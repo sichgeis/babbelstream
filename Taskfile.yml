@@ -1,0 +1,20 @@
+version: "3"
+
+tasks:
+  stt:help:
+    desc: Show the LiteLLM speech-to-text checker help
+    dir: tools/litellm-stt-check
+    cmds:
+      - python3 check_stt.py --help
+
+  stt:models:
+    desc: Probe the configured LiteLLM /v1/models endpoint
+    dir: tools/litellm-stt-check
+    cmds:
+      - python3 check_stt.py --models
+
+  stt:check:
+    desc: Transcribe an audio file through the configured LiteLLM endpoint
+    dir: tools/litellm-stt-check
+    cmds:
+      - python3 check_stt.py {{.CLI_ARGS}}
