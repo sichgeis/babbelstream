@@ -83,6 +83,7 @@
 - Permission granted after denial.
 - App restart after permission changes.
 - App restart with a saved API key does not show a Keychain prompt before dictation starts.
+- Launch-at-login toggle creates/removes the BabbelStream user LaunchAgent and survives app restart.
 
 ## Failure Mode Tests
 

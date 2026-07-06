@@ -411,6 +411,134 @@ final class SettingsWindowController {
     }
 }
 
+enum LaunchAtLoginError: Error, LocalizedError {
+    case couldNotWriteLaunchAgent(String)
+    case couldNotRemoveLaunchAgent(String)
+    case launchctlFailed(command: String, status: Int32)
+
+    var errorDescription: String? {
+        switch self {
+        case let .couldNotWriteLaunchAgent(message):
+            "Could not enable launch at login: \(message)"
+        case let .couldNotRemoveLaunchAgent(message):
+            "Could not disable launch at login: \(message)"
+        case let .launchctlFailed(command, status):
+            "launchctl \(command) failed with status \(status)."
+        }
+    }
+}
+
+final class LaunchAtLoginService {
+    private let label = "com.sichgeis.babbelstream.loginitem"
+    private let fileManager: FileManager
+
+    init(fileManager: FileManager = .default) {
+        self.fileManager = fileManager
+    }
+
+    var isEnabled: Bool {
+        fileManager.fileExists(atPath: launchAgentURL.path)
+    }
+
+    func enable(appURL: URL = Bundle.main.bundleURL) throws {
+        do {
+            try fileManager.createDirectory(
+                at: launchAgentsDirectoryURL,
+                withIntermediateDirectories: true
+            )
+            try launchAgentData(appURL: appURL).write(to: launchAgentURL, options: .atomic)
+        } catch {
+            throw LaunchAtLoginError.couldNotWriteLaunchAgent(error.localizedDescription)
+        }
+
+        _ = performLaunchctl(command: "bootout", ignoreFailure: true)
+        try requireLaunchctlSuccess(command: "bootstrap")
+    }
+
+    func disable() throws {
+        _ = performLaunchctl(command: "bootout", ignoreFailure: true)
+
+        guard fileManager.fileExists(atPath: launchAgentURL.path) else {
+            return
+        }
+
+        do {
+            try fileManager.removeItem(at: launchAgentURL)
+        } catch {
+            throw LaunchAtLoginError.couldNotRemoveLaunchAgent(error.localizedDescription)
+        }
+    }
+
+    private var launchAgentsDirectoryURL: URL {
+        fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("LaunchAgents", isDirectory: true)
+    }
+
+    private var launchAgentURL: URL {
+        launchAgentsDirectoryURL
+            .appendingPathComponent(label)
+            .appendingPathExtension("plist")
+    }
+
+    private var launchctlDomain: String {
+        "gui/\(getuid())"
+    }
+
+    private func launchAgentData(appURL: URL) throws -> Data {
+        let plist: [String: Any] = [
+            "Label": label,
+            "ProgramArguments": [
+                "/usr/bin/open",
+                appURL.path
+            ],
+            "RunAtLoad": true,
+            "StandardErrorPath": "/tmp/\(label).err",
+            "StandardOutPath": "/tmp/\(label).out"
+        ]
+
+        return try PropertyListSerialization.data(
+            fromPropertyList: plist,
+            format: .xml,
+            options: 0
+        )
+    }
+
+    @discardableResult
+    private func performLaunchctl(command: String, ignoreFailure: Bool = false) -> Int32 {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        process.arguments = [
+            command,
+            launchctlDomain,
+            launchAgentURL.path
+        ]
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            if ignoreFailure {
+                return -1
+            }
+            return -1
+        }
+
+        if !ignoreFailure && process.terminationStatus != 0 {
+            return process.terminationStatus
+        }
+
+        return process.terminationStatus
+    }
+
+    private func requireLaunchctlSuccess(command: String) throws {
+        let status = performLaunchctl(command: command, ignoreFailure: false)
+        guard status == 0 else {
+            throw LaunchAtLoginError.launchctlFailed(command: command, status: status)
+        }
+    }
+}
+
 struct DiagnosticEvent: Identifiable {
     let id = UUID()
     let timestamp: Date
@@ -445,6 +573,7 @@ final class AppState: ObservableObject {
     @Published var errorMessage: String?
     @Published var hotkeyStatus = "Hotkey not registered yet."
     @Published var hasAPIKey = false
+    @Published var launchAtLoginEnabled = false
 
     @Published var baseURLText: String
     @Published var transcriptionPathText: String
@@ -468,6 +597,7 @@ final class AppState: ObservableObject {
     private let cleanupProvider: CleanupProvider
     private let textInsertionService: TextInsertionService
     private let hotkeyService: HotkeyService
+    private let launchAtLoginService: LaunchAtLoginService
 
     private var appSettings: AppSettings
     private var recordingStartedAt: Date?
@@ -488,7 +618,8 @@ final class AppState: ObservableObject {
         transcriptionProvider: TranscriptionProvider = OpenAICompatibleTranscriptionProvider(),
         cleanupProvider: CleanupProvider = OpenAICompatibleCleanupProvider(),
         textInsertionService: TextInsertionService = ClipboardTextInsertionService(),
-        hotkeyService: HotkeyService = CarbonHotkeyService()
+        hotkeyService: HotkeyService = CarbonHotkeyService(),
+        launchAtLoginService: LaunchAtLoginService = LaunchAtLoginService()
     ) {
         self.audioRecorder = audioRecorder
         self.settingsStore = settingsStore
@@ -498,6 +629,7 @@ final class AppState: ObservableObject {
         self.cleanupProvider = cleanupProvider
         self.textInsertionService = textInsertionService
         self.hotkeyService = hotkeyService
+        self.launchAtLoginService = launchAtLoginService
 
         let loadedSettings = settingsStore.load()
         self.appSettings = loadedSettings
@@ -515,6 +647,7 @@ final class AppState: ObservableObject {
         self.microphonePermissionStatus = audioRecorder.microphonePermissionStatus()
         self.accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
         self.hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
+        self.launchAtLoginEnabled = launchAtLoginService.isEnabled
 
         updateLatestExternalPasteTarget(from: NSWorkspace.shared.frontmostApplication)
         observeWorkspaceActivations()
@@ -804,6 +937,27 @@ final class AppState: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
             recordDiagnostic("cleanup toggle failed: \(diagnosticErrorCategory(error))")
+        }
+    }
+
+    func setLaunchAtLoginEnabled(_ isEnabled: Bool) {
+        do {
+            if isEnabled {
+                try launchAtLoginService.enable()
+            } else {
+                try launchAtLoginService.disable()
+            }
+
+            launchAtLoginEnabled = launchAtLoginService.isEnabled
+            errorMessage = nil
+            lastResult = isEnabled
+                ? "BabbelStream will launch when you log in."
+                : "BabbelStream will no longer launch at login."
+            recordDiagnostic("launch at login \(launchAtLoginEnabled ? "enabled" : "disabled")")
+        } catch {
+            launchAtLoginEnabled = launchAtLoginService.isEnabled
+            errorMessage = error.localizedDescription
+            recordDiagnostic("launch at login update failed: \(diagnosticErrorCategory(error))")
         }
     }
 
@@ -1372,6 +1526,17 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
         }
     }
 
+    if let launchAtLoginError = error as? LaunchAtLoginError {
+        switch launchAtLoginError {
+        case .couldNotWriteLaunchAgent:
+            return "LaunchAtLoginError.couldNotWriteLaunchAgent"
+        case .couldNotRemoveLaunchAgent:
+            return "LaunchAtLoginError.couldNotRemoveLaunchAgent"
+        case let .launchctlFailed(command, status):
+            return "LaunchAtLoginError.launchctlFailed(\(command), \(status))"
+        }
+    }
+
     return String(describing: type(of: error))
 }
 
@@ -1425,6 +1590,13 @@ struct SettingsView: View {
                     isOn: Binding(
                         get: { appState.cleanupEnabled },
                         set: { appState.setCleanupEnabled($0) }
+                    )
+                )
+                Toggle(
+                    "Launch at login",
+                    isOn: Binding(
+                        get: { appState.launchAtLoginEnabled },
+                        set: { appState.setLaunchAtLoginEnabled($0) }
                     )
                 )
                 TextField("Max recording minutes", text: $appState.maxAudioDurationMinutesText)

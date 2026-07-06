@@ -2,7 +2,7 @@
 
 ## Current Implementation Note
 
-Milestones 1-4 and the fixed-hotkey part of Milestone 5 have been implemented as one usable MVP slice: local recording, LiteLLM/OpenAI-compatible transcription, optional cleanup, clipboard paste/manual-copy fallback, Keychain API key storage, settings UI, and the fixed `Control + Option + Space` hotkey. Future work should harden this flow, add tests around providers/settings beyond `BabbelStreamChecks`, and then continue with configurable hotkeys, usage tracking, and packaging.
+Milestones 1-4, the fixed-hotkey part of Milestone 5, and local packaging from Milestone 8 have been implemented as one usable MVP slice: local recording, LiteLLM/OpenAI-compatible transcription, optional cleanup, clipboard paste/manual-copy fallback, Keychain API key storage, settings UI, the fixed `Control + Option + Space` hotkey, and a local DMG packaging script. Future work should harden this flow, add tests around providers/settings beyond `BabbelStreamChecks`, and then continue with configurable hotkeys, usage tracking, Developer ID signing, notarization, and GitHub release automation.
 
 ## Milestone 0: Repo Setup
 
@@ -70,8 +70,8 @@ Milestones 1-4 and the fixed-hotkey part of Milestone 5 have been implemented as
 
 ## Milestone 8: Packaging And Notarization
 
-- Deliverable: packaging decision, signing/notarization notes, optional installer.
-- Acceptance: app can be distributed to the user's Mac outside Xcode.
-- Manual test: install and run on a clean user account.
+- Deliverable: packaging decision, signing/notarization notes, optional installer. Local DMG packaging is implemented in `scripts/package-dmg.sh`; Developer ID signing and notarization remain future work.
+- Acceptance: app can be packaged as a local DMG outside Xcode. Public release requires Developer ID signing and notarization.
+- Manual test: build the DMG, install on the user's Mac, and later verify a notarized build on a clean user account.
 - Risks: entitlements, hardened runtime, update flow.
 - Complexity: L.
