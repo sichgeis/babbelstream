@@ -15,6 +15,7 @@
 - Transcript text: memory only, plus last transcript in memory for retry/paste-last during the running app session.
 - Cleaned text: memory and, when the clipboard fallback path is used, the clipboard.
 - API keys: macOS Keychain only. A non-secret `UserDefaults` marker may remember that a key was saved so the app can avoid reading Keychain on startup.
+- Launch at login: optional user LaunchAgent plist storing only the app bundle path; removable from Settings.
 - Usage counters: future work; when added, they should use local non-secret settings storage only.
 
 ## Clipboard Implications

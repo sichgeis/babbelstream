@@ -81,6 +81,10 @@ Use direct Accessibility insertion when the focused element supports it. Fall ba
 
 Use `UserDefaults` for non-secret settings and Keychain for API keys. Avoid plaintext config files for secrets. The settings UI should show which provider destination will receive audio and text. Startup must not read the Keychain secret; it may use a non-secret `UserDefaults` presence marker so relaunching the app does not trigger a Keychain access prompt. The real API key should be read only when a provider request is about to run.
 
+## Launch At Login
+
+The app can create or remove a user LaunchAgent at `~/Library/LaunchAgents/com.sichgeis.babbelstream.loginitem.plist` from Settings. The LaunchAgent runs `/usr/bin/open` against the current app bundle path at login. This keeps launch-at-login local and reversible without adding a helper app or installer package for the MVP.
+
 ## Logging And Debugging
 
 Default logs may include state transitions, provider names, durations, and error categories. They must not include audio, transcripts, cleanup input, cleanup output, API keys, or clipboard contents. Debug persistence must be explicit and visibly enabled.

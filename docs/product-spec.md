@@ -41,6 +41,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Inserted dictation text ends with one trailing space so consecutive push-to-talk chunks do not run together in the same composer.
 - API key storage in macOS Keychain.
 - Copy/retry last draft from memory during the running app session.
+- Launch-at-login can be enabled or disabled from Settings.
 - Optional transcription language is a single ISO 639-1 code such as `de` or `en`; leave it empty for mixed German-English dictation.
 - No transcript/audio persistence by default.
 
