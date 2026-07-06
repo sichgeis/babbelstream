@@ -38,7 +38,7 @@ Milestones 1-4 and the fixed-hotkey part of Milestone 5 have been implemented as
 
 ## Milestone 4: Clipboard Paste Into Slack
 
-- Deliverable: paste service with clipboard snapshot/restore and failure fallback.
+- Deliverable: paste service with direct Accessibility insertion, clipboard Cmd+V fallback, and manual-copy fallback.
 - Acceptance: final draft appears in Slack desktop, Slack browser, and TextEdit. Implemented in usable MVP slice; still needs manual QA in Slack.
 - Manual test: composer, thread reply, edit message field, browser Slack.
 - Risks: Accessibility permission, clipboard timing, focus changes.

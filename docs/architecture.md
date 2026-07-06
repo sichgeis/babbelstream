@@ -34,7 +34,7 @@ Menu bar SwiftUI app
 3. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint.
 4. The temporary audio file is deleted after transcription completes or fails.
 5. `CleanupProvider` rewrites the transcript when cleanup is enabled.
-6. `TextInsertionService` saves current clipboard content, writes final text, simulates Cmd+V, then restores prior clipboard content after a short delay.
+6. `TextInsertionService` first tries direct Accessibility insertion into the focused element. If the target app does not support that path, it writes the final text to the clipboard, reactivates the captured target app, and simulates Cmd+V. Because the Cmd+V path cannot be confirmed reliably across Slack, browsers, and native apps, the final draft remains on the clipboard as a visible fallback.
 7. `UsageTracker` stores local-only counters for minutes and token estimates.
 
 ## Permission Model
@@ -74,7 +74,7 @@ Use a chat/completions-compatible endpoint with a fixed Slack-ready cleanup syst
 
 ## Paste Insertion Approach
 
-Use NSPasteboard and simulated Cmd+V for MVP because it works across Slack desktop, browser Slack, and many native text fields. Restore clipboard content after paste. If paste cannot be confirmed, leave the final text on the clipboard and notify the user.
+Use direct Accessibility insertion when the focused element supports it. Fall back to NSPasteboard and simulated Cmd+V because it works across Slack desktop, browser Slack, and many native text fields. If paste cannot be confirmed, leave the final text on the clipboard and notify the user.
 
 ## Settings And Secrets
 

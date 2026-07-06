@@ -105,29 +105,7 @@ public final class CarbonHotkeyService: HotkeyService {
         var handlerRef: EventHandlerRef?
         let status = InstallEventHandler(
             GetApplicationEventTarget(),
-            { _, event, userData in
-                guard let event, let userData else {
-                    return noErr
-                }
-
-                let service = Unmanaged<CarbonHotkeyService>
-                    .fromOpaque(userData)
-                    .takeUnretainedValue()
-                let eventKind = GetEventKind(event)
-
-                Task { @MainActor in
-                    switch eventKind {
-                    case UInt32(kEventHotKeyPressed):
-                        service.onPressed?()
-                    case UInt32(kEventHotKeyReleased):
-                        service.onReleased?()
-                    default:
-                        break
-                    }
-                }
-
-                return noErr
-            },
+            carbonHotkeyEventHandler,
             eventTypes.count,
             &eventTypes,
             userData,
@@ -140,6 +118,17 @@ public final class CarbonHotkeyService: HotkeyService {
 
         eventHandlerRef = handlerRef
     }
+
+    fileprivate func handle(eventKind: UInt32) {
+        switch eventKind {
+        case UInt32(kEventHotKeyPressed):
+            onPressed?()
+        case UInt32(kEventHotKeyReleased):
+            onReleased?()
+        default:
+            break
+        }
+    }
 }
 
 private func FourCharCode(_ string: String) -> UInt32 {
@@ -150,4 +139,21 @@ private func FourCharCode(_ string: String) -> UInt32 {
     }
 
     return result
+}
+
+private let carbonHotkeyEventHandler: EventHandlerUPP = { _, event, userData in
+    guard let event, let userData else {
+        return noErr
+    }
+
+    let service = Unmanaged<CarbonHotkeyService>
+        .fromOpaque(userData)
+        .takeUnretainedValue()
+    let eventKind = GetEventKind(event)
+
+    Task { @MainActor in
+        service.handle(eventKind: eventKind)
+    }
+
+    return noErr
 }

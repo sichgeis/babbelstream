@@ -5,6 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIGURATION="${CONFIGURATION:-debug}"
 APP_NAME="BabbelStream"
 BUNDLE_IDENTIFIER="com.sichgeis.babbelstream"
+LOCAL_CODESIGN_IDENTITY="${LOCAL_CODESIGN_IDENTITY:-BabbelStream Local Code Signing}"
+CODESIGN_IDENTITY="${CODESIGN_IDENTITY:-}"
 DIST_DIR="$ROOT_DIR/dist"
 APP_DIR="$DIST_DIR/$APP_NAME.app"
 CONTENTS_DIR="$APP_DIR/Contents"
@@ -65,7 +67,20 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 PLIST
 
 if command -v codesign >/dev/null 2>&1; then
-  codesign --force --sign - "$APP_DIR" >/dev/null
+  if [[ -z "$CODESIGN_IDENTITY" ]]; then
+    if security find-identity -v -p codesigning 2>/dev/null | grep -F "\"$LOCAL_CODESIGN_IDENTITY\"" >/dev/null; then
+      CODESIGN_IDENTITY="$LOCAL_CODESIGN_IDENTITY"
+    else
+      CODESIGN_IDENTITY="-"
+    fi
+  fi
+
+  codesign --force --sign "$CODESIGN_IDENTITY" "$APP_DIR" >/dev/null
+  echo "Signed with identity: $CODESIGN_IDENTITY"
+  if [[ "$CODESIGN_IDENTITY" == "-" ]]; then
+    echo "Warning: ad-hoc signing changes the app identity on rebuilds; Accessibility may not stay trusted."
+    echo "Run scripts/create-local-codesign-identity.sh once for a stable local signing identity."
+  fi
 fi
 
 echo "Built $APP_DIR"

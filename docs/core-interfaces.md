@@ -36,11 +36,11 @@ These are conceptual Swift protocols for future milestones. They should be imple
 
 ## `TextInsertionService`
 
-- Responsibility: paste final text into the focused app using clipboard plus synthetic Cmd+V, then restore clipboard.
-- Input: final text, restore delay.
+- Responsibility: insert final text into the focused app using direct Accessibility insertion when possible, with clipboard plus synthetic Cmd+V as a fallback.
+- Input: final text, optional captured target app.
 - Output: insertion result.
 - Errors: missing Accessibility permission, clipboard unavailable, paste event failed, no focused target.
-- Test strategy: unit-test clipboard snapshot/restore logic behind an adapter; manual QA for Slack and browsers.
+- Test strategy: unit-test insertion result handling behind an adapter; manual QA for Slack, browsers, and native text fields.
 
 ## `SettingsStore`
 

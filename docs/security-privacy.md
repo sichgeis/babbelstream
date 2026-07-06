@@ -14,13 +14,13 @@
 
 - Audio: temporary file only; delete immediately after transcription succeeds, fails, times out, or is canceled.
 - Transcript text: memory only, plus last transcript in memory for retry/paste-last when implemented.
-- Cleaned text: memory and clipboard during paste.
+- Cleaned text: memory and, when the clipboard fallback path is used, the clipboard.
 - API keys: macOS Keychain only.
 - Usage counters: local non-secret settings storage.
 
 ## Clipboard Implications
 
-Clipboard paste temporarily places work text on the system clipboard. The app should snapshot prior clipboard content, paste the final draft, and restore the prior content after a short delay. If paste fails, leaving the final text on the clipboard is acceptable only with a visible notification.
+Clipboard fallback places work text on the system clipboard. Direct Accessibility insertion should avoid clipboard writes when the focused element supports it. When the app has to use synthetic Cmd+V, paste success cannot be confirmed reliably across all targets, so the final text remains on the clipboard with a visible status message.
 
 ## Network Destinations
 

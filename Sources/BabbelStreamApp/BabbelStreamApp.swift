@@ -3,20 +3,406 @@ import BabbelStreamCore
 import SwiftUI
 
 @main
-struct BabbelStreamApp: App {
-    @StateObject private var appState = AppState()
+enum BabbelStreamMain {
+    @MainActor
+    static func main() {
+        let application = NSApplication.shared
+        let appDelegate = AppDelegate()
+        application.delegate = appDelegate
+        application.setActivationPolicy(.accessory)
+        application.run()
+        _ = appDelegate
+    }
+}
 
-    var body: some Scene {
-        MenuBarExtra(ProjectDefaults.appName, systemImage: appState.menuBarSystemImage) {
-            StatusMenuView()
-                .environmentObject(appState)
-        }
-        .menuBarExtraStyle(.menu)
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    private let appState = AppState()
+    private var statusBarController: StatusBarController?
+    private var settingsWindowController: SettingsWindowController?
 
-        Settings {
-            SettingsView()
-                .environmentObject(appState)
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        installMainMenu()
+        let settingsWindowController = SettingsWindowController(appState: appState)
+        self.settingsWindowController = settingsWindowController
+        statusBarController = StatusBarController(
+            appState: appState,
+            settingsWindowController: settingsWindowController
+        )
+    }
+
+    private func installMainMenu() {
+        let mainMenu = NSMenu()
+
+        let appMenuItem = NSMenuItem()
+        let appMenu = NSMenu(title: ProjectDefaults.appName)
+        appMenu.addItem(
+            withTitle: "Quit \(ProjectDefaults.appName)",
+            action: #selector(NSApplication.terminate(_:)),
+            keyEquivalent: "q"
+        )
+        appMenuItem.submenu = appMenu
+        mainMenu.addItem(appMenuItem)
+
+        let editMenuItem = NSMenuItem()
+        let editMenu = NSMenu(title: "Edit")
+        editMenu.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        editMenu.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "Z")
+        editMenu.addItem(.separator())
+        editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(
+            withTitle: "Select All",
+            action: #selector(NSText.selectAll(_:)),
+            keyEquivalent: "a"
+        )
+        editMenuItem.submenu = editMenu
+        mainMenu.addItem(editMenuItem)
+
+        NSApp.mainMenu = mainMenu
+    }
+}
+
+@MainActor
+final class StatusBarController: NSObject, NSMenuDelegate {
+    private let appState: AppState
+    private let settingsWindowController: SettingsWindowController
+    private let statusItem: NSStatusItem
+    private let menu = NSMenu()
+
+    init(
+        appState: AppState,
+        settingsWindowController: SettingsWindowController
+    ) {
+        self.appState = appState
+        self.settingsWindowController = settingsWindowController
+        self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        super.init()
+
+        menu.delegate = self
+        statusItem.menu = menu
+        refreshStatusItem()
+        rebuildMenu()
+        appState.onStateChanged = { [weak self] in
+            self?.refreshStatusItem()
         }
+    }
+
+    func menuWillOpen(_ menu: NSMenu) {
+        appState.refreshPermissionStatuses()
+        rebuildMenu()
+        refreshStatusItem()
+    }
+
+    private func refreshStatusItem() {
+        let symbolName: String
+        if appState.isRecording {
+            symbolName = "mic.fill"
+        } else if appState.isProcessing {
+            symbolName = "waveform"
+        } else {
+            symbolName = "mic"
+        }
+
+        statusItem.button?.image = NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: ProjectDefaults.appName
+        )
+        statusItem.button?.toolTip = "\(ProjectDefaults.appName): \(appState.status)"
+    }
+
+    private func rebuildMenu() {
+        menu.removeAllItems()
+
+        addInfo(appState.status)
+        addInfo("Hotkey: \(ProjectDefaults.fixedHotkeyDescription)")
+        addInfo(appState.hotkeyStatus)
+        addInfo("Microphone: \(appState.microphonePermissionStatus.displayName)")
+        addInfo("Accessibility: \(appState.accessibilityPermissionStatus.displayName)")
+        if let pasteTargetSummary = appState.pasteTargetSummary {
+            addInfo("Paste target: \(pasteTargetSummary)")
+        }
+
+        if appState.isRecording {
+            addInfo("Elapsed: \(elapsedText)")
+        }
+
+        addInfo(appState.lastResult)
+
+        if let warningMessage = appState.warningMessage {
+            addInfo("Warning: \(warningMessage)")
+        }
+        if let errorMessage = appState.errorMessage {
+            addInfo("Error: \(errorMessage)")
+        }
+
+        if appState.canUseLatestDraft {
+            addInfo("Last raw transcript: \(appState.latestRawTranscriptSummary)")
+            addInfo("Last final draft: \(appState.latestFinalDraftSummary)")
+        }
+
+        menu.addItem(.separator())
+
+        let cleanupItem = addAction(
+            "Cleanup",
+            action: #selector(toggleCleanup),
+            enabled: true
+        )
+        cleanupItem.state = appState.cleanupEnabled ? .on : .off
+
+        addAction(
+            "Start Dictation",
+            action: #selector(startDictation),
+            enabled: appState.canStart
+        )
+        addAction(
+            "Stop + Transcribe",
+            action: #selector(stopActiveRecording),
+            enabled: appState.canStop
+        )
+        addAction(
+            "Cancel Recording",
+            action: #selector(cancelRecording),
+            enabled: appState.canStop
+        )
+
+        menu.addItem(.separator())
+
+        addAction(
+            "Start Local Test Recording",
+            action: #selector(startLocalTestRecording),
+            enabled: appState.canStart
+        )
+        addAction(
+            "Copy Last Draft",
+            action: #selector(copyLastDraft),
+            enabled: appState.canUseLatestDraft
+        )
+        addAction(
+            "Paste Last Draft",
+            action: #selector(retryPasteLastDraft),
+            enabled: appState.canUseLatestDraft && !appState.isProcessing
+        )
+
+        menu.addItem(.separator())
+
+        if appState.microphonePermissionStatus != .authorized {
+            addAction(
+                "Request Microphone Permission",
+                action: #selector(requestMicrophonePermission),
+                enabled: appState.canStart
+            )
+        }
+        if appState.accessibilityPermissionStatus != .trusted {
+            addAction(
+                "Request Accessibility Permission",
+                action: #selector(requestAccessibilityPermission),
+                enabled: true
+            )
+        }
+        addAction(
+            "Refresh Permissions",
+            action: #selector(refreshPermissions),
+            enabled: true
+        )
+
+        if appState.microphonePermissionStatus == .denied || appState.microphonePermissionStatus == .restricted {
+            addAction(
+                "Open Microphone Settings",
+                action: #selector(openMicrophoneSettings),
+                enabled: true
+            )
+        }
+
+        if appState.accessibilityPermissionStatus == .notTrusted {
+            addAction(
+                "Open Accessibility Settings",
+                action: #selector(openAccessibilitySettings),
+                enabled: true
+            )
+        }
+
+        menu.addItem(.separator())
+
+        addDiagnosticsSubmenu()
+
+        menu.addItem(.separator())
+
+        addAction("Settings...", action: #selector(openSettings), enabled: true)
+        addAction("Quit", action: #selector(quit), enabled: true)
+    }
+
+    @discardableResult
+    private func addAction(
+        _ title: String,
+        action: Selector,
+        enabled: Bool
+    ) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+        item.target = self
+        item.isEnabled = enabled
+        menu.addItem(item)
+
+        return item
+    }
+
+    private func addInfo(_ title: String) {
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        menu.addItem(item)
+    }
+
+    private func addDiagnosticsSubmenu() {
+        let parent = NSMenuItem(title: "Diagnostics", action: nil, keyEquivalent: "")
+        let submenu = NSMenu(title: "Diagnostics")
+        let lines = appState.diagnosticSummaries
+
+        if lines.isEmpty {
+            let item = NSMenuItem(title: "No events yet.", action: nil, keyEquivalent: "")
+            item.isEnabled = false
+            submenu.addItem(item)
+        } else {
+            for line in lines {
+                let item = NSMenuItem(title: line, action: nil, keyEquivalent: "")
+                item.isEnabled = false
+                submenu.addItem(item)
+            }
+        }
+
+        parent.submenu = submenu
+        menu.addItem(parent)
+    }
+
+    private var elapsedText: String {
+        "\(Int(appState.elapsedSeconds.rounded(.down)))s / \(Int(ProjectDefaults.maxAudioDurationSeconds))s"
+    }
+
+    @objc private func toggleCleanup() {
+        appState.setCleanupEnabled(!appState.cleanupEnabled)
+        rebuildMenu()
+    }
+
+    @objc private func startDictation() {
+        Task { @MainActor in
+            await appState.startDictation()
+            rebuildMenu()
+        }
+    }
+
+    @objc private func stopActiveRecording() {
+        Task { @MainActor in
+            await appState.stopActiveRecording()
+            rebuildMenu()
+        }
+    }
+
+    @objc private func cancelRecording() {
+        Task { @MainActor in
+            await appState.cancelRecording()
+            rebuildMenu()
+        }
+    }
+
+    @objc private func startLocalTestRecording() {
+        Task { @MainActor in
+            await appState.startTestRecording()
+            rebuildMenu()
+        }
+    }
+
+    @objc private func copyLastDraft() {
+        appState.copyLatestDraft()
+        rebuildMenu()
+    }
+
+    @objc private func retryPasteLastDraft() {
+        Task { @MainActor in
+            await appState.retryPasteLatestDraft()
+            rebuildMenu()
+        }
+    }
+
+    @objc private func requestMicrophonePermission() {
+        Task { @MainActor in
+            await appState.requestMicrophonePermission()
+            rebuildMenu()
+        }
+    }
+
+    @objc private func requestAccessibilityPermission() {
+        appState.requestAccessibilityPermission()
+        rebuildMenu()
+    }
+
+    @objc private func refreshPermissions() {
+        appState.refreshPermissionStatuses()
+        rebuildMenu()
+    }
+
+    @objc private func openMicrophoneSettings() {
+        appState.openMicrophonePrivacySettings()
+    }
+
+    @objc private func openAccessibilitySettings() {
+        appState.openAccessibilityPrivacySettings()
+    }
+
+    @objc private func openSettings() {
+        settingsWindowController.show()
+    }
+
+    @objc private func quit() {
+        NSApp.terminate(nil)
+    }
+}
+
+@MainActor
+final class SettingsWindowController {
+    private let appState: AppState
+    private var windowController: NSWindowController?
+
+    init(appState: AppState) {
+        self.appState = appState
+    }
+
+    func show() {
+        let controller = windowController ?? makeWindowController()
+        windowController = controller
+        controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func makeWindowController() -> NSWindowController {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 620),
+            styleMask: [.titled, .closable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "\(ProjectDefaults.appName) Settings"
+        window.contentViewController = NSHostingController(
+            rootView: SettingsView()
+                .environmentObject(appState)
+        )
+        window.isReleasedWhenClosed = false
+        window.center()
+
+        return NSWindowController(window: window)
+    }
+}
+
+struct DiagnosticEvent: Identifiable {
+    let id = UUID()
+    let timestamp: Date
+    let message: String
+
+    var displayText: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+
+        return "\(formatter.string(from: timestamp)) \(message)"
     }
 }
 
@@ -51,6 +437,9 @@ final class AppState: ObservableObject {
     @Published var transcriptionLanguageText: String
     @Published var transcriptionPromptText: String
     @Published var apiKeyInput = ""
+    @Published private(set) var diagnostics: [DiagnosticEvent] = []
+
+    var onStateChanged: (() -> Void)?
 
     private let audioRecorder: AudioRecorder
     private let settingsStore: SettingsStore
@@ -65,6 +454,11 @@ final class AppState: ObservableObject {
     private var elapsedTimer: Timer?
     private var latestRawTranscript: String?
     private var latestFinalDraft: String?
+    private var latestPasteTarget: TextInsertionTarget?
+    private var latestExternalPasteTarget: TextInsertionTarget?
+    private var workspaceActivationObserver: NSObjectProtocol?
+    private var shouldStopDictationAfterStart = false
+    private var cachedAPIKey: String?
 
     init(
         audioRecorder: AudioRecorder = AVFoundationAudioRecorder(),
@@ -97,8 +491,11 @@ final class AppState: ObservableObject {
 
         self.microphonePermissionStatus = audioRecorder.microphonePermissionStatus()
         self.accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
-        self.hasAPIKey = ((try? secretStore.readAPIKey()) ?? nil) != nil
+        self.hasAPIKey = ((try? secretStore.hasAPIKey()) ?? false)
 
+        updateLatestExternalPasteTarget(from: NSWorkspace.shared.frontmostApplication)
+        observeWorkspaceActivations()
+        cleanupStaleTemporaryAudio()
         configureHotkey()
     }
 
@@ -124,13 +521,97 @@ final class AppState: ObservableObject {
         latestFinalDraft?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
+    var pasteTargetSummary: String? {
+        (latestPasteTarget ?? latestExternalPasteTarget)?.displayName
+    }
+
+    var latestRawTranscriptSummary: String {
+        guard let latestRawTranscript else {
+            return "None"
+        }
+
+        return "\(latestRawTranscript.count) characters"
+    }
+
+    var latestFinalDraftSummary: String {
+        guard let latestFinalDraft else {
+            return "None"
+        }
+
+        return "\(latestFinalDraft.count) characters"
+    }
+
+    var diagnosticSummaries: [String] {
+        diagnostics.suffix(10).map(\.displayText)
+    }
+
     var providerDestinationSummary: String {
         "\(baseURLText)\(transcriptionPathText)"
+    }
+
+    private func observeWorkspaceActivations() {
+        workspaceActivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let application = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else {
+                return
+            }
+
+            let processIdentifier = application.processIdentifier
+            let localizedName = application.localizedName
+            let bundleIdentifier = application.bundleIdentifier
+
+            Task { @MainActor [weak self] in
+                self?.updateLatestExternalPasteTarget(
+                    processIdentifier: processIdentifier,
+                    localizedName: localizedName,
+                    bundleIdentifier: bundleIdentifier
+                )
+            }
+        }
+    }
+
+    private func captureCurrentPasteTarget() {
+        updateLatestExternalPasteTarget(from: NSWorkspace.shared.frontmostApplication)
+        latestPasteTarget = latestExternalPasteTarget
+        notifyStateChanged()
+    }
+
+    private func updateLatestExternalPasteTarget(from application: NSRunningApplication?) {
+        guard let application else {
+            return
+        }
+
+        updateLatestExternalPasteTarget(
+            processIdentifier: application.processIdentifier,
+            localizedName: application.localizedName,
+            bundleIdentifier: application.bundleIdentifier
+        )
+    }
+
+    private func updateLatestExternalPasteTarget(
+        processIdentifier: pid_t,
+        localizedName: String?,
+        bundleIdentifier: String?
+    ) {
+        guard processIdentifier != ProcessInfo.processInfo.processIdentifier,
+              bundleIdentifier != Bundle.main.bundleIdentifier
+        else {
+            return
+        }
+
+        latestExternalPasteTarget = TextInsertionTarget(
+            processIdentifier: processIdentifier,
+            localizedName: localizedName
+        )
     }
 
     func refreshPermissionStatuses() {
         microphonePermissionStatus = audioRecorder.microphonePermissionStatus()
         accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
+        notifyStateChanged()
     }
 
     func requestMicrophonePermission() async {
@@ -146,11 +627,20 @@ final class AppState: ObservableObject {
             status = "Microphone unavailable"
             errorMessage = microphoneGuidance(for: microphonePermissionStatus)
         }
+        recordDiagnostic("microphone permission: \(microphonePermissionStatus.displayName)")
     }
 
     func requestAccessibilityPermission() {
         textInsertionService.requestAccessibilityPermission()
-        accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
+        refreshPermissionStatuses()
+
+        if accessibilityPermissionStatus == .trusted {
+            errorMessage = nil
+            lastResult = "Accessibility is allowed."
+        } else {
+            errorMessage = "Accessibility is still not allowed for this app instance. If System Settings already shows it enabled, remove and re-add BabbelStream after rebuilding."
+        }
+        recordDiagnostic("accessibility permission: \(accessibilityPermissionStatus.displayName)")
     }
 
     func startDictation() async {
@@ -187,14 +677,17 @@ final class AppState: ObservableObject {
             errorMessage = nil
             warningMessage = nil
             lastResult = "Recording canceled; temporary file deleted."
+            recordDiagnostic("recording canceled; temporary audio deleted")
         } catch {
             resetRecordingState()
             status = "Cancel failed"
             errorMessage = error.localizedDescription
             lastResult = "Could not cancel recording safely."
+            recordDiagnostic("recording cancel failed: \(diagnosticErrorCategory(error))")
         }
 
         isProcessing = false
+        notifyStateChanged()
     }
 
     func saveSettings() {
@@ -230,27 +723,33 @@ final class AppState: ObservableObject {
             let trimmedKey = apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmedKey.isEmpty {
                 try secretStore.saveAPIKey(trimmedKey)
+                cachedAPIKey = trimmedKey
                 apiKeyInput = ""
             }
 
             appSettings = settings
-            hasAPIKey = ((try? secretStore.readAPIKey()) ?? nil) != nil
+            hasAPIKey = ((try? secretStore.hasAPIKey()) ?? false)
             warningMessage = nil
             errorMessage = nil
             lastResult = "Settings saved. Provider: \(providerDestinationSummary)"
+            recordDiagnostic("settings saved")
         } catch {
             errorMessage = error.localizedDescription
+            recordDiagnostic("settings save failed: \(diagnosticErrorCategory(error))")
         }
     }
 
     func deleteAPIKey() {
         do {
             try secretStore.deleteAPIKey()
+            cachedAPIKey = nil
             apiKeyInput = ""
             hasAPIKey = false
             lastResult = "API key deleted from Keychain."
+            recordDiagnostic("api key deleted")
         } catch {
             errorMessage = error.localizedDescription
+            recordDiagnostic("api key delete failed: \(diagnosticErrorCategory(error))")
         }
     }
 
@@ -261,8 +760,10 @@ final class AppState: ObservableObject {
         do {
             try settingsStore.save(updatedSettings)
             appSettings = updatedSettings
+            recordDiagnostic("cleanup \(isEnabled ? "enabled" : "disabled")")
         } catch {
             errorMessage = error.localizedDescription
+            recordDiagnostic("cleanup toggle failed: \(diagnosticErrorCategory(error))")
         }
     }
 
@@ -274,8 +775,10 @@ final class AppState: ObservableObject {
         do {
             try textInsertionService.copyText(latestFinalDraft)
             lastResult = "Latest draft copied to clipboard."
+            recordDiagnostic("latest draft copied")
         } catch {
             errorMessage = error.localizedDescription
+            recordDiagnostic("latest draft copy failed: \(diagnosticErrorCategory(error))")
         }
     }
 
@@ -284,6 +787,9 @@ final class AppState: ObservableObject {
             return
         }
 
+        if latestPasteTarget == nil {
+            latestPasteTarget = latestExternalPasteTarget
+        }
         await insertFinalDraft(latestFinalDraft)
     }
 
@@ -295,21 +801,33 @@ final class AppState: ObservableObject {
         openSystemSettings("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
     }
 
+    private func recordDiagnostic(_ message: String) {
+        diagnostics.append(DiagnosticEvent(timestamp: Date(), message: message))
+        if diagnostics.count > 50 {
+            diagnostics.removeFirst(diagnostics.count - 50)
+        }
+        onStateChanged?()
+    }
+
+    private func notifyStateChanged() {
+        onStateChanged?()
+    }
+
     private func configureHotkey() {
         hotkeyService.onPressed = { [weak self] in
             Task { @MainActor in
-                guard let self, self.canStart else {
+                guard let self else {
                     return
                 }
-                await self.startDictation()
+                await self.handleDictationHotkeyPressed()
             }
         }
         hotkeyService.onReleased = { [weak self] in
             Task { @MainActor in
-                guard let self, self.recordingMode == .dictation else {
+                guard let self else {
                     return
                 }
-                await self.stopAndProcessDictation()
+                await self.handleDictationHotkeyReleased()
             }
         }
 
@@ -321,11 +839,50 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func startRecording(mode: RecordingMode) async {
+    private func handleDictationHotkeyPressed() async {
+        recordDiagnostic("hotkey pressed")
         guard canStart else {
+            recordDiagnostic("hotkey press ignored: busy")
             return
         }
 
+        shouldStopDictationAfterStart = false
+        await startRecording(mode: .dictation)
+
+        guard shouldStopDictationAfterStart else {
+            return
+        }
+
+        shouldStopDictationAfterStart = false
+        if recordingMode == .dictation {
+            await stopAndProcessDictation()
+        }
+    }
+
+    private func handleDictationHotkeyReleased() async {
+        recordDiagnostic("hotkey released")
+        if recordingMode == .dictation {
+            await stopAndProcessDictation()
+            return
+        }
+
+        if isProcessing {
+            shouldStopDictationAfterStart = true
+            lastResult = "Release received; stopping as soon as recording starts."
+            recordDiagnostic("hotkey release queued until recording starts")
+        }
+    }
+
+    private func startRecording(mode: RecordingMode) async {
+        guard canStart else {
+            recordDiagnostic("recording start ignored: busy")
+            return
+        }
+
+        if mode == .dictation {
+            captureCurrentPasteTarget()
+        }
+        cleanupStaleTemporaryAudio()
         isProcessing = true
         warningMessage = nil
         errorMessage = nil
@@ -341,6 +898,7 @@ final class AppState: ObservableObject {
             lastResult = "Recording not started."
             errorMessage = microphoneGuidance(for: newStatus)
             isProcessing = false
+            recordDiagnostic("recording not started: microphone \(newStatus.displayName)")
             return
         }
 
@@ -355,13 +913,16 @@ final class AppState: ObservableObject {
                 ? "Speak, then release \(ProjectDefaults.fixedHotkeyDescription) or click Stop."
                 : "Test recording only; no transcription will run."
             startElapsedTimer()
+            recordDiagnostic("recording started: \(mode == .dictation ? "dictation" : "local test")")
         } catch {
             status = "Recording failed"
             lastResult = "Recording not started."
             errorMessage = error.localizedDescription
+            recordDiagnostic("recording start failed: \(diagnosticErrorCategory(error))")
         }
 
         isProcessing = false
+        notifyStateChanged()
     }
 
     private func stopAndProcessDictation(autoStopped: Bool = false) async {
@@ -376,15 +937,18 @@ final class AppState: ObservableObject {
             let recording = try await audioRecorder.stop(deleteTemporaryFile: false)
             resetRecordingState()
             elapsedSeconds = recording.duration
+            recordDiagnostic("recording stopped: dictation, \(formatDuration(recording.duration))")
             try await processRecording(recording, autoStopped: autoStopped)
         } catch {
             resetRecordingState()
             status = "Dictation failed"
             errorMessage = error.localizedDescription
             lastResult = "Could not finish dictation safely."
+            recordDiagnostic("dictation failed: \(diagnosticErrorCategory(error))")
         }
 
         isProcessing = false
+        notifyStateChanged()
     }
 
     private func stopTestRecording(autoStopped: Bool = false) async {
@@ -403,14 +967,17 @@ final class AppState: ObservableObject {
             errorMessage = nil
             warningMessage = nil
             lastResult = resultMessage(for: recording, autoStopped: autoStopped)
+            recordDiagnostic("local test stopped: \(formatDuration(recording.duration)); temp audio deleted")
         } catch {
             resetRecordingState()
             status = "Stop failed"
             errorMessage = error.localizedDescription
             lastResult = "Could not finish test recording safely."
+            recordDiagnostic("local test stop failed: \(diagnosticErrorCategory(error))")
         }
 
         isProcessing = false
+        notifyStateChanged()
     }
 
     private func processRecording(_ recording: RecordedAudio, autoStopped: Bool) async throws {
@@ -418,13 +985,16 @@ final class AppState: ObservableObject {
             _ = try? AudioTempFileStore.deleteTemporaryAudio(at: recording.temporaryFileURL)
         }
 
-        let apiKey = try secretStore.readAPIKey() ?? ""
+        let apiKey = try cachedAPIKey ?? secretStore.readAPIKey() ?? ""
         guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            recordDiagnostic("transcription not started: missing API key")
             throw ProviderError.missingAPIKey
         }
+        cachedAPIKey = apiKey
 
         status = autoStopped ? "Max reached; transcribing" : "Transcribing"
         lastResult = "Sending audio to \(appSettings.providerConfiguration.baseURL.host ?? appSettings.providerConfiguration.baseURL.absoluteString)."
+        recordDiagnostic("transcription started")
 
         let rawTranscript = try await transcriptionProvider.transcribe(
             TranscriptionRequest(
@@ -434,10 +1004,12 @@ final class AppState: ObservableObject {
             )
         )
         latestRawTranscript = rawTranscript
+        recordDiagnostic("transcription succeeded: \(rawTranscript.count) characters")
 
         let finalDraft: String
         if cleanupEnabled {
             status = "Cleaning up"
+            recordDiagnostic("cleanup started")
             do {
                 finalDraft = try await cleanupProvider.cleanup(
                     CleanupRequest(
@@ -447,13 +1019,16 @@ final class AppState: ObservableObject {
                     )
                 )
                 warningMessage = nil
+                recordDiagnostic("cleanup succeeded: \(finalDraft.count) characters")
             } catch {
                 finalDraft = rawTranscript
                 warningMessage = "Cleanup failed; using raw transcript. \(error.localizedDescription)"
+                recordDiagnostic("cleanup failed; using raw transcript: \(diagnosticErrorCategory(error))")
             }
         } else {
             finalDraft = rawTranscript
             warningMessage = nil
+            recordDiagnostic("cleanup skipped")
         }
 
         latestFinalDraft = finalDraft
@@ -462,20 +1037,35 @@ final class AppState: ObservableObject {
 
     private func insertFinalDraft(_ finalDraft: String) async {
         status = "Pasting draft"
+        let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
 
         do {
-            let insertionResult = try await textInsertionService.insertText(finalDraft)
+            let insertionResult = try await textInsertionService.insertText(finalDraft, target: pasteTarget)
             accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
 
             switch insertionResult {
-            case .pasted:
+            case .insertedDirectly:
                 status = "Ready"
-                lastResult = "Draft pasted. Review it before sending."
+                lastResult = "Draft inserted. Review it before sending."
                 errorMessage = nil
+                warningMessage = nil
+                recordDiagnostic("paste succeeded: direct accessibility insertion")
+            case .pasteShortcutPosted:
+                status = "Ready"
+                lastResult = "Paste shortcut sent; draft is also on the clipboard."
+                errorMessage = nil
+                warningMessage = "If the draft did not appear, press Cmd+V in the target field."
+                recordDiagnostic("paste shortcut posted; clipboard fallback retained")
             case .copiedForManualPaste:
                 status = "Copied"
                 lastResult = "Draft copied to clipboard. Paste manually with Cmd+V."
                 errorMessage = "Accessibility is not allowed, so BabbelStream could not paste automatically."
+                recordDiagnostic("paste fallback: copied for manual paste")
+            case .copiedAfterPasteShortcutFailure:
+                status = "Copied"
+                lastResult = "Draft copied to clipboard after paste shortcut failed."
+                errorMessage = "BabbelStream could not post Cmd+V. Paste manually with Cmd+V."
+                recordDiagnostic("paste shortcut failed; clipboard fallback retained")
             }
         } catch {
             do {
@@ -483,12 +1073,15 @@ final class AppState: ObservableObject {
                 status = "Copied"
                 lastResult = "Draft copied to clipboard after paste failed. Paste manually with Cmd+V."
                 errorMessage = error.localizedDescription
+                recordDiagnostic("paste failed; copied fallback: \(diagnosticErrorCategory(error))")
             } catch {
                 status = "Paste failed"
                 lastResult = "Draft is only available in memory for this app session."
                 errorMessage = error.localizedDescription
+                recordDiagnostic("paste and copy failed: \(diagnosticErrorCategory(error))")
             }
         }
+        notifyStateChanged()
     }
 
     private func startElapsedTimer() {
@@ -531,6 +1124,39 @@ final class AppState: ObservableObject {
         isRecording = false
         recordingStartedAt = nil
         recordingMode = .none
+        shouldStopDictationAfterStart = false
+    }
+
+    private func cleanupStaleTemporaryAudio() {
+        do {
+            let deletedCount = try staleTemporaryAudioDirectories()
+                .reduce(into: 0) { count, directory in
+                    count += try AudioTempFileStore.deleteStaleTemporaryAudioFiles(in: directory)
+                }
+
+            if deletedCount > 0 {
+                lastResult = "Cleaned up \(deletedCount) stale temporary recording(s)."
+                recordDiagnostic("stale temp audio cleaned: \(deletedCount) file(s)")
+            }
+        } catch {
+            warningMessage = "Could not clean up stale temporary recordings. \(error.localizedDescription)"
+            recordDiagnostic("stale temp audio cleanup failed: \(diagnosticErrorCategory(error))")
+        }
+    }
+
+    private func staleTemporaryAudioDirectories() -> [URL] {
+        var directories = [AudioTempFileStore.temporaryDirectory()]
+
+        if let tempPath = ProcessInfo.processInfo.environment["TMPDIR"], !tempPath.isEmpty {
+            let tempDirectory = URL(fileURLWithPath: tempPath, isDirectory: true)
+                .appendingPathComponent(ProjectDefaults.audioTempDirectoryName, isDirectory: true)
+
+            if !directories.contains(tempDirectory) {
+                directories.append(tempDirectory)
+            }
+        }
+
+        return directories
     }
 
     private func resultMessage(for recording: RecordedAudio, autoStopped: Bool) -> String {
@@ -575,147 +1201,85 @@ final class AppState: ObservableObject {
     }
 }
 
-struct StatusMenuView: View {
-    @EnvironmentObject private var appState: AppState
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(appState.status)
-                .font(.headline)
-
-            Text("Hotkey: \(ProjectDefaults.fixedHotkeyDescription)")
-                .font(.subheadline)
-            Text(appState.hotkeyStatus)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Text("Microphone: \(appState.microphonePermissionStatus.displayName)")
-                .font(.caption)
-            Text("Accessibility: \(appState.accessibilityPermissionStatus.displayName)")
-                .font(.caption)
-
-            if appState.isRecording {
-                Text("Elapsed: \(elapsedText)")
-                    .font(.system(.body, design: .monospaced))
-            }
-
-            Text(appState.lastResult)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if let warningMessage = appState.warningMessage {
-                Text(warningMessage)
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            if let errorMessage = appState.errorMessage {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Divider()
-
-            Toggle(
-                "Cleanup",
-                isOn: Binding(
-                    get: { appState.cleanupEnabled },
-                    set: { appState.setCleanupEnabled($0) }
-                )
-            )
-
-            Button("Start Dictation") {
-                Task {
-                    await appState.startDictation()
-                }
-            }
-            .disabled(!appState.canStart)
-
-            Button("Stop + Transcribe") {
-                Task {
-                    await appState.stopActiveRecording()
-                }
-            }
-            .disabled(!appState.canStop)
-
-            Button("Cancel Recording") {
-                Task {
-                    await appState.cancelRecording()
-                }
-            }
-            .disabled(!appState.canStop)
-
-            Divider()
-
-            Button("Start Local Test Recording") {
-                Task {
-                    await appState.startTestRecording()
-                }
-            }
-            .disabled(!appState.canStart)
-
-            Button("Copy Last Draft") {
-                appState.copyLatestDraft()
-            }
-            .disabled(!appState.canUseLatestDraft)
-
-            Button("Retry Paste Last Draft") {
-                Task {
-                    await appState.retryPasteLatestDraft()
-                }
-            }
-            .disabled(!appState.canUseLatestDraft || appState.isProcessing)
-
-            Divider()
-
-            Button("Request Microphone Permission") {
-                Task {
-                    await appState.requestMicrophonePermission()
-                }
-            }
-            .disabled(!appState.canStart || appState.microphonePermissionStatus == .authorized)
-
-            Button("Request Accessibility Permission") {
-                appState.requestAccessibilityPermission()
-            }
-
-            if appState.microphonePermissionStatus == .denied || appState.microphonePermissionStatus == .restricted {
-                Button("Open Microphone Settings") {
-                    appState.openMicrophonePrivacySettings()
-                }
-            }
-
-            if appState.accessibilityPermissionStatus == .notTrusted {
-                Button("Open Accessibility Settings") {
-                    appState.openAccessibilityPrivacySettings()
-                }
-            }
-
-            Divider()
-
-            Button("Settings...") {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-            }
-
-            Button("Quit") {
-                NSApp.terminate(nil)
-            }
-            .keyboardShortcut("q")
+private func diagnosticErrorCategory(_ error: Error) -> String {
+    if let providerError = error as? ProviderError {
+        switch providerError {
+        case .missingAPIKey:
+            return "ProviderError.missingAPIKey"
+        case .invalidEndpointURL:
+            return "ProviderError.invalidEndpointURL"
+        case .emptyAudioFile:
+            return "ProviderError.emptyAudioFile"
+        case let .requestFailed(statusCode):
+            return "ProviderError.requestFailed(HTTP \(statusCode))"
+        case .malformedResponse:
+            return "ProviderError.malformedResponse"
+        case .emptyTranscript:
+            return "ProviderError.emptyTranscript"
+        case .emptyCleanupOutput:
+            return "ProviderError.emptyCleanupOutput"
         }
-        .onAppear {
-            appState.refreshPermissionStatuses()
-        }
-        .padding()
-        .frame(minWidth: 320, alignment: .leading)
     }
 
-    private var elapsedText: String {
-        "\(Int(appState.elapsedSeconds.rounded(.down)))s / \(Int(ProjectDefaults.maxAudioDurationSeconds))s"
+    if let audioError = error as? AudioRecordingError {
+        switch audioError {
+        case .microphonePermissionDenied:
+            return "AudioRecordingError.microphonePermissionDenied"
+        case .alreadyRecording:
+            return "AudioRecordingError.alreadyRecording"
+        case .notRecording:
+            return "AudioRecordingError.notRecording"
+        case .couldNotCreateTempDirectory:
+            return "AudioRecordingError.couldNotCreateTempDirectory"
+        case .couldNotStartRecording:
+            return "AudioRecordingError.couldNotStartRecording"
+        case .missingRecordingFile:
+            return "AudioRecordingError.missingRecordingFile"
+        case .couldNotReadRecordingMetadata:
+            return "AudioRecordingError.couldNotReadRecordingMetadata"
+        case .couldNotDeleteTemporaryFile:
+            return "AudioRecordingError.couldNotDeleteTemporaryFile"
+        }
     }
+
+    if let insertionError = error as? TextInsertionError {
+        switch insertionError {
+        case .emptyText:
+            return "TextInsertionError.emptyText"
+        case .pasteboardUnavailable:
+            return "TextInsertionError.pasteboardUnavailable"
+        case .pasteEventFailed:
+            return "TextInsertionError.pasteEventFailed"
+        }
+    }
+
+    if let secretError = error as? SecretStoreError {
+        switch secretError {
+        case let .keychainError(status):
+            return "SecretStoreError.keychainStatus(\(status))"
+        case .invalidSecretData:
+            return "SecretStoreError.invalidSecretData"
+        }
+    }
+
+    if let validationError = error as? SettingsValidationError {
+        switch validationError {
+        case .invalidBaseURL:
+            return "SettingsValidationError.invalidBaseURL"
+        case .missingTranscriptionModel:
+            return "SettingsValidationError.missingTranscriptionModel"
+        case .missingCleanupModel:
+            return "SettingsValidationError.missingCleanupModel"
+        case .missingTranscriptionPath:
+            return "SettingsValidationError.missingTranscriptionPath"
+        case .missingCleanupPath:
+            return "SettingsValidationError.missingCleanupPath"
+        case .invalidTimeout:
+            return "SettingsValidationError.invalidTimeout"
+        }
+    }
+
+    return String(describing: type(of: error))
 }
 
 struct SettingsView: View {
@@ -775,6 +1339,55 @@ struct SettingsView: View {
                 LabeledContent("Auto-send", value: ProjectDefaults.autoSendEnabledByDefault ? "On" : "Off")
                 LabeledContent("History", value: ProjectDefaults.transcriptHistoryEnabledByDefault ? "On" : "Off")
             }
+
+            Section("Permissions") {
+                LabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
+                LabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
+
+                HStack {
+                    Button("Request Accessibility") {
+                        appState.requestAccessibilityPermission()
+                    }
+                    Button("Refresh") {
+                        appState.refreshPermissionStatuses()
+                    }
+                }
+            }
+
+            Section("Latest Draft") {
+                LabeledContent("Raw transcript", value: appState.latestRawTranscriptSummary)
+                LabeledContent("Final draft", value: appState.latestFinalDraftSummary)
+
+                HStack {
+                    Button("Copy Last Draft") {
+                        appState.copyLatestDraft()
+                    }
+                    .disabled(!appState.canUseLatestDraft)
+
+                    Button("Retry Paste Last Draft") {
+                        Task {
+                            await appState.retryPasteLatestDraft()
+                        }
+                    }
+                    .disabled(!appState.canUseLatestDraft || appState.isProcessing)
+                }
+            }
+
+            Section("Diagnostics") {
+                if appState.diagnosticSummaries.isEmpty {
+                    Text("No events yet.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(appState.diagnosticSummaries, id: \.self) { line in
+                        Text(line)
+                            .font(.system(.caption, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+                }
+            }
+        }
+        .onAppear {
+            appState.refreshPermissionStatuses()
         }
         .padding(24)
         .frame(width: 560)
