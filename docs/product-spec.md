@@ -36,18 +36,18 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - OpenAI-compatible LiteLLM-style transcription provider configuration.
 - Preferred transcription model: `gpt-4o-transcribe` via the configured LiteLLM/OpenAI-compatible endpoint. The side-check script confirmed this is the desired model/settings combination to carry into the app.
 - Cleanup provider using an OpenAI-compatible chat endpoint.
-- Clipboard-based paste into the currently focused text field.
+- Direct Accessibility insertion into the focused text field when possible, with clipboard plus Cmd+V fallback.
 - API key storage in macOS Keychain.
-- Local usage counters for dictated minutes and estimated cleanup tokens.
+- Copy/retry last draft from memory during the running app session.
 - No transcript/audio persistence by default.
 
 ## V1 Scope
 
 - Editable provider settings UI with validation.
 - Hotkey customization.
-- Paste-last-transcript from memory.
 - Better active-app indication before paste.
 - Optional per-app cleanup style defaults.
+- Local usage counters for dictated minutes and estimated cleanup tokens.
 - Direct OpenAI profile as a preconfigured alternative.
 
 ## Future Scope

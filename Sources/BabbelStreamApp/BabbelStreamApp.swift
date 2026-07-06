@@ -115,6 +115,18 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private func rebuildMenu() {
         menu.removeAllItems()
 
+        addStatusSection()
+        menu.addItem(.separator())
+        addDictationActions()
+        menu.addItem(.separator())
+        addPermissionActions()
+        menu.addItem(.separator())
+        addDiagnosticsSubmenu()
+        menu.addItem(.separator())
+        addAppActions()
+    }
+
+    private func addStatusSection() {
         addInfo(appState.status)
         addInfo("Hotkey: \(ProjectDefaults.fixedHotkeyDescription)")
         addInfo(appState.hotkeyStatus)
@@ -141,9 +153,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             addInfo("Last raw transcript: \(appState.latestRawTranscriptSummary)")
             addInfo("Last final draft: \(appState.latestFinalDraftSummary)")
         }
+    }
 
-        menu.addItem(.separator())
-
+    private func addDictationActions() {
         let cleanupItem = addAction(
             "Cleanup",
             action: #selector(toggleCleanup),
@@ -167,8 +179,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             enabled: appState.canStop
         )
 
-        menu.addItem(.separator())
-
         addAction(
             "Start Local Test Recording",
             action: #selector(startLocalTestRecording),
@@ -184,9 +194,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             action: #selector(retryPasteLastDraft),
             enabled: appState.canUseLatestDraft && !appState.isProcessing
         )
+    }
 
-        menu.addItem(.separator())
-
+    private func addPermissionActions() {
         if appState.microphonePermissionStatus != .authorized {
             addAction(
                 "Request Microphone Permission",
@@ -222,13 +232,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                 enabled: true
             )
         }
+    }
 
-        menu.addItem(.separator())
-
-        addDiagnosticsSubmenu()
-
-        menu.addItem(.separator())
-
+    private func addAppActions() {
         addAction("Settings...", action: #selector(openSettings), enabled: true)
         addAction("Quit", action: #selector(quit), enabled: true)
     }

@@ -2,7 +2,7 @@
 
 ## Recommended Architecture
 
-BabbelStream should be a native Swift/SwiftUI macOS menu-bar app with a small core layer for testable logic. The MVP should use native macOS APIs before adding dependencies: AVFoundation for audio recording, Carbon for the global hotkey, URLSession for provider calls, Security/Keychain for secrets, and NSPasteboard plus synthetic Cmd+V for text insertion.
+BabbelStream is a native macOS menu-bar app with an AppKit status item, SwiftUI settings, and a small core layer for testable logic. The MVP uses native macOS APIs before adding dependencies: AVFoundation for audio recording, Carbon for the global hotkey, URLSession for provider calls, Security/Keychain for secrets, Accessibility for direct insertion where possible, and NSPasteboard plus synthetic Cmd+V as a fallback.
 
 ## Alternatives Considered
 
@@ -15,16 +15,16 @@ BabbelStream should be a native Swift/SwiftUI macOS menu-bar app with a small co
 ## Component Diagram
 
 ```text
-Menu bar SwiftUI app
+AppKit status-item app
   -> HotkeyService
   -> AudioRecorder
-  -> DictationCoordinator
+  -> AppState dictation flow
      -> TranscriptionProvider
      -> CleanupProvider
      -> TextInsertionService
-     -> UsageTracker
   -> SettingsStore
   -> SecretStore
+  -> SwiftUI SettingsView
 ```
 
 ## Data Flow
@@ -35,7 +35,7 @@ Menu bar SwiftUI app
 4. The temporary audio file is deleted after transcription completes or fails.
 5. `CleanupProvider` rewrites the transcript when cleanup is enabled.
 6. `TextInsertionService` first tries direct Accessibility insertion into the focused element. If the target app does not support that path, it writes the final text to the clipboard, reactivates the captured target app, and simulates Cmd+V. Because the Cmd+V path cannot be confirmed reliably across Slack, browsers, and native apps, the final draft remains on the clipboard as a visible fallback.
-7. `UsageTracker` stores local-only counters for minutes and token estimates.
+7. The app keeps only the latest raw/final draft in memory for copy/retry during the running session. Usage counters remain future work.
 
 ## Permission Model
 
@@ -56,9 +56,9 @@ Provider settings should include:
 - Timeout.
 - Retry policy.
 - Maximum audio duration.
-- Optional price inputs for local cost estimates.
+- Optional future price inputs for local cost estimates.
 
-The default shape targets OpenAI-compatible LiteLLM endpoints. It is an explicit implementation risk that the user's LightON/LiteLLM proxy may not support OpenAI-compatible audio transcription. Verify this before Milestone 2.
+The default shape targets OpenAI-compatible LiteLLM endpoints. It is still an integration risk that a specific LiteLLM proxy may not support OpenAI-compatible audio transcription even if the app's request shape is valid.
 
 ## Audio Recording Approach
 

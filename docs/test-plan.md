@@ -5,7 +5,7 @@
 - Provider configuration validation.
 - Cleanup prompt regression checks.
 - Settings defaults and migrations.
-- Usage estimate arithmetic.
+- Usage estimate arithmetic once usage tracking is implemented.
 - Temp-file deletion policy.
 - Text insertion result handling behind an adapter.
 - Keychain wrapper behavior with an in-memory fake.
@@ -56,6 +56,7 @@
 
 ## API-Cost Tests
 
+- Future work until local usage tracking exists.
 - Track dictated minutes locally.
 - Track approximate cleanup tokens locally.
 - Estimate monthly transcription cost as `minutes dictated * price per minute`.
