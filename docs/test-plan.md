@@ -37,6 +37,7 @@
 - Message edit field.
 - Empty composer.
 - Composer with existing text.
+- Consecutive dictations into the same composer leave at least one space between chunks.
 - Focus changes before paste.
 
 ## Slack Browser Cases

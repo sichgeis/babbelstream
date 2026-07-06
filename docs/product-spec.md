@@ -38,6 +38,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Cleanup provider using an OpenAI-compatible chat endpoint.
 - Cleanup removes filler and adds punctuation, but must not translate. English speech stays English, German speech stays German, and mixed German-English stays mixed.
 - Direct Accessibility insertion into the focused text field when possible, with clipboard plus Cmd+V fallback.
+- Inserted dictation text ends with one trailing space so consecutive push-to-talk chunks do not run together in the same composer.
 - API key storage in macOS Keychain.
 - Copy/retry last draft from memory during the running app session.
 - Optional transcription language is a single ISO 639-1 code such as `de` or `en`; leave it empty for mixed German-English dictation.
