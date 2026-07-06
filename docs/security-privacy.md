@@ -7,16 +7,15 @@
 - Cleaned Slack-ready draft text.
 - Provider configuration.
 - API keys.
-- Local usage counters.
 - Temporary clipboard contents during paste.
 
 ## Storage And Lifetime
 
 - Audio: temporary file only; delete immediately after transcription succeeds, fails, times out, or is canceled.
-- Transcript text: memory only, plus last transcript in memory for retry/paste-last when implemented.
+- Transcript text: memory only, plus last transcript in memory for retry/paste-last during the running app session.
 - Cleaned text: memory and, when the clipboard fallback path is used, the clipboard.
 - API keys: macOS Keychain only.
-- Usage counters: local non-secret settings storage.
+- Usage counters: future work; when added, they should use local non-secret settings storage only.
 
 ## Clipboard Implications
 

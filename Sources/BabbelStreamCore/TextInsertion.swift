@@ -191,29 +191,3 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         try? await Task.sleep(nanoseconds: nanoseconds)
     }
 }
-
-public struct ClipboardSnapshot {
-    private let items: [NSPasteboardItem]
-    private let stringFallback: String?
-
-    public static func capture(from pasteboard: NSPasteboard) -> ClipboardSnapshot {
-        let copiedItems = pasteboard.pasteboardItems?.compactMap { item in
-            item.copy() as? NSPasteboardItem
-        } ?? []
-
-        return ClipboardSnapshot(
-            items: copiedItems,
-            stringFallback: pasteboard.string(forType: .string)
-        )
-    }
-
-    public func restore(to pasteboard: NSPasteboard) {
-        pasteboard.clearContents()
-
-        if !items.isEmpty {
-            pasteboard.writeObjects(items)
-        } else if let stringFallback {
-            pasteboard.setString(stringFallback, forType: .string)
-        }
-    }
-}

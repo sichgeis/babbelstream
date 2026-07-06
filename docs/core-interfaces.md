@@ -1,6 +1,6 @@
 # Core Interfaces
 
-These are conceptual Swift protocols for future milestones. They should be implemented only when their milestone begins.
+These are the main protocol boundaries for the native macOS MVP. Implemented interfaces should stay small and mockable; future-only interfaces are marked as such.
 
 ## `AudioRecorder`
 
@@ -60,6 +60,7 @@ These are conceptual Swift protocols for future milestones. They should be imple
 
 ## `UsageTracker`
 
+- Status: future work.
 - Responsibility: track local-only usage estimates without analytics.
 - Input: audio duration, estimated token counts, optional user-configured prices.
 - Output: local totals and rough cost estimates.
