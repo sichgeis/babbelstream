@@ -84,23 +84,20 @@ public final class ClipboardTextInsertionService: TextInsertionService {
     }
 
     public func insertText(_ text: String, target: TextInsertionTarget?) async throws -> TextInsertionResult {
-        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedText.isEmpty else {
-            throw TextInsertionError.emptyText
-        }
+        let insertionText = try TextInsertionPayload.validated(text)
 
         guard accessibilityPermissionStatus() == .trusted else {
-            _ = try writeToClipboard(trimmedText)
+            _ = try writeToClipboard(insertionText)
             return .copiedForManualPaste
         }
 
         await prepareTargetForInsertion(target)
 
-        if insertDirectlyIntoFocusedElement(trimmedText) {
+        if insertDirectlyIntoFocusedElement(insertionText) {
             return .insertedDirectly
         }
 
-        _ = try writeToClipboard(trimmedText)
+        _ = try writeToClipboard(insertionText)
 
         guard await postPasteShortcut() else {
             return .copiedAfterPasteShortcutFailure
@@ -110,12 +107,9 @@ public final class ClipboardTextInsertionService: TextInsertionService {
     }
 
     public func copyText(_ text: String) throws {
-        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedText.isEmpty else {
-            throw TextInsertionError.emptyText
-        }
+        let insertionText = try TextInsertionPayload.validated(text)
 
-        _ = try writeToClipboard(trimmedText)
+        _ = try writeToClipboard(insertionText)
     }
 
     private func writeToClipboard(_ text: String) throws -> Int {
