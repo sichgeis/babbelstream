@@ -44,7 +44,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `SettingsStore`
 
-- Responsibility: persist non-secret settings such as provider URLs, model names, cleanup toggle, max recording duration, and price inputs.
+- Responsibility: persist non-secret settings such as provider URLs, endpoint paths, model names, cleanup toggle, transcription language, transcription prompt, and max recording duration.
 - Input: typed settings values.
 - Output: current settings and validation errors.
 - Errors: invalid URL, invalid duration, missing model, unsupported endpoint path.
@@ -57,6 +57,14 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 - Output: secret value on demand.
 - Errors: key not found, Keychain read/write failure, access denied.
 - Test strategy: wrap Keychain behind a protocol; use in-memory fake for unit tests and manual Keychain verification.
+
+## `LaunchAtLoginService`
+
+- Responsibility: enable, disable, and report local launch-at-login state.
+- Input: current app bundle URL.
+- Output: user LaunchAgent presence and launchctl load/unload result.
+- Errors: LaunchAgent write/remove failure, launchctl bootstrap/bootout failure.
+- Test strategy: unit-test plist generation and state detection with a temporary file manager root; manual QA against the real user LaunchAgent.
 
 ## `UsageTracker`
 
