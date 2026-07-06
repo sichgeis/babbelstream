@@ -15,6 +15,7 @@ public enum ProjectDefaults {
     public static let autoSendEnabledByDefault = false
     public static let transcriptHistoryEnabledByDefault = false
     public static let debugPersistenceEnabledByDefault = false
+    public static let maxPersonalDictionaryPromptCharacters = 6_000
 }
 
 public struct ProviderConfiguration: Equatable, Sendable {

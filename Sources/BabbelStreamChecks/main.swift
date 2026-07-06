@@ -77,6 +77,22 @@ check(dictionaryContext.contains("LiteLLM"), "Dictionary prompt should include e
 check(dictionaryContext.contains("light LM => LiteLLM"), "Dictionary prompt should include enabled corrections.")
 check(!dictionaryContext.contains("IgnoredTerm"), "Dictionary prompt should omit disabled vocabulary.")
 check(!dictionaryContext.contains("ignored => Ignored"), "Dictionary prompt should omit disabled corrections.")
+let limitedDictionary = PersonalDictionary(
+    vocabulary: [
+        PersonalVocabularyEntry(term: "ShortTerm"),
+        PersonalVocabularyEntry(term: String(repeating: "LongDictionaryTerm", count: 20))
+    ],
+    corrections: [
+        PersonalCorrectionEntry(from: "wrong short", to: "ShortTerm")
+    ]
+)
+let limitedContext = DictionaryPromptBuilder.cleanupContextDetails(for: limitedDictionary, maxCharacters: 360)
+check(limitedContext?.includedVocabularyCount == 1, "Dictionary prompt should include entries within the local limit.")
+check(limitedContext?.wasTruncated == true, "Dictionary prompt should report skipped entries when the context is capped.")
+check(
+    (limitedContext?.text.count ?? 0) <= 860,
+    "Dictionary prompt should stay bounded even after adding the truncation note."
+)
 let parsedDictionary = try PersonalDictionaryTextCodec.dictionary(
     vocabularyText: "Hypatos\nLiteLLM\nlitellm\n",
     correctionsText: "light LM => LiteLLM\nprompting service => prompting-service\n"
@@ -148,6 +164,14 @@ apiKeyPresenceStore.hasSavedAPIKey = true
 check(apiKeyPresenceStore.hasSavedAPIKey, "API key presence should persist as a non-secret UserDefaults hint.")
 try AppSettingsValidator.validate(AppSettings())
 do {
+    var invalidPathSettings = AppSettings()
+    invalidPathSettings.providerConfiguration.transcriptionEndpointPath = "v1/audio/transcriptions"
+    try AppSettingsValidator.validate(invalidPathSettings)
+    fatalError("Endpoint paths without a leading slash should fail settings validation.")
+} catch SettingsValidationError.invalidEndpointPath {
+    // Expected.
+}
+do {
     var invalidDurationSettings = AppSettings()
     invalidDurationSettings.maxAudioDurationSeconds = 601
     try AppSettingsValidator.validate(invalidDurationSettings)
@@ -163,6 +187,28 @@ do {
 } catch SettingsValidationError.invalidTranscriptionLanguage {
     // Expected.
 }
+var usageSnapshot = UsageSnapshot()
+usageSnapshot.recordDictation(duration: 90)
+usageSnapshot.recordCleanupRequest()
+usageSnapshot.recordTranscriptionFailure()
+usageSnapshot.recordCleanupFallback()
+check(usageSnapshot.totalDictations == 1, "Usage counters should track dictation attempts.")
+check(usageSnapshot.totalRecordedMinutes == 1.5, "Usage counters should track recorded minutes locally.")
+check(usageSnapshot.cleanupRequests == 1, "Usage counters should track cleanup requests.")
+check(usageSnapshot.transcriptionFailures == 1, "Usage counters should track transcription failures.")
+check(usageSnapshot.cleanupFallbacks == 1, "Usage counters should track cleanup fallbacks.")
+let usageDefaults = UserDefaults(suiteName: "com.sichgeis.babbelstream.usage-checks")!
+usageDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.usage-checks")
+let usageTracker = UserDefaultsUsageTracker(userDefaults: usageDefaults, key: "usage-check")
+usageTracker.save(usageSnapshot)
+check(usageTracker.load() == usageSnapshot, "Usage counters should persist as local UserDefaults data.")
+usageTracker.reset()
+check(usageTracker.load() == UsageSnapshot(), "Usage counters should reset locally.")
+let diagnosticsText = PrivacyDiagnosticsBuilder.redactSecrets(
+    in: "api key: sk-testSecret123456789 Authorization: Bearer secret-token"
+)
+check(!diagnosticsText.contains("sk-testSecret"), "Diagnostics redaction should remove OpenAI-style API keys.")
+check(!diagnosticsText.contains("secret-token"), "Diagnostics redaction should remove bearer tokens.")
 check(
     AudioTempFileStore.isUnderSystemTemporaryDirectory(tempDirectory),
     "Audio temp directory should stay under the system temp directory."

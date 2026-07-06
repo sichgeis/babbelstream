@@ -36,8 +36,9 @@ AppKit status-item app
 4. The temporary audio file is deleted after transcription completes or fails.
 5. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
 6. `CleanupProvider` rewrites the transcript when cleanup is enabled, using dictionary context in the same model call.
-7. `TextInsertionService` first tries direct Accessibility insertion into the focused element. If the target app does not support that path, it writes the final text to the clipboard, reactivates the captured target app, and simulates Cmd+V. Because the Cmd+V path cannot be confirmed reliably across Slack, browsers, and native apps, the final draft remains on the clipboard as a visible fallback.
-8. The app keeps only the latest raw/final draft in memory for copy/retry during the running session. Usage counters remain future work.
+7. Usage counters are updated locally for dictation attempts, recorded duration, cleanup requests, transcription failures, and cleanup fallbacks.
+8. `TextInsertionService` first tries direct Accessibility insertion into the focused element. If the target app does not support that path, it writes the final text to the clipboard, reactivates the captured target app, and simulates Cmd+V. Because the Cmd+V path cannot be confirmed reliably across Slack, browsers, and native apps, the final draft remains on the clipboard as a visible fallback.
+9. The app keeps only the latest raw/final draft in memory for copy/retry during the running session.
 
 ## Permission Model
 
@@ -77,7 +78,7 @@ Use a chat/completions-compatible endpoint with a fixed Slack-ready cleanup syst
 
 ## Personal Dictionary
 
-Use a local JSON dictionary at `~/Library/Application Support/BabbelStream/personal-dictionary.json` for explicit vocabulary and correction hints. The app reloads it before each cleanup request and appends compact context to the cleanup system prompt. This version is cleanup-only: it does not perform deterministic local replacements and it does not add a second model call.
+Use a local JSON dictionary at `~/Library/Application Support/BabbelStream/personal-dictionary.json` for explicit vocabulary and correction hints. The app reloads it before each cleanup request and appends compact context to the cleanup system prompt. The injected context is capped by `ProjectDefaults.maxPersonalDictionaryPromptCharacters`; if entries are skipped, the app warns and records only counts. This version is cleanup-only: it does not perform deterministic local replacements and it does not add a second model call.
 
 A lightweight personal Codex skill may edit the same file directly. No MCP server is required for this version.
 
@@ -95,7 +96,7 @@ The app can create or remove a user LaunchAgent at `~/Library/LaunchAgents/com.s
 
 ## Logging And Debugging
 
-Default logs may include state transitions, provider names, durations, and error categories. They must not include audio, transcripts, cleanup input, cleanup output, API keys, or clipboard contents. Debug persistence must be explicit and visibly enabled.
+Default logs may include state transitions, provider names, durations, counts, and error categories. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, and recent sanitized event categories. They must not include audio, transcripts, cleanup input, cleanup output, API keys, clipboard contents, or audio file paths. Debug persistence must be explicit and visibly enabled.
 
 ## Security And Privacy
 

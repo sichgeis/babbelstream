@@ -31,6 +31,7 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
     case missingCleanupModel
     case missingTranscriptionPath
     case missingCleanupPath
+    case invalidEndpointPath
     case invalidTranscriptionLanguage
     case invalidTimeout
     case invalidMaxAudioDuration
@@ -47,6 +48,8 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
             "Transcription endpoint path is required."
         case .missingCleanupPath:
             "Cleanup endpoint path is required."
+        case .invalidEndpointPath:
+            "Provider endpoint paths must start with / and produce valid URLs."
         case .invalidTranscriptionLanguage:
             "Transcription language must be a single ISO 639-1 code like de or en. Leave it empty for mixed German-English dictation and put free-form hints in the prompt."
         case .invalidTimeout:
@@ -76,6 +79,19 @@ public enum AppSettingsValidator {
         }
         guard !configuration.cleanupEndpointPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw SettingsValidationError.missingCleanupPath
+        }
+        guard configuration.transcriptionEndpointPath.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("/"),
+              configuration.cleanupEndpointPath.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("/"),
+              ProviderEndpointBuilder.endpointURL(
+                baseURL: configuration.baseURL,
+                path: configuration.transcriptionEndpointPath
+              ) != nil,
+              ProviderEndpointBuilder.endpointURL(
+                baseURL: configuration.baseURL,
+                path: configuration.cleanupEndpointPath
+              ) != nil
+        else {
+            throw SettingsValidationError.invalidEndpointPath
         }
         guard TranscriptionLanguageNormalizer.isValidForSettings(settings.transcriptionLanguage) else {
             throw SettingsValidationError.invalidTranscriptionLanguage
