@@ -79,7 +79,7 @@ Use direct Accessibility insertion when the focused element supports it. Fall ba
 
 ## Settings And Secrets
 
-Use `UserDefaults` for non-secret settings and Keychain for API keys. Avoid plaintext config files for secrets. The settings UI should show which provider destination will receive audio and text.
+Use `UserDefaults` for non-secret settings and Keychain for API keys. Avoid plaintext config files for secrets. The settings UI should show which provider destination will receive audio and text. Startup must not read the Keychain secret; it may use a non-secret `UserDefaults` presence marker so relaunching the app does not trigger a Keychain access prompt. The real API key should be read only when a provider request is about to run.
 
 ## Logging And Debugging
 

@@ -54,6 +54,15 @@ check(
         .contains("bad request") == true,
     "Provider HTTP failures should expose safe provider details."
 )
+let presenceDefaults = UserDefaults(suiteName: "com.sichgeis.babbelstream.checks")!
+presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
+let apiKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(
+    userDefaults: presenceDefaults,
+    key: "api-key-presence-check"
+)
+check(!apiKeyPresenceStore.hasSavedAPIKey, "API key presence should default to false without Keychain access.")
+apiKeyPresenceStore.hasSavedAPIKey = true
+check(apiKeyPresenceStore.hasSavedAPIKey, "API key presence should persist as a non-secret UserDefaults hint.")
 try AppSettingsValidator.validate(AppSettings())
 do {
     var invalidLanguageSettings = AppSettings()
