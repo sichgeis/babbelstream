@@ -49,11 +49,18 @@ public struct CleanupRequest: Sendable {
     public let transcript: String
     public let settings: AppSettings
     public let apiKey: String
+    public let personalDictionary: PersonalDictionary
 
-    public init(transcript: String, settings: AppSettings, apiKey: String) {
+    public init(
+        transcript: String,
+        settings: AppSettings,
+        apiKey: String,
+        personalDictionary: PersonalDictionary = PersonalDictionary()
+    ) {
         self.transcript = transcript
         self.settings = settings
         self.apiKey = apiKey
+        self.personalDictionary = personalDictionary
     }
 }
 
@@ -153,7 +160,10 @@ public final class OpenAICompatibleCleanupProvider: CleanupProvider {
             "model": configuration.cleanupModel,
             "temperature": 0,
             "messages": [
-                ["role": "system", "content": CleanupPrompt.slackReady],
+                [
+                    "role": "system",
+                    "content": DictionaryPromptBuilder.cleanupSystemPrompt(dictionary: request.personalDictionary)
+                ],
                 ["role": "user", "content": request.transcript]
             ]
         ]

@@ -7,6 +7,7 @@
 - Cleaned Slack-ready draft text.
 - Provider configuration.
 - API keys.
+- Personal dictionary vocabulary and correction hints.
 - Temporary clipboard contents during paste.
 
 ## Storage And Lifetime
@@ -15,6 +16,7 @@
 - Transcript text: memory only, plus last transcript in memory for retry/paste-last during the running app session.
 - Cleaned text: memory and, when the clipboard fallback path is used, the clipboard.
 - API keys: macOS Keychain only. A non-secret `UserDefaults` marker may remember that a key was saved so the app can avoid reading Keychain on startup.
+- Personal dictionary: explicit local JSON only; no transcript history, audio, or automatic learning.
 - Launch at login: optional user LaunchAgent plist storing only the app bundle path; removable from Settings.
 - Usage counters: future work; when added, they should use local non-secret settings storage only.
 
@@ -26,6 +28,8 @@ Clipboard fallback places work text on the system clipboard. Direct Accessibilit
 
 The app sends audio to the configured transcription endpoint and transcript text to the configured cleanup endpoint when cleanup is enabled. The settings UI must show provider base URL and model names. The app must not silently switch providers.
 
+When cleanup is enabled, personal dictionary entries are included in the cleanup request as context. They are explicit user-maintained hints, not inferred transcript history.
+
 ## Debug Logging Policy
 
 Default logs may include timestamps, state names, durations, provider labels, error categories, and short sanitized provider error messages. Default logs must not include audio, transcripts, cleanup input/output, API keys, clipboard contents, or request bodies. Debug persistence must be opt-in and visibly enabled.
@@ -36,6 +40,7 @@ Default logs may include timestamps, state names, durations, provider labels, er
 - Accidental paste into the wrong app.
 - Sending work content to the wrong provider.
 - API key leakage.
+- Personal dictionary leakage through cleanup context.
 - Repeated Keychain prompts caused by startup secret reads or unstable local code signatures.
 - Transcript/audio persistence through logs or temp files.
 - Clipboard exposure to other apps.

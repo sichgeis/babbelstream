@@ -17,17 +17,23 @@ enum BabbelStreamMain {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let appState = AppState()
+    private let personalDictionaryStore = JSONPersonalDictionaryStore()
+    private lazy var appState = AppState(personalDictionaryStore: personalDictionaryStore)
     private var statusBarController: StatusBarController?
     private var settingsWindowController: SettingsWindowController?
+    private var personalDictionaryWindowController: PersonalDictionaryWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         installMainMenu()
+        let appState = appState
         let settingsWindowController = SettingsWindowController(appState: appState)
+        let personalDictionaryWindowController = PersonalDictionaryWindowController(store: personalDictionaryStore)
         self.settingsWindowController = settingsWindowController
+        self.personalDictionaryWindowController = personalDictionaryWindowController
         statusBarController = StatusBarController(
             appState: appState,
-            settingsWindowController: settingsWindowController
+            settingsWindowController: settingsWindowController,
+            personalDictionaryWindowController: personalDictionaryWindowController
         )
     }
 
@@ -68,15 +74,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 final class StatusBarController: NSObject, NSMenuDelegate {
     private let appState: AppState
     private let settingsWindowController: SettingsWindowController
+    private let personalDictionaryWindowController: PersonalDictionaryWindowController
     private let statusItem: NSStatusItem
     private let menu = NSMenu()
 
     init(
         appState: AppState,
-        settingsWindowController: SettingsWindowController
+        settingsWindowController: SettingsWindowController,
+        personalDictionaryWindowController: PersonalDictionaryWindowController
     ) {
         self.appState = appState
         self.settingsWindowController = settingsWindowController
+        self.personalDictionaryWindowController = personalDictionaryWindowController
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
 
@@ -235,6 +244,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     private func addAppActions() {
+        addAction("Personal Dictionary...", action: #selector(openPersonalDictionary), enabled: true)
         addAction("Settings...", action: #selector(openSettings), enabled: true)
         addAction("Quit", action: #selector(quit), enabled: true)
     }
@@ -370,6 +380,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         settingsWindowController.show()
     }
 
+    @objc private func openPersonalDictionary() {
+        personalDictionaryWindowController.show()
+    }
+
     @objc private func quit() {
         NSApp.terminate(nil)
     }
@@ -403,6 +417,41 @@ final class SettingsWindowController {
         window.contentViewController = NSHostingController(
             rootView: SettingsView()
                 .environmentObject(appState)
+        )
+        window.isReleasedWhenClosed = false
+        window.center()
+
+        return NSWindowController(window: window)
+    }
+}
+
+@MainActor
+final class PersonalDictionaryWindowController {
+    private let store: PersonalDictionaryStore
+    private var windowController: NSWindowController?
+
+    init(store: PersonalDictionaryStore) {
+        self.store = store
+    }
+
+    func show() {
+        let controller = windowController ?? makeWindowController()
+        windowController = controller
+        controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func makeWindowController() -> NSWindowController {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 620, height: 560),
+            styleMask: [.titled, .closable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "\(ProjectDefaults.appName) Personal Dictionary"
+        window.contentViewController = NSHostingController(
+            rootView: PersonalDictionaryView(store: store)
         )
         window.isReleasedWhenClosed = false
         window.center()
@@ -470,6 +519,7 @@ final class AppState: ObservableObject {
     private let textInsertionService: TextInsertionService
     private let hotkeyService: HotkeyService
     private let launchAtLoginService: LaunchAtLoginService
+    private let personalDictionaryStore: PersonalDictionaryStore
 
     private var appSettings: AppSettings
     private var recordingStartedAt: Date?
@@ -491,7 +541,8 @@ final class AppState: ObservableObject {
         cleanupProvider: CleanupProvider = OpenAICompatibleCleanupProvider(),
         textInsertionService: TextInsertionService = ClipboardTextInsertionService(),
         hotkeyService: HotkeyService = CarbonHotkeyService(),
-        launchAtLoginService: LaunchAtLoginService = LaunchAtLoginService()
+        launchAtLoginService: LaunchAtLoginService = LaunchAtLoginService(),
+        personalDictionaryStore: PersonalDictionaryStore = JSONPersonalDictionaryStore()
     ) {
         self.audioRecorder = audioRecorder
         self.settingsStore = settingsStore
@@ -502,6 +553,7 @@ final class AppState: ObservableObject {
         self.textInsertionService = textInsertionService
         self.hotkeyService = hotkeyService
         self.launchAtLoginService = launchAtLoginService
+        self.personalDictionaryStore = personalDictionaryStore
 
         let loadedSettings = settingsStore.load()
         self.appSettings = loadedSettings
@@ -1089,12 +1141,14 @@ final class AppState: ObservableObject {
         if cleanupEnabled {
             status = "Cleaning up"
             recordDiagnostic("cleanup started")
+            let personalDictionary = loadPersonalDictionaryForCleanup()
             do {
                 finalDraft = try await cleanupProvider.cleanup(
                     CleanupRequest(
                         transcript: rawTranscript,
                         settings: appSettings,
-                        apiKey: apiKey
+                        apiKey: apiKey,
+                        personalDictionary: personalDictionary
                     )
                 )
                 warningMessage = nil
@@ -1112,6 +1166,22 @@ final class AppState: ObservableObject {
 
         latestFinalDraft = finalDraft
         await insertFinalDraft(finalDraft)
+    }
+
+    private func loadPersonalDictionaryForCleanup() -> PersonalDictionary {
+        do {
+            let dictionary = try personalDictionaryStore.load()
+            if !dictionary.isEmpty {
+                recordDiagnostic(
+                    "personal dictionary loaded: \(dictionary.enabledVocabulary.count) terms, \(dictionary.enabledCorrections.count) corrections"
+                )
+            }
+            return dictionary
+        } catch {
+            warningMessage = "Personal dictionary could not be loaded; continuing without it."
+            recordDiagnostic("personal dictionary load failed: \(diagnosticErrorCategory(error))")
+            return PersonalDictionary()
+        }
     }
 
     private func loadAPIKeyForDictation() throws -> String {
@@ -1528,5 +1598,97 @@ struct SettingsView: View {
         }
 
         return "\(totalSeconds / 60) min"
+    }
+}
+
+struct PersonalDictionaryView: View {
+    let store: PersonalDictionaryStore
+
+    @State private var loadedDictionary = PersonalDictionary()
+    @State private var vocabularyText = ""
+    @State private var correctionsText = ""
+    @State private var statusMessage = ""
+    @State private var errorMessage: String?
+
+    var body: some View {
+        Form {
+            Section("Vocabulary") {
+                TextEditor(text: $vocabularyText)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(minHeight: 140)
+            }
+
+            Section("Corrections") {
+                TextEditor(text: $correctionsText)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(minHeight: 140)
+            }
+
+            Section("Storage") {
+                Text(store.fileURL.path)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+            }
+
+            Section {
+                HStack {
+                    Button("Save") {
+                        save()
+                    }
+                    Button("Reload") {
+                        load()
+                    }
+                    Button("Close") {
+                        NSApp.keyWindow?.performClose(nil)
+                    }
+                }
+
+                if let errorMessage {
+                    Text(errorMessage)
+                        .foregroundStyle(.red)
+                } else if !statusMessage.isEmpty {
+                    Text(statusMessage)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .onAppear {
+            load()
+        }
+        .padding(24)
+        .frame(width: 620)
+    }
+
+    private func load() {
+        do {
+            let dictionary = try store.load()
+            loadedDictionary = dictionary
+            vocabularyText = PersonalDictionaryTextCodec.vocabularyText(from: dictionary)
+            correctionsText = PersonalDictionaryTextCodec.correctionsText(from: dictionary)
+            errorMessage = nil
+            statusMessage = dictionary.isEmpty
+                ? "Dictionary is empty."
+                : "Loaded \(dictionary.enabledVocabulary.count) terms and \(dictionary.enabledCorrections.count) corrections."
+        } catch {
+            errorMessage = error.localizedDescription
+            statusMessage = ""
+        }
+    }
+
+    private func save() {
+        do {
+            let dictionary = try PersonalDictionaryTextCodec.dictionary(
+                vocabularyText: vocabularyText,
+                correctionsText: correctionsText,
+                preserving: loadedDictionary
+            )
+            try store.save(dictionary)
+            loadedDictionary = dictionary
+            errorMessage = nil
+            statusMessage = "Saved \(dictionary.enabledVocabulary.count) terms and \(dictionary.enabledCorrections.count) corrections."
+        } catch {
+            errorMessage = error.localizedDescription
+            statusMessage = ""
+        }
     }
 }
