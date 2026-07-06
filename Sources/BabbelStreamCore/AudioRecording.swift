@@ -8,7 +8,7 @@ public protocol AudioRecorder: AnyObject {
     func microphonePermissionStatus() -> MicrophonePermissionStatus
     func requestMicrophonePermission() async -> MicrophonePermissionStatus
     func start(maxDuration: TimeInterval) async throws
-    func stop() async throws -> RecordedAudio
+    func stop(deleteTemporaryFile: Bool) async throws -> RecordedAudio
     func cancel() async throws
 }
 
@@ -220,7 +220,7 @@ public final class AVFoundationAudioRecorder: NSObject, AudioRecorder {
         )
     }
 
-    public func stop() async throws -> RecordedAudio {
+    public func stop(deleteTemporaryFile: Bool = true) async throws -> RecordedAudio {
         guard let recording = activeRecording else {
             throw AudioRecordingError.notRecording
         }
@@ -241,7 +241,9 @@ public final class AVFoundationAudioRecorder: NSObject, AudioRecorder {
             throw error
         }
 
-        let deletedAt = try AudioTempFileStore.deleteTemporaryAudio(at: recording.fileURL)
+        let deletedAt = deleteTemporaryFile
+            ? try AudioTempFileStore.deleteTemporaryAudio(at: recording.fileURL)
+            : nil
 
         return RecordedAudio(
             temporaryFileURL: recording.fileURL,
