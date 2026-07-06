@@ -1116,9 +1116,10 @@ final class AppState: ObservableObject {
     private func insertFinalDraft(_ finalDraft: String) async {
         status = "Pasting draft"
         let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
+        let insertionText = draftTextWithTrailingSeparator(finalDraft)
 
         do {
-            let insertionResult = try await textInsertionService.insertText(finalDraft, target: pasteTarget)
+            let insertionResult = try await textInsertionService.insertText(insertionText, target: pasteTarget)
             accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
 
             switch insertionResult {
@@ -1147,7 +1148,7 @@ final class AppState: ObservableObject {
             }
         } catch {
             do {
-                try textInsertionService.copyText(finalDraft)
+                try textInsertionService.copyText(insertionText)
                 status = "Copied"
                 lastResult = "Draft copied to clipboard after paste failed. Paste manually with Cmd+V."
                 errorMessage = error.localizedDescription
@@ -1160,6 +1161,16 @@ final class AppState: ObservableObject {
             }
         }
         notifyStateChanged()
+    }
+
+    private func draftTextWithTrailingSeparator(_ finalDraft: String) -> String {
+        guard !finalDraft.isEmpty,
+              finalDraft.last?.isWhitespace == false
+        else {
+            return finalDraft
+        }
+
+        return finalDraft + " "
     }
 
     private func startElapsedTimer() {
