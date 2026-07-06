@@ -1,0 +1,89 @@
+# Architecture
+
+## Recommended Architecture
+
+BabbelStream should be a native Swift/SwiftUI macOS menu-bar app with a small core layer for testable logic. The MVP should use native macOS APIs before adding dependencies: AVFoundation for audio recording, Carbon for the global hotkey, URLSession for provider calls, Security/Keychain for secrets, and NSPasteboard plus synthetic Cmd+V for text insertion.
+
+## Alternatives Considered
+
+- Slack bot/app: rejected for MVP because the desired UX is dictating into the focused composer, not talking to a bot or routing through Slack APIs.
+- Browser extension: rejected because Slack desktop and other apps should work.
+- Electron: rejected because the app is small, permission-heavy, and should feel native.
+- Local Whisper first: deferred because packaging, performance, and model management would dominate the MVP.
+- KeyboardShortcuts package: deferred until shortcut customization needs a polished recorder UI.
+
+## Component Diagram
+
+```text
+Menu bar SwiftUI app
+  -> HotkeyService
+  -> AudioRecorder
+  -> DictationCoordinator
+     -> TranscriptionProvider
+     -> CleanupProvider
+     -> TextInsertionService
+     -> UsageTracker
+  -> SettingsStore
+  -> SecretStore
+```
+
+## Data Flow
+
+1. Hotkey press starts `AudioRecorder`.
+2. Hotkey release stops recording and returns a temporary audio URL.
+3. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint.
+4. The temporary audio file is deleted after transcription completes or fails.
+5. `CleanupProvider` rewrites the transcript when cleanup is enabled.
+6. `TextInsertionService` saves current clipboard content, writes final text, simulates Cmd+V, then restores prior clipboard content after a short delay.
+7. `UsageTracker` stores local-only counters for minutes and token estimates.
+
+## Permission Model
+
+- Microphone: required for recording.
+- Accessibility: required for reliable simulated paste and future active-app/focused-field checks.
+- Input Monitoring: avoid for MVP if Carbon hotkeys work without it; document if a future hotkey path requires it.
+
+## Provider Abstraction
+
+Provider settings should include:
+
+- Base URL.
+- API key reference in Keychain.
+- Transcription endpoint path.
+- Cleanup endpoint path.
+- Transcription model name.
+- Cleanup model name.
+- Timeout.
+- Retry policy.
+- Maximum audio duration.
+- Optional price inputs for local cost estimates.
+
+The default shape targets OpenAI-compatible LiteLLM endpoints. It is an explicit implementation risk that the user's LightON/LiteLLM proxy may not support OpenAI-compatible audio transcription. Verify this before Milestone 2.
+
+## Audio Recording Approach
+
+Use AVFoundation to record compressed audio to a temporary file. The MVP default maximum duration is 60 seconds. The recorder must clean up partial files on cancel, timeout, provider failure, and app quit.
+
+## Transcription Approach
+
+Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provider should return plain transcript text plus optional metadata if available. Do not build provider-specific assumptions into UI state.
+
+## Cleanup Approach
+
+Use a chat/completions-compatible endpoint with a fixed Slack-ready cleanup system prompt and the transcript as user input. Cleanup is enabled by default and can be disabled. If cleanup fails after transcription succeeds, paste the raw transcript and notify the user.
+
+## Paste Insertion Approach
+
+Use NSPasteboard and simulated Cmd+V for MVP because it works across Slack desktop, browser Slack, and many native text fields. Restore clipboard content after paste. If paste cannot be confirmed, leave the final text on the clipboard and notify the user.
+
+## Settings And Secrets
+
+Use `UserDefaults` for non-secret settings and Keychain for API keys. Avoid plaintext config files for secrets. The settings UI should show which provider destination will receive audio and text.
+
+## Logging And Debugging
+
+Default logs may include state transitions, provider names, durations, and error categories. They must not include audio, transcripts, cleanup input, cleanup output, API keys, or clipboard contents. Debug persistence must be explicit and visibly enabled.
+
+## Security And Privacy
+
+The main risks are accidental capture, accidental paste, clipboard exposure, overbroad Accessibility permission, and sending work content to the wrong provider. The app should prefer obvious state, explicit provider configuration, no history, immediate audio deletion, and no auto-send.

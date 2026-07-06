@@ -1,0 +1,67 @@
+# Core Interfaces
+
+These are conceptual Swift protocols for future milestones. They should be implemented only when their milestone begins.
+
+## `AudioRecorder`
+
+- Responsibility: request microphone access, record audio to a temporary file, stop/cancel recording, enforce max duration, delete partial files.
+- Input: max duration, audio format settings.
+- Output: temporary audio file URL and duration.
+- Errors: permission denied, no input device, recording failed, duration exceeded, cancellation cleanup failed.
+- Test strategy: fake recorder returning fixture URLs; unit test temp-file cleanup policy separately.
+
+## `HotkeyService`
+
+- Responsibility: register global push-to-talk hotkey and emit press/release/cancel events.
+- Input: hotkey configuration.
+- Output: event stream or callbacks.
+- Errors: shortcut unavailable, registration failed, release not detectable.
+- Test strategy: pure event-state tests with a fake implementation; manual QA for Carbon integration.
+
+## `TranscriptionProvider`
+
+- Responsibility: upload audio and return transcript text.
+- Input: audio URL, provider configuration, API key.
+- Output: transcript text, optional language/duration metadata.
+- Errors: missing key, invalid endpoint, unsupported request format, timeout, network failure, malformed response.
+- Test strategy: URLProtocol/mock server tests for request shape, timeout, retry, and response parsing.
+
+## `CleanupProvider`
+
+- Responsibility: convert raw transcript into Slack-ready draft while preserving meaning and technical terms.
+- Input: transcript text, cleanup prompt, provider configuration, API key.
+- Output: final draft text.
+- Errors: missing key, timeout, provider failure, malformed response, empty output.
+- Test strategy: mock provider tests plus prompt regression cases for German and mixed technical input.
+
+## `TextInsertionService`
+
+- Responsibility: paste final text into the focused app using clipboard plus synthetic Cmd+V, then restore clipboard.
+- Input: final text, restore delay.
+- Output: insertion result.
+- Errors: missing Accessibility permission, clipboard unavailable, paste event failed, no focused target.
+- Test strategy: unit-test clipboard snapshot/restore logic behind an adapter; manual QA for Slack and browsers.
+
+## `SettingsStore`
+
+- Responsibility: persist non-secret settings such as provider URLs, model names, cleanup toggle, max duration, and price inputs.
+- Input: typed settings values.
+- Output: current settings and validation errors.
+- Errors: invalid URL, invalid duration, missing model, unsupported endpoint path.
+- Test strategy: validation unit tests and migration/default tests.
+
+## `SecretStore`
+
+- Responsibility: store and retrieve API keys from macOS Keychain.
+- Input: provider identifier and secret value.
+- Output: secret value on demand.
+- Errors: key not found, Keychain read/write failure, access denied.
+- Test strategy: wrap Keychain behind a protocol; use in-memory fake for unit tests and manual Keychain verification.
+
+## `UsageTracker`
+
+- Responsibility: track local-only usage estimates without analytics.
+- Input: audio duration, estimated token counts, optional user-configured prices.
+- Output: local totals and rough cost estimates.
+- Errors: counter persistence failure, invalid price input.
+- Test strategy: deterministic arithmetic tests and persistence tests with temporary stores.
