@@ -36,9 +36,11 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - OpenAI-compatible LiteLLM-style transcription provider configuration.
 - Preferred transcription model: `gpt-4o-transcribe` via the configured LiteLLM/OpenAI-compatible endpoint. The side-check script confirmed this is the desired model/settings combination to carry into the app.
 - Cleanup provider using an OpenAI-compatible chat endpoint.
+- Cleanup removes filler and adds punctuation, but must not translate. English speech stays English, German speech stays German, and mixed German-English stays mixed.
 - Direct Accessibility insertion into the focused text field when possible, with clipboard plus Cmd+V fallback.
 - API key storage in macOS Keychain.
 - Copy/retry last draft from memory during the running app session.
+- Optional transcription language is a single ISO 639-1 code such as `de` or `en`; leave it empty for mixed German-English dictation.
 - No transcript/audio persistence by default.
 
 ## V1 Scope

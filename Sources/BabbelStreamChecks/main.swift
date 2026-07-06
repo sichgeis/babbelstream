@@ -27,13 +27,42 @@ check(configuration.cleanupEndpointPath == "/v1/chat/completions", "Unexpected c
 check(configuration.transcriptionModel == ProjectDefaults.defaultTranscriptionModel, "Provider configuration should use the default STT model.")
 check(configuration.cleanupModel == ProjectDefaults.defaultCleanupModel, "Provider configuration should use the default cleanup model.")
 check(CleanupPrompt.slackReady.contains("German-English"), "Cleanup prompt must protect mixed-language dictation.")
+check(CleanupPrompt.slackReady.contains("English stays English"), "Cleanup prompt must prevent English-to-German translation.")
+check(CleanupPrompt.slackReady.contains("German stays German"), "Cleanup prompt must prevent German-to-English translation.")
+check(CleanupPrompt.slackReady.contains("Do not translate"), "Cleanup prompt must explicitly forbid translation.")
 check(CleanupPrompt.slackReady.contains("ticket IDs"), "Cleanup prompt must protect ticket IDs.")
+check(
+    TranscriptionLanguageNormalizer.apiValue(from: "German") == "de",
+    "Single-language aliases should normalize to API language codes."
+)
+check(
+    TranscriptionLanguageNormalizer.apiValue(from: "German, English") == nil,
+    "Mixed-language hints must not be sent as the transcription language parameter."
+)
 check(
     ProviderEndpointBuilder.endpointURL(baseURL: configuration.baseURL, path: configuration.transcriptionEndpointPath)?
         .absoluteString == "https://litellm.example.local/v1/audio/transcriptions",
     "Provider endpoint builder should join base URL and paths predictably."
 )
+let providerErrorBody = Data(#"{"error":{"message":"model not found\ncheck provider config"}}"#.utf8)
+check(
+    ProviderErrorMessageExtractor.message(from: providerErrorBody) == "model not found check provider config",
+    "Provider error messages should be extracted and whitespace-normalized."
+)
+check(
+    ProviderError.requestFailed(statusCode: 400, message: "bad request").errorDescription?
+        .contains("bad request") == true,
+    "Provider HTTP failures should expose safe provider details."
+)
 try AppSettingsValidator.validate(AppSettings())
+do {
+    var invalidLanguageSettings = AppSettings()
+    invalidLanguageSettings.transcriptionLanguage = "German, English"
+    try AppSettingsValidator.validate(invalidLanguageSettings)
+    fatalError("Mixed-language free-form hints should fail settings validation.")
+} catch SettingsValidationError.invalidTranscriptionLanguage {
+    // Expected.
+}
 check(
     AudioTempFileStore.isUnderSystemTemporaryDirectory(tempDirectory),
     "Audio temp directory should stay under the system temp directory."

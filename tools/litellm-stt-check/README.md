@@ -28,6 +28,9 @@ Edit `.env`:
 LITELLM_BASE_URL=https://your-litellm-host
 LITELLM_API_KEY=your-token
 LITELLM_STT_MODEL=gpt-4o-transcribe
+# Optional: a single ISO 639-1 language code such as de or en.
+# Leave empty for mixed German-English dictation.
+LITELLM_LANGUAGE=
 ```
 
 ## Run

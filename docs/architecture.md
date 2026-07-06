@@ -53,6 +53,7 @@ Provider settings should include:
 - Cleanup endpoint path.
 - Transcription model name.
 - Cleanup model name.
+- Optional transcription language code. This must be a single ISO 639-1 code such as `de` or `en`; mixed-language dictation should leave it empty and use prompt/cleanup hints.
 - Timeout.
 - Retry policy.
 - Maximum audio duration.
@@ -70,7 +71,7 @@ Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provide
 
 ## Cleanup Approach
 
-Use a chat/completions-compatible endpoint with a fixed Slack-ready cleanup system prompt and the transcript as user input. Cleanup is enabled by default and can be disabled. If cleanup fails after transcription succeeds, paste the raw transcript and notify the user.
+Use a chat/completions-compatible endpoint with a fixed Slack-ready cleanup system prompt and the transcript as user input. Cleanup is enabled by default and can be disabled. Cleanup must preserve the language of each sentence or phrase; it must not translate between German and English. If cleanup fails after transcription succeeds, paste the raw transcript and notify the user.
 
 ## Paste Insertion Approach
 
