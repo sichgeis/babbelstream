@@ -44,7 +44,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `SettingsStore`
 
-- Responsibility: persist non-secret settings such as provider URLs, model names, cleanup toggle, max duration, and price inputs.
+- Responsibility: persist non-secret settings such as provider URLs, model names, cleanup toggle, max recording duration, and price inputs.
 - Input: typed settings values.
 - Output: current settings and validation errors.
 - Errors: invalid URL, invalid duration, missing model, unsupported endpoint path.

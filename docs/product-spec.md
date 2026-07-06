@@ -32,7 +32,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 - Native macOS menu-bar app.
 - Global push-to-talk hotkey.
-- Local audio recording with a default maximum duration of 60 seconds.
+- Local audio recording with a configurable maximum duration, defaulting to 10 minutes.
 - OpenAI-compatible LiteLLM-style transcription provider configuration.
 - Preferred transcription model: `gpt-4o-transcribe` via the configured LiteLLM/OpenAI-compatible endpoint. The side-check script confirmed this is the desired model/settings combination to carry into the app.
 - Cleanup provider using an OpenAI-compatible chat endpoint.
