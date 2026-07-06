@@ -450,6 +450,7 @@ final class AppState: ObservableObject {
     private let audioRecorder: AudioRecorder
     private let settingsStore: SettingsStore
     private let secretStore: SecretStore
+    private let apiKeyPresenceStore: APIKeyPresenceStore
     private let transcriptionProvider: TranscriptionProvider
     private let cleanupProvider: CleanupProvider
     private let textInsertionService: TextInsertionService
@@ -470,6 +471,7 @@ final class AppState: ObservableObject {
         audioRecorder: AudioRecorder = AVFoundationAudioRecorder(),
         settingsStore: SettingsStore = UserDefaultsSettingsStore(),
         secretStore: SecretStore = KeychainSecretStore(),
+        apiKeyPresenceStore: APIKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(),
         transcriptionProvider: TranscriptionProvider = OpenAICompatibleTranscriptionProvider(),
         cleanupProvider: CleanupProvider = OpenAICompatibleCleanupProvider(),
         textInsertionService: TextInsertionService = ClipboardTextInsertionService(),
@@ -478,6 +480,7 @@ final class AppState: ObservableObject {
         self.audioRecorder = audioRecorder
         self.settingsStore = settingsStore
         self.secretStore = secretStore
+        self.apiKeyPresenceStore = apiKeyPresenceStore
         self.transcriptionProvider = transcriptionProvider
         self.cleanupProvider = cleanupProvider
         self.textInsertionService = textInsertionService
@@ -497,7 +500,7 @@ final class AppState: ObservableObject {
 
         self.microphonePermissionStatus = audioRecorder.microphonePermissionStatus()
         self.accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
-        self.hasAPIKey = ((try? secretStore.hasAPIKey()) ?? false)
+        self.hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
 
         updateLatestExternalPasteTarget(from: NSWorkspace.shared.frontmostApplication)
         observeWorkspaceActivations()
@@ -733,11 +736,12 @@ final class AppState: ObservableObject {
                 try secretStore.saveAPIKey(trimmedKey)
                 cachedAPIKey = trimmedKey
                 apiKeyInput = ""
+                apiKeyPresenceStore.hasSavedAPIKey = true
             }
 
             appSettings = settings
             transcriptionLanguageText = normalizedLanguage
-            hasAPIKey = ((try? secretStore.hasAPIKey()) ?? false)
+            hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
             warningMessage = nil
             errorMessage = nil
             lastResult = "Settings saved. Provider: \(providerDestinationSummary)"
@@ -753,6 +757,7 @@ final class AppState: ObservableObject {
             try secretStore.deleteAPIKey()
             cachedAPIKey = nil
             apiKeyInput = ""
+            apiKeyPresenceStore.hasSavedAPIKey = false
             hasAPIKey = false
             lastResult = "API key deleted from Keychain."
             recordDiagnostic("api key deleted")
@@ -999,12 +1004,11 @@ final class AppState: ObservableObject {
             recordDiagnostic("transcription language ignored: invalid language setting")
         }
 
-        let apiKey = try cachedAPIKey ?? secretStore.readAPIKey() ?? ""
+        let apiKey = try loadAPIKeyForDictation()
         guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             recordDiagnostic("transcription not started: missing API key")
             throw ProviderError.missingAPIKey
         }
-        cachedAPIKey = apiKey
 
         status = autoStopped ? "Max reached; transcribing" : "Transcribing"
         lastResult = "Sending audio to \(appSettings.providerConfiguration.baseURL.host ?? appSettings.providerConfiguration.baseURL.absoluteString)."
@@ -1047,6 +1051,31 @@ final class AppState: ObservableObject {
 
         latestFinalDraft = finalDraft
         await insertFinalDraft(finalDraft)
+    }
+
+    private func loadAPIKeyForDictation() throws -> String {
+        if let cachedAPIKey {
+            return cachedAPIKey
+        }
+
+        guard let apiKey = try secretStore.readAPIKey() else {
+            apiKeyPresenceStore.hasSavedAPIKey = false
+            hasAPIKey = false
+            return ""
+        }
+
+        cachedAPIKey = apiKey
+        apiKeyPresenceStore.hasSavedAPIKey = true
+        hasAPIKey = true
+
+        do {
+            try secretStore.saveAPIKey(apiKey)
+            recordDiagnostic("api key keychain item refreshed")
+        } catch {
+            recordDiagnostic("api key keychain refresh skipped: \(diagnosticErrorCategory(error))")
+        }
+
+        return apiKey
     }
 
     private func insertFinalDraft(_ finalDraft: String) async {

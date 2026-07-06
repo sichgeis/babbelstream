@@ -10,6 +10,7 @@
 - Temp-file deletion policy.
 - Text insertion result handling behind an adapter.
 - Keychain wrapper behavior with an in-memory fake.
+- Startup does not read the Keychain secret; API key presence is represented by a non-secret marker.
 
 ## Integration Tests
 
@@ -79,6 +80,7 @@
 - Missing Accessibility permission.
 - Permission granted after denial.
 - App restart after permission changes.
+- App restart with a saved API key does not show a Keychain prompt before dictation starts.
 
 ## Failure Mode Tests
 

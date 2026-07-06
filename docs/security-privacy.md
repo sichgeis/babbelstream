@@ -14,7 +14,7 @@
 - Audio: temporary file only; delete immediately after transcription succeeds, fails, times out, or is canceled.
 - Transcript text: memory only, plus last transcript in memory for retry/paste-last during the running app session.
 - Cleaned text: memory and, when the clipboard fallback path is used, the clipboard.
-- API keys: macOS Keychain only.
+- API keys: macOS Keychain only. A non-secret `UserDefaults` marker may remember that a key was saved so the app can avoid reading Keychain on startup.
 - Usage counters: future work; when added, they should use local non-secret settings storage only.
 
 ## Clipboard Implications
@@ -35,6 +35,7 @@ Default logs may include timestamps, state names, durations, provider labels, er
 - Accidental paste into the wrong app.
 - Sending work content to the wrong provider.
 - API key leakage.
+- Repeated Keychain prompts caused by startup secret reads or unstable local code signatures.
 - Transcript/audio persistence through logs or temp files.
 - Clipboard exposure to other apps.
 - Accessibility permission abuse if compromised.
