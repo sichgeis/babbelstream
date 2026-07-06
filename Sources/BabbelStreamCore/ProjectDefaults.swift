@@ -49,8 +49,11 @@ public enum CleanupPrompt {
 
     Rules:
     - Preserve the speaker's meaning and tone.
-    - Preserve German, English, and natural German-English mixture.
-    - If the input is German, output German unless the speaker clearly dictates English.
+    - Preserve the language of the transcript exactly: English stays English, German stays German, and mixed German-English stays mixed.
+    - Do not translate English to German or German to English.
+    - If a sentence, clause, or phrase is in English, keep it in English.
+    - If a sentence, clause, or phrase is in German, keep it in German.
+    - If unsure about a language choice, keep the original wording rather than translating.
     - Preserve technical terms, product names, personal names, acronyms, code symbols, URLs, file paths, repository names, and ticket IDs.
     - Remove filler words and obvious false starts.
     - Add punctuation and paragraph breaks only where they improve readability.

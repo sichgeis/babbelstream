@@ -3,6 +3,7 @@
 ## Unit Tests
 
 - Provider configuration validation.
+- Transcription language validation: `de`/`en` accepted, free-form `German, English` not sent as `language`.
 - Cleanup prompt regression checks.
 - Settings defaults and migrations.
 - Usage estimate arithmetic once usage tracking is implemented.
@@ -14,6 +15,7 @@
 
 - Mock transcription endpoint request shape and response parsing.
 - Mock cleanup endpoint request shape and fallback behavior.
+- Provider HTTP error body extraction without logging request bodies or transcripts.
 - Coordinator flow from audio URL to pasted text using fakes.
 - Timeout, retry, invalid-key, and malformed-response cases.
 
@@ -47,6 +49,7 @@
 - German: "Kannst du bitte das Ticket nochmal prüfen und mir kurz Feedback geben?"
 - Mixed: "Ich habe im prompting-service repo den BACKEND-123 fix gepusht, aber CI ist noch flaky."
 - Technical: URLs, file paths, Swift symbols, Jira keys, acronyms, model names, and product names.
+- Cleanup must not translate: English input remains English, German input remains German, and mixed input remains mixed.
 
 ## Latency Tests
 

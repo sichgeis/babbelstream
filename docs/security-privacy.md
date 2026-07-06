@@ -27,7 +27,7 @@ The app sends audio to the configured transcription endpoint and transcript text
 
 ## Debug Logging Policy
 
-Default logs may include timestamps, state names, durations, provider labels, and error categories. Default logs must not include audio, transcripts, cleanup input/output, API keys, clipboard contents, or request bodies. Debug persistence must be opt-in and visibly enabled.
+Default logs may include timestamps, state names, durations, provider labels, error categories, and short sanitized provider error messages. Default logs must not include audio, transcripts, cleanup input/output, API keys, clipboard contents, or request bodies. Debug persistence must be opt-in and visibly enabled.
 
 ## Threat Model
 

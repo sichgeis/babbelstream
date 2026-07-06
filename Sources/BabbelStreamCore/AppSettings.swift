@@ -28,6 +28,7 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
     case missingCleanupModel
     case missingTranscriptionPath
     case missingCleanupPath
+    case invalidTranscriptionLanguage
     case invalidTimeout
 
     public var errorDescription: String? {
@@ -42,6 +43,8 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
             "Transcription endpoint path is required."
         case .missingCleanupPath:
             "Cleanup endpoint path is required."
+        case .invalidTranscriptionLanguage:
+            "Transcription language must be a single ISO 639-1 code like de or en. Leave it empty for mixed German-English dictation and put free-form hints in the prompt."
         case .invalidTimeout:
             "Timeout must be at least 1 second."
         }
@@ -68,9 +71,42 @@ public enum AppSettingsValidator {
         guard !configuration.cleanupEndpointPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw SettingsValidationError.missingCleanupPath
         }
+        guard TranscriptionLanguageNormalizer.isValidForSettings(settings.transcriptionLanguage) else {
+            throw SettingsValidationError.invalidTranscriptionLanguage
+        }
         guard configuration.timeoutSeconds >= 1 else {
             throw SettingsValidationError.invalidTimeout
         }
+    }
+}
+
+public enum TranscriptionLanguageNormalizer {
+    private static let aliases = [
+        "deutsch": "de",
+        "german": "de",
+        "englisch": "en",
+        "english": "en"
+    ]
+
+    public static func apiValue(from value: String) -> String? {
+        let normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        guard !normalized.isEmpty else {
+            return nil
+        }
+
+        let languageCode = aliases[normalized] ?? normalized
+        guard languageCode.range(of: #"^[a-z]{2}$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+
+        return languageCode
+    }
+
+    public static func isValidForSettings(_ value: String) -> Bool {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty || apiValue(from: trimmed) != nil
     }
 }
 

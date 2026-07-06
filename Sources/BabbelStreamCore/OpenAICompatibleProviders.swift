@@ -4,7 +4,7 @@ public enum ProviderError: Error, Equatable, LocalizedError, Sendable {
     case missingAPIKey
     case invalidEndpointURL
     case emptyAudioFile
-    case requestFailed(Int)
+    case requestFailed(statusCode: Int, message: String?)
     case malformedResponse
     case emptyTranscript
     case emptyCleanupOutput
@@ -17,8 +17,12 @@ public enum ProviderError: Error, Equatable, LocalizedError, Sendable {
             "Provider endpoint URL is invalid."
         case .emptyAudioFile:
             "Recording file is empty."
-        case let .requestFailed(statusCode):
-            "Provider request failed with HTTP \(statusCode)."
+        case let .requestFailed(statusCode, message):
+            if let message {
+                "Provider request failed with HTTP \(statusCode): \(message)"
+            } else {
+                "Provider request failed with HTTP \(statusCode)."
+            }
         case .malformedResponse:
             "Provider response could not be parsed."
         case .emptyTranscript:
@@ -93,7 +97,7 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
         let fields = [
             "model": configuration.transcriptionModel,
             "response_format": request.settings.transcriptionResponseFormat,
-            "language": request.settings.transcriptionLanguage,
+            "language": TranscriptionLanguageNormalizer.apiValue(from: request.settings.transcriptionLanguage) ?? "",
             "prompt": request.settings.transcriptionPrompt
         ]
         let multipart = try MultipartFormDataBuilder.build(
@@ -110,7 +114,7 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
         urlRequest.setValue("application/json, text/plain;q=0.9, */*;q=0.1", forHTTPHeaderField: "Accept")
 
         let (data, response) = try await urlSession.data(for: urlRequest)
-        try ProviderResponseValidator.validate(response)
+        try ProviderResponseValidator.validate(response, data: data)
 
         let text = try TranscriptionResponseParser.parse(data: data)
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -147,7 +151,7 @@ public final class OpenAICompatibleCleanupProvider: CleanupProvider {
 
         let payload: [String: Any] = [
             "model": configuration.cleanupModel,
-            "temperature": 0.2,
+            "temperature": 0,
             "messages": [
                 ["role": "system", "content": CleanupPrompt.slackReady],
                 ["role": "user", "content": request.transcript]
@@ -163,7 +167,7 @@ public final class OpenAICompatibleCleanupProvider: CleanupProvider {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
         let (data, response) = try await urlSession.data(for: urlRequest)
-        try ProviderResponseValidator.validate(response)
+        try ProviderResponseValidator.validate(response, data: data)
 
         let text = try CleanupResponseParser.parse(data: data)
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -248,13 +252,75 @@ public enum MultipartFormDataBuilder {
 }
 
 public enum ProviderResponseValidator {
-    public static func validate(_ response: URLResponse) throws {
+    public static func validate(_ response: URLResponse, data: Data) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw ProviderError.malformedResponse
         }
         guard (200..<300).contains(httpResponse.statusCode) else {
-            throw ProviderError.requestFailed(httpResponse.statusCode)
+            throw ProviderError.requestFailed(
+                statusCode: httpResponse.statusCode,
+                message: ProviderErrorMessageExtractor.message(from: data)
+            )
         }
+    }
+}
+
+public enum ProviderErrorMessageExtractor {
+    public static func message(from data: Data) -> String? {
+        guard !data.isEmpty else {
+            return nil
+        }
+
+        if let object = try? JSONSerialization.jsonObject(with: data) {
+            return sanitized(extractMessage(from: object))
+        }
+
+        return sanitized(String(data: data, encoding: .utf8))
+    }
+
+    private static func extractMessage(from object: Any) -> String? {
+        if let dictionary = object as? [String: Any] {
+            for key in ["error", "message", "detail", "error_description", "msg", "type", "code", "param"] {
+                guard let value = dictionary[key] else {
+                    continue
+                }
+
+                if let message = value as? String {
+                    return message
+                }
+
+                if let message = extractMessage(from: value) {
+                    return message
+                }
+            }
+        }
+
+        if let array = object as? [Any] {
+            let messages = array.compactMap(extractMessage)
+            return messages.isEmpty ? nil : messages.joined(separator: "; ")
+        }
+
+        return object as? String
+    }
+
+    private static func sanitized(_ message: String?) -> String? {
+        guard let message else {
+            return nil
+        }
+
+        let collapsed = message
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !collapsed.isEmpty else {
+            return nil
+        }
+
+        let limit = 300
+        if collapsed.count > limit {
+            return "\(collapsed.prefix(limit))..."
+        }
+
+        return collapsed
     }
 }
 

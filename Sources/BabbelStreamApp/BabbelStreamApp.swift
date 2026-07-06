@@ -706,6 +706,8 @@ final class AppState: ObservableObject {
             return
         }
 
+        let rawLanguage = transcriptionLanguageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedLanguage = TranscriptionLanguageNormalizer.apiValue(from: rawLanguage) ?? rawLanguage
         let configuration = ProviderConfiguration(
             baseURL: baseURL,
             transcriptionEndpointPath: transcriptionPathText,
@@ -719,7 +721,7 @@ final class AppState: ObservableObject {
             providerConfiguration: configuration,
             cleanupEnabled: cleanupEnabled,
             transcriptionResponseFormat: ProjectDefaults.defaultTranscriptionResponseFormat,
-            transcriptionLanguage: transcriptionLanguageText,
+            transcriptionLanguage: normalizedLanguage,
             transcriptionPrompt: transcriptionPromptText
         )
 
@@ -734,6 +736,7 @@ final class AppState: ObservableObject {
             }
 
             appSettings = settings
+            transcriptionLanguageText = normalizedLanguage
             hasAPIKey = ((try? secretStore.hasAPIKey()) ?? false)
             warningMessage = nil
             errorMessage = nil
@@ -991,6 +994,11 @@ final class AppState: ObservableObject {
             _ = try? AudioTempFileStore.deleteTemporaryAudio(at: recording.temporaryFileURL)
         }
 
+        if !TranscriptionLanguageNormalizer.isValidForSettings(appSettings.transcriptionLanguage) {
+            warningMessage = "Language setting ignored. Use a single code like de or en, or leave it empty for mixed German-English."
+            recordDiagnostic("transcription language ignored: invalid language setting")
+        }
+
         let apiKey = try cachedAPIKey ?? secretStore.readAPIKey() ?? ""
         guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             recordDiagnostic("transcription not started: missing API key")
@@ -1216,7 +1224,7 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
             return "ProviderError.invalidEndpointURL"
         case .emptyAudioFile:
             return "ProviderError.emptyAudioFile"
-        case let .requestFailed(statusCode):
+        case let .requestFailed(statusCode, _):
             return "ProviderError.requestFailed(HTTP \(statusCode))"
         case .malformedResponse:
             return "ProviderError.malformedResponse"
@@ -1280,6 +1288,8 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
             return "SettingsValidationError.missingTranscriptionPath"
         case .missingCleanupPath:
             return "SettingsValidationError.missingCleanupPath"
+        case .invalidTranscriptionLanguage:
+            return "SettingsValidationError.invalidTranscriptionLanguage"
         case .invalidTimeout:
             return "SettingsValidationError.invalidTimeout"
         }
@@ -1309,8 +1319,8 @@ struct SettingsView: View {
             }
 
             Section("Transcription Hints") {
-                TextField("Language, optional", text: $appState.transcriptionLanguageText)
-                TextField("Prompt, optional", text: $appState.transcriptionPromptText, axis: .vertical)
+                TextField("Language code, optional (blank = auto)", text: $appState.transcriptionLanguageText)
+                TextField("Transcription prompt, optional", text: $appState.transcriptionPromptText, axis: .vertical)
                     .lineLimit(2...4)
             }
 
