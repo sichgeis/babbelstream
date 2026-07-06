@@ -56,6 +56,24 @@ check(
         .contains("bad request") == true,
     "Provider HTTP failures should expose safe provider details."
 )
+let launchAgentPlist = LaunchAtLoginService.launchAgentPropertyList(
+    appURL: URL(fileURLWithPath: "/Applications/BabbelStream.app")
+)
+check(
+    launchAgentPlist["Label"] as? String == LaunchAtLoginService.defaultLabel,
+    "Launch-at-login should use the stable BabbelStream LaunchAgent label."
+)
+check(
+    launchAgentPlist["RunAtLoad"] as? Bool == true,
+    "Launch-at-login should run BabbelStream at user login."
+)
+check(
+    launchAgentPlist["ProgramArguments"] as? [String] == [
+        "/usr/bin/open",
+        "/Applications/BabbelStream.app"
+    ],
+    "Launch-at-login should open the configured app bundle path."
+)
 let presenceDefaults = UserDefaults(suiteName: "com.sichgeis.babbelstream.checks")!
 presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
 let apiKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(
