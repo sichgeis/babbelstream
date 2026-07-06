@@ -60,6 +60,7 @@
 - Mixed: "Ich habe im prompting-service repo den BACKEND-123 fix gepusht, aber CI ist noch flaky."
 - Technical: URLs, file paths, Swift symbols, Jira keys, acronyms, model names, and product names.
 - Cleanup must not translate: English input remains English, German input remains German, and mixed input remains mixed.
+- Cleanup should not introduce em dashes or other conspicuously AI-polished punctuation.
 - Dictionary hints: preferred terms such as `LiteLLM` and corrections such as `light LM => LiteLLM`.
 
 ## Latency Tests

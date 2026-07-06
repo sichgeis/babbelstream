@@ -33,6 +33,7 @@ check(CleanupPrompt.slackReady.contains("English stays English"), "Cleanup promp
 check(CleanupPrompt.slackReady.contains("German stays German"), "Cleanup prompt must prevent German-to-English translation.")
 check(CleanupPrompt.slackReady.contains("Do not translate"), "Cleanup prompt must explicitly forbid translation.")
 check(CleanupPrompt.slackReady.contains("ticket IDs"), "Cleanup prompt must protect ticket IDs.")
+check(CleanupPrompt.slackReady.contains("Do not use em dashes"), "Cleanup prompt must avoid obvious LLM punctuation.")
 check(
     TranscriptionLanguageNormalizer.apiValue(from: "German") == "de",
     "Single-language aliases should normalize to API language codes."
