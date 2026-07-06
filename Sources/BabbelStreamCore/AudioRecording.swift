@@ -136,6 +136,36 @@ public enum AudioTempFileStore {
         }
     }
 
+    public static func deleteStaleTemporaryAudioFiles(
+        fileManager: FileManager = .default
+    ) throws -> Int {
+        try deleteStaleTemporaryAudioFiles(
+            in: temporaryDirectory(fileManager: fileManager),
+            fileManager: fileManager
+        )
+    }
+
+    public static func deleteStaleTemporaryAudioFiles(
+        in directory: URL,
+        fileManager: FileManager = .default
+    ) throws -> Int {
+        guard fileManager.fileExists(atPath: directory.path) else {
+            return 0
+        }
+
+        let audioURLs = try fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        )
+        .filter { $0.pathExtension == ProjectDefaults.audioFileExtension }
+
+        for audioURL in audioURLs {
+            _ = try deleteTemporaryAudio(at: audioURL, fileManager: fileManager)
+        }
+
+        return audioURLs.count
+    }
+
     public static func isUnderSystemTemporaryDirectory(
         _ url: URL,
         fileManager: FileManager = .default

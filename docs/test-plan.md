@@ -7,7 +7,7 @@
 - Settings defaults and migrations.
 - Usage estimate arithmetic.
 - Temp-file deletion policy.
-- Clipboard snapshot and restore logic behind an adapter.
+- Text insertion result handling behind an adapter.
 - Keychain wrapper behavior with an in-memory fake.
 
 ## Integration Tests
@@ -39,7 +39,7 @@
 
 - Chrome, Safari, or the user's default browser.
 - Main composer and thread composer.
-- Existing clipboard content is restored.
+- Clipboard fallback leaves the final draft available for manual Cmd+V when automatic paste cannot be confirmed.
 
 ## Language Cases
 

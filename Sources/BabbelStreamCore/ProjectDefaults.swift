@@ -8,7 +8,6 @@ public enum ProjectDefaults {
     public static let defaultTranscriptionModel = "gpt-4o-transcribe"
     public static let defaultCleanupModel = "gpt-4o-mini"
     public static let defaultTranscriptionResponseFormat = "json"
-    public static let defaultPasteRestoreDelaySeconds: TimeInterval = 0.8
     public static let fixedHotkeyDescription = "Control + Option + Space"
     public static let cleanupEnabledByDefault = true
     public static let autoSendEnabledByDefault = false
