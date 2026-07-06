@@ -47,7 +47,6 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 ## V1 Scope
 
-- Editable provider settings UI with validation.
 - Hotkey customization.
 - Better active-app indication before paste.
 - Optional per-app cleanup style defaults.
@@ -60,7 +59,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - More advanced correction dictionary for names, acronyms, projects, and ticket prefixes.
 - Optional preview/editor mode.
 - Optional email-specific cleanup style.
-- Packaging, signing, notarization, and update flow.
+- Developer ID signing, notarization, GitHub release automation, and update flow.
 
 ## UX Requirements
 
