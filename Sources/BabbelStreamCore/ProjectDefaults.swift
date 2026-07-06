@@ -60,6 +60,7 @@ public enum CleanupPrompt {
     - Preserve technical terms, product names, personal names, acronyms, code symbols, URLs, file paths, repository names, and ticket IDs.
     - Remove filler words and obvious false starts.
     - Add punctuation and paragraph breaks only where they improve readability.
+    - Do not use em dashes or other conspicuously AI-polished punctuation. Prefer simple commas, periods, colons, semicolons, parentheses, or separate sentences.
     - Do not add greetings, sign-offs, facts, promises, or corporate polish.
     - Return only the final message text.
     """
