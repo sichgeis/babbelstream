@@ -1142,7 +1142,7 @@ final class AppState: ObservableObject {
     private func insertFinalDraft(_ finalDraft: String) async {
         status = "Pasting draft"
         let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
-        let insertionText = draftTextWithTrailingSeparator(finalDraft)
+        let insertionText = DictationDraftFormatter.textWithTrailingSeparator(finalDraft)
 
         do {
             let insertionResult = try await textInsertionService.insertText(insertionText, target: pasteTarget)
@@ -1187,16 +1187,6 @@ final class AppState: ObservableObject {
             }
         }
         notifyStateChanged()
-    }
-
-    private func draftTextWithTrailingSeparator(_ finalDraft: String) -> String {
-        guard !finalDraft.isEmpty,
-              finalDraft.last?.isWhitespace == false
-        else {
-            return finalDraft
-        }
-
-        return finalDraft + " "
     }
 
     private func startElapsedTimer() {

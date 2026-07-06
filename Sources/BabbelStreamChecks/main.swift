@@ -56,6 +56,25 @@ check(
         .contains("bad request") == true,
     "Provider HTTP failures should expose safe provider details."
 )
+check(
+    DictationDraftFormatter.textWithTrailingSeparator("First sentence.") == "First sentence. ",
+    "Inserted dictation drafts should receive one trailing separator."
+)
+check(
+    DictationDraftFormatter.textWithTrailingSeparator("Already spaced ") == "Already spaced ",
+    "Dictation drafts should not receive duplicate trailing separators."
+)
+let preservedInsertionPayload = try TextInsertionPayload.validated("First sentence. ")
+check(
+    preservedInsertionPayload == "First sentence. ",
+    "Text insertion must preserve the intentional trailing separator."
+)
+do {
+    _ = try TextInsertionPayload.validated("   ")
+    fatalError("Whitespace-only insertion payloads should be rejected.")
+} catch TextInsertionError.emptyText {
+    // Expected.
+}
 let launchAgentPlist = LaunchAtLoginService.launchAgentPropertyList(
     appURL: URL(fileURLWithPath: "/Applications/BabbelStream.app")
 )
