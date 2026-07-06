@@ -7,12 +7,13 @@
 - Cleanup prompt regression checks.
 - Settings defaults and migrations.
 - Configurable max recording duration defaults to 10 minutes and rejects values above the cap.
-- Usage estimate arithmetic once usage tracking is implemented.
+- Usage counter arithmetic and reset behavior.
+- Privacy-safe diagnostics redaction.
 - Temp-file deletion policy.
 - Text insertion result handling behind an adapter.
 - Keychain wrapper behavior with an in-memory fake.
 - Startup does not read the Keychain secret; API key presence is represented by a non-secret marker.
-- Personal dictionary JSON round trip, text parsing, disabled-entry omission, and cleanup prompt rendering.
+- Personal dictionary JSON round trip, text parsing, disabled-entry omission, cleanup prompt rendering, and prompt-size capping.
 
 ## Integration Tests
 
@@ -20,6 +21,7 @@
 - Mock cleanup endpoint request shape and fallback behavior.
 - Provider HTTP error body extraction without logging request bodies or transcripts.
 - Cleanup request includes dictionary context in the existing cleanup call when entries exist.
+- Oversized dictionary context skips entries with counts instead of failing dictation.
 - Coordinator flow from audio URL to pasted text using fakes.
 - Timeout, retry, invalid-key, and malformed-response cases.
 
@@ -29,6 +31,8 @@
 - Recording state is visible.
 - Cleanup can be toggled.
 - Provider destination is visible in settings.
+- Usage counters are visible in Settings and can be reset.
+- Copy Diagnostics produces a redacted report without transcripts, audio paths, clipboard contents, or API keys.
 - No message is auto-sent.
 - No transcript or audio file remains after normal use.
 - Personal dictionary edits are picked up on the next cleanup without app restart.
@@ -64,13 +68,12 @@
 - Transcription-only versus transcription plus cleanup.
 - Provider timeout and retry behavior.
 
-## API-Cost Tests
+## Usage And API-Cost Tests
 
-- Future work until local usage tracking exists.
 - Track dictated minutes locally.
-- Track approximate cleanup tokens locally.
-- Estimate monthly transcription cost as `minutes dictated * price per minute`.
-- Estimate cleanup cost as `tokens used * model price`.
+- Track cleanup request count locally.
+- Track transcription failures and cleanup fallbacks locally.
+- Future work: track approximate cleanup tokens and optional price inputs.
 - Do not send analytics anywhere.
 
 ## Privacy Tests
@@ -79,6 +82,8 @@
 - Confirm no transcript history is written to disk.
 - Confirm personal dictionary contains only explicit terms/corrections and no transcript history.
 - Confirm logs exclude audio, transcripts, API keys, and clipboard content.
+- Confirm copied diagnostics exclude audio, transcripts, API keys, audio paths, request bodies, and clipboard content.
+- Confirm usage counters contain only counts and durations.
 - Confirm debug persistence is explicit and visible.
 
 ## Permissions Tests

@@ -9,6 +9,7 @@
 - API keys.
 - Personal dictionary vocabulary and correction hints.
 - Temporary clipboard contents during paste.
+- Local usage counters and sanitized diagnostics.
 
 ## Storage And Lifetime
 
@@ -18,7 +19,7 @@
 - API keys: macOS Keychain only. A non-secret `UserDefaults` marker may remember that a key was saved so the app can avoid reading Keychain on startup.
 - Personal dictionary: explicit local JSON only; no transcript history, audio, or automatic learning.
 - Launch at login: optional user LaunchAgent plist storing only the app bundle path; removable from Settings.
-- Usage counters: future work; when added, they should use local non-secret settings storage only.
+- Usage counters: local non-secret `UserDefaults` storage only, with counts and durations but no transcript, draft text, audio file path, provider body, or clipboard content.
 
 ## Clipboard Implications
 
@@ -32,7 +33,7 @@ When cleanup is enabled, personal dictionary entries are included in the cleanup
 
 ## Debug Logging Policy
 
-Default logs may include timestamps, state names, durations, provider labels, error categories, and short sanitized provider error messages. Default logs must not include audio, transcripts, cleanup input/output, API keys, clipboard contents, or request bodies. Debug persistence must be opt-in and visibly enabled.
+Default logs may include timestamps, state names, durations, provider labels, counts, error categories, and short sanitized provider error messages. Copyable diagnostics must redact API-key-like values and omit audio, transcripts, cleanup input/output, clipboard contents, audio paths, and request bodies. Debug persistence must be opt-in and visibly enabled.
 
 ## Threat Model
 

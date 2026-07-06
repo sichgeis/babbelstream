@@ -162,6 +162,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             addInfo("Last raw transcript: \(appState.latestRawTranscriptSummary)")
             addInfo("Last final draft: \(appState.latestFinalDraftSummary)")
         }
+
+        addInfo("Usage: \(appState.usageSummary)")
     }
 
     private func addDictationActions() {
@@ -286,6 +288,11 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             }
         }
 
+        submenu.addItem(.separator())
+        let copyItem = NSMenuItem(title: "Copy Diagnostics", action: #selector(copyDiagnostics), keyEquivalent: "")
+        copyItem.target = self
+        submenu.addItem(copyItem)
+
         parent.submenu = submenu
         menu.addItem(parent)
     }
@@ -341,6 +348,11 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func copyLastDraft() {
         appState.copyLatestDraft()
+        rebuildMenu()
+    }
+
+    @objc private func copyDiagnostics() {
+        appState.copyDiagnosticsReport()
         rebuildMenu()
     }
 
@@ -408,7 +420,7 @@ final class SettingsWindowController {
 
     private func makeWindowController() -> NSWindowController {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 560, height: 620),
+            contentRect: NSRect(x: 0, y: 0, width: 600, height: 760),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -495,6 +507,9 @@ final class AppState: ObservableObject {
     @Published var hotkeyStatus = "Hotkey not registered yet."
     @Published var hasAPIKey = false
     @Published var launchAtLoginEnabled = false
+    @Published var usageSnapshot: UsageSnapshot
+    @Published var personalDictionarySummary = "Not loaded yet."
+    @Published var lastFailureCategory = "None"
 
     @Published var baseURLText: String
     @Published var transcriptionPathText: String
@@ -520,6 +535,7 @@ final class AppState: ObservableObject {
     private let hotkeyService: HotkeyService
     private let launchAtLoginService: LaunchAtLoginService
     private let personalDictionaryStore: PersonalDictionaryStore
+    private let usageTracker: UsageTracker
 
     private var appSettings: AppSettings
     private var recordingStartedAt: Date?
@@ -542,7 +558,8 @@ final class AppState: ObservableObject {
         textInsertionService: TextInsertionService = ClipboardTextInsertionService(),
         hotkeyService: HotkeyService = CarbonHotkeyService(),
         launchAtLoginService: LaunchAtLoginService = LaunchAtLoginService(),
-        personalDictionaryStore: PersonalDictionaryStore = JSONPersonalDictionaryStore()
+        personalDictionaryStore: PersonalDictionaryStore = JSONPersonalDictionaryStore(),
+        usageTracker: UsageTracker = UserDefaultsUsageTracker()
     ) {
         self.audioRecorder = audioRecorder
         self.settingsStore = settingsStore
@@ -554,9 +571,12 @@ final class AppState: ObservableObject {
         self.hotkeyService = hotkeyService
         self.launchAtLoginService = launchAtLoginService
         self.personalDictionaryStore = personalDictionaryStore
+        self.usageTracker = usageTracker
 
         let loadedSettings = settingsStore.load()
+        let loadedUsageSnapshot = usageTracker.load()
         self.appSettings = loadedSettings
+        self.usageSnapshot = loadedUsageSnapshot
         self.cleanupEnabled = loadedSettings.cleanupEnabled
         self.baseURLText = loadedSettings.providerConfiguration.baseURL.absoluteString
         self.transcriptionPathText = loadedSettings.providerConfiguration.transcriptionEndpointPath
@@ -629,8 +649,20 @@ final class AppState: ObservableObject {
         "\(baseURLText)\(transcriptionPathText)"
     }
 
+    var cleanupDestinationSummary: String {
+        "\(baseURLText)\(cleanupPathText)"
+    }
+
     var maxAudioDurationSeconds: TimeInterval {
         appSettings.maxAudioDurationSeconds
+    }
+
+    var usageSummary: String {
+        "\(usageSnapshot.totalDictations) dictations, \(formatDuration(usageSnapshot.totalRecordedSeconds)) recorded"
+    }
+
+    var usageRecordedMinutesSummary: String {
+        String(format: "%.1f min", usageSnapshot.totalRecordedMinutes)
     }
 
     private func observeWorkspaceActivations() {
@@ -900,6 +932,26 @@ final class AppState: ObservableObject {
         }
     }
 
+    func copyDiagnosticsReport() {
+        let report = PrivacyDiagnosticsBuilder.redactSecrets(in: diagnosticsReport())
+        do {
+            try textInsertionService.copyText(report)
+            lastResult = "Diagnostics copied to clipboard."
+            recordDiagnostic("privacy-safe diagnostics copied")
+        } catch {
+            errorMessage = error.localizedDescription
+            recordDiagnostic("diagnostics copy failed: \(diagnosticErrorCategory(error))")
+        }
+    }
+
+    func resetUsageCounters() {
+        usageTracker.reset()
+        usageSnapshot = UsageSnapshot()
+        lastResult = "Usage counters reset."
+        recordDiagnostic("usage counters reset")
+        notifyStateChanged()
+    }
+
     func retryPasteLatestDraft() async {
         guard let latestFinalDraft else {
             return
@@ -927,6 +979,35 @@ final class AppState: ObservableObject {
         onStateChanged?()
     }
 
+    private func diagnosticsReport() -> String {
+        let lines = [
+            "\(ProjectDefaults.appName) diagnostics",
+            "status: \(status)",
+            "last failure category: \(lastFailureCategory)",
+            "transcription destination: \(providerDestinationSummary)",
+            "cleanup destination: \(cleanupDestinationSummary)",
+            "transcription model: \(transcriptionModelText)",
+            "cleanup model: \(cleanupModelText)",
+            "timeout seconds: \(timeoutText)",
+            "max recording minutes: \(maxAudioDurationMinutesText)",
+            "cleanup enabled: \(cleanupEnabled)",
+            "api key saved: \(hasAPIKey)",
+            "microphone: \(microphonePermissionStatus.displayName)",
+            "accessibility: \(accessibilityPermissionStatus.displayName)",
+            "launch at login: \(launchAtLoginEnabled)",
+            "personal dictionary: \(personalDictionarySummary)",
+            "usage dictations: \(usageSnapshot.totalDictations)",
+            "usage recorded seconds: \(String(format: "%.1f", usageSnapshot.totalRecordedSeconds))",
+            "cleanup requests: \(usageSnapshot.cleanupRequests)",
+            "transcription failures: \(usageSnapshot.transcriptionFailures)",
+            "cleanup fallbacks: \(usageSnapshot.cleanupFallbacks)",
+            "recent events:",
+            diagnosticSummaries.joined(separator: "\n")
+        ]
+
+        return lines.joined(separator: "\n")
+    }
+
     private static func durationMinutesText(for duration: TimeInterval) -> String {
         let minutes = duration / 60
         if minutes.rounded(.towardZero) == minutes {
@@ -938,6 +1019,26 @@ final class AppState: ObservableObject {
 
     private func notifyStateChanged() {
         onStateChanged?()
+    }
+
+    private func validateSettingsBeforeDictation() -> Bool {
+        do {
+            try AppSettingsValidator.validate(appSettings)
+            return true
+        } catch {
+            status = "Settings invalid"
+            lastResult = "Dictation not started."
+            errorMessage = error.localizedDescription
+            lastFailureCategory = diagnosticErrorCategory(error)
+            recordDiagnostic("dictation not started: invalid settings \(lastFailureCategory)")
+            notifyStateChanged()
+            return false
+        }
+    }
+
+    private func saveUsageSnapshot() {
+        usageTracker.save(usageSnapshot)
+        notifyStateChanged()
     }
 
     private func configureHotkey() {
@@ -1006,6 +1107,10 @@ final class AppState: ObservableObject {
             return
         }
 
+        if mode == .dictation, !validateSettingsBeforeDictation() {
+            return
+        }
+
         if mode == .dictation {
             captureCurrentPasteTarget()
         }
@@ -1071,7 +1176,8 @@ final class AppState: ObservableObject {
             status = "Dictation failed"
             errorMessage = error.localizedDescription
             lastResult = "Could not finish dictation safely."
-            recordDiagnostic("dictation failed: \(diagnosticErrorCategory(error))")
+            lastFailureCategory = diagnosticErrorCategory(error)
+            recordDiagnostic("dictation failed: \(lastFailureCategory)")
         }
 
         isProcessing = false
@@ -1123,17 +1229,27 @@ final class AppState: ObservableObject {
             throw ProviderError.missingAPIKey
         }
 
+        usageSnapshot.recordDictation(duration: recording.duration)
+        saveUsageSnapshot()
+
         status = autoStopped ? "Max reached; transcribing" : "Transcribing"
         lastResult = "Sending audio to \(appSettings.providerConfiguration.baseURL.host ?? appSettings.providerConfiguration.baseURL.absoluteString)."
         recordDiagnostic("transcription started")
 
-        let rawTranscript = try await transcriptionProvider.transcribe(
-            TranscriptionRequest(
-                audioURL: recording.temporaryFileURL,
-                settings: appSettings,
-                apiKey: apiKey
+        let rawTranscript: String
+        do {
+            rawTranscript = try await transcriptionProvider.transcribe(
+                TranscriptionRequest(
+                    audioURL: recording.temporaryFileURL,
+                    settings: appSettings,
+                    apiKey: apiKey
+                )
             )
-        )
+        } catch {
+            usageSnapshot.recordTranscriptionFailure()
+            saveUsageSnapshot()
+            throw error
+        }
         latestRawTranscript = rawTranscript
         recordDiagnostic("transcription succeeded: \(rawTranscript.count) characters")
 
@@ -1141,7 +1257,10 @@ final class AppState: ObservableObject {
         if cleanupEnabled {
             status = "Cleaning up"
             recordDiagnostic("cleanup started")
+            usageSnapshot.recordCleanupRequest()
+            saveUsageSnapshot()
             let personalDictionary = loadPersonalDictionaryForCleanup()
+            let dictionaryWarning = warningMessage
             do {
                 finalDraft = try await cleanupProvider.cleanup(
                     CleanupRequest(
@@ -1151,12 +1270,15 @@ final class AppState: ObservableObject {
                         personalDictionary: personalDictionary
                     )
                 )
-                warningMessage = nil
+                warningMessage = dictionaryWarning
                 recordDiagnostic("cleanup succeeded: \(finalDraft.count) characters")
             } catch {
                 finalDraft = rawTranscript
                 warningMessage = "Cleanup failed; using raw transcript. \(error.localizedDescription)"
-                recordDiagnostic("cleanup failed; using raw transcript: \(diagnosticErrorCategory(error))")
+                usageSnapshot.recordCleanupFallback()
+                saveUsageSnapshot()
+                lastFailureCategory = diagnosticErrorCategory(error)
+                recordDiagnostic("cleanup failed; using raw transcript: \(lastFailureCategory)")
             }
         } else {
             finalDraft = rawTranscript
@@ -1165,20 +1287,33 @@ final class AppState: ObservableObject {
         }
 
         latestFinalDraft = finalDraft
+        if warningMessage == nil {
+            lastFailureCategory = "None"
+        }
         await insertFinalDraft(finalDraft)
     }
 
     private func loadPersonalDictionaryForCleanup() -> PersonalDictionary {
         do {
             let dictionary = try personalDictionaryStore.load()
-            if !dictionary.isEmpty {
+            if let context = DictionaryPromptBuilder.cleanupContextDetails(for: dictionary) {
+                personalDictionarySummary = "\(context.includedVocabularyCount) terms, \(context.includedCorrectionsCount) corrections"
+                if context.wasTruncated {
+                    let skipped = context.skippedVocabularyCount + context.skippedCorrectionsCount
+                    warningMessage = "Personal dictionary loaded, but \(skipped) entries were skipped because the prompt context is too large."
+                    personalDictionarySummary += ", \(skipped) skipped"
+                    recordDiagnostic("personal dictionary truncated: \(skipped) skipped")
+                }
                 recordDiagnostic(
-                    "personal dictionary loaded: \(dictionary.enabledVocabulary.count) terms, \(dictionary.enabledCorrections.count) corrections"
+                    "personal dictionary loaded: \(context.includedVocabularyCount) terms, \(context.includedCorrectionsCount) corrections"
                 )
+            } else {
+                personalDictionarySummary = "0 terms, 0 corrections"
             }
             return dictionary
         } catch {
             warningMessage = "Personal dictionary could not be loaded; continuing without it."
+            personalDictionarySummary = "Load failed"
             recordDiagnostic("personal dictionary load failed: \(diagnosticErrorCategory(error))")
             return PersonalDictionary()
         }
@@ -1213,6 +1348,7 @@ final class AppState: ObservableObject {
         status = "Pasting draft"
         let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
         let insertionText = DictationDraftFormatter.textWithTrailingSeparator(finalDraft)
+        let priorWarning = warningMessage
 
         do {
             let insertionResult = try await textInsertionService.insertText(insertionText, target: pasteTarget)
@@ -1223,23 +1359,28 @@ final class AppState: ObservableObject {
                 status = "Ready"
                 lastResult = "Draft inserted. Review it before sending."
                 errorMessage = nil
-                warningMessage = nil
+                warningMessage = priorWarning
                 recordDiagnostic("paste succeeded: direct accessibility insertion")
             case .pasteShortcutPosted:
                 status = "Ready"
                 lastResult = "Paste shortcut sent; draft is also on the clipboard."
                 errorMessage = nil
-                warningMessage = "If the draft did not appear, press Cmd+V in the target field."
+                warningMessage = combinedWarning(
+                    priorWarning,
+                    "If the draft did not appear, press Cmd+V in the target field."
+                )
                 recordDiagnostic("paste shortcut posted; clipboard fallback retained")
             case .copiedForManualPaste:
                 status = "Copied"
                 lastResult = "Draft copied to clipboard. Paste manually with Cmd+V."
                 errorMessage = "Accessibility is not allowed, so BabbelStream could not paste automatically."
+                warningMessage = priorWarning
                 recordDiagnostic("paste fallback: copied for manual paste")
             case .copiedAfterPasteShortcutFailure:
                 status = "Copied"
                 lastResult = "Draft copied to clipboard after paste shortcut failed."
                 errorMessage = "BabbelStream could not post Cmd+V. Paste manually with Cmd+V."
+                warningMessage = priorWarning
                 recordDiagnostic("paste shortcut failed; clipboard fallback retained")
             }
         } catch {
@@ -1352,6 +1493,14 @@ final class AppState: ObservableObject {
         return formatter.string(fromByteCount: byteCount)
     }
 
+    private func combinedWarning(_ first: String?, _ second: String) -> String {
+        guard let first, !first.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return second
+        }
+
+        return "\(first) \(second)"
+    }
+
     private func microphoneGuidance(for status: MicrophonePermissionStatus) -> String? {
         switch status {
         case .authorized:
@@ -1449,6 +1598,8 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
             return "SettingsValidationError.missingTranscriptionPath"
         case .missingCleanupPath:
             return "SettingsValidationError.missingCleanupPath"
+        case .invalidEndpointPath:
+            return "SettingsValidationError.invalidEndpointPath"
         case .invalidTranscriptionLanguage:
             return "SettingsValidationError.invalidTranscriptionLanguage"
         case .invalidTimeout:
@@ -1481,6 +1632,11 @@ struct SettingsView: View {
                 Text("Audio is sent to:")
                     .foregroundStyle(.secondary)
                 Text(appState.providerDestinationSummary)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                Text("Cleanup text is sent to:")
+                    .foregroundStyle(.secondary)
+                Text(appState.cleanupDestinationSummary)
                     .font(.system(.caption, design: .monospaced))
                     .textSelection(.enabled)
 
@@ -1538,6 +1694,25 @@ struct SettingsView: View {
                 LabeledContent("History", value: ProjectDefaults.transcriptHistoryEnabledByDefault ? "On" : "Off")
             }
 
+            Section("Usage") {
+                LabeledContent("Dictations", value: "\(appState.usageSnapshot.totalDictations)")
+                LabeledContent("Recorded", value: appState.usageRecordedMinutesSummary)
+                LabeledContent("Cleanup requests", value: "\(appState.usageSnapshot.cleanupRequests)")
+                LabeledContent("Transcription failures", value: "\(appState.usageSnapshot.transcriptionFailures)")
+                LabeledContent("Cleanup fallbacks", value: "\(appState.usageSnapshot.cleanupFallbacks)")
+                Button("Reset Usage Counters") {
+                    appState.resetUsageCounters()
+                }
+            }
+
+            Section("Personal Dictionary") {
+                LabeledContent("Cleanup context", value: appState.personalDictionarySummary)
+                LabeledContent(
+                    "Prompt limit",
+                    value: "\(ProjectDefaults.maxPersonalDictionaryPromptCharacters) characters"
+                )
+            }
+
             Section("Permissions") {
                 LabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
                 LabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
@@ -1572,6 +1747,11 @@ struct SettingsView: View {
             }
 
             Section("Diagnostics") {
+                LabeledContent("Last failure", value: appState.lastFailureCategory)
+                Button("Copy Diagnostics") {
+                    appState.copyDiagnosticsReport()
+                }
+
                 if appState.diagnosticSummaries.isEmpty {
                     Text("No events yet.")
                         .foregroundStyle(.secondary)
@@ -1588,7 +1768,7 @@ struct SettingsView: View {
             appState.refreshPermissionStatuses()
         }
         .padding(24)
-        .frame(width: 560)
+        .frame(width: 600)
     }
 
     private func formatSettingsDuration(_ duration: TimeInterval) -> String {

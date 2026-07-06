@@ -13,6 +13,8 @@ Hold `Control + Option + Space`, speak, release, and BabbelStream transcribes th
 - OpenAI-compatible cleanup endpoint, default path `/v1/chat/completions`.
 - Cleanup preserves German, English, and mixed German-English speech without translating.
 - Local personal dictionary injects preferred vocabulary and correction hints into cleanup.
+- Local usage counters show dictations, recorded minutes, cleanup requests, and safe failure counts.
+- Copyable diagnostics summarize state and provider settings without transcripts, audio paths, or API keys.
 - Direct Accessibility insertion first, clipboard plus `Cmd+V` fallback.
 - One trailing space after inserted dictation chunks so repeated dictations do not run together.
 - In-app launch-at-login toggle backed by a user LaunchAgent.
@@ -76,6 +78,8 @@ An optional local Codex skill can edit the same file from `~/.codex/skills/babbe
 - API keys are stored in Keychain, not in files or `UserDefaults`.
 - A non-secret `UserDefaults` marker may remember that an API key was saved so startup does not read Keychain.
 - The personal dictionary stores only explicit vocabulary/correction hints, not transcript history.
+- Usage counters are local `UserDefaults` numbers only; they do not contain transcript text or audio metadata.
+- Diagnostics copied from the app are redacted and omit transcripts, cleaned drafts, audio paths, and clipboard contents.
 - No telemetry, analytics, cloud database, transcript history, or Slack API integration.
 
 ## Release Status

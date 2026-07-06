@@ -256,18 +256,37 @@ public enum PersonalDictionaryTextCodec {
 }
 
 public enum DictionaryPromptBuilder {
+    public struct Context: Equatable, Sendable {
+        public let text: String
+        public let includedVocabularyCount: Int
+        public let includedCorrectionsCount: Int
+        public let skippedVocabularyCount: Int
+        public let skippedCorrectionsCount: Int
+
+        public var wasTruncated: Bool {
+            skippedVocabularyCount > 0 || skippedCorrectionsCount > 0
+        }
+    }
+
     public static func cleanupSystemPrompt(
         basePrompt: String = CleanupPrompt.slackReady,
         dictionary: PersonalDictionary
     ) -> String {
-        guard let context = cleanupContext(for: dictionary) else {
+        guard let context = cleanupContextDetails(for: dictionary) else {
             return basePrompt
         }
 
-        return "\(basePrompt)\n\n\(context)"
+        return "\(basePrompt)\n\n\(context.text)"
     }
 
     public static func cleanupContext(for dictionary: PersonalDictionary) -> String? {
+        cleanupContextDetails(for: dictionary)?.text
+    }
+
+    public static func cleanupContextDetails(
+        for dictionary: PersonalDictionary,
+        maxCharacters: Int = ProjectDefaults.maxPersonalDictionaryPromptCharacters
+    ) -> Context? {
         guard !dictionary.isEmpty else {
             return nil
         }
@@ -279,19 +298,67 @@ public enum DictionaryPromptBuilder {
             "- Treat correction hints as wrong => preferred wording, without changing the speaker's meaning or language."
         ]
 
+        var includedVocabularyCount = 0
+        var includedCorrectionsCount = 0
+        var skippedVocabularyCount = 0
+        var skippedCorrectionsCount = 0
+
         let vocabulary = dictionary.enabledVocabulary.map(\.term)
         if !vocabulary.isEmpty {
-            lines.append("Preferred vocabulary:")
-            lines.append(contentsOf: vocabulary.map { "- \($0)" })
+            if appendLine("Preferred vocabulary:", to: &lines, maxCharacters: maxCharacters) {
+                for term in vocabulary {
+                    if appendLine("- \(term)", to: &lines, maxCharacters: maxCharacters) {
+                        includedVocabularyCount += 1
+                    } else {
+                        skippedVocabularyCount += 1
+                    }
+                }
+            } else {
+                skippedVocabularyCount = vocabulary.count
+            }
         }
 
         let corrections = dictionary.enabledCorrections
         if !corrections.isEmpty {
-            lines.append("Correction hints:")
-            lines.append(contentsOf: corrections.map { "- \($0.from) => \($0.to)" })
+            if appendLine("Correction hints:", to: &lines, maxCharacters: maxCharacters) {
+                for correction in corrections {
+                    if appendLine("- \(correction.from) => \(correction.to)", to: &lines, maxCharacters: maxCharacters) {
+                        includedCorrectionsCount += 1
+                    } else {
+                        skippedCorrectionsCount += 1
+                    }
+                }
+            } else {
+                skippedCorrectionsCount = corrections.count
+            }
         }
 
-        return lines.joined(separator: "\n")
+        if skippedVocabularyCount > 0 || skippedCorrectionsCount > 0 {
+            _ = appendLine(
+                "Some personal dictionary entries were omitted because the dictionary prompt context reached its local size limit.",
+                to: &lines,
+                maxCharacters: maxCharacters + 500
+            )
+        }
+
+        return Context(
+            text: lines.joined(separator: "\n"),
+            includedVocabularyCount: includedVocabularyCount,
+            includedCorrectionsCount: includedCorrectionsCount,
+            skippedVocabularyCount: skippedVocabularyCount,
+            skippedCorrectionsCount: skippedCorrectionsCount
+        )
+    }
+
+    private static func appendLine(_ line: String, to lines: inout [String], maxCharacters: Int) -> Bool {
+        let currentLength = lines.joined(separator: "\n").count
+        let separatorLength = lines.isEmpty ? 0 : 1
+        guard currentLength + separatorLength + line.count <= maxCharacters else {
+            return false
+        }
+
+        lines.append(line)
+        return true
     }
 }
 

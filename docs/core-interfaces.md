@@ -72,13 +72,20 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 - Input: vocabulary terms and wrong-to-right correction pairs.
 - Output: typed dictionary plus cleanup prompt context.
 - Errors: invalid JSON, empty terms, malformed correction pairs, file write failures.
-- Test strategy: JSON round trip, text parsing, prompt rendering, disabled-entry omission.
+- Test strategy: JSON round trip, text parsing, prompt rendering, disabled-entry omission, prompt-size cap checks.
 
 ## `UsageTracker`
 
-- Status: future work.
-- Responsibility: track local-only usage estimates without analytics.
-- Input: audio duration, estimated token counts, optional user-configured prices.
-- Output: local totals and rough cost estimates.
-- Errors: counter persistence failure, invalid price input.
-- Test strategy: deterministic arithmetic tests and persistence tests with temporary stores.
+- Responsibility: track local-only usage counters without analytics or transcript history.
+- Input: audio duration and event categories such as cleanup requested, transcription failed, and cleanup fallback used.
+- Output: local totals for dictations, recorded duration, cleanup requests, transcription failures, and cleanup fallbacks.
+- Errors: counter persistence failure should fail soft and never block dictation.
+- Test strategy: deterministic arithmetic tests, reset behavior, and persistence tests with temporary stores.
+
+## `PrivacyDiagnosticsBuilder`
+
+- Responsibility: produce or sanitize copyable diagnostics without secrets, transcripts, audio paths, clipboard contents, or provider request/response bodies.
+- Input: state summaries, provider settings, counters, dictionary counts, and diagnostic event categories.
+- Output: redacted plain-text diagnostics suitable for sharing during debugging.
+- Errors: none; redaction must be conservative.
+- Test strategy: redaction tests for API-key-like and bearer-token-like strings.
