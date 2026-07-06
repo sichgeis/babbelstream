@@ -4,7 +4,9 @@ public enum ProjectDefaults {
     public static let appName = "BabbelStream"
     public static let audioTempDirectoryName = "BabbelStream"
     public static let audioFileExtension = "m4a"
-    public static let maxAudioDurationSeconds: TimeInterval = 60
+    public static let maxAudioDurationSeconds: TimeInterval = 600
+    public static let minConfigurableAudioDurationSeconds: TimeInterval = 5
+    public static let maxConfigurableAudioDurationSeconds: TimeInterval = 600
     public static let defaultTranscriptionModel = "gpt-4o-transcribe"
     public static let defaultCleanupModel = "gpt-4o-mini"
     public static let defaultTranscriptionResponseFormat = "json"

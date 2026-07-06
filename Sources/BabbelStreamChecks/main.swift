@@ -17,10 +17,12 @@ check(ProjectDefaults.cleanupEnabledByDefault, "Cleanup should be enabled by def
 check(!ProjectDefaults.autoSendEnabledByDefault, "MVP must not auto-send messages.")
 check(!ProjectDefaults.transcriptHistoryEnabledByDefault, "MVP must not persist transcript history.")
 check(!ProjectDefaults.debugPersistenceEnabledByDefault, "Debug persistence must be opt-in.")
-check(ProjectDefaults.maxAudioDurationSeconds == 60, "MS1 max recording duration should remain 60 seconds.")
+check(ProjectDefaults.maxAudioDurationSeconds == 600, "Max recording duration should be 10 minutes.")
 check(ProjectDefaults.audioFileExtension == "m4a", "MS1 should record m4a files.")
 check(ProjectDefaults.defaultTranscriptionModel == "gpt-4o-transcribe", "Unexpected default STT model.")
 check(ProjectDefaults.defaultCleanupModel == "gpt-4o-mini", "Unexpected default cleanup model.")
+check(ProjectDefaults.minConfigurableAudioDurationSeconds == 5, "Unexpected minimum recording duration.")
+check(ProjectDefaults.maxConfigurableAudioDurationSeconds == 600, "Unexpected maximum configurable recording duration.")
 check(ProjectDefaults.defaultTranscriptionResponseFormat == "json", "Transcription should default to JSON responses.")
 check(configuration.transcriptionEndpointPath == "/v1/audio/transcriptions", "Unexpected transcription endpoint default.")
 check(configuration.cleanupEndpointPath == "/v1/chat/completions", "Unexpected cleanup endpoint default.")
@@ -64,6 +66,14 @@ check(!apiKeyPresenceStore.hasSavedAPIKey, "API key presence should default to f
 apiKeyPresenceStore.hasSavedAPIKey = true
 check(apiKeyPresenceStore.hasSavedAPIKey, "API key presence should persist as a non-secret UserDefaults hint.")
 try AppSettingsValidator.validate(AppSettings())
+do {
+    var invalidDurationSettings = AppSettings()
+    invalidDurationSettings.maxAudioDurationSeconds = 601
+    try AppSettingsValidator.validate(invalidDurationSettings)
+    fatalError("Recording duration above the 10-minute cap should fail settings validation.")
+} catch SettingsValidationError.invalidMaxAudioDuration {
+    // Expected.
+}
 do {
     var invalidLanguageSettings = AppSettings()
     invalidLanguageSettings.transcriptionLanguage = "German, English"

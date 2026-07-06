@@ -56,14 +56,14 @@ Provider settings should include:
 - Optional transcription language code. This must be a single ISO 639-1 code such as `de` or `en`; mixed-language dictation should leave it empty and use prompt/cleanup hints.
 - Timeout.
 - Retry policy.
-- Maximum audio duration.
+- Maximum audio duration, editable in Settings and defaulting to 10 minutes.
 - Optional future price inputs for local cost estimates.
 
 The default shape targets OpenAI-compatible LiteLLM endpoints. It is still an integration risk that a specific LiteLLM proxy may not support OpenAI-compatible audio transcription even if the app's request shape is valid.
 
 ## Audio Recording Approach
 
-Use AVFoundation to record compressed audio to a temporary file. The MVP default maximum duration is 60 seconds. The recorder must clean up partial files on cancel, timeout, provider failure, and app quit.
+Use AVFoundation to record compressed audio to a temporary file. The MVP default maximum duration is 10 minutes and can be lowered in Settings. The recorder must clean up partial files on cancel, timeout, provider failure, and app quit.
 
 ## Transcription Approach
 

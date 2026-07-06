@@ -281,7 +281,19 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     private var elapsedText: String {
-        "\(Int(appState.elapsedSeconds.rounded(.down)))s / \(Int(ProjectDefaults.maxAudioDurationSeconds))s"
+        "\(formatMenuDuration(appState.elapsedSeconds)) / \(formatMenuDuration(appState.maxAudioDurationSeconds))"
+    }
+
+    private func formatMenuDuration(_ duration: TimeInterval) -> String {
+        let totalSeconds = Int(duration.rounded(.down))
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+
+        if minutes > 0 {
+            return String(format: "%d:%02d", minutes, seconds)
+        }
+
+        return "\(seconds)s"
     }
 
     @objc private func toggleCleanup() {
@@ -440,6 +452,7 @@ final class AppState: ObservableObject {
     @Published var transcriptionModelText: String
     @Published var cleanupModelText: String
     @Published var timeoutText: String
+    @Published var maxAudioDurationMinutesText: String
     @Published var transcriptionLanguageText: String
     @Published var transcriptionPromptText: String
     @Published var apiKeyInput = ""
@@ -495,6 +508,7 @@ final class AppState: ObservableObject {
         self.transcriptionModelText = loadedSettings.providerConfiguration.transcriptionModel
         self.cleanupModelText = loadedSettings.providerConfiguration.cleanupModel
         self.timeoutText = String(Int(loadedSettings.providerConfiguration.timeoutSeconds))
+        self.maxAudioDurationMinutesText = Self.durationMinutesText(for: loadedSettings.maxAudioDurationSeconds)
         self.transcriptionLanguageText = loadedSettings.transcriptionLanguage
         self.transcriptionPromptText = loadedSettings.transcriptionPrompt
 
@@ -556,6 +570,10 @@ final class AppState: ObservableObject {
 
     var providerDestinationSummary: String {
         "\(baseURLText)\(transcriptionPathText)"
+    }
+
+    var maxAudioDurationSeconds: TimeInterval {
+        appSettings.maxAudioDurationSeconds
     }
 
     private func observeWorkspaceActivations() {
@@ -708,6 +726,12 @@ final class AppState: ObservableObject {
             errorMessage = SettingsValidationError.invalidTimeout.localizedDescription
             return
         }
+        guard let maxAudioDurationMinutes = TimeInterval(
+            maxAudioDurationMinutesText.trimmingCharacters(in: .whitespacesAndNewlines)
+        ) else {
+            errorMessage = SettingsValidationError.invalidMaxAudioDuration.localizedDescription
+            return
+        }
 
         let rawLanguage = transcriptionLanguageText.trimmingCharacters(in: .whitespacesAndNewlines)
         let normalizedLanguage = TranscriptionLanguageNormalizer.apiValue(from: rawLanguage) ?? rawLanguage
@@ -725,7 +749,8 @@ final class AppState: ObservableObject {
             cleanupEnabled: cleanupEnabled,
             transcriptionResponseFormat: ProjectDefaults.defaultTranscriptionResponseFormat,
             transcriptionLanguage: normalizedLanguage,
-            transcriptionPrompt: transcriptionPromptText
+            transcriptionPrompt: transcriptionPromptText,
+            maxAudioDurationSeconds: maxAudioDurationMinutes * 60
         )
 
         do {
@@ -741,6 +766,7 @@ final class AppState: ObservableObject {
 
             appSettings = settings
             transcriptionLanguageText = normalizedLanguage
+            maxAudioDurationMinutesText = Self.durationMinutesText(for: settings.maxAudioDurationSeconds)
             hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
             warningMessage = nil
             errorMessage = nil
@@ -821,6 +847,15 @@ final class AppState: ObservableObject {
             diagnostics.removeFirst(diagnostics.count - 50)
         }
         onStateChanged?()
+    }
+
+    private static func durationMinutesText(for duration: TimeInterval) -> String {
+        let minutes = duration / 60
+        if minutes.rounded(.towardZero) == minutes {
+            return "\(Int(minutes))"
+        }
+
+        return String(format: "%.1f", minutes)
     }
 
     private func notifyStateChanged() {
@@ -917,7 +952,7 @@ final class AppState: ObservableObject {
         }
 
         do {
-            try await audioRecorder.start(maxDuration: ProjectDefaults.maxAudioDurationSeconds)
+            try await audioRecorder.start(maxDuration: appSettings.maxAudioDurationSeconds)
             recordingStartedAt = Date()
             elapsedSeconds = 0
             recordingMode = mode
@@ -1149,7 +1184,7 @@ final class AppState: ObservableObject {
 
         elapsedSeconds = Date().timeIntervalSince(recordingStartedAt)
 
-        if elapsedSeconds >= ProjectDefaults.maxAudioDurationSeconds, !isProcessing {
+        if elapsedSeconds >= appSettings.maxAudioDurationSeconds, !isProcessing {
             Task {
                 switch recordingMode {
                 case .dictation:
@@ -1321,6 +1356,8 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
             return "SettingsValidationError.invalidTranscriptionLanguage"
         case .invalidTimeout:
             return "SettingsValidationError.invalidTimeout"
+        case .invalidMaxAudioDuration:
+            return "SettingsValidationError.invalidMaxAudioDuration"
         }
     }
 
@@ -1379,8 +1416,9 @@ struct SettingsView: View {
                         set: { appState.setCleanupEnabled($0) }
                     )
                 )
+                TextField("Max recording minutes", text: $appState.maxAudioDurationMinutesText)
                 LabeledContent("Hotkey", value: ProjectDefaults.fixedHotkeyDescription)
-                LabeledContent("Max duration", value: "\(Int(ProjectDefaults.maxAudioDurationSeconds))s")
+                LabeledContent("Max duration", value: formatSettingsDuration(appState.maxAudioDurationSeconds))
                 LabeledContent("Auto-send", value: ProjectDefaults.autoSendEnabledByDefault ? "On" : "Off")
                 LabeledContent("History", value: ProjectDefaults.transcriptHistoryEnabledByDefault ? "On" : "Off")
             }
@@ -1436,5 +1474,14 @@ struct SettingsView: View {
         }
         .padding(24)
         .frame(width: 560)
+    }
+
+    private func formatSettingsDuration(_ duration: TimeInterval) -> String {
+        let totalSeconds = Int(duration.rounded(.down))
+        guard totalSeconds >= 60, totalSeconds % 60 == 0 else {
+            return "\(totalSeconds)s"
+        }
+
+        return "\(totalSeconds / 60) min"
     }
 }

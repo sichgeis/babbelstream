@@ -6,19 +6,22 @@ public struct AppSettings: Equatable, Sendable {
     public var transcriptionResponseFormat: String
     public var transcriptionLanguage: String
     public var transcriptionPrompt: String
+    public var maxAudioDurationSeconds: TimeInterval
 
     public init(
         providerConfiguration: ProviderConfiguration = ProviderConfiguration(),
         cleanupEnabled: Bool = ProjectDefaults.cleanupEnabledByDefault,
         transcriptionResponseFormat: String = ProjectDefaults.defaultTranscriptionResponseFormat,
         transcriptionLanguage: String = "",
-        transcriptionPrompt: String = ""
+        transcriptionPrompt: String = "",
+        maxAudioDurationSeconds: TimeInterval = ProjectDefaults.maxAudioDurationSeconds
     ) {
         self.providerConfiguration = providerConfiguration
         self.cleanupEnabled = cleanupEnabled
         self.transcriptionResponseFormat = transcriptionResponseFormat
         self.transcriptionLanguage = transcriptionLanguage
         self.transcriptionPrompt = transcriptionPrompt
+        self.maxAudioDurationSeconds = maxAudioDurationSeconds
     }
 }
 
@@ -30,6 +33,7 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
     case missingCleanupPath
     case invalidTranscriptionLanguage
     case invalidTimeout
+    case invalidMaxAudioDuration
 
     public var errorDescription: String? {
         switch self {
@@ -47,6 +51,8 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
             "Transcription language must be a single ISO 639-1 code like de or en. Leave it empty for mixed German-English dictation and put free-form hints in the prompt."
         case .invalidTimeout:
             "Timeout must be at least 1 second."
+        case .invalidMaxAudioDuration:
+            "Max recording duration must be between 5 seconds and 10 minutes."
         }
     }
 }
@@ -76,6 +82,11 @@ public enum AppSettingsValidator {
         }
         guard configuration.timeoutSeconds >= 1 else {
             throw SettingsValidationError.invalidTimeout
+        }
+        guard settings.maxAudioDurationSeconds >= ProjectDefaults.minConfigurableAudioDurationSeconds,
+              settings.maxAudioDurationSeconds <= ProjectDefaults.maxConfigurableAudioDurationSeconds
+        else {
+            throw SettingsValidationError.invalidMaxAudioDuration
         }
     }
 }
@@ -128,6 +139,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         static let transcriptionResponseFormat = "transcription.responseFormat"
         static let transcriptionLanguage = "transcription.language"
         static let transcriptionPrompt = "transcription.prompt"
+        static let maxAudioDurationSeconds = "recording.maxAudioDurationSeconds"
     }
 
     private let userDefaults: UserDefaults
@@ -171,7 +183,9 @@ public final class UserDefaultsSettingsStore: SettingsStore {
             transcriptionLanguage: userDefaults.string(forKey: Key.transcriptionLanguage)
                 ?? defaults.transcriptionLanguage,
             transcriptionPrompt: userDefaults.string(forKey: Key.transcriptionPrompt)
-                ?? defaults.transcriptionPrompt
+                ?? defaults.transcriptionPrompt,
+            maxAudioDurationSeconds: userDefaults.object(forKey: Key.maxAudioDurationSeconds) as? Double
+                ?? defaults.maxAudioDurationSeconds
         )
     }
 
@@ -190,5 +204,6 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         userDefaults.set(settings.transcriptionResponseFormat, forKey: Key.transcriptionResponseFormat)
         userDefaults.set(settings.transcriptionLanguage, forKey: Key.transcriptionLanguage)
         userDefaults.set(settings.transcriptionPrompt, forKey: Key.transcriptionPrompt)
+        userDefaults.set(settings.maxAudioDurationSeconds, forKey: Key.maxAudioDurationSeconds)
     }
 }

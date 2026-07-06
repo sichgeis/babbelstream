@@ -6,6 +6,7 @@
 - Transcription language validation: `de`/`en` accepted, free-form `German, English` not sent as `language`.
 - Cleanup prompt regression checks.
 - Settings defaults and migrations.
+- Configurable max recording duration defaults to 10 minutes and rejects values above the cap.
 - Usage estimate arithmetic once usage tracking is implemented.
 - Temp-file deletion policy.
 - Text insertion result handling behind an adapter.
@@ -54,7 +55,7 @@
 
 ## Latency Tests
 
-- 5-second, 15-second, and 60-second dictations.
+- 5-second, 15-second, 60-second, and long-form dictations up to the 10-minute cap.
 - Transcription-only versus transcription plus cleanup.
 - Provider timeout and retry behavior.
 
