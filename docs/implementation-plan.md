@@ -1,5 +1,9 @@
 # Implementation Plan
 
+## Current Implementation Note
+
+Milestones 1-4 and the fixed-hotkey part of Milestone 5 have been implemented as one usable MVP slice: local recording, LiteLLM/OpenAI-compatible transcription, optional cleanup, clipboard paste/manual-copy fallback, Keychain API key storage, settings UI, and the fixed `Control + Option + Space` hotkey. Future work should harden this flow, add tests around providers/settings beyond `BabbelStreamChecks`, and then continue with configurable hotkeys, usage tracking, and packaging.
+
 ## Milestone 0: Repo Setup
 
 - Deliverable: docs, Swift package scaffold, menu-bar shell, core defaults, basic test target.
@@ -19,7 +23,7 @@
 ## Milestone 2: Transcription API Call
 
 - Deliverable: configurable OpenAI-compatible transcription request using URLSession.
-- Acceptance: fixture or real endpoint returns transcript text; invalid key and timeout are handled.
+- Acceptance: fixture or real endpoint returns transcript text; invalid key and timeout are handled. Implemented in usable MVP slice.
 - Manual test: verify LiteLLM/LightON audio compatibility; fall back to direct OpenAI-compatible endpoint if needed.
 - Risks: proxy may not support `/v1/audio/transcriptions`.
 - Complexity: M.
@@ -27,7 +31,7 @@
 ## Milestone 3: Cleanup Pass
 
 - Deliverable: cleanup provider, Slack-ready prompt, cleanup toggle, raw-transcript fallback.
-- Acceptance: cleanup preserves technical terms and language mixture in tests.
+- Acceptance: cleanup preserves technical terms and language mixture in tests. Implemented in usable MVP slice.
 - Manual test: dictate mixed German-English Slack messages.
 - Risks: over-polishing, hallucinated facts, latency.
 - Complexity: M.
@@ -35,7 +39,7 @@
 ## Milestone 4: Clipboard Paste Into Slack
 
 - Deliverable: paste service with clipboard snapshot/restore and failure fallback.
-- Acceptance: final draft appears in Slack desktop, Slack browser, and TextEdit.
+- Acceptance: final draft appears in Slack desktop, Slack browser, and TextEdit. Implemented in usable MVP slice; still needs manual QA in Slack.
 - Manual test: composer, thread reply, edit message field, browser Slack.
 - Risks: Accessibility permission, clipboard timing, focus changes.
 - Complexity: M.
@@ -43,7 +47,7 @@
 ## Milestone 5: Global Hotkey/Menu-Bar UX
 
 - Deliverable: Carbon push-to-talk hotkey wired to recording and processing state.
-- Acceptance: press starts recording, release processes, cancel is available.
+- Acceptance: press starts recording, release processes, cancel is available. Fixed `Control + Option + Space` is implemented; configurable hotkeys are still future work.
 - Manual test: use shortcut from Slack and another app.
 - Risks: release detection, shortcut conflicts, layout differences.
 - Complexity: M.

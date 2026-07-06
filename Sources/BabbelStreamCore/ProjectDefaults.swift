@@ -5,6 +5,11 @@ public enum ProjectDefaults {
     public static let audioTempDirectoryName = "BabbelStream"
     public static let audioFileExtension = "m4a"
     public static let maxAudioDurationSeconds: TimeInterval = 60
+    public static let defaultTranscriptionModel = "gpt-4o-transcribe"
+    public static let defaultCleanupModel = "gpt-4o-mini"
+    public static let defaultTranscriptionResponseFormat = "json"
+    public static let defaultPasteRestoreDelaySeconds: TimeInterval = 0.8
+    public static let fixedHotkeyDescription = "Control + Option + Space"
     public static let cleanupEnabledByDefault = true
     public static let autoSendEnabledByDefault = false
     public static let transcriptHistoryEnabledByDefault = false
@@ -24,8 +29,8 @@ public struct ProviderConfiguration: Equatable, Sendable {
         baseURL: URL = URL(string: "https://litellm.example.local")!,
         transcriptionEndpointPath: String = "/v1/audio/transcriptions",
         cleanupEndpointPath: String = "/v1/chat/completions",
-        transcriptionModel: String = "configure-me",
-        cleanupModel: String = "configure-me",
+        transcriptionModel: String = ProjectDefaults.defaultTranscriptionModel,
+        cleanupModel: String = ProjectDefaults.defaultCleanupModel,
         timeoutSeconds: TimeInterval = 30,
         retryCount: Int = 1
     ) {
