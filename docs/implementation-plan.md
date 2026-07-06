@@ -2,7 +2,7 @@
 
 ## Current Implementation Note
 
-Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-login, and local packaging from Milestone 8 have been implemented as one usable MVP slice: local recording, LiteLLM/OpenAI-compatible transcription, optional cleanup, direct Accessibility insertion with clipboard fallback, Keychain API key storage, settings UI, the fixed `Control + Option + Space` hotkey, an in-app launch-at-login toggle, and a local DMG packaging script. Future work should harden this flow, add focused provider/settings tests beyond `BabbelStreamChecks`, and then continue with configurable hotkeys, usage tracking, Developer ID signing, notarization, GitHub release automation, and an update flow.
+Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-login, local personal dictionary, and local packaging from Milestone 8 have been implemented as one usable MVP slice: local recording, LiteLLM/OpenAI-compatible transcription, optional cleanup, cleanup-only dictionary context, direct Accessibility insertion with clipboard fallback, Keychain API key storage, settings UI, the fixed `Control + Option + Space` hotkey, an in-app launch-at-login toggle, and a local DMG packaging script. Future work should harden this flow, add focused provider/settings tests beyond `BabbelStreamChecks`, and then continue with configurable hotkeys, usage tracking, deterministic correction if needed, Developer ID signing, notarization, GitHub release automation, and an update flow.
 
 ## Milestone 0: Repo Setup
 
@@ -62,7 +62,7 @@ Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-log
 
 ## Milestone 7: Privacy Hardening And Usage Tracking
 
-- Deliverable: local counters, debug mode guardrails, privacy tests, log review.
+- Deliverable: local counters, debug mode guardrails, personal dictionary privacy checks, privacy tests, log review.
 - Acceptance: no audio/transcript persistence in normal mode; usage estimates are local.
 - Manual test: inspect logs and app storage after several dictations.
 - Risks: accidental logging, clipboard leakage, LaunchAgent pointing at an unintended app path after moving the bundle.

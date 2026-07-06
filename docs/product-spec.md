@@ -37,6 +37,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Preferred transcription model: `gpt-4o-transcribe` via the configured LiteLLM/OpenAI-compatible endpoint. The side-check script confirmed this is the desired model/settings combination to carry into the app.
 - Cleanup provider using an OpenAI-compatible chat endpoint.
 - Cleanup removes filler and adds punctuation, but must not translate. English speech stays English, German speech stays German, and mixed German-English stays mixed.
+- Local personal dictionary for preferred vocabulary and wrong-to-right correction hints; entries are injected into the existing cleanup call.
 - Direct Accessibility insertion into the focused text field when possible, with clipboard plus Cmd+V fallback.
 - Inserted dictation text ends with one trailing space so consecutive push-to-talk chunks do not run together in the same composer.
 - API key storage in macOS Keychain.
@@ -57,6 +58,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 - Local Whisper or `whisper.cpp` backend.
 - More advanced correction dictionary for names, acronyms, projects, and ticket prefixes.
+- Optional deterministic local correction pass when exact replacement guarantees become more important than cleanup-only behavior.
 - Optional preview/editor mode.
 - Optional email-specific cleanup style.
 - Developer ID signing, notarization, GitHub release automation, and update flow.

@@ -12,12 +12,14 @@
 - Text insertion result handling behind an adapter.
 - Keychain wrapper behavior with an in-memory fake.
 - Startup does not read the Keychain secret; API key presence is represented by a non-secret marker.
+- Personal dictionary JSON round trip, text parsing, disabled-entry omission, and cleanup prompt rendering.
 
 ## Integration Tests
 
 - Mock transcription endpoint request shape and response parsing.
 - Mock cleanup endpoint request shape and fallback behavior.
 - Provider HTTP error body extraction without logging request bodies or transcripts.
+- Cleanup request includes dictionary context in the existing cleanup call when entries exist.
 - Coordinator flow from audio URL to pasted text using fakes.
 - Timeout, retry, invalid-key, and malformed-response cases.
 
@@ -29,6 +31,7 @@
 - Provider destination is visible in settings.
 - No message is auto-sent.
 - No transcript or audio file remains after normal use.
+- Personal dictionary edits are picked up on the next cleanup without app restart.
 
 ## Slack Desktop Cases
 
@@ -53,6 +56,7 @@
 - Mixed: "Ich habe im prompting-service repo den BACKEND-123 fix gepusht, aber CI ist noch flaky."
 - Technical: URLs, file paths, Swift symbols, Jira keys, acronyms, model names, and product names.
 - Cleanup must not translate: English input remains English, German input remains German, and mixed input remains mixed.
+- Dictionary hints: preferred terms such as `LiteLLM` and corrections such as `light LM => LiteLLM`.
 
 ## Latency Tests
 
@@ -73,6 +77,7 @@
 
 - Confirm temporary audio deletion on success, failure, timeout, and cancel.
 - Confirm no transcript history is written to disk.
+- Confirm personal dictionary contains only explicit terms/corrections and no transcript history.
 - Confirm logs exclude audio, transcripts, API keys, and clipboard content.
 - Confirm debug persistence is explicit and visible.
 

@@ -24,6 +24,7 @@ AppKit status-item app
      -> TextInsertionService
   -> SettingsStore
   -> SecretStore
+  -> PersonalDictionaryStore
   -> SwiftUI SettingsView
 ```
 
@@ -33,9 +34,10 @@ AppKit status-item app
 2. Hotkey release stops recording and returns a temporary audio URL.
 3. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint.
 4. The temporary audio file is deleted after transcription completes or fails.
-5. `CleanupProvider` rewrites the transcript when cleanup is enabled.
-6. `TextInsertionService` first tries direct Accessibility insertion into the focused element. If the target app does not support that path, it writes the final text to the clipboard, reactivates the captured target app, and simulates Cmd+V. Because the Cmd+V path cannot be confirmed reliably across Slack, browsers, and native apps, the final draft remains on the clipboard as a visible fallback.
-7. The app keeps only the latest raw/final draft in memory for copy/retry during the running session. Usage counters remain future work.
+5. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
+6. `CleanupProvider` rewrites the transcript when cleanup is enabled, using dictionary context in the same model call.
+7. `TextInsertionService` first tries direct Accessibility insertion into the focused element. If the target app does not support that path, it writes the final text to the clipboard, reactivates the captured target app, and simulates Cmd+V. Because the Cmd+V path cannot be confirmed reliably across Slack, browsers, and native apps, the final draft remains on the clipboard as a visible fallback.
+8. The app keeps only the latest raw/final draft in memory for copy/retry during the running session. Usage counters remain future work.
 
 ## Permission Model
 
@@ -72,6 +74,12 @@ Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provide
 ## Cleanup Approach
 
 Use a chat/completions-compatible endpoint with a fixed Slack-ready cleanup system prompt and the transcript as user input. Cleanup is enabled by default and can be disabled. Cleanup must preserve the language of each sentence or phrase; it must not translate between German and English. If cleanup fails after transcription succeeds, paste the raw transcript and notify the user.
+
+## Personal Dictionary
+
+Use a local JSON dictionary at `~/Library/Application Support/BabbelStream/personal-dictionary.json` for explicit vocabulary and correction hints. The app reloads it before each cleanup request and appends compact context to the cleanup system prompt. This version is cleanup-only: it does not perform deterministic local replacements and it does not add a second model call.
+
+A lightweight personal Codex skill may edit the same file directly. No MCP server is required for this version.
 
 ## Paste Insertion Approach
 

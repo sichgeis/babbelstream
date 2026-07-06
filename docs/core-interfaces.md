@@ -29,7 +29,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 ## `CleanupProvider`
 
 - Responsibility: convert raw transcript into Slack-ready draft while preserving meaning and technical terms.
-- Input: transcript text, cleanup prompt, provider configuration, API key.
+- Input: transcript text, cleanup prompt, personal dictionary context, provider configuration, API key.
 - Output: final draft text.
 - Errors: missing key, timeout, provider failure, malformed response, empty output.
 - Test strategy: mock provider tests plus prompt regression cases for German and mixed technical input.
@@ -65,6 +65,14 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 - Output: user LaunchAgent presence and launchctl load/unload result.
 - Errors: LaunchAgent write/remove failure, launchctl bootstrap/bootout failure.
 - Test strategy: unit-test plist generation; manual QA state detection and enable/disable against the real user LaunchAgent.
+
+## `PersonalDictionaryStore`
+
+- Responsibility: persist explicit local vocabulary and correction hints.
+- Input: vocabulary terms and wrong-to-right correction pairs.
+- Output: typed dictionary plus cleanup prompt context.
+- Errors: invalid JSON, empty terms, malformed correction pairs, file write failures.
+- Test strategy: JSON round trip, text parsing, prompt rendering, disabled-entry omission.
 
 ## `UsageTracker`
 

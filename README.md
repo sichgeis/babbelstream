@@ -12,6 +12,7 @@ Hold `Control + Option + Space`, speak, release, and BabbelStream transcribes th
 - OpenAI-compatible transcription endpoint, default path `/v1/audio/transcriptions`.
 - OpenAI-compatible cleanup endpoint, default path `/v1/chat/completions`.
 - Cleanup preserves German, English, and mixed German-English speech without translating.
+- Local personal dictionary injects preferred vocabulary and correction hints into cleanup.
 - Direct Accessibility insertion first, clipboard plus `Cmd+V` fallback.
 - One trailing space after inserted dictation chunks so repeated dictations do not run together.
 - In-app launch-at-login toggle backed by a user LaunchAgent.
@@ -64,12 +65,17 @@ This local DMG is suitable for personal testing. Public distribution should use 
 
 For mixed German-English dictation, leave the language field blank. Use the optional transcription prompt only for transcription hints, not cleanup instructions.
 
+Open `Personal Dictionary...` from the menu-bar icon to maintain preferred vocabulary and wrong-to-right correction hints. BabbelStream stores this locally at `~/Library/Application Support/BabbelStream/personal-dictionary.json`.
+
+An optional local Codex skill can edit the same file from `~/.codex/skills/babbelstream-dictionary`.
+
 ## Privacy Defaults
 
 - Temporary audio is deleted after processing or cancellation.
 - Transcripts and cleaned drafts are kept only in memory for the running app session.
 - API keys are stored in Keychain, not in files or `UserDefaults`.
 - A non-secret `UserDefaults` marker may remember that an API key was saved so startup does not read Keychain.
+- The personal dictionary stores only explicit vocabulary/correction hints, not transcript history.
 - No telemetry, analytics, cloud database, transcript history, or Slack API integration.
 
 ## Release Status

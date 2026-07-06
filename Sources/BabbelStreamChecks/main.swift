@@ -56,6 +56,50 @@ check(
         .contains("bad request") == true,
     "Provider HTTP failures should expose safe provider details."
 )
+let emptyDictionary = PersonalDictionary()
+check(emptyDictionary.isEmpty, "Personal dictionary should default to empty.")
+check(
+    DictionaryPromptBuilder.cleanupContext(for: emptyDictionary) == nil,
+    "Empty dictionaries should not add cleanup prompt context."
+)
+let sampleDictionary = PersonalDictionary(
+    vocabulary: [
+        PersonalVocabularyEntry(term: "LiteLLM"),
+        PersonalVocabularyEntry(term: "IgnoredTerm", enabled: false)
+    ],
+    corrections: [
+        PersonalCorrectionEntry(from: "light LM", to: "LiteLLM"),
+        PersonalCorrectionEntry(from: "ignored", to: "Ignored", enabled: false)
+    ]
+)
+let dictionaryContext = DictionaryPromptBuilder.cleanupContext(for: sampleDictionary) ?? ""
+check(dictionaryContext.contains("LiteLLM"), "Dictionary prompt should include enabled vocabulary.")
+check(dictionaryContext.contains("light LM => LiteLLM"), "Dictionary prompt should include enabled corrections.")
+check(!dictionaryContext.contains("IgnoredTerm"), "Dictionary prompt should omit disabled vocabulary.")
+check(!dictionaryContext.contains("ignored => Ignored"), "Dictionary prompt should omit disabled corrections.")
+let parsedDictionary = try PersonalDictionaryTextCodec.dictionary(
+    vocabularyText: "Hypatos\nLiteLLM\nlitellm\n",
+    correctionsText: "light LM => LiteLLM\nprompting service => prompting-service\n"
+)
+check(parsedDictionary.vocabulary.count == 2, "Vocabulary parsing should remove duplicate terms case-insensitively.")
+check(parsedDictionary.corrections.count == 2, "Correction parsing should parse wrong-to-right pairs.")
+do {
+    _ = try PersonalDictionaryTextCodec.dictionary(vocabularyText: "", correctionsText: "missing separator")
+    fatalError("Invalid correction lines should fail validation.")
+} catch PersonalDictionaryError.invalidCorrectionLine(_) {
+    // Expected.
+}
+let dictionaryStoreURL = FileManager.default.temporaryDirectory
+    .appendingPathComponent("BabbelStreamChecks", isDirectory: true)
+    .appendingPathComponent("personal-dictionary-check.json")
+let dictionaryStore = JSONPersonalDictionaryStore(fileURL: dictionaryStoreURL)
+try? FileManager.default.removeItem(at: dictionaryStoreURL)
+let missingDictionary = try dictionaryStore.load()
+check(missingDictionary == PersonalDictionary(), "Missing dictionary files should load as empty.")
+try dictionaryStore.save(sampleDictionary)
+let reloadedDictionary = try dictionaryStore.load()
+check(reloadedDictionary == sampleDictionary, "Personal dictionary JSON should round-trip.")
+try? FileManager.default.removeItem(at: dictionaryStoreURL)
 check(
     DictationDraftFormatter.textWithTrailingSeparator("First sentence.") == "First sentence. ",
     "Inserted dictation drafts should receive one trailing separator."
