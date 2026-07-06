@@ -2,6 +2,8 @@ import Foundation
 
 public enum ProjectDefaults {
     public static let appName = "BabbelStream"
+    public static let audioTempDirectoryName = "BabbelStream"
+    public static let audioFileExtension = "m4a"
     public static let maxAudioDurationSeconds: TimeInterval = 60
     public static let cleanupEnabledByDefault = true
     public static let autoSendEnabledByDefault = false

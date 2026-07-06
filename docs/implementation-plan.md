@@ -10,9 +10,9 @@
 
 ## Milestone 1: Local Recording Prototype
 
-- Deliverable: microphone permission flow, AVFoundation recorder, recording indicator, temp-file cleanup.
+- Deliverable: microphone permission flow, AVFoundation recorder, recording indicator, temp-file cleanup, and local `.app` bundle via `scripts/build-app.sh`.
 - Acceptance: recording starts/stops locally and files are deleted on success/cancel/failure.
-- Manual test: record short English/German samples and inspect temp directory.
+- Manual test: build `dist/BabbelStream.app`, request microphone permission, record short English/German samples, stop/cancel, and inspect that temp files are deleted.
 - Risks: permission UX, audio format compatibility with provider.
 - Complexity: M.
 
