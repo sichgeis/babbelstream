@@ -147,6 +147,37 @@ public enum PersonalDictionaryValidator {
 }
 
 public enum PersonalDictionaryTextCodec {
+    @discardableResult
+    public static func upsertCorrection(
+        from wrong: String,
+        to correct: String,
+        in dictionary: inout PersonalDictionary
+    ) throws -> Bool {
+        let from = wrong.trimmingCharacters(in: .whitespacesAndNewlines)
+        let to = correct.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !from.isEmpty, !to.isEmpty else {
+            throw PersonalDictionaryError.emptyCorrectionValue
+        }
+
+        let key = correctionKey(from: from, to: to)
+        for index in dictionary.corrections.indices {
+            guard correctionKey(
+                from: dictionary.corrections[index].from,
+                to: dictionary.corrections[index].to
+            ) == key else {
+                continue
+            }
+
+            dictionary.corrections[index].from = from
+            dictionary.corrections[index].to = to
+            dictionary.corrections[index].enabled = true
+            return false
+        }
+
+        dictionary.corrections.append(PersonalCorrectionEntry(from: from, to: to))
+        return true
+    }
+
     public static func vocabularyText(from dictionary: PersonalDictionary) -> String {
         dictionary.vocabulary
             .filter(\.enabled)

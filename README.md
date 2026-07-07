@@ -67,7 +67,7 @@ This local DMG is suitable for personal testing. Public distribution should use 
 
 For mixed German-English dictation, leave the language field blank. Use the optional transcription prompt only for transcription hints, not cleanup instructions.
 
-Open `Personal Dictionary...` from the menu-bar icon to maintain preferred vocabulary and wrong-to-right correction hints. BabbelStream stores this locally at `~/Library/Application Support/BabbelStream/personal-dictionary.json`.
+Open `Teach Correction...` from the menu-bar icon or Settings to quickly add a wrong-to-right hint such as `David => Dawid`. Open `Personal Dictionary...` for bulk vocabulary and correction editing. BabbelStream stores these local hints at `~/Library/Application Support/BabbelStream/personal-dictionary.json`.
 
 An optional local Codex skill can edit the same file from `~/.codex/skills/babbelstream-dictionary`.
 

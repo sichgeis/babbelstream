@@ -40,6 +40,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Cleanup should avoid conspicuously AI-polished punctuation such as em dashes; prefer ordinary Slack-like punctuation.
 - Local personal dictionary for preferred vocabulary and wrong-to-right correction hints; entries are injected into the existing cleanup call.
 - Personal dictionary cleanup context is capped locally; oversized dictionaries continue to work with a visible skipped-entry warning.
+- Teach Correction flow for explicitly adding wrong-to-right hints after a bad dictation, without automatic learning or transcript history.
 - Direct Accessibility insertion into the focused text field when possible, with clipboard plus Cmd+V fallback.
 - Inserted dictation text ends with one trailing space so consecutive push-to-talk chunks do not run together in the same composer.
 - API key storage in macOS Keychain.

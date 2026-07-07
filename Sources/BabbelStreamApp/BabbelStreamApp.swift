@@ -22,18 +22,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController?
     private var settingsWindowController: SettingsWindowController?
     private var personalDictionaryWindowController: PersonalDictionaryWindowController?
+    private var teachCorrectionWindowController: TeachCorrectionWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         installMainMenu()
         let appState = appState
         let settingsWindowController = SettingsWindowController(appState: appState)
-        let personalDictionaryWindowController = PersonalDictionaryWindowController(store: personalDictionaryStore)
+        let teachCorrectionWindowController = TeachCorrectionWindowController(
+            store: personalDictionaryStore,
+            appState: appState
+        )
+        let personalDictionaryWindowController = PersonalDictionaryWindowController(
+            store: personalDictionaryStore,
+            onTeachCorrection: { [weak teachCorrectionWindowController] in
+                teachCorrectionWindowController?.show()
+            }
+        )
         self.settingsWindowController = settingsWindowController
         self.personalDictionaryWindowController = personalDictionaryWindowController
+        self.teachCorrectionWindowController = teachCorrectionWindowController
+        appState.onTeachCorrectionRequested = { [weak teachCorrectionWindowController] in
+            teachCorrectionWindowController?.show()
+        }
         statusBarController = StatusBarController(
             appState: appState,
             settingsWindowController: settingsWindowController,
-            personalDictionaryWindowController: personalDictionaryWindowController
+            personalDictionaryWindowController: personalDictionaryWindowController,
+            teachCorrectionWindowController: teachCorrectionWindowController
         )
     }
 
@@ -75,17 +90,20 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private let appState: AppState
     private let settingsWindowController: SettingsWindowController
     private let personalDictionaryWindowController: PersonalDictionaryWindowController
+    private let teachCorrectionWindowController: TeachCorrectionWindowController
     private let statusItem: NSStatusItem
     private let menu = NSMenu()
 
     init(
         appState: AppState,
         settingsWindowController: SettingsWindowController,
-        personalDictionaryWindowController: PersonalDictionaryWindowController
+        personalDictionaryWindowController: PersonalDictionaryWindowController,
+        teachCorrectionWindowController: TeachCorrectionWindowController
     ) {
         self.appState = appState
         self.settingsWindowController = settingsWindowController
         self.personalDictionaryWindowController = personalDictionaryWindowController
+        self.teachCorrectionWindowController = teachCorrectionWindowController
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
 
@@ -246,6 +264,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     private func addAppActions() {
+        addAction("Teach Correction...", action: #selector(openTeachCorrection), enabled: true)
         addAction("Personal Dictionary...", action: #selector(openPersonalDictionary), enabled: true)
         addAction("Settings...", action: #selector(openSettings), enabled: true)
         addAction("Quit", action: #selector(quit), enabled: true)
@@ -396,6 +415,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         personalDictionaryWindowController.show()
     }
 
+    @objc private func openTeachCorrection() {
+        teachCorrectionWindowController.show()
+    }
+
     @objc private func quit() {
         NSApp.terminate(nil)
     }
@@ -440,10 +463,12 @@ final class SettingsWindowController {
 @MainActor
 final class PersonalDictionaryWindowController {
     private let store: PersonalDictionaryStore
+    private let onTeachCorrection: () -> Void
     private var windowController: NSWindowController?
 
-    init(store: PersonalDictionaryStore) {
+    init(store: PersonalDictionaryStore, onTeachCorrection: @escaping () -> Void) {
         self.store = store
+        self.onTeachCorrection = onTeachCorrection
     }
 
     func show() {
@@ -463,7 +488,48 @@ final class PersonalDictionaryWindowController {
         )
         window.title = "\(ProjectDefaults.appName) Personal Dictionary"
         window.contentViewController = NSHostingController(
-            rootView: PersonalDictionaryView(store: store)
+            rootView: PersonalDictionaryView(
+                store: store,
+                onTeachCorrection: onTeachCorrection
+            )
+        )
+        window.isReleasedWhenClosed = false
+        window.center()
+
+        return NSWindowController(window: window)
+    }
+}
+
+@MainActor
+final class TeachCorrectionWindowController {
+    private let store: PersonalDictionaryStore
+    private let appState: AppState
+    private var windowController: NSWindowController?
+
+    init(store: PersonalDictionaryStore, appState: AppState) {
+        self.store = store
+        self.appState = appState
+    }
+
+    func show() {
+        let controller = windowController ?? makeWindowController()
+        windowController = controller
+        controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func makeWindowController() -> NSWindowController {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 360),
+            styleMask: [.titled, .closable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "\(ProjectDefaults.appName) Teach Correction"
+        window.contentViewController = NSHostingController(
+            rootView: TeachCorrectionView(store: store)
+                .environmentObject(appState)
         )
         window.isReleasedWhenClosed = false
         window.center()
@@ -524,6 +590,7 @@ final class AppState: ObservableObject {
     @Published private(set) var diagnostics: [DiagnosticEvent] = []
 
     var onStateChanged: (() -> Void)?
+    var onTeachCorrectionRequested: (() -> Void)?
 
     private let audioRecorder: AudioRecorder
     private let settingsStore: SettingsStore
@@ -639,6 +706,14 @@ final class AppState: ObservableObject {
         }
 
         return "\(latestFinalDraft.count) characters"
+    }
+
+    var latestRawTranscriptForCorrection: String {
+        latestRawTranscript ?? ""
+    }
+
+    var latestFinalDraftForCorrection: String {
+        latestFinalDraft ?? ""
     }
 
     var diagnosticSummaries: [String] {
@@ -950,6 +1025,10 @@ final class AppState: ObservableObject {
         lastResult = "Usage counters reset."
         recordDiagnostic("usage counters reset")
         notifyStateChanged()
+    }
+
+    func openTeachCorrection() {
+        onTeachCorrectionRequested?()
     }
 
     func retryPasteLatestDraft() async {
@@ -1711,6 +1790,9 @@ struct SettingsView: View {
                     "Prompt limit",
                     value: "\(ProjectDefaults.maxPersonalDictionaryPromptCharacters) characters"
                 )
+                Button("Teach Correction...") {
+                    appState.openTeachCorrection()
+                }
             }
 
             Section("Permissions") {
@@ -1783,6 +1865,7 @@ struct SettingsView: View {
 
 struct PersonalDictionaryView: View {
     let store: PersonalDictionaryStore
+    let onTeachCorrection: () -> Void
 
     @State private var loadedDictionary = PersonalDictionary()
     @State private var vocabularyText = ""
@@ -1817,6 +1900,9 @@ struct PersonalDictionaryView: View {
                     }
                     Button("Reload") {
                         load()
+                    }
+                    Button("Teach Correction...") {
+                        onTeachCorrection()
                     }
                     Button("Close") {
                         NSApp.keyWindow?.performClose(nil)
@@ -1870,5 +1956,98 @@ struct PersonalDictionaryView: View {
             errorMessage = error.localizedDescription
             statusMessage = ""
         }
+    }
+}
+
+struct TeachCorrectionView: View {
+    let store: PersonalDictionaryStore
+
+    @EnvironmentObject private var appState: AppState
+    @State private var wrongText = ""
+    @State private var preferredText = ""
+    @State private var statusMessage = ""
+    @State private var errorMessage: String?
+
+    var body: some View {
+        Form {
+            Section("Correction") {
+                TextField("Wrong / heard as", text: $wrongText)
+                TextField("Preferred spelling", text: $preferredText)
+                Text("Used as a cleanup hint, not transcript history.")
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Recent Examples") {
+                LabeledContent("Raw transcript", value: appState.latestRawTranscriptSummary)
+                LabeledContent("Final draft", value: appState.latestFinalDraftSummary)
+
+                HStack {
+                    Button("Use Raw As Wrong") {
+                        wrongText = appState.latestRawTranscriptForCorrection
+                    }
+                    .disabled(appState.latestRawTranscriptForCorrection.isEmpty)
+
+                    Button("Use Final As Preferred") {
+                        preferredText = appState.latestFinalDraftForCorrection
+                    }
+                    .disabled(appState.latestFinalDraftForCorrection.isEmpty)
+                }
+            }
+
+            Section {
+                HStack {
+                    Button("Save Correction") {
+                        save()
+                    }
+                    .keyboardShortcut(.defaultAction)
+
+                    Button("Clear") {
+                        clear()
+                    }
+
+                    Button("Close") {
+                        NSApp.keyWindow?.performClose(nil)
+                    }
+                }
+
+                if let errorMessage {
+                    Text(errorMessage)
+                        .foregroundStyle(.red)
+                } else if !statusMessage.isEmpty {
+                    Text(statusMessage)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(24)
+        .frame(width: 460)
+    }
+
+    private func save() {
+        do {
+            var dictionary = try store.load()
+            let created = try PersonalDictionaryTextCodec.upsertCorrection(
+                from: wrongText,
+                to: preferredText,
+                in: &dictionary
+            )
+            try store.save(dictionary)
+            let wrong = wrongText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let preferred = preferredText.trimmingCharacters(in: .whitespacesAndNewlines)
+            errorMessage = nil
+            statusMessage = created
+                ? "Added correction: \(wrong) => \(preferred)"
+                : "Updated existing correction: \(wrong) => \(preferred)"
+        } catch {
+            errorMessage = error.localizedDescription
+            statusMessage = ""
+        }
+    }
+
+    private func clear() {
+        wrongText = ""
+        preferredText = ""
+        errorMessage = nil
+        statusMessage = ""
     }
 }
