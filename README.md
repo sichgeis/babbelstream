@@ -14,6 +14,7 @@ Hold `Control + Option + Space`, speak, release, and BabbelStream transcribes th
 - Cleanup preserves German, English, and mixed German-English speech without translating.
 - Local personal dictionary injects preferred vocabulary and correction hints into cleanup.
 - Local usage counters show dictations, recorded minutes, cleanup requests, and safe failure counts.
+- Optional local dictation archive writes daily JSONL text files and provides monthly word-count review/export.
 - Copyable diagnostics summarize state and provider settings without transcripts, audio paths, or API keys.
 - Direct Accessibility insertion first, clipboard plus `Cmd+V` fallback.
 - One trailing space after inserted dictation chunks so repeated dictations do not run together.
@@ -63,23 +64,27 @@ This local DMG is suitable for personal testing. Public distribution should use 
 4. Configure provider base URL, model names, and API key.
 5. Request Accessibility permission so BabbelStream can insert text automatically.
 6. Optionally enable `Launch at login` in Settings.
-7. Focus Slack or another text field, hold `Control + Option + Space`, speak, and release.
+7. Optionally enable `Archive completed dictations` if you want local daily text files and monthly word-count review.
+8. Focus Slack or another text field, hold `Control + Option + Space`, speak, and release.
 
 For mixed German-English dictation, leave the language field blank. Use the optional transcription prompt only for transcription hints, not cleanup instructions.
 
 Open `Teach Correction...` from the menu-bar icon or Settings to quickly add a wrong-to-right hint such as `David => Dawid`. Open `Personal Dictionary...` for bulk vocabulary and correction editing. BabbelStream stores these local hints at `~/Library/Application Support/BabbelStream/personal-dictionary.json`.
+
+Open `Dictation Archive...` from the menu-bar icon to review monthly local word counts, copy a Markdown export, reveal the archive folder, or clear archive data. When enabled, archive files are stored under `~/Library/Application Support/BabbelStream/Archive/YYYY-MM/YYYY-MM-DD.jsonl`.
 
 An optional local Codex skill can edit the same file from `~/.codex/skills/babbelstream-dictionary`.
 
 ## Privacy Defaults
 
 - Temporary audio is deleted after processing or cancellation.
-- Transcripts and cleaned drafts are kept only in memory for the running app session.
+- Transcripts and cleaned drafts are kept only in memory for the running app session unless the local dictation archive is explicitly enabled.
+- Dictation archive is off by default. When enabled, it stores final draft text and word counts locally; raw transcript storage is a separate opt-in.
 - API keys are stored in Keychain, not in files or `UserDefaults`.
 - A non-secret `UserDefaults` marker may remember that an API key was saved so startup does not read Keychain.
 - The personal dictionary stores only explicit vocabulary/correction hints, not transcript history.
 - Usage counters are local `UserDefaults` numbers only; they do not contain transcript text or audio metadata.
-- Diagnostics copied from the app are redacted and omit transcripts, cleaned drafts, audio paths, and clipboard contents.
+- Diagnostics copied from the app are redacted and omit transcripts, cleaned drafts, archive contents, audio paths, and clipboard contents.
 - No telemetry, analytics, cloud database, transcript history, or Slack API integration.
 
 ## Release Status

@@ -92,8 +92,8 @@
 - Raw transcript text is omitted unless the separate raw-transcript archive setting is enabled.
 - Audio file paths, API keys, provider request bodies, and clipboard contents are never stored in archive entries.
 - Monthly aggregation counts words by day and month deterministically.
-- Markdown/plain-text monthly export preserves entry ordering and contents.
-- Topic-summary generation requires explicit user action and visible provider destination before any archive text is sent.
+- Markdown monthly export preserves entry ordering and contents.
+- Future topic-summary generation requires explicit user action and visible provider destination before any archive text is sent.
 - Clear archive requires confirmation and removes only archive files.
 
 ## Privacy Tests

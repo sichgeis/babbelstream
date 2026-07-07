@@ -94,7 +94,7 @@ The archive should use local daily JSONL text files instead of a database for th
 - Entry identity: each entry receives a stable UUID plus `startedAt`/`completedAt` timestamps.
 - Text fields: store the final draft text by default when archive is enabled. Store raw transcript text only when the user enables an additional raw-transcript option.
 - Metadata fields: active app name/bundle id if available, cleanup enabled/fallback state, transcription and cleanup provider labels, optional language metadata, insertion mode/outcome, raw/spoken word count, final draft word count, and audio duration.
-- Query model: monthly stats read a date range of JSONL files, aggregate word counts by day/month, and optionally render a month to Markdown/plain text for review.
+- Query model: monthly stats read a date range of JSONL files, aggregate word counts by day/month, and render a month to Markdown for review.
 - Topic review: topic summaries should be generated only on explicit user action. If summary generation uses an AI provider, the UI must show the destination and approximate content scope before sending.
 - Retention: default to "keep until deleted" for local control, with a future optional retention window.
 - Deletion: Settings should include reveal archive folder and clear archive actions; destructive clears require confirmation.
