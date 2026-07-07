@@ -460,7 +460,7 @@ final class SettingsWindowController {
 
     private func makeWindowController() -> NSWindowController {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 840),
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 560),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -2001,51 +2001,64 @@ struct SettingsView: View {
     @EnvironmentObject private var appState: AppState
 
     var body: some View {
-        Form {
-            Section("Provider") {
-                Text("Audio is sent to:")
-                    .foregroundStyle(.secondary)
-                Text(appState.providerDestinationSummary)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
-                Text("Cleanup text is sent to:")
-                    .foregroundStyle(.secondary)
-                Text(appState.cleanupDestinationSummary)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
-
-                TextField("Base URL", text: $appState.baseURLText)
-                TextField("Transcription path", text: $appState.transcriptionPathText)
-                TextField("Transcription model", text: $appState.transcriptionModelText)
-                TextField("Cleanup path", text: $appState.cleanupPathText)
-                TextField("Cleanup model", text: $appState.cleanupModelText)
-                TextField("Timeout seconds", text: $appState.timeoutText)
-            }
-
-            Section("Transcription Hints") {
-                TextField("Language code, optional (blank = auto)", text: $appState.transcriptionLanguageText)
-                TextField("Transcription prompt, optional", text: $appState.transcriptionPromptText, axis: .vertical)
-                    .lineLimit(2...4)
-            }
-
-            Section("API Key") {
-                SecureField(
-                    appState.hasAPIKey ? "API key saved in Keychain" : "Paste API key",
-                    text: $appState.apiKeyInput
-                )
-                LabeledContent("Keychain", value: appState.hasAPIKey ? "Saved" : "Missing")
-
-                HStack {
-                    Button("Save Settings") {
-                        appState.saveSettings()
-                    }
-                    Button("Delete API Key") {
-                        appState.deleteAPIKey()
-                    }
-                    .disabled(!appState.hasAPIKey)
+        TabView {
+            SettingsGeneralPane()
+                .tabItem {
+                    Label("General", systemImage: "gearshape")
                 }
-            }
 
+            SettingsProviderPane()
+                .tabItem {
+                    Label("Provider", systemImage: "network")
+                }
+
+            SettingsWritingPane()
+                .tabItem {
+                    Label("Writing", systemImage: "text.bubble")
+                }
+
+            SettingsArchivePane()
+                .tabItem {
+                    Label("Archive", systemImage: "archivebox")
+                }
+
+            SettingsDiagnosticsPane()
+                .tabItem {
+                    Label("Diagnostics", systemImage: "stethoscope")
+                }
+        }
+        .onAppear {
+            appState.refreshPermissionStatuses()
+        }
+        .padding(16)
+        .frame(width: 680, height: 560)
+    }
+}
+
+private struct SettingsPane<Content: View>: View {
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        ScrollView {
+            Form {
+                content
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .top)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+}
+
+private struct SettingsGeneralPane: View {
+    @EnvironmentObject private var appState: AppState
+
+    var body: some View {
+        SettingsPane {
             Section("Behavior") {
                 Toggle(
                     "Cleanup enabled",
@@ -2067,7 +2080,95 @@ struct SettingsView: View {
                 LabeledContent("Auto-send", value: ProjectDefaults.autoSendEnabledByDefault ? "On" : "Off")
                 LabeledContent("History", value: ProjectDefaults.transcriptHistoryEnabledByDefault ? "On" : "Off")
             }
+        }
+    }
 
+    private func formatSettingsDuration(_ duration: TimeInterval) -> String {
+        let totalSeconds = Int(duration.rounded(.down))
+        guard totalSeconds >= 60, totalSeconds % 60 == 0 else {
+            return "\(totalSeconds)s"
+        }
+
+        return "\(totalSeconds / 60) min"
+    }
+}
+
+private struct SettingsProviderPane: View {
+    @EnvironmentObject private var appState: AppState
+
+    var body: some View {
+        SettingsPane {
+            Section("Provider") {
+                Text("Audio is sent to:")
+                    .foregroundStyle(.secondary)
+                Text(appState.providerDestinationSummary)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                Text("Cleanup text is sent to:")
+                    .foregroundStyle(.secondary)
+                Text(appState.cleanupDestinationSummary)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+
+                TextField("Base URL", text: $appState.baseURLText)
+                TextField("Transcription path", text: $appState.transcriptionPathText)
+                TextField("Transcription model", text: $appState.transcriptionModelText)
+                TextField("Cleanup path", text: $appState.cleanupPathText)
+                TextField("Cleanup model", text: $appState.cleanupModelText)
+                TextField("Timeout seconds", text: $appState.timeoutText)
+            }
+
+            Section("API Key") {
+                SecureField(
+                    appState.hasAPIKey ? "API key saved in Keychain" : "Paste API key",
+                    text: $appState.apiKeyInput
+                )
+                LabeledContent("Keychain", value: appState.hasAPIKey ? "Saved" : "Missing")
+
+                HStack {
+                    Button("Save Settings") {
+                        appState.saveSettings()
+                    }
+                    Button("Delete API Key") {
+                        appState.deleteAPIKey()
+                    }
+                    .disabled(!appState.hasAPIKey)
+                }
+            }
+        }
+    }
+}
+
+private struct SettingsWritingPane: View {
+    @EnvironmentObject private var appState: AppState
+
+    var body: some View {
+        SettingsPane {
+            Section("Transcription Hints") {
+                TextField("Language code, optional (blank = auto)", text: $appState.transcriptionLanguageText)
+                TextField("Transcription prompt, optional", text: $appState.transcriptionPromptText, axis: .vertical)
+                    .lineLimit(2...4)
+            }
+
+            Section("Personal Dictionary") {
+                LabeledContent("Cleanup context", value: appState.personalDictionarySummary)
+                LabeledContent(
+                    "Prompt limit",
+                    value: "\(ProjectDefaults.maxPersonalDictionaryPromptCharacters) characters"
+                )
+                Button("Teach Correction...") {
+                    appState.openTeachCorrection()
+                }
+            }
+        }
+    }
+}
+
+private struct SettingsArchivePane: View {
+    @EnvironmentObject private var appState: AppState
+
+    var body: some View {
+        SettingsPane {
             Section("Dictation Archive") {
                 Toggle(
                     "Archive completed dictations",
@@ -2088,7 +2189,15 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
                 LabeledContent("Archive folder", value: appState.archiveDirectoryPath)
             }
+        }
+    }
+}
 
+private struct SettingsDiagnosticsPane: View {
+    @EnvironmentObject private var appState: AppState
+
+    var body: some View {
+        SettingsPane {
             Section("Usage") {
                 LabeledContent("Dictations", value: "\(appState.usageSnapshot.totalDictations)")
                 LabeledContent("Recorded", value: appState.usageRecordedMinutesSummary)
@@ -2097,17 +2206,6 @@ struct SettingsView: View {
                 LabeledContent("Cleanup fallbacks", value: "\(appState.usageSnapshot.cleanupFallbacks)")
                 Button("Reset Usage Counters") {
                     appState.resetUsageCounters()
-                }
-            }
-
-            Section("Personal Dictionary") {
-                LabeledContent("Cleanup context", value: appState.personalDictionarySummary)
-                LabeledContent(
-                    "Prompt limit",
-                    value: "\(ProjectDefaults.maxPersonalDictionaryPromptCharacters) characters"
-                )
-                Button("Teach Correction...") {
-                    appState.openTeachCorrection()
                 }
             }
 
@@ -2163,20 +2261,6 @@ struct SettingsView: View {
                 }
             }
         }
-        .onAppear {
-            appState.refreshPermissionStatuses()
-        }
-        .padding(24)
-        .frame(width: 600)
-    }
-
-    private func formatSettingsDuration(_ duration: TimeInterval) -> String {
-        let totalSeconds = Int(duration.rounded(.down))
-        guard totalSeconds >= 60, totalSeconds % 60 == 0 else {
-            return "\(totalSeconds)s"
-        }
-
-        return "\(totalSeconds / 60) min"
     }
 }
 
