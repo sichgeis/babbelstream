@@ -110,15 +110,15 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 ## Optional Local Dictation Archive
 
-The user may enable a local archive for work self-review and month-end reporting. This is a V1 feature and should be the next backlog priority before broader convenience features.
+The user may enable a local archive for work self-review and month-end reporting. This is implemented as a V1 feature.
 
 - Default: off. Existing privacy behavior remains unchanged until the user enables the archive in Settings.
 - Storage: text-only daily JSONL files under `~/Library/Application Support/BabbelStream/Archive/YYYY-MM/YYYY-MM-DD.jsonl`.
 - Entry content: timestamp, stable entry id, active app name if available, cleanup enabled/fallback flags, insertion outcome, provider labels, spoken/raw word count, final draft word count, final draft text, and optional raw transcript text only if the user enables an additional "Store raw transcript" setting.
 - Audio: never stored in the archive.
-- Monthly review: the app should be able to count words by day/month, show or export the stored contents, and prepare a monthly topic-summary input from the archive.
+- Monthly review: the app can count words by day/month and export the stored contents as Markdown.
 - Topic summaries: no monthly archive content may be sent to any AI provider automatically. If an AI-generated monthly summary is added, it must be an explicit user action with the provider destination shown before sending.
-- User controls: enable/disable archive, pause archive for a dictation when feasible, reveal archive folder, export a month as Markdown or plain text, clear archive data, and optionally configure retention.
+- User controls: enable/disable archive, enable/disable raw transcript archiving, reveal archive folder, export a month as Markdown, and clear archive data. Pausing archive for a single dictation and retention windows are future controls.
 - Diagnostics: copyable diagnostics may include archive enabled/disabled state and entry counts, but never archive contents.
 
 ## Error States
