@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">BabbelStream app icon</title>
+  <desc id="desc">A balanced monochrome app tile with centered rounded voice bars and a soft stream curve.</desc>
+  <rect width="1024" height="1024" rx="226" fill="#0B0F14"/>
+  <path d="M230 712C330 646 426 644 512 710C598 776 694 774 794 712" fill="none" stroke="#B8BCBD" stroke-width="40" stroke-linecap="round"/>
+  <rect x="230" y="310" width="78" height="382" rx="39" fill="#FFFFFF"/>
+  <rect x="352" y="422" width="78" height="226" rx="39" fill="#D3D5D6"/>
+  <rect x="474" y="248" width="78" height="422" rx="39" fill="#FFFFFF"/>
+  <rect x="596" y="384" width="78" height="264" rx="39" fill="#D3D5D6"/>
+  <rect x="718" y="310" width="78" height="382" rx="39" fill="#FFFFFF"/>
+</svg>
