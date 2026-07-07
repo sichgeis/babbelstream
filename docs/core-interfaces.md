@@ -82,6 +82,22 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 - Errors: counter persistence failure should fail soft and never block dictation.
 - Test strategy: deterministic arithmetic tests, reset behavior, and persistence tests with temporary stores.
 
+## `DictationArchiveStore` (V1 opt-in)
+
+- Responsibility: append, read, export, and delete opt-in local dictation archive entries without storing audio.
+- Input: completed dictation metadata, final draft text, raw/spoken word count, final draft word count, and optional raw transcript text only when raw transcript archiving is enabled.
+- Output: daily JSONL files, date-range archive entries, monthly word-count aggregates, and Markdown/plain-text exports.
+- Errors: archive write/read/delete failures should be visible but must not block paste or lose the final draft.
+- Test strategy: disabled-by-default tests, JSONL round trip with temporary directories, word-count aggregation tests, export rendering tests, raw-transcript opt-in tests, and destructive clear confirmation coverage.
+
+## `ArchiveSummaryService` (future optional)
+
+- Responsibility: prepare monthly topic-summary inputs from archive entries and, only after explicit user action, request an AI summary through the configured provider.
+- Input: date range, selected archive entries, summary style, provider configuration, and API key if AI summary generation is chosen.
+- Output: local monthly summary text or a provider-generated topic summary.
+- Errors: provider failure, archive read failure, or oversized summary input should leave archive data unchanged and provide a copy/export fallback.
+- Test strategy: provider-destination confirmation flow, prompt-size/content-scope checks, no automatic-send regression tests, and fallback export tests.
+
 ## `PrivacyDiagnosticsBuilder`
 
 - Responsibility: produce or sanitize copyable diagnostics without secrets, transcripts, audio paths, clipboard contents, or provider request/response bodies.

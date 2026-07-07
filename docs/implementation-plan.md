@@ -2,7 +2,16 @@
 
 ## Current Implementation Note
 
-Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-login, local personal dictionary, privacy-safe usage counters/diagnostics from Milestone 7, and local packaging from Milestone 8 have been implemented as one usable MVP slice: local recording, LiteLLM/OpenAI-compatible transcription, optional cleanup, cleanup-only dictionary context with a prompt-size cap, direct Accessibility insertion with clipboard fallback, Keychain API key storage, settings UI, the fixed `Control + Option + Space` hotkey, an in-app launch-at-login toggle, local usage visibility, redacted copyable diagnostics, and a local DMG packaging script. Future work should add focused provider/settings tests beyond `BabbelStreamChecks`, then continue with configurable hotkeys, optional deterministic correction if needed, Developer ID signing, notarization, GitHub release automation, and an update flow.
+Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-login, local personal dictionary, privacy-safe usage counters/diagnostics from Milestone 7, local packaging from Milestone 8, and the opt-in local dictation archive/monthly review feature have been implemented as one usable MVP/V1 slice: local recording, LiteLLM/OpenAI-compatible transcription, optional cleanup, cleanup-only dictionary context with a prompt-size cap, direct Accessibility insertion with clipboard fallback, Keychain API key storage, settings UI, the fixed `Control + Option + Space` hotkey, an in-app launch-at-login toggle, local usage visibility, redacted copyable diagnostics, local daily JSONL dictation archive files, monthly word-count review/export, and a local DMG packaging script. Future work should add focused provider/settings tests beyond `BabbelStreamChecks`, configurable hotkeys, optional deterministic correction if needed, Developer ID signing, notarization, GitHub release automation, and an update flow.
+
+## Implemented V1 Slice: Optional Local Dictation Archive And Monthly Review
+
+- Deliverable: opt-in local archive setting, daily JSONL archive files, completed-dictation archive writes, monthly word-count aggregation, month export, reveal-folder and clear-archive controls.
+- Acceptance: archive is off by default; enabling it writes text-only entries under `~/Library/Application Support/BabbelStream/Archive/YYYY-MM/YYYY-MM-DD.jsonl`; audio is never archived; final draft text and word counts are captured; raw transcript text is stored only behind a separate opt-in; monthly review can answer words by day/month and export contents. Implemented.
+- Manual test: enable archive, dictate several Slack and TextEdit samples across cleanup-on/off cases, inspect the daily JSONL file, compare word counts, export the month, clear the archive, and verify normal dictation/paste still works if archive writing fails.
+- Privacy test: verify no archive files are created when disabled, diagnostics omit archive contents, topic-summary generation never sends archive text to an AI provider without explicit confirmation, and local files contain no audio paths, API keys, provider request bodies, or clipboard-only data.
+- Risks: storing confidential work text locally, accidental raw transcript persistence, file corruption during append, confusing "spoken words" versus "final draft words", and unintentional provider sends for summaries.
+- Complexity: M.
 
 ## Milestone 0: Repo Setup
 

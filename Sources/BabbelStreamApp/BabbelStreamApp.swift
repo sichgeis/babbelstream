@@ -18,9 +18,14 @@ enum BabbelStreamMain {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let personalDictionaryStore = JSONPersonalDictionaryStore()
-    private lazy var appState = AppState(personalDictionaryStore: personalDictionaryStore)
+    private let dictationArchiveStore = JSONLDictationArchiveStore()
+    private lazy var appState = AppState(
+        personalDictionaryStore: personalDictionaryStore,
+        dictationArchiveStore: dictationArchiveStore
+    )
     private var statusBarController: StatusBarController?
     private var settingsWindowController: SettingsWindowController?
+    private var dictationArchiveWindowController: DictationArchiveWindowController?
     private var personalDictionaryWindowController: PersonalDictionaryWindowController?
     private var teachCorrectionWindowController: TeachCorrectionWindowController?
 
@@ -28,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         installMainMenu()
         let appState = appState
         let settingsWindowController = SettingsWindowController(appState: appState)
+        let dictationArchiveWindowController = DictationArchiveWindowController(appState: appState)
         let teachCorrectionWindowController = TeachCorrectionWindowController(
             store: personalDictionaryStore,
             appState: appState
@@ -39,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         )
         self.settingsWindowController = settingsWindowController
+        self.dictationArchiveWindowController = dictationArchiveWindowController
         self.personalDictionaryWindowController = personalDictionaryWindowController
         self.teachCorrectionWindowController = teachCorrectionWindowController
         appState.onTeachCorrectionRequested = { [weak teachCorrectionWindowController] in
@@ -47,6 +54,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusBarController = StatusBarController(
             appState: appState,
             settingsWindowController: settingsWindowController,
+            dictationArchiveWindowController: dictationArchiveWindowController,
             personalDictionaryWindowController: personalDictionaryWindowController,
             teachCorrectionWindowController: teachCorrectionWindowController
         )
@@ -89,6 +97,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 final class StatusBarController: NSObject, NSMenuDelegate {
     private let appState: AppState
     private let settingsWindowController: SettingsWindowController
+    private let dictationArchiveWindowController: DictationArchiveWindowController
     private let personalDictionaryWindowController: PersonalDictionaryWindowController
     private let teachCorrectionWindowController: TeachCorrectionWindowController
     private let statusItem: NSStatusItem
@@ -97,11 +106,13 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     init(
         appState: AppState,
         settingsWindowController: SettingsWindowController,
+        dictationArchiveWindowController: DictationArchiveWindowController,
         personalDictionaryWindowController: PersonalDictionaryWindowController,
         teachCorrectionWindowController: TeachCorrectionWindowController
     ) {
         self.appState = appState
         self.settingsWindowController = settingsWindowController
+        self.dictationArchiveWindowController = dictationArchiveWindowController
         self.personalDictionaryWindowController = personalDictionaryWindowController
         self.teachCorrectionWindowController = teachCorrectionWindowController
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -266,6 +277,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private func addAppActions() {
         addAction("Teach Correction...", action: #selector(openTeachCorrection), enabled: true)
         addAction("Personal Dictionary...", action: #selector(openPersonalDictionary), enabled: true)
+        addAction("Dictation Archive...", action: #selector(openDictationArchive), enabled: true)
         addAction("Settings...", action: #selector(openSettings), enabled: true)
         addAction("Quit", action: #selector(quit), enabled: true)
     }
@@ -415,6 +427,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         personalDictionaryWindowController.show()
     }
 
+    @objc private func openDictationArchive() {
+        dictationArchiveWindowController.show()
+    }
+
     @objc private func openTeachCorrection() {
         teachCorrectionWindowController.show()
     }
@@ -443,7 +459,7 @@ final class SettingsWindowController {
 
     private func makeWindowController() -> NSWindowController {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 760),
+            contentRect: NSRect(x: 0, y: 0, width: 600, height: 840),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
@@ -451,6 +467,43 @@ final class SettingsWindowController {
         window.title = "\(ProjectDefaults.appName) Settings"
         window.contentViewController = NSHostingController(
             rootView: SettingsView()
+                .environmentObject(appState)
+        )
+        window.isReleasedWhenClosed = false
+        window.center()
+
+        return NSWindowController(window: window)
+    }
+}
+
+@MainActor
+final class DictationArchiveWindowController {
+    private let appState: AppState
+    private var windowController: NSWindowController?
+
+    init(appState: AppState) {
+        self.appState = appState
+    }
+
+    func show() {
+        let controller = windowController ?? makeWindowController()
+        windowController = controller
+        controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        appState.loadArchiveMonth()
+    }
+
+    private func makeWindowController() -> NSWindowController {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 640),
+            styleMask: [.titled, .closable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "\(ProjectDefaults.appName) Dictation Archive"
+        window.contentViewController = NSHostingController(
+            rootView: DictationArchiveView()
                 .environmentObject(appState)
         )
         window.isReleasedWhenClosed = false
@@ -576,6 +629,12 @@ final class AppState: ObservableObject {
     @Published var usageSnapshot: UsageSnapshot
     @Published var personalDictionarySummary = "Not loaded yet."
     @Published var lastFailureCategory = "None"
+    @Published var dictationArchiveEnabled: Bool
+    @Published var archiveRawTranscriptEnabled: Bool
+    @Published var archiveMonthText: String
+    @Published var archiveSnapshot: DictationArchiveMonthSnapshot
+    @Published var archiveStatusMessage = "Archive not loaded yet."
+    @Published var archiveErrorMessage: String?
 
     @Published var baseURLText: String
     @Published var transcriptionPathText: String
@@ -603,6 +662,7 @@ final class AppState: ObservableObject {
     private let launchAtLoginService: LaunchAtLoginService
     private let personalDictionaryStore: PersonalDictionaryStore
     private let usageTracker: UsageTracker
+    private let dictationArchiveStore: DictationArchiveStore
 
     private var appSettings: AppSettings
     private var recordingStartedAt: Date?
@@ -626,7 +686,8 @@ final class AppState: ObservableObject {
         hotkeyService: HotkeyService = CarbonHotkeyService(),
         launchAtLoginService: LaunchAtLoginService = LaunchAtLoginService(),
         personalDictionaryStore: PersonalDictionaryStore = JSONPersonalDictionaryStore(),
-        usageTracker: UsageTracker = UserDefaultsUsageTracker()
+        usageTracker: UsageTracker = UserDefaultsUsageTracker(),
+        dictationArchiveStore: DictationArchiveStore = JSONLDictationArchiveStore()
     ) {
         self.audioRecorder = audioRecorder
         self.settingsStore = settingsStore
@@ -639,12 +700,18 @@ final class AppState: ObservableObject {
         self.launchAtLoginService = launchAtLoginService
         self.personalDictionaryStore = personalDictionaryStore
         self.usageTracker = usageTracker
+        self.dictationArchiveStore = dictationArchiveStore
 
         let loadedSettings = settingsStore.load()
         let loadedUsageSnapshot = usageTracker.load()
+        let currentArchiveMonth = DictationArchiveMonth.current()
         self.appSettings = loadedSettings
         self.usageSnapshot = loadedUsageSnapshot
         self.cleanupEnabled = loadedSettings.cleanupEnabled
+        self.dictationArchiveEnabled = loadedSettings.dictationArchiveEnabled
+        self.archiveRawTranscriptEnabled = loadedSettings.archiveRawTranscriptEnabled
+        self.archiveMonthText = currentArchiveMonth.directoryName
+        self.archiveSnapshot = DictationArchiveMonthSnapshot(month: currentArchiveMonth, entries: [])
         self.baseURLText = loadedSettings.providerConfiguration.baseURL.absoluteString
         self.transcriptionPathText = loadedSettings.providerConfiguration.transcriptionEndpointPath
         self.cleanupPathText = loadedSettings.providerConfiguration.cleanupEndpointPath
@@ -740,6 +807,14 @@ final class AppState: ObservableObject {
         String(format: "%.1f min", usageSnapshot.totalRecordedMinutes)
     }
 
+    var archiveDirectoryPath: String {
+        dictationArchiveStore.archiveDirectoryURL.path
+    }
+
+    var archiveSummary: String {
+        "\(archiveSnapshot.entries.count) entries, \(archiveSnapshot.totalFinalWordCount) final words"
+    }
+
     private func observeWorkspaceActivations() {
         workspaceActivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification,
@@ -795,7 +870,8 @@ final class AppState: ObservableObject {
 
         latestExternalPasteTarget = TextInsertionTarget(
             processIdentifier: processIdentifier,
-            localizedName: localizedName
+            localizedName: localizedName,
+            bundleIdentifier: bundleIdentifier
         )
     }
 
@@ -914,7 +990,9 @@ final class AppState: ObservableObject {
             transcriptionResponseFormat: ProjectDefaults.defaultTranscriptionResponseFormat,
             transcriptionLanguage: normalizedLanguage,
             transcriptionPrompt: transcriptionPromptText,
-            maxAudioDurationSeconds: maxAudioDurationMinutes * 60
+            maxAudioDurationSeconds: maxAudioDurationMinutes * 60,
+            dictationArchiveEnabled: dictationArchiveEnabled,
+            archiveRawTranscriptEnabled: dictationArchiveEnabled && archiveRawTranscriptEnabled
         )
 
         do {
@@ -929,6 +1007,8 @@ final class AppState: ObservableObject {
             }
 
             appSettings = settings
+            dictationArchiveEnabled = settings.dictationArchiveEnabled
+            archiveRawTranscriptEnabled = settings.archiveRawTranscriptEnabled
             transcriptionLanguageText = normalizedLanguage
             maxAudioDurationMinutesText = Self.durationMinutesText(for: settings.maxAudioDurationSeconds)
             hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
@@ -968,6 +1048,59 @@ final class AppState: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
             recordDiagnostic("cleanup toggle failed: \(diagnosticErrorCategory(error))")
+        }
+    }
+
+    func setDictationArchiveEnabled(_ isEnabled: Bool) {
+        dictationArchiveEnabled = isEnabled
+        var updatedSettings = appSettings
+        updatedSettings.dictationArchiveEnabled = isEnabled
+        if !isEnabled {
+            updatedSettings.archiveRawTranscriptEnabled = false
+            archiveRawTranscriptEnabled = false
+        }
+
+        do {
+            try settingsStore.save(updatedSettings)
+            appSettings = updatedSettings
+            dictationArchiveEnabled = updatedSettings.dictationArchiveEnabled
+            archiveRawTranscriptEnabled = updatedSettings.archiveRawTranscriptEnabled
+            archiveStatusMessage = isEnabled
+                ? "Archive enabled. Completed dictations will be stored locally."
+                : "Archive disabled. Completed dictations will not be stored."
+            archiveErrorMessage = nil
+            lastResult = archiveStatusMessage
+            recordDiagnostic("dictation archive \(isEnabled ? "enabled" : "disabled")")
+            if isEnabled {
+                loadArchiveMonth()
+            } else {
+                notifyStateChanged()
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            recordDiagnostic("archive toggle failed: \(diagnosticErrorCategory(error))")
+        }
+    }
+
+    func setArchiveRawTranscriptEnabled(_ isEnabled: Bool) {
+        archiveRawTranscriptEnabled = dictationArchiveEnabled && isEnabled
+        var updatedSettings = appSettings
+        updatedSettings.archiveRawTranscriptEnabled = archiveRawTranscriptEnabled
+
+        do {
+            try settingsStore.save(updatedSettings)
+            appSettings = updatedSettings
+            archiveRawTranscriptEnabled = updatedSettings.archiveRawTranscriptEnabled
+            archiveStatusMessage = archiveRawTranscriptEnabled
+                ? "Raw transcript archiving enabled."
+                : "Raw transcript archiving disabled."
+            archiveErrorMessage = nil
+            lastResult = archiveStatusMessage
+            recordDiagnostic("raw transcript archive \(archiveRawTranscriptEnabled ? "enabled" : "disabled")")
+            notifyStateChanged()
+        } catch {
+            errorMessage = error.localizedDescription
+            recordDiagnostic("raw transcript archive toggle failed: \(diagnosticErrorCategory(error))")
         }
     }
 
@@ -1027,6 +1160,97 @@ final class AppState: ObservableObject {
         notifyStateChanged()
     }
 
+    func loadArchiveMonth() {
+        guard let month = DictationArchiveMonth(string: archiveMonthText) else {
+            archiveErrorMessage = "Use a month in YYYY-MM format."
+            archiveStatusMessage = "Archive month could not be loaded."
+            recordDiagnostic("archive month load failed: invalid month")
+            notifyStateChanged()
+            return
+        }
+
+        do {
+            let snapshot = try dictationArchiveStore.loadMonth(month)
+            archiveSnapshot = snapshot
+            archiveMonthText = month.directoryName
+            archiveErrorMessage = nil
+            archiveStatusMessage = "Loaded \(snapshot.entries.count) archive entr\(snapshot.entries.count == 1 ? "y" : "ies")."
+            recordDiagnostic("archive month loaded: \(month.directoryName), \(snapshot.entries.count) entries")
+        } catch {
+            archiveErrorMessage = error.localizedDescription
+            archiveStatusMessage = "Archive month could not be loaded."
+            recordDiagnostic("archive month load failed: \(diagnosticErrorCategory(error))")
+        }
+
+        notifyStateChanged()
+    }
+
+    func copyArchiveMarkdownExport() {
+        guard let month = DictationArchiveMonth(string: archiveMonthText) else {
+            archiveErrorMessage = "Use a month in YYYY-MM format."
+            archiveStatusMessage = "Archive export could not be prepared."
+            recordDiagnostic("archive export failed: invalid month")
+            notifyStateChanged()
+            return
+        }
+
+        do {
+            let snapshot = try dictationArchiveStore.loadMonth(month)
+            let markdown = dictationArchiveStore.markdownExport(for: snapshot)
+            try textInsertionService.copyText(markdown)
+            archiveSnapshot = snapshot
+            archiveMonthText = month.directoryName
+            archiveErrorMessage = nil
+            archiveStatusMessage = "Archive Markdown export copied."
+            lastResult = "Archive Markdown export copied."
+            recordDiagnostic("archive export copied: \(month.directoryName), \(snapshot.entries.count) entries")
+        } catch {
+            archiveErrorMessage = error.localizedDescription
+            archiveStatusMessage = "Archive export could not be copied."
+            recordDiagnostic("archive export failed: \(diagnosticErrorCategory(error))")
+        }
+
+        notifyStateChanged()
+    }
+
+    func revealArchiveFolder() {
+        let fileManager = FileManager.default
+        let archiveURL = dictationArchiveStore.archiveDirectoryURL
+        let fallbackURL = archiveURL.deletingLastPathComponent()
+
+        if fileManager.fileExists(atPath: archiveURL.path) {
+            NSWorkspace.shared.open(archiveURL)
+            archiveStatusMessage = "Archive folder opened."
+        } else if fileManager.fileExists(atPath: fallbackURL.path) {
+            NSWorkspace.shared.open(fallbackURL)
+            archiveStatusMessage = "Archive folder does not exist yet. Opened BabbelStream support folder."
+        } else {
+            NSWorkspace.shared.open(fallbackURL.deletingLastPathComponent())
+            archiveStatusMessage = "Archive folder does not exist yet."
+        }
+        archiveErrorMessage = nil
+        recordDiagnostic("archive folder reveal requested")
+        notifyStateChanged()
+    }
+
+    func clearArchive() {
+        do {
+            try dictationArchiveStore.clearArchive()
+            let month = DictationArchiveMonth(string: archiveMonthText) ?? DictationArchiveMonth.current()
+            archiveSnapshot = DictationArchiveMonthSnapshot(month: month, entries: [])
+            archiveErrorMessage = nil
+            archiveStatusMessage = "Archive cleared."
+            lastResult = "Dictation archive cleared."
+            recordDiagnostic("dictation archive cleared")
+        } catch {
+            archiveErrorMessage = error.localizedDescription
+            archiveStatusMessage = "Archive could not be cleared."
+            recordDiagnostic("archive clear failed: \(diagnosticErrorCategory(error))")
+        }
+
+        notifyStateChanged()
+    }
+
     func openTeachCorrection() {
         onTeachCorrectionRequested?()
     }
@@ -1039,7 +1263,7 @@ final class AppState: ObservableObject {
         if latestPasteTarget == nil {
             latestPasteTarget = latestExternalPasteTarget
         }
-        await insertFinalDraft(latestFinalDraft)
+        _ = await insertFinalDraft(latestFinalDraft)
     }
 
     func openMicrophonePrivacySettings() {
@@ -1075,6 +1299,11 @@ final class AppState: ObservableObject {
             "accessibility: \(accessibilityPermissionStatus.displayName)",
             "launch at login: \(launchAtLoginEnabled)",
             "personal dictionary: \(personalDictionarySummary)",
+            "archive enabled: \(dictationArchiveEnabled)",
+            "archive raw transcript enabled: \(dictationArchiveEnabled && archiveRawTranscriptEnabled)",
+            "archive path: \(archiveDirectoryPath)",
+            "archive loaded month: \(archiveSnapshot.month.directoryName)",
+            "archive loaded entries: \(archiveSnapshot.entries.count)",
             "usage dictations: \(usageSnapshot.totalDictations)",
             "usage recorded seconds: \(String(format: "%.1f", usageSnapshot.totalRecordedSeconds))",
             "cleanup requests: \(usageSnapshot.cleanupRequests)",
@@ -1333,7 +1562,9 @@ final class AppState: ObservableObject {
         recordDiagnostic("transcription succeeded: \(rawTranscript.count) characters")
 
         let finalDraft: String
-        if cleanupEnabled {
+        let cleanupWasEnabled = cleanupEnabled
+        var cleanupFallbackUsed = false
+        if cleanupWasEnabled {
             status = "Cleaning up"
             recordDiagnostic("cleanup started")
             usageSnapshot.recordCleanupRequest()
@@ -1353,6 +1584,7 @@ final class AppState: ObservableObject {
                 recordDiagnostic("cleanup succeeded: \(finalDraft.count) characters")
             } catch {
                 finalDraft = rawTranscript
+                cleanupFallbackUsed = true
                 warningMessage = "Cleanup failed; using raw transcript. \(error.localizedDescription)"
                 usageSnapshot.recordCleanupFallback()
                 saveUsageSnapshot()
@@ -1369,7 +1601,69 @@ final class AppState: ObservableObject {
         if warningMessage == nil {
             lastFailureCategory = "None"
         }
-        await insertFinalDraft(finalDraft)
+        let insertionOutcome = await insertFinalDraft(finalDraft)
+        appendDictationArchiveEntry(
+            recording: recording,
+            rawTranscript: rawTranscript,
+            finalDraft: finalDraft,
+            cleanupWasEnabled: cleanupWasEnabled,
+            cleanupFallbackUsed: cleanupFallbackUsed,
+            insertionOutcome: insertionOutcome
+        )
+    }
+
+    private func appendDictationArchiveEntry(
+        recording: RecordedAudio,
+        rawTranscript: String,
+        finalDraft: String,
+        cleanupWasEnabled: Bool,
+        cleanupFallbackUsed: Bool,
+        insertionOutcome: DictationArchiveInsertionOutcome
+    ) {
+        guard appSettings.dictationArchiveEnabled else {
+            return
+        }
+
+        let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
+        let configuration = appSettings.providerConfiguration
+        let entry = DictationArchiveEntry(
+            startedAt: recording.createdAt,
+            completedAt: Date(),
+            audioDurationSeconds: recording.duration,
+            activeAppName: pasteTarget?.localizedName,
+            activeAppBundleIdentifier: pasteTarget?.bundleIdentifier,
+            cleanupEnabled: cleanupWasEnabled,
+            cleanupFallbackUsed: cleanupFallbackUsed,
+            insertionOutcome: insertionOutcome,
+            transcriptionProviderLabel: providerLabel(model: configuration.transcriptionModel),
+            cleanupProviderLabel: cleanupWasEnabled ? providerLabel(model: configuration.cleanupModel) : nil,
+            transcriptionLanguage: TranscriptionLanguageNormalizer.apiValue(from: appSettings.transcriptionLanguage),
+            rawWordCount: DictationWordCounter.count(in: rawTranscript),
+            finalWordCount: DictationWordCounter.count(in: finalDraft),
+            finalDraftText: finalDraft,
+            rawTranscriptText: appSettings.archiveRawTranscriptEnabled ? rawTranscript : nil
+        )
+
+        do {
+            try dictationArchiveStore.append(entry)
+            recordDiagnostic("archive entry written: \(entry.finalWordCount) final words")
+            if DictationArchiveMonth(string: archiveMonthText) == DictationArchiveMonth.containing(entry.startedAt) {
+                loadArchiveMonth()
+            }
+        } catch {
+            warningMessage = combinedWarning(
+                warningMessage,
+                "Dictation archive could not be written. \(error.localizedDescription)"
+            )
+            recordDiagnostic("archive write failed: \(diagnosticErrorCategory(error))")
+            notifyStateChanged()
+        }
+    }
+
+    private func providerLabel(model: String) -> String {
+        let configuration = appSettings.providerConfiguration
+        let host = configuration.baseURL.host ?? configuration.baseURL.absoluteString
+        return "\(host) / \(model)"
     }
 
     private func loadPersonalDictionaryForCleanup() -> PersonalDictionary {
@@ -1423,11 +1717,12 @@ final class AppState: ObservableObject {
         return apiKey
     }
 
-    private func insertFinalDraft(_ finalDraft: String) async {
+    private func insertFinalDraft(_ finalDraft: String) async -> DictationArchiveInsertionOutcome {
         status = "Pasting draft"
         let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
         let insertionText = DictationDraftFormatter.textWithTrailingSeparator(finalDraft)
         let priorWarning = warningMessage
+        var archiveOutcome = DictationArchiveInsertionOutcome.memoryOnlyAfterPasteFailure
 
         do {
             let insertionResult = try await textInsertionService.insertText(insertionText, target: pasteTarget)
@@ -1435,12 +1730,14 @@ final class AppState: ObservableObject {
 
             switch insertionResult {
             case .insertedDirectly:
+                archiveOutcome = .directAccessibilityInsertion
                 status = "Ready"
                 lastResult = "Draft inserted. Review it before sending."
                 errorMessage = nil
                 warningMessage = priorWarning
                 recordDiagnostic("paste succeeded: direct accessibility insertion")
             case .pasteShortcutPosted:
+                archiveOutcome = .pasteShortcutPosted
                 status = "Ready"
                 lastResult = "Paste shortcut sent; draft is also on the clipboard."
                 errorMessage = nil
@@ -1450,12 +1747,14 @@ final class AppState: ObservableObject {
                 )
                 recordDiagnostic("paste shortcut posted; clipboard fallback retained")
             case .copiedForManualPaste:
+                archiveOutcome = .copiedForManualPaste
                 status = "Copied"
                 lastResult = "Draft copied to clipboard. Paste manually with Cmd+V."
                 errorMessage = "Accessibility is not allowed, so BabbelStream could not paste automatically."
                 warningMessage = priorWarning
                 recordDiagnostic("paste fallback: copied for manual paste")
             case .copiedAfterPasteShortcutFailure:
+                archiveOutcome = .copiedAfterPasteShortcutFailure
                 status = "Copied"
                 lastResult = "Draft copied to clipboard after paste shortcut failed."
                 errorMessage = "BabbelStream could not post Cmd+V. Paste manually with Cmd+V."
@@ -1465,11 +1764,13 @@ final class AppState: ObservableObject {
         } catch {
             do {
                 try textInsertionService.copyText(insertionText)
+                archiveOutcome = .copiedAfterPasteFailure
                 status = "Copied"
                 lastResult = "Draft copied to clipboard after paste failed. Paste manually with Cmd+V."
                 errorMessage = error.localizedDescription
                 recordDiagnostic("paste failed; copied fallback: \(diagnosticErrorCategory(error))")
             } catch {
+                archiveOutcome = .memoryOnlyAfterPasteFailure
                 status = "Paste failed"
                 lastResult = "Draft is only available in memory for this app session."
                 errorMessage = error.localizedDescription
@@ -1477,6 +1778,7 @@ final class AppState: ObservableObject {
             }
         }
         notifyStateChanged()
+        return archiveOutcome
     }
 
     private func startElapsedTimer() {
@@ -1688,6 +1990,13 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
         }
     }
 
+    if let archiveError = error as? DictationArchiveError {
+        switch archiveError {
+        case .unreadableLine:
+            return "DictationArchiveError.unreadableLine"
+        }
+    }
+
     if let launchAtLoginError = error as? LaunchAtLoginError {
         switch launchAtLoginError {
         case .couldNotWriteLaunchAgent:
@@ -1771,6 +2080,27 @@ struct SettingsView: View {
                 LabeledContent("Max duration", value: formatSettingsDuration(appState.maxAudioDurationSeconds))
                 LabeledContent("Auto-send", value: ProjectDefaults.autoSendEnabledByDefault ? "On" : "Off")
                 LabeledContent("History", value: ProjectDefaults.transcriptHistoryEnabledByDefault ? "On" : "Off")
+            }
+
+            Section("Dictation Archive") {
+                Toggle(
+                    "Archive completed dictations",
+                    isOn: Binding(
+                        get: { appState.dictationArchiveEnabled },
+                        set: { appState.setDictationArchiveEnabled($0) }
+                    )
+                )
+                Toggle(
+                    "Store raw transcript in archive",
+                    isOn: Binding(
+                        get: { appState.archiveRawTranscriptEnabled },
+                        set: { appState.setArchiveRawTranscriptEnabled($0) }
+                    )
+                )
+                .disabled(!appState.dictationArchiveEnabled)
+                Text("When enabled, BabbelStream writes work text to local daily files on this Mac. Audio is never archived.")
+                    .foregroundStyle(.secondary)
+                LabeledContent("Archive folder", value: appState.archiveDirectoryPath)
             }
 
             Section("Usage") {
@@ -1860,6 +2190,84 @@ struct SettingsView: View {
         }
 
         return "\(totalSeconds / 60) min"
+    }
+}
+
+struct DictationArchiveView: View {
+    @EnvironmentObject private var appState: AppState
+
+    var body: some View {
+        Form {
+            Section("Month") {
+                TextField("Month (YYYY-MM)", text: $appState.archiveMonthText)
+                HStack {
+                    Button("Reload") {
+                        appState.loadArchiveMonth()
+                    }
+                    Button("Copy Markdown Export") {
+                        appState.copyArchiveMarkdownExport()
+                    }
+                    Button("Reveal Folder") {
+                        appState.revealArchiveFolder()
+                    }
+                    Button("Clear Archive") {
+                        confirmClearArchive()
+                    }
+                }
+            }
+
+            Section("Summary") {
+                LabeledContent("Entries", value: "\(appState.archiveSnapshot.entries.count)")
+                LabeledContent("Raw words", value: "\(appState.archiveSnapshot.totalRawWordCount)")
+                LabeledContent("Final words", value: "\(appState.archiveSnapshot.totalFinalWordCount)")
+                LabeledContent("Archive", value: appState.dictationArchiveEnabled ? "Enabled" : "Disabled")
+
+                if let archiveErrorMessage = appState.archiveErrorMessage {
+                    Text(archiveErrorMessage)
+                        .foregroundStyle(.red)
+                } else {
+                    Text(appState.archiveStatusMessage)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section("Daily Totals") {
+                if appState.archiveSnapshot.dailySummaries.isEmpty {
+                    Text("No archived dictations for this month.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(appState.archiveSnapshot.dailySummaries) { summary in
+                        LabeledContent(
+                            summary.dateString,
+                            value: "\(summary.entryCount) dictations, \(summary.rawWordCount) raw words, \(summary.finalWordCount) final words"
+                        )
+                    }
+                }
+            }
+
+            Section("Storage") {
+                Text(appState.archiveDirectoryPath)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+            }
+        }
+        .padding(24)
+        .frame(width: 680)
+    }
+
+    private func confirmClearArchive() {
+        let alert = NSAlert()
+        alert.messageText = "Clear dictation archive?"
+        alert.informativeText = "This deletes local archive files. Audio is not part of the archive."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Clear Archive")
+        alert.addButton(withTitle: "Cancel")
+
+        guard alert.runModal() == .alertFirstButtonReturn else {
+            return
+        }
+
+        appState.clearArchive()
     }
 }
 

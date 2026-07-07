@@ -8,6 +8,8 @@ struct ProjectDefaultsTests {
         precondition(ProjectDefaults.cleanupEnabledByDefault)
         precondition(!ProjectDefaults.autoSendEnabledByDefault)
         precondition(!ProjectDefaults.transcriptHistoryEnabledByDefault)
+        precondition(!ProjectDefaults.dictationArchiveEnabledByDefault)
+        precondition(!ProjectDefaults.archiveRawTranscriptEnabledByDefault)
         precondition(!ProjectDefaults.debugPersistenceEnabledByDefault)
     }
 

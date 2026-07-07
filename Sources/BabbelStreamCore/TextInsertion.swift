@@ -37,10 +37,12 @@ public protocol TextInsertionService: AnyObject {
 public struct TextInsertionTarget: Equatable, Sendable {
     public let processIdentifier: pid_t
     public let localizedName: String?
+    public let bundleIdentifier: String?
 
-    public init(processIdentifier: pid_t, localizedName: String?) {
+    public init(processIdentifier: pid_t, localizedName: String?, bundleIdentifier: String? = nil) {
         self.processIdentifier = processIdentifier
         self.localizedName = localizedName
+        self.bundleIdentifier = bundleIdentifier
     }
 
     public var displayName: String {
