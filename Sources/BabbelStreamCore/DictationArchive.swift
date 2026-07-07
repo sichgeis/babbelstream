@@ -248,28 +248,9 @@ public final class JSONLDictationArchiveStore: DictationArchiveStore {
 
     public func append(_ entry: DictationArchiveEntry) throws {
         let fileURL = dailyFileURL(for: entry.startedAt)
-        let directoryURL = fileURL.deletingLastPathComponent()
-        try fileManager.createDirectory(
-            at: directoryURL,
-            withIntermediateDirectories: true,
-            attributes: [.posixPermissions: 0o700]
-        )
-
-        if !fileManager.fileExists(atPath: fileURL.path) {
-            fileManager.createFile(
-                atPath: fileURL.path,
-                contents: nil,
-                attributes: [.posixPermissions: 0o600]
-            )
-        }
-
+        try prepareDailyArchiveFile(at: fileURL)
         let data = try encoder.encode(entry) + Data("\n".utf8)
-        let handle = try FileHandle(forWritingTo: fileURL)
-        defer {
-            try? handle.close()
-        }
-        try handle.seekToEnd()
-        try handle.write(contentsOf: data)
+        try append(data, to: fileURL)
     }
 
     public func loadMonth(_ month: DictationArchiveMonth) throws -> DictationArchiveMonthSnapshot {
@@ -278,29 +259,8 @@ public final class JSONLDictationArchiveStore: DictationArchiveStore {
             return DictationArchiveMonthSnapshot(month: month, entries: [], calendar: calendar)
         }
 
-        let fileURLs = try fileManager
-            .contentsOfDirectory(at: monthDirectoryURL, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "jsonl" }
-            .sorted { $0.lastPathComponent < $1.lastPathComponent }
-
-        var entries = [DictationArchiveEntry]()
-        for fileURL in fileURLs {
-            let data = try Data(contentsOf: fileURL)
-            guard let text = String(data: data, encoding: .utf8) else {
-                throw DictationArchiveError.unreadableLine(file: fileURL.lastPathComponent, line: 1)
-            }
-
-            for (lineIndex, line) in text.split(separator: "\n", omittingEmptySubsequences: true).enumerated() {
-                do {
-                    entries.append(try decoder.decode(DictationArchiveEntry.self, from: Data(line.utf8)))
-                } catch {
-                    throw DictationArchiveError.unreadableLine(
-                        file: fileURL.lastPathComponent,
-                        line: lineIndex + 1
-                    )
-                }
-            }
-        }
+        let entries = try archiveFileURLs(in: monthDirectoryURL)
+            .flatMap { try archiveEntries(in: $0) }
 
         return DictationArchiveMonthSnapshot(month: month, entries: entries, calendar: calendar)
     }
@@ -378,6 +338,61 @@ public final class JSONLDictationArchiveStore: DictationArchiveStore {
             .appendingPathComponent(month.directoryName, isDirectory: true)
             .appendingPathComponent(day)
             .appendingPathExtension("jsonl")
+    }
+
+    private func prepareDailyArchiveFile(at fileURL: URL) throws {
+        try fileManager.createDirectory(
+            at: fileURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o700]
+        )
+
+        guard !fileManager.fileExists(atPath: fileURL.path) else {
+            return
+        }
+
+        fileManager.createFile(
+            atPath: fileURL.path,
+            contents: nil,
+            attributes: [.posixPermissions: 0o600]
+        )
+    }
+
+    private func append(_ data: Data, to fileURL: URL) throws {
+        let handle = try FileHandle(forWritingTo: fileURL)
+        defer {
+            try? handle.close()
+        }
+        try handle.seekToEnd()
+        try handle.write(contentsOf: data)
+    }
+
+    private func archiveFileURLs(in monthDirectoryURL: URL) throws -> [URL] {
+        try fileManager
+            .contentsOfDirectory(at: monthDirectoryURL, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "jsonl" }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+    }
+
+    private func archiveEntries(in fileURL: URL) throws -> [DictationArchiveEntry] {
+        let data = try Data(contentsOf: fileURL)
+        guard let text = String(data: data, encoding: .utf8) else {
+            throw DictationArchiveError.unreadableLine(file: fileURL.lastPathComponent, line: 1)
+        }
+
+        return try text
+            .split(separator: "\n", omittingEmptySubsequences: true)
+            .enumerated()
+            .map { lineIndex, line in
+                do {
+                    return try decoder.decode(DictationArchiveEntry.self, from: Data(line.utf8))
+                } catch {
+                    throw DictationArchiveError.unreadableLine(
+                        file: fileURL.lastPathComponent,
+                        line: lineIndex + 1
+                    )
+                }
+            }
     }
 
     private func appSuffix(for entry: DictationArchiveEntry) -> String {

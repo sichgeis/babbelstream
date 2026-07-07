@@ -230,106 +230,7 @@ usageTracker.save(usageSnapshot)
 check(usageTracker.load() == usageSnapshot, "Usage counters should persist as local UserDefaults data.")
 usageTracker.reset()
 check(usageTracker.load() == UsageSnapshot(), "Usage counters should reset locally.")
-let settingsDefaults = UserDefaults(suiteName: "com.sichgeis.babbelstream.settings-checks")!
-settingsDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.settings-checks")
-let settingsStore = UserDefaultsSettingsStore(userDefaults: settingsDefaults)
-let archiveSettings = AppSettings(dictationArchiveEnabled: true, archiveRawTranscriptEnabled: true)
-try settingsStore.save(archiveSettings)
-check(settingsStore.load().dictationArchiveEnabled, "Archive enabled setting should persist.")
-check(settingsStore.load().archiveRawTranscriptEnabled, "Raw transcript archive setting should persist when archive is enabled.")
-let disabledArchiveSettings = AppSettings(dictationArchiveEnabled: false, archiveRawTranscriptEnabled: true)
-check(!disabledArchiveSettings.archiveRawTranscriptEnabled, "Raw transcript archiving should be ineffective when archive is disabled.")
-check(DictationWordCounter.count(in: "hello world") == 2, "Word counter should count simple English words.")
-check(DictationWordCounter.count(in: "Kannst du bitte testen") == 4, "Word counter should count simple German words.")
-check(DictationWordCounter.count(in: "Hallo team please review") == 4, "Word counter should count mixed-language words.")
-check(DictationWordCounter.count(in: "   ") == 0, "Word counter should return zero for blank text.")
-
-var archiveCalendar = Calendar(identifier: .gregorian)
-archiveCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
-let archiveRootURL = FileManager.default.temporaryDirectory
-    .appendingPathComponent("BabbelStreamChecks", isDirectory: true)
-    .appendingPathComponent("ArchiveChecks", isDirectory: true)
-let archiveURL = archiveRootURL.appendingPathComponent("Archive", isDirectory: true)
-let siblingURL = archiveRootURL.appendingPathComponent("keep.txt")
-try? FileManager.default.removeItem(at: archiveRootURL)
-try FileManager.default.createDirectory(at: archiveRootURL, withIntermediateDirectories: true)
-try Data("keep".utf8).write(to: siblingURL)
-let archiveStore = JSONLDictationArchiveStore(archiveDirectoryURL: archiveURL, calendar: archiveCalendar)
-let archiveMonth = DictationArchiveMonth(year: 2026, month: 7)!
-let firstArchiveDate = ISO8601DateFormatter().date(from: "2026-07-07T10:00:00Z")!
-let firstRawTranscript = "hello world"
-let firstFinalDraft = "Hello world."
-let firstArchiveEntry = DictationArchiveEntry(
-    id: UUID(uuidString: "00000000-0000-0000-0000-000000000101")!,
-    startedAt: firstArchiveDate,
-    completedAt: firstArchiveDate.addingTimeInterval(3),
-    audioDurationSeconds: 3,
-    activeAppName: "Slack",
-    activeAppBundleIdentifier: "com.tinyspeck.slackmacgap",
-    cleanupEnabled: true,
-    cleanupFallbackUsed: false,
-    insertionOutcome: .directAccessibilityInsertion,
-    transcriptionProviderLabel: "example / gpt-4o-transcribe",
-    cleanupProviderLabel: "example / gpt-4o-mini",
-    transcriptionLanguage: nil,
-    rawWordCount: DictationWordCounter.count(in: firstRawTranscript),
-    finalWordCount: DictationWordCounter.count(in: firstFinalDraft),
-    finalDraftText: firstFinalDraft,
-    rawTranscriptText: nil
-)
-try archiveStore.append(firstArchiveEntry)
-let firstArchiveFile = archiveURL
-    .appendingPathComponent("2026-07", isDirectory: true)
-    .appendingPathComponent("2026-07-07")
-    .appendingPathExtension("jsonl")
-let firstArchiveFileText = try String(contentsOf: firstArchiveFile, encoding: .utf8)
-check(!firstArchiveFileText.contains("rawTranscriptText"), "Archive entries should omit raw transcript text unless enabled.")
-let secondArchiveDate = ISO8601DateFormatter().date(from: "2026-07-07T11:00:00Z")!
-let secondRawTranscript = "Kannst du bitte testen"
-let secondFinalDraft = "Kannst du bitte testen?"
-let secondArchiveEntry = DictationArchiveEntry(
-    id: UUID(uuidString: "00000000-0000-0000-0000-000000000102")!,
-    startedAt: secondArchiveDate,
-    completedAt: secondArchiveDate.addingTimeInterval(4),
-    audioDurationSeconds: 4,
-    activeAppName: "TextEdit",
-    activeAppBundleIdentifier: "com.apple.TextEdit",
-    cleanupEnabled: false,
-    cleanupFallbackUsed: false,
-    insertionOutcome: .copiedForManualPaste,
-    transcriptionProviderLabel: "example / gpt-4o-transcribe",
-    cleanupProviderLabel: nil,
-    transcriptionLanguage: "de",
-    rawWordCount: DictationWordCounter.count(in: secondRawTranscript),
-    finalWordCount: DictationWordCounter.count(in: secondFinalDraft),
-    finalDraftText: secondFinalDraft,
-    rawTranscriptText: secondRawTranscript
-)
-try archiveStore.append(secondArchiveEntry)
-let archiveSnapshot = try archiveStore.loadMonth(archiveMonth)
-check(archiveSnapshot.entries == [firstArchiveEntry, secondArchiveEntry], "Archive JSONL entries should round-trip in timestamp order.")
-check(archiveSnapshot.dailySummaries.count == 1, "Archive monthly aggregation should group same-day entries.")
-check(archiveSnapshot.dailySummaries[0].entryCount == 2, "Archive daily aggregation should count entries.")
-check(
-    archiveSnapshot.totalRawWordCount == firstArchiveEntry.rawWordCount + secondArchiveEntry.rawWordCount,
-    "Archive monthly aggregation should total raw words."
-)
-check(
-    archiveSnapshot.totalFinalWordCount == firstArchiveEntry.finalWordCount + secondArchiveEntry.finalWordCount,
-    "Archive monthly aggregation should total final words."
-)
-let archiveMarkdown = archiveStore.markdownExport(for: archiveSnapshot)
-check(archiveMarkdown.contains("# BabbelStream Archive 2026-07"), "Archive Markdown export should name the month.")
-check(archiveMarkdown.contains(firstFinalDraft), "Archive Markdown export should include final draft contents.")
-check(archiveMarkdown.contains(secondFinalDraft), "Archive Markdown export should include all final draft contents.")
-check(
-    archiveMarkdown.range(of: firstFinalDraft)!.lowerBound < archiveMarkdown.range(of: secondFinalDraft)!.lowerBound,
-    "Archive Markdown export should preserve timestamp order."
-)
-try archiveStore.clearArchive()
-check(!FileManager.default.fileExists(atPath: archiveURL.path), "Archive clear should remove the archive directory.")
-check(FileManager.default.fileExists(atPath: siblingURL.path), "Archive clear should not remove sibling files.")
-try? FileManager.default.removeItem(at: archiveRootURL)
+try runArchiveChecks()
 let diagnosticsText = PrivacyDiagnosticsBuilder.redactSecrets(
     in: "api key: sk-testSecret123456789 Authorization: Bearer secret-token"
 )
@@ -373,3 +274,134 @@ let retainedRecording = RecordedAudio(
 check(!retainedRecording.wasDeleted, "Retained recordings should report that temp audio still needs cleanup.")
 
 print("BabbelStream scaffold checks passed.")
+
+func runArchiveChecks() throws {
+    let settingsDefaults = UserDefaults(suiteName: "com.sichgeis.babbelstream.settings-checks")!
+    settingsDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.settings-checks")
+    let settingsStore = UserDefaultsSettingsStore(userDefaults: settingsDefaults)
+    let archiveSettings = AppSettings(dictationArchiveEnabled: true, archiveRawTranscriptEnabled: true)
+    try settingsStore.save(archiveSettings)
+    check(settingsStore.load().dictationArchiveEnabled, "Archive enabled setting should persist.")
+    check(
+        settingsStore.load().archiveRawTranscriptEnabled,
+        "Raw transcript archive setting should persist when archive is enabled."
+    )
+
+    let disabledArchiveSettings = AppSettings(dictationArchiveEnabled: false, archiveRawTranscriptEnabled: true)
+    check(
+        !disabledArchiveSettings.archiveRawTranscriptEnabled,
+        "Raw transcript archiving should be ineffective when archive is disabled."
+    )
+    check(DictationWordCounter.count(in: "hello world") == 2, "Word counter should count simple English words.")
+    check(DictationWordCounter.count(in: "Kannst du bitte testen") == 4, "Word counter should count simple German words.")
+    check(
+        DictationWordCounter.count(in: "Hallo team please review") == 4,
+        "Word counter should count mixed-language words."
+    )
+    check(DictationWordCounter.count(in: "   ") == 0, "Word counter should return zero for blank text.")
+
+    var archiveCalendar = Calendar(identifier: .gregorian)
+    archiveCalendar.timeZone = TimeZone(secondsFromGMT: 0)!
+    let archiveRootURL = FileManager.default.temporaryDirectory
+        .appendingPathComponent("BabbelStreamChecks", isDirectory: true)
+        .appendingPathComponent("ArchiveChecks", isDirectory: true)
+    let archiveURL = archiveRootURL.appendingPathComponent("Archive", isDirectory: true)
+    let siblingURL = archiveRootURL.appendingPathComponent("keep.txt")
+    try? FileManager.default.removeItem(at: archiveRootURL)
+    try FileManager.default.createDirectory(at: archiveRootURL, withIntermediateDirectories: true)
+    try Data("keep".utf8).write(to: siblingURL)
+
+    let archiveStore = JSONLDictationArchiveStore(archiveDirectoryURL: archiveURL, calendar: archiveCalendar)
+    let firstArchiveEntry = makeFirstArchiveEntry()
+    try archiveStore.append(firstArchiveEntry)
+
+    let firstArchiveFile = archiveURL
+        .appendingPathComponent("2026-07", isDirectory: true)
+        .appendingPathComponent("2026-07-07")
+        .appendingPathExtension("jsonl")
+    let firstArchiveFileText = try String(contentsOf: firstArchiveFile, encoding: .utf8)
+    check(!firstArchiveFileText.contains("rawTranscriptText"), "Archive entries should omit raw transcript text unless enabled.")
+
+    let secondArchiveEntry = makeSecondArchiveEntry()
+    try archiveStore.append(secondArchiveEntry)
+    let archiveSnapshot = try archiveStore.loadMonth(DictationArchiveMonth(year: 2026, month: 7)!)
+    check(
+        archiveSnapshot.entries == [firstArchiveEntry, secondArchiveEntry],
+        "Archive JSONL entries should round-trip in timestamp order."
+    )
+    check(archiveSnapshot.dailySummaries.count == 1, "Archive monthly aggregation should group same-day entries.")
+    check(archiveSnapshot.dailySummaries[0].entryCount == 2, "Archive daily aggregation should count entries.")
+    check(
+        archiveSnapshot.totalRawWordCount == firstArchiveEntry.rawWordCount + secondArchiveEntry.rawWordCount,
+        "Archive monthly aggregation should total raw words."
+    )
+    check(
+        archiveSnapshot.totalFinalWordCount == firstArchiveEntry.finalWordCount + secondArchiveEntry.finalWordCount,
+        "Archive monthly aggregation should total final words."
+    )
+
+    let archiveMarkdown = archiveStore.markdownExport(for: archiveSnapshot)
+    check(archiveMarkdown.contains("# BabbelStream Archive 2026-07"), "Archive Markdown export should name the month.")
+    check(archiveMarkdown.contains(firstArchiveEntry.finalDraftText), "Archive Markdown export should include final draft contents.")
+    check(archiveMarkdown.contains(secondArchiveEntry.finalDraftText), "Archive Markdown export should include all final draft contents.")
+    check(
+        archiveMarkdown.range(of: firstArchiveEntry.finalDraftText)!.lowerBound
+            < archiveMarkdown.range(of: secondArchiveEntry.finalDraftText)!.lowerBound,
+        "Archive Markdown export should preserve timestamp order."
+    )
+
+    try archiveStore.clearArchive()
+    check(!FileManager.default.fileExists(atPath: archiveURL.path), "Archive clear should remove the archive directory.")
+    check(FileManager.default.fileExists(atPath: siblingURL.path), "Archive clear should not remove sibling files.")
+    try? FileManager.default.removeItem(at: archiveRootURL)
+}
+
+func makeFirstArchiveEntry() -> DictationArchiveEntry {
+    let rawTranscript = "hello world"
+    let finalDraft = "Hello world."
+    let startedAt = ISO8601DateFormatter().date(from: "2026-07-07T10:00:00Z")!
+
+    return DictationArchiveEntry(
+        id: UUID(uuidString: "00000000-0000-0000-0000-000000000101")!,
+        startedAt: startedAt,
+        completedAt: startedAt.addingTimeInterval(3),
+        audioDurationSeconds: 3,
+        activeAppName: "Slack",
+        activeAppBundleIdentifier: "com.tinyspeck.slackmacgap",
+        cleanupEnabled: true,
+        cleanupFallbackUsed: false,
+        insertionOutcome: .directAccessibilityInsertion,
+        transcriptionProviderLabel: "example / gpt-4o-transcribe",
+        cleanupProviderLabel: "example / gpt-4o-mini",
+        transcriptionLanguage: nil,
+        rawWordCount: DictationWordCounter.count(in: rawTranscript),
+        finalWordCount: DictationWordCounter.count(in: finalDraft),
+        finalDraftText: finalDraft,
+        rawTranscriptText: nil
+    )
+}
+
+func makeSecondArchiveEntry() -> DictationArchiveEntry {
+    let rawTranscript = "Kannst du bitte testen"
+    let finalDraft = "Kannst du bitte testen?"
+    let startedAt = ISO8601DateFormatter().date(from: "2026-07-07T11:00:00Z")!
+
+    return DictationArchiveEntry(
+        id: UUID(uuidString: "00000000-0000-0000-0000-000000000102")!,
+        startedAt: startedAt,
+        completedAt: startedAt.addingTimeInterval(4),
+        audioDurationSeconds: 4,
+        activeAppName: "TextEdit",
+        activeAppBundleIdentifier: "com.apple.TextEdit",
+        cleanupEnabled: false,
+        cleanupFallbackUsed: false,
+        insertionOutcome: .copiedForManualPaste,
+        transcriptionProviderLabel: "example / gpt-4o-transcribe",
+        cleanupProviderLabel: nil,
+        transcriptionLanguage: "de",
+        rawWordCount: DictationWordCounter.count(in: rawTranscript),
+        finalWordCount: DictationWordCounter.count(in: finalDraft),
+        finalDraftText: finalDraft,
+        rawTranscriptText: rawTranscript
+    )
+}

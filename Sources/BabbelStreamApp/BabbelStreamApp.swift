@@ -477,43 +477,6 @@ final class SettingsWindowController {
 }
 
 @MainActor
-final class DictationArchiveWindowController {
-    private let appState: AppState
-    private var windowController: NSWindowController?
-
-    init(appState: AppState) {
-        self.appState = appState
-    }
-
-    func show() {
-        let controller = windowController ?? makeWindowController()
-        windowController = controller
-        controller.showWindow(nil)
-        controller.window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-        appState.loadArchiveMonth()
-    }
-
-    private func makeWindowController() -> NSWindowController {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 640),
-            styleMask: [.titled, .closable, .miniaturizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = "\(ProjectDefaults.appName) Dictation Archive"
-        window.contentViewController = NSHostingController(
-            rootView: DictationArchiveView()
-                .environmentObject(appState)
-        )
-        window.isReleasedWhenClosed = false
-        window.center()
-
-        return NSWindowController(window: window)
-    }
-}
-
-@MainActor
 final class PersonalDictionaryWindowController {
     private let store: PersonalDictionaryStore
     private let onTeachCorrection: () -> Void
@@ -1052,25 +1015,20 @@ final class AppState: ObservableObject {
     }
 
     func setDictationArchiveEnabled(_ isEnabled: Bool) {
-        dictationArchiveEnabled = isEnabled
         var updatedSettings = appSettings
         updatedSettings.dictationArchiveEnabled = isEnabled
         if !isEnabled {
             updatedSettings.archiveRawTranscriptEnabled = false
-            archiveRawTranscriptEnabled = false
         }
 
         do {
-            try settingsStore.save(updatedSettings)
-            appSettings = updatedSettings
-            dictationArchiveEnabled = updatedSettings.dictationArchiveEnabled
-            archiveRawTranscriptEnabled = updatedSettings.archiveRawTranscriptEnabled
-            archiveStatusMessage = isEnabled
-                ? "Archive enabled. Completed dictations will be stored locally."
-                : "Archive disabled. Completed dictations will not be stored."
-            archiveErrorMessage = nil
-            lastResult = archiveStatusMessage
-            recordDiagnostic("dictation archive \(isEnabled ? "enabled" : "disabled")")
+            try applySavedArchiveSettings(
+                updatedSettings,
+                statusMessage: isEnabled
+                    ? "Archive enabled. Completed dictations will be stored locally."
+                    : "Archive disabled. Completed dictations will not be stored.",
+                diagnosticMessage: "dictation archive \(isEnabled ? "enabled" : "disabled")"
+            )
             if isEnabled {
                 loadArchiveMonth()
             } else {
@@ -1083,25 +1041,37 @@ final class AppState: ObservableObject {
     }
 
     func setArchiveRawTranscriptEnabled(_ isEnabled: Bool) {
-        archiveRawTranscriptEnabled = dictationArchiveEnabled && isEnabled
         var updatedSettings = appSettings
-        updatedSettings.archiveRawTranscriptEnabled = archiveRawTranscriptEnabled
+        updatedSettings.archiveRawTranscriptEnabled = dictationArchiveEnabled && isEnabled
 
         do {
-            try settingsStore.save(updatedSettings)
-            appSettings = updatedSettings
-            archiveRawTranscriptEnabled = updatedSettings.archiveRawTranscriptEnabled
-            archiveStatusMessage = archiveRawTranscriptEnabled
-                ? "Raw transcript archiving enabled."
-                : "Raw transcript archiving disabled."
-            archiveErrorMessage = nil
-            lastResult = archiveStatusMessage
-            recordDiagnostic("raw transcript archive \(archiveRawTranscriptEnabled ? "enabled" : "disabled")")
+            try applySavedArchiveSettings(
+                updatedSettings,
+                statusMessage: updatedSettings.archiveRawTranscriptEnabled
+                    ? "Raw transcript archiving enabled."
+                    : "Raw transcript archiving disabled.",
+                diagnosticMessage: "raw transcript archive \(updatedSettings.archiveRawTranscriptEnabled ? "enabled" : "disabled")"
+            )
             notifyStateChanged()
         } catch {
             errorMessage = error.localizedDescription
             recordDiagnostic("raw transcript archive toggle failed: \(diagnosticErrorCategory(error))")
         }
+    }
+
+    private func applySavedArchiveSettings(
+        _ settings: AppSettings,
+        statusMessage: String,
+        diagnosticMessage: String
+    ) throws {
+        try settingsStore.save(settings)
+        appSettings = settings
+        dictationArchiveEnabled = settings.dictationArchiveEnabled
+        archiveRawTranscriptEnabled = settings.archiveRawTranscriptEnabled
+        archiveStatusMessage = statusMessage
+        archiveErrorMessage = nil
+        lastResult = statusMessage
+        recordDiagnostic(diagnosticMessage)
     }
 
     func setLaunchAtLoginEnabled(_ isEnabled: Bool) {
@@ -1722,63 +1692,77 @@ final class AppState: ObservableObject {
         let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
         let insertionText = DictationDraftFormatter.textWithTrailingSeparator(finalDraft)
         let priorWarning = warningMessage
-        var archiveOutcome = DictationArchiveInsertionOutcome.memoryOnlyAfterPasteFailure
 
         do {
             let insertionResult = try await textInsertionService.insertText(insertionText, target: pasteTarget)
             accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
-
-            switch insertionResult {
-            case .insertedDirectly:
-                archiveOutcome = .directAccessibilityInsertion
-                status = "Ready"
-                lastResult = "Draft inserted. Review it before sending."
-                errorMessage = nil
-                warningMessage = priorWarning
-                recordDiagnostic("paste succeeded: direct accessibility insertion")
-            case .pasteShortcutPosted:
-                archiveOutcome = .pasteShortcutPosted
-                status = "Ready"
-                lastResult = "Paste shortcut sent; draft is also on the clipboard."
-                errorMessage = nil
-                warningMessage = combinedWarning(
-                    priorWarning,
-                    "If the draft did not appear, press Cmd+V in the target field."
-                )
-                recordDiagnostic("paste shortcut posted; clipboard fallback retained")
-            case .copiedForManualPaste:
-                archiveOutcome = .copiedForManualPaste
-                status = "Copied"
-                lastResult = "Draft copied to clipboard. Paste manually with Cmd+V."
-                errorMessage = "Accessibility is not allowed, so BabbelStream could not paste automatically."
-                warningMessage = priorWarning
-                recordDiagnostic("paste fallback: copied for manual paste")
-            case .copiedAfterPasteShortcutFailure:
-                archiveOutcome = .copiedAfterPasteShortcutFailure
-                status = "Copied"
-                lastResult = "Draft copied to clipboard after paste shortcut failed."
-                errorMessage = "BabbelStream could not post Cmd+V. Paste manually with Cmd+V."
-                warningMessage = priorWarning
-                recordDiagnostic("paste shortcut failed; clipboard fallback retained")
-            }
+            let outcome = applySuccessfulInsertionResult(insertionResult, priorWarning: priorWarning)
+            notifyStateChanged()
+            return outcome
         } catch {
-            do {
-                try textInsertionService.copyText(insertionText)
-                archiveOutcome = .copiedAfterPasteFailure
-                status = "Copied"
-                lastResult = "Draft copied to clipboard after paste failed. Paste manually with Cmd+V."
-                errorMessage = error.localizedDescription
-                recordDiagnostic("paste failed; copied fallback: \(diagnosticErrorCategory(error))")
-            } catch {
-                archiveOutcome = .memoryOnlyAfterPasteFailure
-                status = "Paste failed"
-                lastResult = "Draft is only available in memory for this app session."
-                errorMessage = error.localizedDescription
-                recordDiagnostic("paste and copy failed: \(diagnosticErrorCategory(error))")
-            }
+            let outcome = copyAfterInsertionFailure(insertionText, originalError: error)
+            notifyStateChanged()
+            return outcome
         }
-        notifyStateChanged()
-        return archiveOutcome
+    }
+
+    private func applySuccessfulInsertionResult(
+        _ insertionResult: TextInsertionResult,
+        priorWarning: String?
+    ) -> DictationArchiveInsertionOutcome {
+        switch insertionResult {
+        case .insertedDirectly:
+            status = "Ready"
+            lastResult = "Draft inserted. Review it before sending."
+            errorMessage = nil
+            warningMessage = priorWarning
+            recordDiagnostic("paste succeeded: direct accessibility insertion")
+            return .directAccessibilityInsertion
+        case .pasteShortcutPosted:
+            status = "Ready"
+            lastResult = "Paste shortcut sent; draft is also on the clipboard."
+            errorMessage = nil
+            warningMessage = combinedWarning(
+                priorWarning,
+                "If the draft did not appear, press Cmd+V in the target field."
+            )
+            recordDiagnostic("paste shortcut posted; clipboard fallback retained")
+            return .pasteShortcutPosted
+        case .copiedForManualPaste:
+            status = "Copied"
+            lastResult = "Draft copied to clipboard. Paste manually with Cmd+V."
+            errorMessage = "Accessibility is not allowed, so BabbelStream could not paste automatically."
+            warningMessage = priorWarning
+            recordDiagnostic("paste fallback: copied for manual paste")
+            return .copiedForManualPaste
+        case .copiedAfterPasteShortcutFailure:
+            status = "Copied"
+            lastResult = "Draft copied to clipboard after paste shortcut failed."
+            errorMessage = "BabbelStream could not post Cmd+V. Paste manually with Cmd+V."
+            warningMessage = priorWarning
+            recordDiagnostic("paste shortcut failed; clipboard fallback retained")
+            return .copiedAfterPasteShortcutFailure
+        }
+    }
+
+    private func copyAfterInsertionFailure(
+        _ insertionText: String,
+        originalError: Error
+    ) -> DictationArchiveInsertionOutcome {
+        do {
+            try textInsertionService.copyText(insertionText)
+            status = "Copied"
+            lastResult = "Draft copied to clipboard after paste failed. Paste manually with Cmd+V."
+            errorMessage = originalError.localizedDescription
+            recordDiagnostic("paste failed; copied fallback: \(diagnosticErrorCategory(originalError))")
+            return .copiedAfterPasteFailure
+        } catch {
+            status = "Paste failed"
+            lastResult = "Draft is only available in memory for this app session."
+            errorMessage = error.localizedDescription
+            recordDiagnostic("paste and copy failed: \(diagnosticErrorCategory(error))")
+            return .memoryOnlyAfterPasteFailure
+        }
     }
 
     private func startElapsedTimer() {
@@ -2190,84 +2174,6 @@ struct SettingsView: View {
         }
 
         return "\(totalSeconds / 60) min"
-    }
-}
-
-struct DictationArchiveView: View {
-    @EnvironmentObject private var appState: AppState
-
-    var body: some View {
-        Form {
-            Section("Month") {
-                TextField("Month (YYYY-MM)", text: $appState.archiveMonthText)
-                HStack {
-                    Button("Reload") {
-                        appState.loadArchiveMonth()
-                    }
-                    Button("Copy Markdown Export") {
-                        appState.copyArchiveMarkdownExport()
-                    }
-                    Button("Reveal Folder") {
-                        appState.revealArchiveFolder()
-                    }
-                    Button("Clear Archive") {
-                        confirmClearArchive()
-                    }
-                }
-            }
-
-            Section("Summary") {
-                LabeledContent("Entries", value: "\(appState.archiveSnapshot.entries.count)")
-                LabeledContent("Raw words", value: "\(appState.archiveSnapshot.totalRawWordCount)")
-                LabeledContent("Final words", value: "\(appState.archiveSnapshot.totalFinalWordCount)")
-                LabeledContent("Archive", value: appState.dictationArchiveEnabled ? "Enabled" : "Disabled")
-
-                if let archiveErrorMessage = appState.archiveErrorMessage {
-                    Text(archiveErrorMessage)
-                        .foregroundStyle(.red)
-                } else {
-                    Text(appState.archiveStatusMessage)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Section("Daily Totals") {
-                if appState.archiveSnapshot.dailySummaries.isEmpty {
-                    Text("No archived dictations for this month.")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(appState.archiveSnapshot.dailySummaries) { summary in
-                        LabeledContent(
-                            summary.dateString,
-                            value: "\(summary.entryCount) dictations, \(summary.rawWordCount) raw words, \(summary.finalWordCount) final words"
-                        )
-                    }
-                }
-            }
-
-            Section("Storage") {
-                Text(appState.archiveDirectoryPath)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
-            }
-        }
-        .padding(24)
-        .frame(width: 680)
-    }
-
-    private func confirmClearArchive() {
-        let alert = NSAlert()
-        alert.messageText = "Clear dictation archive?"
-        alert.informativeText = "This deletes local archive files. Audio is not part of the archive."
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "Clear Archive")
-        alert.addButton(withTitle: "Cancel")
-
-        guard alert.runModal() == .alertFirstButtonReturn else {
-            return
-        }
-
-        appState.clearArchive()
     }
 }
 
