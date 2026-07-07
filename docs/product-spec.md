@@ -25,7 +25,8 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - No iOS app.
 - No Electron.
 - No auto-send in MVP, including no "press enter" voice command.
-- No transcript history, analytics, telemetry, cloud database, or subscription service.
+- No transcript history by default; no analytics, telemetry, cloud database, or subscription service.
+- No automatic transcript-history learning. Any local dictation archive must be explicit, opt-in, local-only, and user-visible.
 - No local Whisper backend in MVP, though the architecture should allow one later.
 
 ## MVP Scope
@@ -53,6 +54,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 ## V1 Scope
 
+- Optional local dictation archive for work usage review: when explicitly enabled, store text-only dictation entries locally so the user can inspect daily/monthly content, count spoken words, and later generate monthly topic summaries.
 - Hotkey customization.
 - Better active-app indication before paste.
 - Optional per-app cleanup style defaults.
@@ -100,9 +102,24 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 - Temporary audio is deleted immediately after processing unless debug mode is explicitly enabled.
 - Transcript text is kept only in memory for current processing and optional paste-last behavior.
-- Transcripts and audio are not logged by default.
+- Transcripts and audio are not logged or archived by default.
+- Optional archive persistence is disabled by default and must clearly explain that work text will be written to local disk.
+- When the archive is enabled, audio is still never archived; the default archive entry stores the final generated draft plus word counts and metadata, while raw transcript text remains optional and disabled by default.
 - API keys are stored in Keychain.
 - Network destinations are configurable and visible.
+
+## Optional Local Dictation Archive
+
+The user may enable a local archive for work self-review and month-end reporting. This is a V1 feature and should be the next backlog priority before broader convenience features.
+
+- Default: off. Existing privacy behavior remains unchanged until the user enables the archive in Settings.
+- Storage: text-only daily JSONL files under `~/Library/Application Support/BabbelStream/Archive/YYYY-MM/YYYY-MM-DD.jsonl`.
+- Entry content: timestamp, stable entry id, active app name if available, cleanup enabled/fallback flags, insertion outcome, provider labels, spoken/raw word count, final draft word count, final draft text, and optional raw transcript text only if the user enables an additional "Store raw transcript" setting.
+- Audio: never stored in the archive.
+- Monthly review: the app should be able to count words by day/month, show or export the stored contents, and prepare a monthly topic-summary input from the archive.
+- Topic summaries: no monthly archive content may be sent to any AI provider automatically. If an AI-generated monthly summary is added, it must be an explicit user action with the provider destination shown before sending.
+- User controls: enable/disable archive, pause archive for a dictation when feasible, reveal archive folder, export a month as Markdown or plain text, clear archive data, and optionally configure retention.
+- Diagnostics: copyable diagnostics may include archive enabled/disabled state and entry counts, but never archive contents.
 
 ## Error States
 
@@ -122,5 +139,6 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Mixed German-English technical speech preserves terms such as repository names, ticket IDs, acronyms, URLs, and code identifiers.
 - No message is auto-sent.
 - Audio is deleted after normal processing.
-- No transcript history is written to disk.
+- No transcript history is written to disk when the archive is disabled.
+- When the archive is enabled, a completed dictation writes a text-only local archive entry with correct word counts and no audio.
 - Provider settings make the destination explicit.

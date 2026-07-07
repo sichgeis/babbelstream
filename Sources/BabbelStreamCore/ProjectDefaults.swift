@@ -14,6 +14,8 @@ public enum ProjectDefaults {
     public static let cleanupEnabledByDefault = true
     public static let autoSendEnabledByDefault = false
     public static let transcriptHistoryEnabledByDefault = false
+    public static let dictationArchiveEnabledByDefault = false
+    public static let archiveRawTranscriptEnabledByDefault = false
     public static let debugPersistenceEnabledByDefault = false
     public static let maxPersonalDictionaryPromptCharacters = 6_000
 }

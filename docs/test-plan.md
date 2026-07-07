@@ -8,6 +8,7 @@
 - Settings defaults and migrations.
 - Configurable max recording duration defaults to 10 minutes and rejects values above the cap.
 - Usage counter arithmetic and reset behavior.
+- Dictation archive default-off behavior, JSONL round trip, word-count aggregation, monthly export rendering, and clear behavior.
 - Privacy-safe diagnostics redaction.
 - Temp-file deletion policy.
 - Text insertion result handling behind an adapter.
@@ -22,6 +23,7 @@
 - Provider HTTP error body extraction without logging request bodies or transcripts.
 - Cleanup request includes dictionary context in the existing cleanup call when entries exist.
 - Oversized dictionary context skips entries with counts instead of failing dictation.
+- Archive integration writes one completed-dictation entry only when enabled and never writes audio paths or API keys.
 - Coordinator flow from audio URL to pasted text using fakes.
 - Timeout, retry, invalid-key, and malformed-response cases.
 
@@ -34,7 +36,10 @@
 - Usage counters are visible in Settings and can be reset.
 - Copy Diagnostics produces a redacted report without transcripts, audio paths, clipboard contents, or API keys.
 - No message is auto-sent.
-- No transcript or audio file remains after normal use.
+- No transcript or audio file remains after normal use when the archive is disabled.
+- Optional archive is visibly disabled by default.
+- When enabled, the archive writes a daily local JSONL entry with final draft text, word counts, and no audio.
+- Monthly archive review can count words by day/month and export the selected month for inspection.
 - Personal dictionary edits are picked up on the next cleanup without app restart.
 - Teach Correction can add or update a correction hint without storing transcript history.
 
@@ -78,13 +83,27 @@
 - Future work: track approximate cleanup tokens and optional price inputs.
 - Do not send analytics anywhere.
 
+## Archive Tests
+
+- Archive setting defaults to disabled for new installs and migrations.
+- Disabled archive writes no transcript, final draft, raw transcript, or archive metadata files.
+- Enabled archive appends one valid JSONL object per completed dictation to `Archive/YYYY-MM/YYYY-MM-DD.jsonl`.
+- Archive entries include timestamp, id, provider labels, cleanup state, insertion outcome, audio duration, raw/spoken word count, final draft word count, and final draft text.
+- Raw transcript text is omitted unless the separate raw-transcript archive setting is enabled.
+- Audio file paths, API keys, provider request bodies, and clipboard contents are never stored in archive entries.
+- Monthly aggregation counts words by day and month deterministically.
+- Markdown/plain-text monthly export preserves entry ordering and contents.
+- Topic-summary generation requires explicit user action and visible provider destination before any archive text is sent.
+- Clear archive requires confirmation and removes only archive files.
+
 ## Privacy Tests
 
 - Confirm temporary audio deletion on success, failure, timeout, and cancel.
-- Confirm no transcript history is written to disk.
+- Confirm no transcript history is written to disk when the archive is disabled.
+- Confirm archive files are local-only, text-only, user-visible, and absent unless explicitly enabled.
 - Confirm personal dictionary contains only explicit terms/corrections and no transcript history.
-- Confirm logs exclude audio, transcripts, API keys, and clipboard content.
-- Confirm copied diagnostics exclude audio, transcripts, API keys, audio paths, request bodies, and clipboard content.
+- Confirm logs exclude audio, transcripts, archive contents, API keys, and clipboard content.
+- Confirm copied diagnostics exclude audio, transcripts, archive contents, API keys, audio paths, request bodies, and clipboard content.
 - Confirm usage counters contain only counts and durations.
 - Confirm debug persistence is explicit and visible.
 

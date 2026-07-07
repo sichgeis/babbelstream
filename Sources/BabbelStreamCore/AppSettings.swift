@@ -7,6 +7,8 @@ public struct AppSettings: Equatable, Sendable {
     public var transcriptionLanguage: String
     public var transcriptionPrompt: String
     public var maxAudioDurationSeconds: TimeInterval
+    public var dictationArchiveEnabled: Bool
+    public var archiveRawTranscriptEnabled: Bool
 
     public init(
         providerConfiguration: ProviderConfiguration = ProviderConfiguration(),
@@ -14,7 +16,9 @@ public struct AppSettings: Equatable, Sendable {
         transcriptionResponseFormat: String = ProjectDefaults.defaultTranscriptionResponseFormat,
         transcriptionLanguage: String = "",
         transcriptionPrompt: String = "",
-        maxAudioDurationSeconds: TimeInterval = ProjectDefaults.maxAudioDurationSeconds
+        maxAudioDurationSeconds: TimeInterval = ProjectDefaults.maxAudioDurationSeconds,
+        dictationArchiveEnabled: Bool = ProjectDefaults.dictationArchiveEnabledByDefault,
+        archiveRawTranscriptEnabled: Bool = ProjectDefaults.archiveRawTranscriptEnabledByDefault
     ) {
         self.providerConfiguration = providerConfiguration
         self.cleanupEnabled = cleanupEnabled
@@ -22,6 +26,8 @@ public struct AppSettings: Equatable, Sendable {
         self.transcriptionLanguage = transcriptionLanguage
         self.transcriptionPrompt = transcriptionPrompt
         self.maxAudioDurationSeconds = maxAudioDurationSeconds
+        self.dictationArchiveEnabled = dictationArchiveEnabled
+        self.archiveRawTranscriptEnabled = dictationArchiveEnabled && archiveRawTranscriptEnabled
     }
 }
 
@@ -156,6 +162,8 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         static let transcriptionLanguage = "transcription.language"
         static let transcriptionPrompt = "transcription.prompt"
         static let maxAudioDurationSeconds = "recording.maxAudioDurationSeconds"
+        static let dictationArchiveEnabled = "dictationArchive.enabled"
+        static let archiveRawTranscriptEnabled = "dictationArchive.rawTranscriptEnabled"
     }
 
     private let userDefaults: UserDefaults
@@ -190,6 +198,12 @@ public final class UserDefaultsSettingsStore: SettingsStore {
             retryCount: retryCount
         )
 
+        let dictationArchiveEnabled = userDefaults.object(forKey: Key.dictationArchiveEnabled) as? Bool
+            ?? defaults.dictationArchiveEnabled
+        let archiveRawTranscriptEnabled = dictationArchiveEnabled
+            && (userDefaults.object(forKey: Key.archiveRawTranscriptEnabled) as? Bool
+                ?? defaults.archiveRawTranscriptEnabled)
+
         return AppSettings(
             providerConfiguration: configuration,
             cleanupEnabled: userDefaults.object(forKey: Key.cleanupEnabled) as? Bool
@@ -201,7 +215,9 @@ public final class UserDefaultsSettingsStore: SettingsStore {
             transcriptionPrompt: userDefaults.string(forKey: Key.transcriptionPrompt)
                 ?? defaults.transcriptionPrompt,
             maxAudioDurationSeconds: userDefaults.object(forKey: Key.maxAudioDurationSeconds) as? Double
-                ?? defaults.maxAudioDurationSeconds
+                ?? defaults.maxAudioDurationSeconds,
+            dictationArchiveEnabled: dictationArchiveEnabled,
+            archiveRawTranscriptEnabled: archiveRawTranscriptEnabled
         )
     }
 
@@ -221,5 +237,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         userDefaults.set(settings.transcriptionLanguage, forKey: Key.transcriptionLanguage)
         userDefaults.set(settings.transcriptionPrompt, forKey: Key.transcriptionPrompt)
         userDefaults.set(settings.maxAudioDurationSeconds, forKey: Key.maxAudioDurationSeconds)
+        userDefaults.set(settings.dictationArchiveEnabled, forKey: Key.dictationArchiveEnabled)
+        userDefaults.set(settings.archiveRawTranscriptEnabled, forKey: Key.archiveRawTranscriptEnabled)
     }
 }

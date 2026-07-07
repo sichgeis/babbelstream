@@ -25,6 +25,7 @@ AppKit status-item app
   -> SettingsStore
   -> SecretStore
   -> PersonalDictionaryStore
+  -> DictationArchiveStore
   -> SwiftUI SettingsView
 ```
 
@@ -38,7 +39,8 @@ AppKit status-item app
 6. `CleanupProvider` rewrites the transcript when cleanup is enabled, using dictionary context in the same model call.
 7. Usage counters are updated locally for dictation attempts, recorded duration, cleanup requests, transcription failures, and cleanup fallbacks.
 8. `TextInsertionService` first tries direct Accessibility insertion into the focused element. If the target app does not support that path, it writes the final text to the clipboard, reactivates the captured target app, and simulates Cmd+V. Because the Cmd+V path cannot be confirmed reliably across Slack, browsers, and native apps, the final draft remains on the clipboard as a visible fallback.
-9. The app keeps only the latest raw/final draft in memory for copy/retry during the running session.
+9. If the optional local archive is enabled, `DictationArchiveStore` appends a text-only entry for completed dictations with the final draft, word counts, provider labels, cleanup state, and insertion outcome. Raw transcript text is stored only when a separate raw-transcript archive setting is enabled. Archive write failures are surfaced but must not undo paste or block access to the final draft.
+10. The app keeps only the latest raw/final draft in memory for copy/retry during the running session.
 
 ## Permission Model
 
@@ -82,6 +84,21 @@ Use a local JSON dictionary at `~/Library/Application Support/BabbelStream/perso
 
 A lightweight personal Codex skill may edit the same file directly. No MCP server is required for this version.
 
+## Dictation Archive Approach
+
+The archive should use local daily JSONL text files instead of a database for the first version. This keeps the data inspectable, easy to back up or delete, and simple to query with app code or command-line tools while avoiding database migration and locking work until the feature needs richer search.
+
+- Location: `~/Library/Application Support/BabbelStream/Archive/YYYY-MM/YYYY-MM-DD.jsonl`.
+- File format: newline-delimited JSON, one completed dictation per line.
+- Write model: a small serialized store or actor appends entries and creates parent directories with user-only permissions where possible.
+- Entry identity: each entry receives a stable UUID plus `startedAt`/`completedAt` timestamps.
+- Text fields: store the final draft text by default when archive is enabled. Store raw transcript text only when the user enables an additional raw-transcript option.
+- Metadata fields: active app name/bundle id if available, cleanup enabled/fallback state, transcription and cleanup provider labels, optional language metadata, insertion mode/outcome, raw/spoken word count, final draft word count, and audio duration.
+- Query model: monthly stats read a date range of JSONL files, aggregate word counts by day/month, and optionally render a month to Markdown/plain text for review.
+- Topic review: topic summaries should be generated only on explicit user action. If summary generation uses an AI provider, the UI must show the destination and approximate content scope before sending.
+- Retention: default to "keep until deleted" for local control, with a future optional retention window.
+- Deletion: Settings should include reveal archive folder and clear archive actions; destructive clears require confirmation.
+
 ## Paste Insertion Approach
 
 Use direct Accessibility insertion when the focused element supports it. Fall back to NSPasteboard and simulated Cmd+V because it works across Slack desktop, browser Slack, and many native text fields. If paste cannot be confirmed, leave the final text on the clipboard and notify the user.
@@ -96,8 +113,8 @@ The app can create or remove a user LaunchAgent at `~/Library/LaunchAgents/com.s
 
 ## Logging And Debugging
 
-Default logs may include state transitions, provider names, durations, counts, and error categories. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, and recent sanitized event categories. They must not include audio, transcripts, cleanup input, cleanup output, API keys, clipboard contents, or audio file paths. Debug persistence must be explicit and visibly enabled.
+Default logs may include state transitions, provider names, durations, counts, and error categories. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, optional archive enabled state, archive entry counts, and recent sanitized event categories. They must not include audio, transcripts, archive contents, cleanup input, cleanup output, API keys, clipboard contents, or audio file paths. Debug persistence must be explicit and visibly enabled.
 
 ## Security And Privacy
 
-The main risks are accidental capture, accidental paste, clipboard exposure, overbroad Accessibility permission, and sending work content to the wrong provider. The app should prefer obvious state, explicit provider configuration, no history, immediate audio deletion, and no auto-send.
+The main risks are accidental capture, accidental paste, clipboard exposure, overbroad Accessibility permission, local archive exposure, and sending work content to the wrong provider. The app should prefer obvious state, explicit provider configuration, no history by default, explicit opt-in archive controls, immediate audio deletion, and no auto-send.
