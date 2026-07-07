@@ -111,6 +111,12 @@ Use `UserDefaults` for non-secret settings and Keychain for API keys. Avoid plai
 
 The app can create or remove a user LaunchAgent at `~/Library/LaunchAgents/com.sichgeis.babbelstream.loginitem.plist` from Settings. The LaunchAgent runs `/usr/bin/open` against the current app bundle path at login. This keeps launch-at-login local and reversible without adding a helper app or installer package for the MVP.
 
+## Packaging And Local Install
+
+SwiftPM builds the executable, and `scripts/build-app.sh` wraps it in a local `.app` bundle under `dist/` with the app `Info.plist` and local code signature. `scripts/package-dmg.sh` creates a DMG containing the app bundle plus an `Applications` symlink, matching the standard Finder drag-to-Applications install pattern.
+
+The daily developer install helper opens that DMG and lets Finder perform the copy to `/Applications`. The project scripts should not invoke `sudo` for local installation; if `/Applications` needs administrator authorization, Finder owns that prompt during the drag copy. Restarting the installed app is handled separately by opening `/Applications/BabbelStream.app`.
+
 ## Logging And Debugging
 
 Default logs may include state transitions, provider names, durations, counts, and error categories. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, optional archive enabled state, archive entry counts, and recent sanitized event categories. They must not include audio, transcripts, archive contents, cleanup input, cleanup output, API keys, clipboard contents, or audio file paths. Debug persistence must be explicit and visibly enabled.

@@ -1,6 +1,26 @@
 version: "3"
 
 tasks:
+  app:build:
+    desc: Build the local macOS app bundle into dist/
+    cmds:
+      - scripts/build-app.sh
+
+  app:install-dev:
+    desc: Build a DMG and open the drag-to-Applications installer
+    cmds:
+      - scripts/install-dev-app.sh
+
+  app:restart:
+    desc: Restart the installed /Applications BabbelStream app
+    cmds:
+      - RESTART_ONLY=1 scripts/install-dev-app.sh
+
+  app:package-dmg:
+    desc: Build the local app bundle and package a DMG
+    cmds:
+      - scripts/package-dmg.sh
+
   stt:help:
     desc: Show the LiteLLM speech-to-text checker help
     dir: tools/litellm-stt-check

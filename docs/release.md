@@ -4,19 +4,25 @@
 
 ### Local Testing
 
-Use this for personal smoke testing on the development Mac:
+Use this for daily development and personal smoke testing on the development Mac:
 
 ```bash
 swift test
 swift run BabbelStreamChecks
-scripts/build-app.sh
+scripts/install-dev-app.sh
+```
+
+`scripts/install-dev-app.sh` builds the app bundle, packages the local DMG, opens the Finder drag-to-Applications window, and stops any running BabbelStream copy so Finder can replace it cleanly. The script does not use `sudo`; if `/Applications` needs authorization, Finder shows the standard macOS prompt during the drag copy. After copying, run `RESTART_ONLY=1 scripts/install-dev-app.sh` to launch from `/Applications`.
+
+For release-style manual QA, package a local DMG:
+
+```bash
 scripts/package-dmg.sh
 ```
 
 Output:
 
 ```text
-dist/BabbelStream.app
 dist/BabbelStream-0.1.0.dmg
 ```
 

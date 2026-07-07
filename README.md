@@ -35,12 +35,22 @@ The app bundle is written to:
 dist/BabbelStream.app
 ```
 
-For stable local permissions, create a local signing identity once:
+For stable local permissions, create a local signing identity once, then install the app from a stable path:
 
 ```bash
 scripts/create-local-codesign-identity.sh
-scripts/build-app.sh
+scripts/install-dev-app.sh
 ```
+
+`scripts/install-dev-app.sh` is the daily development install loop. It builds the app, packages the local DMG, opens the Finder drag-to-Applications window, and stops any running BabbelStream copy so Finder can replace it cleanly. The script does not use `sudo`; if `/Applications` needs authorization, Finder shows the standard macOS prompt during the drag copy. After copying, restart the installed app with:
+
+```bash
+RESTART_ONLY=1 scripts/install-dev-app.sh
+```
+
+Set `WAIT_FOR_INSTALL=1` if you want the script to wait for the drag copy and launch `/Applications/BabbelStream.app` after it appears.
+
+Equivalent Taskfile shortcuts are available as `task app:build`, `task app:install-dev`, `task app:restart`, and `task app:package-dmg`.
 
 ## Package A DMG
 
@@ -58,7 +68,7 @@ This local DMG is suitable for personal testing. Public distribution should use 
 
 ## First-Run Setup
 
-1. Open `dist/BabbelStream.app` or install from the DMG.
+1. Run `scripts/install-dev-app.sh`, then drag `BabbelStream.app` onto the Applications link in Finder.
 2. Grant Microphone permission when prompted.
 3. Open Settings from the menu-bar icon.
 4. Configure provider base URL, model names, and API key.
