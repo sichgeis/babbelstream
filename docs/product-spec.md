@@ -49,6 +49,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Copyable privacy-safe diagnostics with provider settings, state, counters, and redacted event categories.
 - Copy/retry last draft from memory during the running app session.
 - Launch-at-login can be enabled or disabled from Settings.
+- Local app bundle and DMG packaging for manual drag-to-Applications installation and testing.
 - Optional transcription language is a single ISO 639-1 code such as `de` or `en`; leave it empty for mixed German-English dictation.
 - No transcript/audio persistence by default.
 

@@ -67,4 +67,4 @@ fi
 
 echo "Created local code-signing identity: $IDENTITY_NAME"
 echo "Keychain: $KEYCHAIN"
-echo "Rebuild with scripts/build-app.sh, then remove and re-add dist/BabbelStream.app in Accessibility once."
+echo "Run scripts/install-dev-app.sh, drag BabbelStream.app to Applications, then remove and re-add /Applications/BabbelStream.app in Accessibility once."

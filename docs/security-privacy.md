@@ -20,6 +20,7 @@
 - API keys: macOS Keychain only. A non-secret `UserDefaults` marker may remember that a key was saved so the app can avoid reading Keychain on startup.
 - Personal dictionary: explicit local JSON only; no transcript history, audio, or automatic learning.
 - Launch at login: optional user LaunchAgent plist storing only the app bundle path; removable from Settings.
+- Local install: development scripts open a DMG for manual Finder drag-to-Applications installation. They do not store administrator credentials or invoke `sudo`; Finder handles any required `/Applications` authorization prompt.
 - Usage counters: local non-secret `UserDefaults` storage only, with counts and durations but no transcript, draft text, audio file path, provider body, or clipboard content.
 - Optional local archive: disabled by default. When enabled, store text-only daily JSONL files in Application Support with final draft text, word counts, timestamps, provider labels, cleanup state, insertion outcome, and optional raw transcript text only if separately enabled. Never store audio in the archive.
 
