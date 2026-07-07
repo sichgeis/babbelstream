@@ -36,7 +36,7 @@ AppKit status-item app
 3. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint.
 4. The temporary audio file is deleted after transcription completes or fails.
 5. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
-6. `CleanupProvider` rewrites the transcript when cleanup is enabled, using dictionary context in the same model call.
+6. `CleanupProvider` lightly formats the transcript when cleanup is enabled, using dictionary context in the same model call.
 7. Usage counters are updated locally for dictation attempts, recorded duration, cleanup requests, transcription failures, and cleanup fallbacks.
 8. `TextInsertionService` first tries direct Accessibility insertion into the focused element. If the target app does not support that path, it writes the final text to the clipboard, reactivates the captured target app, and simulates Cmd+V. Because the Cmd+V path cannot be confirmed reliably across Slack, browsers, and native apps, the final draft remains on the clipboard as a visible fallback.
 9. If the optional local archive is enabled, `DictationArchiveStore` appends a text-only entry for completed dictations with the final draft, word counts, provider labels, cleanup state, and insertion outcome. Raw transcript text is stored only when a separate raw-transcript archive setting is enabled. Archive write failures are surfaced but must not undo paste or block access to the final draft.
@@ -76,7 +76,7 @@ Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provide
 
 ## Cleanup Approach
 
-Use a chat/completions-compatible endpoint with a fixed Slack-ready cleanup system prompt and the transcript as user input. Cleanup is enabled by default and can be disabled. Cleanup must preserve the language of each sentence or phrase; it must not translate between German and English. If cleanup fails after transcription succeeds, paste the raw transcript and notify the user.
+Use a chat/completions-compatible endpoint with a fixed Slack-ready cleanup system prompt and a data-only JSON user message containing the transcript. Cleanup is enabled by default and can be disabled. Cleanup must treat the transcript as content, not instructions; it must preserve wording, order, and the language of each sentence or phrase, return plain text only, and must not translate between German and English. If cleanup fails after transcription succeeds, paste the raw transcript and notify the user.
 
 ## Personal Dictionary
 

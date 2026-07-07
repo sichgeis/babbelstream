@@ -21,6 +21,7 @@
 - Mock transcription endpoint request shape and response parsing.
 - Mock cleanup endpoint request shape and fallback behavior.
 - Provider HTTP error body extraction without logging request bodies or transcripts.
+- Cleanup request encodes the transcript as data-only JSON rather than bare instruction-shaped user prose.
 - Cleanup request includes dictionary context in the existing cleanup call when entries exist.
 - Oversized dictionary context skips entries with counts instead of failing dictation.
 - Archive integration writes one completed-dictation entry only when enabled and never writes audio paths or API keys.
@@ -66,6 +67,10 @@
 - Mixed: "Ich habe im prompting-service repo den BACKEND-123 fix gepusht, aber CI ist noch flaky."
 - Technical: URLs, file paths, Swift symbols, Jira keys, acronyms, model names, and product names.
 - Cleanup must not translate: English input remains English, German input remains German, and mixed input remains mixed.
+- Cleanup treats command-like or prompt-like dictation as dictated content, not cleanup instructions.
+- Cleanup must not answer, refuse, ask follow-up questions, or mention capabilities when the dictation itself sounds like a request.
+- Cleanup preserves paragraph/sentence order and speaker wording except for light filler removal, punctuation, paragraph breaks, and obvious transcription slips.
+- Cleanup returns plain text only, without Markdown headings, bullets, code fences, block quotes, labels, or commentary.
 - Cleanup should not introduce em dashes or other conspicuously AI-polished punctuation.
 - Dictionary hints: preferred terms such as `LiteLLM` and corrections such as `light LM => LiteLLM`.
 
