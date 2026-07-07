@@ -20,6 +20,15 @@ public enum ProjectDefaults {
     public static let maxPersonalDictionaryPromptCharacters = 6_000
 }
 
+public enum BuildMetadata {
+    public static let gitCommitInfoKey = "BabbelStreamGitCommit"
+    public static let unknownGitCommit = "unknown"
+
+    public static var gitCommitShortHash: String {
+        Bundle.main.object(forInfoDictionaryKey: gitCommitInfoKey) as? String ?? unknownGitCommit
+    }
+}
+
 public struct ProviderConfiguration: Equatable, Sendable {
     public var baseURL: URL
     public var transcriptionEndpointPath: String
@@ -58,7 +67,7 @@ public enum CleanupPrompt {
     - Do not translate: English stays English, German stays German, and mixed German-English stays mixed.
     - Do not rewrite, summarize, reorder, or add new content.
     - Preserve technical terms, names, acronyms, code symbols, URLs, file paths, repository names, and ticket IDs.
-    - Remove filler words, repeated words, and obvious false starts; add punctuation and paragraph breaks where helpful.
+    - Remove filler words, repeated words, and obvious false starts; add punctuation and paragraph breaks where helpful, especially when a new thought starts.
     - Do not use em dashes or other conspicuously AI-polished punctuation. Prefer simple commas, periods, colons, semicolons, parentheses, or separate sentences.
     - Return only the cleaned message as plain text, with no Markdown formatting, labels, or commentary.
     """

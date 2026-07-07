@@ -166,6 +166,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     private func addStatusSection() {
         addInfo(appState.status)
+        addInfo("Build: \(BuildMetadata.gitCommitShortHash)")
         addInfo("Hotkey: \(ProjectDefaults.fixedHotkeyDescription)")
         addInfo(appState.hotkeyStatus)
         addInfo("Microphone: \(appState.microphonePermissionStatus.displayName)")
@@ -1255,6 +1256,7 @@ final class AppState: ObservableObject {
     private func diagnosticsReport() -> String {
         let lines = [
             "\(ProjectDefaults.appName) diagnostics",
+            "build commit: \(BuildMetadata.gitCommitShortHash)",
             "status: \(status)",
             "last failure category: \(lastFailureCategory)",
             "transcription destination: \(providerDestinationSummary)",
@@ -2143,6 +2145,7 @@ struct SettingsView: View {
             }
 
             Section("Diagnostics") {
+                LabeledContent("Build commit", value: BuildMetadata.gitCommitShortHash)
                 LabeledContent("Last failure", value: appState.lastFailureCategory)
                 Button("Copy Diagnostics") {
                     appState.copyDiagnosticsReport()

@@ -12,6 +12,7 @@ APP_DIR="$DIST_DIR/$APP_NAME.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
+GIT_COMMIT="${GIT_COMMIT:-unknown}"
 APP_ICON_SOURCE="$ROOT_DIR/Resources/AppIcon.svg"
 APP_ICON_NAME="$APP_NAME.icns"
 ICONSET_DIR="$DIST_DIR/$APP_NAME.iconset"
@@ -67,6 +68,16 @@ make_app_icon() {
 
 cd "$ROOT_DIR"
 
+if [[ "$GIT_COMMIT" == "unknown" ]] && command -v git >/dev/null 2>&1; then
+  GIT_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+  if [[ "$GIT_COMMIT" != "unknown" ]] && ! git diff --quiet --ignore-submodules -- 2>/dev/null; then
+    GIT_COMMIT="$GIT_COMMIT-dirty"
+  fi
+  if [[ "$GIT_COMMIT" != "unknown" && "$GIT_COMMIT" != *-dirty ]] && ! git diff --cached --quiet --ignore-submodules -- 2>/dev/null; then
+    GIT_COMMIT="$GIT_COMMIT-dirty"
+  fi
+fi
+
 swift build -c "$CONFIGURATION" --product "$APP_NAME"
 BIN_PATH="$(swift build -c "$CONFIGURATION" --show-bin-path)"
 EXECUTABLE="$BIN_PATH/$APP_NAME"
@@ -107,6 +118,8 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
   <string>0.1.0</string>
   <key>CFBundleVersion</key>
   <string>1</string>
+  <key>BabbelStreamGitCommit</key>
+  <string>$GIT_COMMIT</string>
   <key>LSMinimumSystemVersion</key>
   <string>13.0</string>
   <key>LSUIElement</key>

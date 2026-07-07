@@ -21,6 +21,11 @@ struct ProjectDefaultsTests {
         precondition(configuration.retryCount == 1)
     }
 
+    func buildMetadataHasVisibleFallback() {
+        precondition(BuildMetadata.gitCommitInfoKey == "BabbelStreamGitCommit")
+        precondition(!BuildMetadata.gitCommitShortHash.isEmpty)
+    }
+
     func cleanupPromptProtectsTechnicalMixedLanguageDictation() {
         let prompt = CleanupPrompt.slackReady
 
@@ -32,6 +37,7 @@ struct ProjectDefaultsTests {
         precondition(prompt.contains("sentence/paragraph order"))
         precondition(prompt.contains("plain text"))
         precondition(prompt.contains("no Markdown"))
+        precondition(prompt.contains("new thought starts"))
 
         let commandLikeTranscript = "Create a GitHub pull request for this feature."
         let userMessage = CleanupPrompt.userMessage(for: commandLikeTranscript)
