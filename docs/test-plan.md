@@ -13,7 +13,7 @@
 - Text insertion result handling behind an adapter.
 - Keychain wrapper behavior with an in-memory fake.
 - Startup does not read the Keychain secret; API key presence is represented by a non-secret marker.
-- Personal dictionary JSON round trip, text parsing, disabled-entry omission, cleanup prompt rendering, and prompt-size capping.
+- Personal dictionary JSON round trip, text parsing, disabled-entry omission, correction teaching de-duplication, cleanup prompt rendering, and prompt-size capping.
 
 ## Integration Tests
 
@@ -36,6 +36,7 @@
 - No message is auto-sent.
 - No transcript or audio file remains after normal use.
 - Personal dictionary edits are picked up on the next cleanup without app restart.
+- Teach Correction can add or update a correction hint without storing transcript history.
 
 ## Slack Desktop Cases
 

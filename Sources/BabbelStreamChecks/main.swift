@@ -100,6 +100,29 @@ let parsedDictionary = try PersonalDictionaryTextCodec.dictionary(
 )
 check(parsedDictionary.vocabulary.count == 2, "Vocabulary parsing should remove duplicate terms case-insensitively.")
 check(parsedDictionary.corrections.count == 2, "Correction parsing should parse wrong-to-right pairs.")
+var trainerDictionary = PersonalDictionary()
+let trainerCreated = try PersonalDictionaryTextCodec.upsertCorrection(
+    from: "David",
+    to: "Dawid",
+    in: &trainerDictionary
+)
+check(trainerCreated, "Teaching a new correction should create a dictionary correction.")
+check(trainerDictionary.enabledCorrections.count == 1, "New taught corrections should be enabled.")
+let trainerUpdated = try PersonalDictionaryTextCodec.upsertCorrection(
+    from: "david",
+    to: "dawid",
+    in: &trainerDictionary
+)
+check(!trainerUpdated, "Teaching the same correction with different casing should update instead of duplicating.")
+check(trainerDictionary.corrections.count == 1, "Taught corrections should de-duplicate case-insensitively.")
+trainerDictionary.corrections[0].enabled = false
+let trainerReenabled = try PersonalDictionaryTextCodec.upsertCorrection(
+    from: "David",
+    to: "Dawid",
+    in: &trainerDictionary
+)
+check(!trainerReenabled, "Teaching a disabled correction should re-enable the existing entry.")
+check(trainerDictionary.enabledCorrections.count == 1, "Disabled taught corrections should be re-enabled.")
 do {
     _ = try PersonalDictionaryTextCodec.dictionary(vocabularyText: "", correctionsText: "missing separator")
     fatalError("Invalid correction lines should fail validation.")
