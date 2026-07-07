@@ -36,6 +36,7 @@
 - Provider destination is visible in settings.
 - Usage counters are visible in Settings and can be reset.
 - Copy Diagnostics produces a redacted report without transcripts, audio paths, clipboard contents, or API keys.
+- Menu/Settings diagnostics show the git short commit hash for the installed build.
 - No message is auto-sent.
 - No transcript or audio file remains after normal use when the archive is disabled.
 - Optional archive is visibly disabled by default.
@@ -109,6 +110,7 @@
 - Confirm personal dictionary contains only explicit terms/corrections and no transcript history.
 - Confirm logs exclude audio, transcripts, archive contents, API keys, and clipboard content.
 - Confirm copied diagnostics exclude audio, transcripts, archive contents, API keys, audio paths, request bodies, and clipboard content.
+- Confirm copied diagnostics include the non-secret build commit hash.
 - Confirm usage counters contain only counts and durations.
 - Confirm debug persistence is explicit and visible.
 
