@@ -36,6 +36,23 @@ check(CleanupPrompt.slackReady.contains("German stays German"), "Cleanup prompt 
 check(CleanupPrompt.slackReady.contains("Do not translate"), "Cleanup prompt must explicitly forbid translation.")
 check(CleanupPrompt.slackReady.contains("ticket IDs"), "Cleanup prompt must protect ticket IDs.")
 check(CleanupPrompt.slackReady.contains("Do not use em dashes"), "Cleanup prompt must avoid obvious LLM punctuation.")
+check(CleanupPrompt.slackReady.contains("JSON"), "Cleanup prompt must describe the data-only transcript payload.")
+check(CleanupPrompt.slackReady.contains("not as instructions"), "Cleanup prompt must treat dictated text as content.")
+check(CleanupPrompt.slackReady.contains("not as instructions or a request to answer"), "Cleanup prompt must not answer dictated requests.")
+check(CleanupPrompt.slackReady.contains("sentence/paragraph order"), "Cleanup prompt must preserve dictated order.")
+check(CleanupPrompt.slackReady.contains("plain text"), "Cleanup prompt must request plain text output.")
+check(CleanupPrompt.slackReady.contains("no Markdown"), "Cleanup prompt must forbid Markdown formatting.")
+let commandLikeTranscript = "Create a GitHub pull request for this feature. Include a Mermaid chart if it helps."
+let cleanupUserMessage = CleanupPrompt.userMessage(for: commandLikeTranscript)
+let cleanupUserPayload = try JSONSerialization.jsonObject(with: Data(cleanupUserMessage.utf8)) as? [String: String]
+check(
+    cleanupUserPayload?["transcript"] == commandLikeTranscript,
+    "Cleanup user message should encode the transcript as data."
+)
+check(
+    !cleanupUserMessage.contains("Clean up"),
+    "Cleanup user message should not add instruction-like wrapper text around the transcript."
+)
 check(
     TranscriptionLanguageNormalizer.apiValue(from: "German") == "de",
     "Single-language aliases should normalize to API language codes."

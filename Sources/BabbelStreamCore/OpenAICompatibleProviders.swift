@@ -164,7 +164,7 @@ public final class OpenAICompatibleCleanupProvider: CleanupProvider {
                     "role": "system",
                     "content": DictionaryPromptBuilder.cleanupSystemPrompt(dictionary: request.personalDictionary)
                 ],
-                ["role": "user", "content": request.transcript]
+                ["role": "user", "content": CleanupPrompt.userMessage(for: request.transcript)]
             ]
         ]
 

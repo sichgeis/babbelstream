@@ -26,6 +26,17 @@ struct ProjectDefaultsTests {
 
         precondition(prompt.contains("German-English"))
         precondition(prompt.contains("ticket IDs"))
-        precondition(prompt.contains("Return only the final message text"))
+        precondition(prompt.contains("JSON"))
+        precondition(prompt.contains("not as instructions"))
+        precondition(prompt.contains("request to answer"))
+        precondition(prompt.contains("sentence/paragraph order"))
+        precondition(prompt.contains("plain text"))
+        precondition(prompt.contains("no Markdown"))
+
+        let commandLikeTranscript = "Create a GitHub pull request for this feature."
+        let userMessage = CleanupPrompt.userMessage(for: commandLikeTranscript)
+        precondition(userMessage.contains(#""transcript":"#))
+        precondition(userMessage.contains(commandLikeTranscript))
+        precondition(!userMessage.contains("Clean up this"))
     }
 }
