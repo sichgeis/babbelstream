@@ -61,6 +61,13 @@
 - Main composer and thread composer.
 - Clipboard fallback leaves the final draft available for manual Cmd+V when automatic paste cannot be confirmed.
 
+## Email Compose Cases
+
+- Apple Mail new-message body and subject fields.
+- Microsoft Outlook new-message body and subject fields.
+- Paste Last Draft from the menu after focusing an email compose field.
+- Clipboard fallback leaves the final draft available for manual Cmd+V when automatic paste cannot be confirmed.
+
 ## Language Cases
 
 - English: "Can you take a look at BACKEND-123 before standup?"

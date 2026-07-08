@@ -1231,9 +1231,7 @@ final class AppState: ObservableObject {
             return
         }
 
-        if latestPasteTarget == nil {
-            latestPasteTarget = latestExternalPasteTarget
-        }
+        captureCurrentPasteTarget()
         _ = await insertFinalDraft(latestFinalDraft)
     }
 

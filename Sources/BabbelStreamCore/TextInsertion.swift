@@ -93,13 +93,21 @@ public final class ClipboardTextInsertionService: TextInsertionService {
             return .copiedForManualPaste
         }
 
-        await prepareTargetForInsertion(target)
+        guard await prepareTargetForInsertion(target) else {
+            _ = try writeToClipboard(insertionText)
+            return .copiedAfterPasteShortcutFailure
+        }
 
-        if insertDirectlyIntoFocusedElement(insertionText) {
+        if !shouldSkipDirectAccessibilityInsertion(for: target),
+           insertDirectlyIntoFocusedElement(insertionText) {
             return .insertedDirectly
         }
 
         _ = try writeToClipboard(insertionText)
+        guard await prepareTargetForInsertion(target) else {
+            return .copiedAfterPasteShortcutFailure
+        }
+        await sleep(seconds: 0.15)
 
         guard await postPasteShortcut() else {
             return .copiedAfterPasteShortcutFailure
@@ -123,18 +131,21 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         return pasteboard.changeCount
     }
 
-    private func prepareTargetForInsertion(_ target: TextInsertionTarget?) async {
+    private func prepareTargetForInsertion(_ target: TextInsertionTarget?) async -> Bool {
         guard let target,
               let application = NSRunningApplication(processIdentifier: target.processIdentifier),
               !application.isTerminated
         else {
-            return
+            return true
         }
 
         if !application.isActive {
             application.activate(options: [.activateIgnoringOtherApps])
-            await sleep(seconds: 0.25)
         }
+
+        let didActivate = await waitForActivation(of: application, timeout: 1.0)
+        await sleep(seconds: 0.1)
+        return didActivate
     }
 
     private func insertDirectlyIntoFocusedElement(_ text: String) -> Bool {
@@ -155,6 +166,17 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         }
 
         let element = focusedElement as! AXUIElement
+        var selectedTextIsSettable = DarwinBoolean(false)
+        let settableResult = AXUIElementIsAttributeSettable(
+            element,
+            kAXSelectedTextAttribute as CFString,
+            &selectedTextIsSettable
+        )
+
+        guard settableResult == .success, selectedTextIsSettable.boolValue else {
+            return false
+        }
+
         let setResult = AXUIElementSetAttributeValue(
             element,
             kAXSelectedTextAttribute as CFString,
@@ -162,6 +184,32 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         )
 
         return setResult == .success
+    }
+
+    private func shouldSkipDirectAccessibilityInsertion(for target: TextInsertionTarget?) -> Bool {
+        guard let bundleIdentifier = target?.bundleIdentifier?.lowercased() else {
+            return false
+        }
+
+        return Self.richEmailEditorBundleIdentifiers.contains(bundleIdentifier)
+    }
+
+    private func waitForActivation(
+        of application: NSRunningApplication,
+        timeout: TimeInterval
+    ) async -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if application.isActive ||
+                NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier {
+                return true
+            }
+
+            await sleep(seconds: 0.05)
+        }
+
+        return application.isActive ||
+            NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier
     }
 
     private func postPasteShortcut() async -> Bool {
@@ -177,7 +225,7 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         }
 
         keyDown.post(tap: .cghidEventTap)
-        await sleep(seconds: 0.05)
+        await sleep(seconds: 0.08)
         keyUp.post(tap: .cghidEventTap)
         return true
     }
@@ -186,4 +234,9 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         let nanoseconds = UInt64(max(seconds, 0) * 1_000_000_000)
         try? await Task.sleep(nanoseconds: nanoseconds)
     }
+
+    private static let richEmailEditorBundleIdentifiers: Set<String> = [
+        "com.apple.mail",
+        "com.microsoft.outlook"
+    ]
 }
