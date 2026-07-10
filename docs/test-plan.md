@@ -39,8 +39,8 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - App launches as a menu-bar utility.
 - Recording state is visible.
 - The HUD shows the captured target, provider host, elapsed time, cancellation control, transcription attempt count, connection/request timeout guidance, and retry reason without activating BabbelStream.
-- Dictation pastes into the same still-focused field in native Mail and in reactive editors such as VS Code and Codex, even if the editor recreates its Accessibility wrapper during processing.
-- Moving focus to a different field in the same app still blocks auto-paste and leaves the draft on the clipboard.
+- Dictation pastes into the currently focused field in native Mail and in reactive editors such as VS Code and Codex.
+- Moving focus to another field inside the same app directs the draft to that current field; switching to another application blocks auto-paste and leaves the draft on the clipboard.
 - Escape cancels while recording and processing but behaves normally after the operation ends.
 - Cleanup can be toggled.
 - Provider destination is visible in settings.

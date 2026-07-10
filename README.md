@@ -21,7 +21,7 @@ Hold `Control + Option + Space`, speak, release, and BabbelStream transcribes th
 - Optional local dictation archive writes daily JSONL text files and provides monthly word-count review/export.
 - Copyable diagnostics summarize state and provider settings without transcripts, audio paths, or API keys.
 - Direct Accessibility insertion first, clipboard plus `Cmd+V` fallback.
-- Automatic insertion only while the originally captured app and logical field still match, including safely recognized replacement wrappers in VS Code, Codex, and other reactive editors.
+- Automatic insertion only while the originally captured app remains frontmost; the currently focused field in that app receives the draft, including in VS Code, Codex, and other reactive editors.
 - One trailing space after inserted dictation chunks so repeated dictations do not run together.
 - In-app launch-at-login toggle backed by a user LaunchAgent.
 - API key stored in macOS Keychain; no transcript or audio history by default.

@@ -36,11 +36,11 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `TextInsertionService`
 
-- Responsibility: capture the intended focused Accessibility field, recognize a narrowly equivalent replacement wrapper in reactive editors, insert into the current verified element when possible, and use clipboard plus synthetic Cmd+V only while the captured application and logical field still match.
-- Input: final text and captured target application/element reference.
-- Output: insertion result, including an explicit copy-only recovery outcome when the target changed.
-- Errors: missing Accessibility permission, clipboard unavailable, paste event failed, no focused target, or unverifiable target.
-- Test strategy: unit-test application-level and logical-field fingerprint policy plus insertion result handling behind an adapter; manually verify element-level behavior in Slack, VS Code, Codex, browsers, and native text fields.
+- Responsibility: capture the intended application, insert into its currently focused Accessibility element when possible, and use clipboard plus synthetic Cmd+V only while that captured application remains frontmost.
+- Input: final text and captured target application.
+- Output: insertion result, including an explicit copy-only recovery outcome when the active application changed.
+- Errors: missing Accessibility permission, clipboard unavailable, paste event failed, no captured application, or changed active application.
+- Test strategy: unit-test the application-level target policy and insertion result handling behind an adapter; manually verify behavior in Slack, VS Code, Codex, browsers, and native text fields, including switching applications during processing.
 
 ## `SettingsStore`
 

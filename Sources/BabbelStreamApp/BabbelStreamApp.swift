@@ -854,7 +854,7 @@ final class AppState: ObservableObject {
             return transcriptionProgressDetail
         }
         if status == "Pasting draft" {
-            return "Verifying the original focused field before insertion."
+            return "Verifying the original application before inserting into its focused field."
         }
 
         return errorMessage ?? warningMessage ?? lastResult
@@ -2036,13 +2036,13 @@ final class AppState: ObservableObject {
             return .copiedForManualPaste
         case .copiedBecauseTargetChanged:
             status = "Copied"
-            lastResult = "The focused field changed while processing. Draft copied; paste manually with Cmd+V."
+            lastResult = "The active application changed while processing. Draft copied; paste manually with Cmd+V."
             errorMessage = nil
             warningMessage = combinedWarning(
                 priorWarning,
-                "BabbelStream did not auto-paste because it could not verify the original target."
+                "BabbelStream did not auto-paste because the original application is no longer active."
             )
-            recordDiagnostic("paste prevented: focused target changed")
+            recordDiagnostic("paste prevented: target application changed")
             return .copiedBecauseTargetChanged
         case .copiedAfterPasteShortcutFailure:
             status = "Copied"
