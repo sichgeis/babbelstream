@@ -21,10 +21,6 @@ let package = Package(
             name: "BabbelStreamChecks",
             dependencies: ["BabbelStreamCore"]
         ),
-        .target(name: "BabbelStreamCore"),
-        .testTarget(
-            name: "BabbelStreamCoreTests",
-            dependencies: ["BabbelStreamCore"]
-        )
+        .target(name: "BabbelStreamCore")
     ]
 )
