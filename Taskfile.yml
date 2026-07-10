@@ -1,6 +1,12 @@
 version: "3"
 
 tasks:
+  check:
+    desc: Build BabbelStream and run the executable core behavior checks
+    cmds:
+      - swift build --product BabbelStream
+      - swift run BabbelStreamChecks
+
   app:build:
     desc: Build the local macOS app bundle into dist/
     cmds:
