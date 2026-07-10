@@ -2160,6 +2160,8 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
             return "ProviderError.invalidEndpointURL"
         case .emptyAudioFile:
             return "ProviderError.emptyAudioFile"
+        case .connectionTimedOut:
+            return "ProviderError.connectionTimedOut"
         case let .requestFailed(statusCode, _):
             return "ProviderError.requestFailed(HTTP \(statusCode))"
         case .malformedResponse:
