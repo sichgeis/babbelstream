@@ -45,7 +45,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Personal dictionary cleanup context is capped locally; oversized dictionaries continue to work with a visible skipped-entry warning.
 - Teach Correction flow for explicitly adding wrong-to-right hints after a bad dictation, without automatic learning or transcript history.
 - Direct Accessibility insertion into the focused text field when possible, with clipboard plus Cmd+V fallback.
-- Automatic insertion only if the captured application and focused Accessibility element still match; otherwise copy without stealing focus.
+- Automatic insertion only if the captured application and focused field still match. Exact Accessibility identity is preferred; reactive editors may replace their AX wrapper only when a stable DOM/AX identifier or compatible role, geometry, and ancestor structure still identifies the same logical field. Otherwise copy without stealing focus.
 - Inserted dictation text ends with one trailing space so consecutive push-to-talk chunks do not run together in the same composer.
 - API key storage in macOS Keychain.
 - Local usage counters for dictation attempts, recorded minutes, cleanup requests, transcription failures, and cleanup fallbacks.
