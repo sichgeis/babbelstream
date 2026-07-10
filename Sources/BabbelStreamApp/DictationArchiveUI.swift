@@ -91,6 +91,16 @@ struct DictationArchiveView: View {
                 }
             }
 
+            if !appState.archiveSnapshot.readWarnings.isEmpty {
+                Section("Recovery") {
+                    Text("Valid entries were loaded. Damaged JSONL lines were skipped and remain in the local files for manual recovery.")
+                        .foregroundStyle(.orange)
+                    ForEach(appState.archiveSnapshot.readWarnings.prefix(8)) { warning in
+                        LabeledContent(warning.fileName, value: "line \(warning.line)")
+                    }
+                }
+            }
+
             Section("Storage") {
                 Text(appState.archiveDirectoryPath)
                     .font(.system(.caption, design: .monospaced))

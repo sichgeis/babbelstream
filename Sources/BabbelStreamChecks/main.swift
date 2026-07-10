@@ -79,6 +79,12 @@ check(
         .contains("bad request") == true,
     "Provider HTTP failures should expose safe provider details."
 )
+do {
+    _ = try TranscriptionResponseParser.parse(data: Data(#"{"unexpected":"shape"}"#.utf8))
+    fatalError("Malformed JSON success responses should not be treated as transcript text.")
+} catch ProviderError.malformedResponse {
+    // Expected.
+}
 check(
     ProviderRetryPolicy.shouldRetry(ProviderError.requestFailed(statusCode: 429, message: "slow down")),
     "Provider throttling should be retryable."
@@ -158,6 +164,14 @@ let trainerUpdated = try PersonalDictionaryTextCodec.upsertCorrection(
 )
 check(!trainerUpdated, "Teaching the same correction with different casing should update instead of duplicating.")
 check(trainerDictionary.corrections.count == 1, "Taught corrections should de-duplicate case-insensitively.")
+let trainerPreferredTextUpdated = try PersonalDictionaryTextCodec.upsertCorrection(
+    from: "David",
+    to: "Dávid",
+    in: &trainerDictionary
+)
+check(!trainerPreferredTextUpdated, "Teaching a new preferred spelling for the same wrong form should update in place.")
+check(trainerDictionary.corrections.count == 1, "One wrong form should not produce conflicting correction hints.")
+check(trainerDictionary.corrections[0].to == "Dávid", "The latest explicit preferred spelling should win.")
 trainerDictionary.corrections[0].enabled = false
 let trainerReenabled = try PersonalDictionaryTextCodec.upsertCorrection(
     from: "David",
@@ -166,6 +180,33 @@ let trainerReenabled = try PersonalDictionaryTextCodec.upsertCorrection(
 )
 check(!trainerReenabled, "Teaching a disabled correction should re-enable the existing entry.")
 check(trainerDictionary.enabledCorrections.count == 1, "Disabled taught corrections should be re-enabled.")
+let metadataDictionary = PersonalDictionary(
+    vocabulary: [
+        PersonalVocabularyEntry(term: "LiteLLM", notes: "Keep exact casing"),
+        PersonalVocabularyEntry(term: "DisabledTerm", notes: "Keep for later", enabled: false)
+    ],
+    corrections: [
+        PersonalCorrectionEntry(from: "light LM", to: "LiteLLM"),
+        PersonalCorrectionEntry(from: "disabled wrong", to: "DisabledTerm", enabled: false)
+    ]
+)
+let metadataPreservingEdit = try PersonalDictionaryTextCodec.dictionary(
+    vocabularyText: "LiteLLM",
+    correctionsText: "light LM => LiteLLM",
+    preserving: metadataDictionary
+)
+check(
+    metadataPreservingEdit.vocabulary.first?.notes == "Keep exact casing",
+    "Bulk editing should preserve notes on retained vocabulary."
+)
+check(
+    metadataPreservingEdit.vocabulary.contains { $0.term == "DisabledTerm" && !$0.enabled },
+    "Bulk editing should preserve disabled vocabulary that is hidden from the text editor."
+)
+check(
+    metadataPreservingEdit.corrections.contains { $0.from == "disabled wrong" && !$0.enabled },
+    "Bulk editing should preserve disabled corrections that are hidden from the text editor."
+)
 do {
     _ = try PersonalDictionaryTextCodec.dictionary(vocabularyText: "", correctionsText: "missing separator")
     fatalError("Invalid correction lines should fail validation.")
@@ -506,6 +547,11 @@ func runArchiveChecks() throws {
     let firstArchiveFileText = try String(contentsOf: firstArchiveFile, encoding: .utf8)
     check(!firstArchiveFileText.contains("rawTranscriptText"), "Archive entries should omit raw transcript text unless enabled.")
 
+    let archiveFileHandle = try FileHandle(forWritingTo: firstArchiveFile)
+    try archiveFileHandle.seekToEnd()
+    try archiveFileHandle.write(contentsOf: Data("{damaged archive line}\n".utf8))
+    try archiveFileHandle.close()
+
     let secondArchiveEntry = makeSecondArchiveEntry()
     try archiveStore.append(secondArchiveEntry)
     let archiveSnapshot = try archiveStore.loadMonth(DictationArchiveMonth(year: 2026, month: 7)!)
@@ -513,6 +559,8 @@ func runArchiveChecks() throws {
         archiveSnapshot.entries == [firstArchiveEntry, secondArchiveEntry],
         "Archive JSONL entries should round-trip in timestamp order."
     )
+    check(archiveSnapshot.readWarnings.count == 1, "Archive loading should report damaged JSONL lines.")
+    check(archiveSnapshot.readWarnings[0].line == 2, "Archive recovery should identify the damaged line.")
     check(archiveSnapshot.dailySummaries.count == 1, "Archive monthly aggregation should group same-day entries.")
     check(archiveSnapshot.dailySummaries[0].entryCount == 2, "Archive daily aggregation should count entries.")
     check(
@@ -528,6 +576,10 @@ func runArchiveChecks() throws {
     check(archiveMarkdown.contains("# BabbelStream Archive 2026-07"), "Archive Markdown export should name the month.")
     check(archiveMarkdown.contains(firstArchiveEntry.finalDraftText), "Archive Markdown export should include final draft contents.")
     check(archiveMarkdown.contains(secondArchiveEntry.finalDraftText), "Archive Markdown export should include all final draft contents.")
+    check(
+        archiveMarkdown.contains("Skipped damaged entries: 1"),
+        "Archive exports should disclose recovered damaged entries."
+    )
     check(
         archiveMarkdown.range(of: firstArchiveEntry.finalDraftText)!.lowerBound
             < archiveMarkdown.range(of: secondArchiveEntry.finalDraftText)!.lowerBound,

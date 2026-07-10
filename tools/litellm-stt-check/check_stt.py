@@ -129,7 +129,7 @@ def list_models(base_url: str, api_key: str, timeout: float) -> int:
 def transcribe(args: argparse.Namespace, env_file: dict[str, str]) -> int:
     base_url = require(config_value(env_file, "LITELLM_BASE_URL"), "LITELLM_BASE_URL")
     api_key = require(config_value(env_file, "LITELLM_API_KEY"), "LITELLM_API_KEY")
-    model = config_value(env_file, "LITELLM_STT_MODEL", "whisper-1")
+    model = config_value(env_file, "LITELLM_STT_MODEL", "gpt-4o-transcribe")
     path = config_value(env_file, "LITELLM_TRANSCRIPTION_PATH", "/v1/audio/transcriptions")
     response_format = config_value(env_file, "LITELLM_RESPONSE_FORMAT", "json")
     language = config_value(env_file, "LITELLM_LANGUAGE")

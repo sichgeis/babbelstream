@@ -406,10 +406,13 @@ public enum ProviderErrorMessageExtractor {
 
 public enum TranscriptionResponseParser {
     public static func parse(data: Data) throws -> String {
-        if
-            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let text = object["text"] as? String
-        {
+        if let object = try? JSONSerialization.jsonObject(with: data) {
+            guard let dictionary = object as? [String: Any],
+                  let text = dictionary["text"] as? String
+            else {
+                throw ProviderError.malformedResponse
+            }
+
             return text
         }
 

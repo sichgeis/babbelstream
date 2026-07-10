@@ -1205,8 +1205,13 @@ final class AppState: ObservableObject {
             archiveSnapshot = snapshot
             archiveMonthText = month.directoryName
             archiveErrorMessage = nil
-            archiveStatusMessage = "Loaded \(snapshot.entries.count) archive entr\(snapshot.entries.count == 1 ? "y" : "ies")."
-            recordDiagnostic("archive month loaded: \(month.directoryName), \(snapshot.entries.count) entries")
+            let recoverySuffix = snapshot.readWarnings.isEmpty
+                ? ""
+                : " Skipped \(snapshot.readWarnings.count) damaged entr\(snapshot.readWarnings.count == 1 ? "y" : "ies")."
+            archiveStatusMessage = "Loaded \(snapshot.entries.count) archive entr\(snapshot.entries.count == 1 ? "y" : "ies").\(recoverySuffix)"
+            recordDiagnostic(
+                "archive month loaded: \(month.directoryName), \(snapshot.entries.count) entries, \(snapshot.readWarnings.count) skipped"
+            )
         } catch {
             archiveErrorMessage = error.localizedDescription
             archiveStatusMessage = "Archive month could not be loaded."
@@ -1232,7 +1237,9 @@ final class AppState: ObservableObject {
             archiveSnapshot = snapshot
             archiveMonthText = month.directoryName
             archiveErrorMessage = nil
-            archiveStatusMessage = "Archive Markdown export copied."
+            archiveStatusMessage = snapshot.readWarnings.isEmpty
+                ? "Archive Markdown export copied."
+                : "Archive Markdown export copied with \(snapshot.readWarnings.count) damaged entr\(snapshot.readWarnings.count == 1 ? "y" : "ies") skipped."
             lastResult = "Archive Markdown export copied."
             recordDiagnostic("archive export copied: \(month.directoryName), \(snapshot.entries.count) entries")
         } catch {
@@ -2196,13 +2203,6 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
             return "SettingsValidationError.invalidTimeout"
         case .invalidMaxAudioDuration:
             return "SettingsValidationError.invalidMaxAudioDuration"
-        }
-    }
-
-    if let archiveError = error as? DictationArchiveError {
-        switch archiveError {
-        case .unreadableLine:
-            return "DictationArchiveError.unreadableLine"
         }
     }
 

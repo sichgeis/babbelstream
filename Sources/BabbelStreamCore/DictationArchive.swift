@@ -147,16 +147,32 @@ public struct DictationArchiveDaySummary: Equatable, Sendable, Identifiable {
     }
 }
 
+public struct DictationArchiveReadWarning: Equatable, Sendable, Identifiable {
+    public let fileName: String
+    public let line: Int
+
+    public init(fileName: String, line: Int) {
+        self.fileName = fileName
+        self.line = line
+    }
+
+    public var id: String {
+        "\(fileName):\(line)"
+    }
+}
+
 public struct DictationArchiveMonthSnapshot: Equatable, Sendable {
     public let month: DictationArchiveMonth
     public let entries: [DictationArchiveEntry]
     public let dailySummaries: [DictationArchiveDaySummary]
     public let totalRawWordCount: Int
     public let totalFinalWordCount: Int
+    public let readWarnings: [DictationArchiveReadWarning]
 
     public init(
         month: DictationArchiveMonth,
         entries: [DictationArchiveEntry],
+        readWarnings: [DictationArchiveReadWarning] = [],
         calendar: Calendar = .current
     ) {
         let sortedEntries = entries.sorted { lhs, rhs in
@@ -170,6 +186,7 @@ public struct DictationArchiveMonthSnapshot: Equatable, Sendable {
         self.entries = sortedEntries
         self.totalRawWordCount = sortedEntries.reduce(0) { $0 + $1.rawWordCount }
         self.totalFinalWordCount = sortedEntries.reduce(0) { $0 + $1.finalWordCount }
+        self.readWarnings = readWarnings
 
         var summariesByDay = [String: DictationArchiveDayAccumulator]()
         for entry in sortedEntries {
@@ -199,17 +216,6 @@ private struct DictationArchiveDayAccumulator {
         entryCount += 1
         rawWordCount += entry.rawWordCount
         finalWordCount += entry.finalWordCount
-    }
-}
-
-public enum DictationArchiveError: Error, Equatable, LocalizedError, Sendable {
-    case unreadableLine(file: String, line: Int)
-
-    public var errorDescription: String? {
-        switch self {
-        case let .unreadableLine(file, line):
-            "Could not read archive entry \(line) in \(file)."
-        }
     }
 }
 
@@ -262,10 +268,20 @@ public final class JSONLDictationArchiveStore: DictationArchiveStore {
             return DictationArchiveMonthSnapshot(month: month, entries: [], calendar: calendar)
         }
 
-        let entries = try archiveFileURLs(in: monthDirectoryURL)
-            .flatMap { try archiveEntries(in: $0) }
+        var entries: [DictationArchiveEntry] = []
+        var readWarnings: [DictationArchiveReadWarning] = []
+        for fileURL in try archiveFileURLs(in: monthDirectoryURL) {
+            let result = try archiveEntries(in: fileURL)
+            entries.append(contentsOf: result.entries)
+            readWarnings.append(contentsOf: result.warnings)
+        }
 
-        return DictationArchiveMonthSnapshot(month: month, entries: entries, calendar: calendar)
+        return DictationArchiveMonthSnapshot(
+            month: month,
+            entries: entries,
+            readWarnings: readWarnings,
+            calendar: calendar
+        )
     }
 
     public func markdownExport(for snapshot: DictationArchiveMonthSnapshot) -> String {
@@ -275,12 +291,17 @@ public final class JSONLDictationArchiveStore: DictationArchiveStore {
             "- Dictations: \(snapshot.entries.count)",
             "- Raw words: \(snapshot.totalRawWordCount)",
             "- Final words: \(snapshot.totalFinalWordCount)",
+        ]
+        if !snapshot.readWarnings.isEmpty {
+            lines.append("- Skipped damaged entries: \(snapshot.readWarnings.count)")
+        }
+        lines.append(contentsOf: [
             "",
             "## Daily Totals",
             "",
             "| Date | Dictations | Raw words | Final words |",
             "| --- | ---: | ---: | ---: |"
-        ]
+        ])
 
         if snapshot.dailySummaries.isEmpty {
             lines.append("| \(snapshot.month.directoryName) | 0 | 0 | 0 |")
@@ -377,25 +398,29 @@ public final class JSONLDictationArchiveStore: DictationArchiveStore {
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
 
-    private func archiveEntries(in fileURL: URL) throws -> [DictationArchiveEntry] {
+    private func archiveEntries(in fileURL: URL) throws -> ArchiveFileReadResult {
         let data = try Data(contentsOf: fileURL)
-        guard let text = String(data: data, encoding: .utf8) else {
-            throw DictationArchiveError.unreadableLine(file: fileURL.lastPathComponent, line: 1)
-        }
+        let lines = data.split(separator: UInt8(ascii: "\n"), omittingEmptySubsequences: false)
+        var entries: [DictationArchiveEntry] = []
+        var warnings: [DictationArchiveReadWarning] = []
 
-        return try text
-            .split(separator: "\n", omittingEmptySubsequences: true)
-            .enumerated()
-            .map { lineIndex, line in
-                do {
-                    return try decoder.decode(DictationArchiveEntry.self, from: Data(line.utf8))
-                } catch {
-                    throw DictationArchiveError.unreadableLine(
-                        file: fileURL.lastPathComponent,
+        for (lineIndex, line) in lines.enumerated() {
+            guard !line.isEmpty else {
+                continue
+            }
+            do {
+                entries.append(try decoder.decode(DictationArchiveEntry.self, from: Data(line)))
+            } catch {
+                warnings.append(
+                    DictationArchiveReadWarning(
+                        fileName: fileURL.lastPathComponent,
                         line: lineIndex + 1
                     )
-                }
+                )
             }
+        }
+
+        return ArchiveFileReadResult(entries: entries, warnings: warnings)
     }
 
     private func appSuffix(for entry: DictationArchiveEntry) -> String {
@@ -419,6 +444,11 @@ public final class JSONLDictationArchiveStore: DictationArchiveStore {
     private func fencedText(_ text: String) -> String {
         text.replacingOccurrences(of: "```", with: "'''")
     }
+}
+
+private struct ArchiveFileReadResult {
+    let entries: [DictationArchiveEntry]
+    let warnings: [DictationArchiveReadWarning]
 }
 
 public enum DictationArchivePaths {
