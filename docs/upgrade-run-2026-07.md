@@ -83,7 +83,7 @@ These choices make the run autonomous while favoring privacy and predictable beh
 - [x] Add uninstall and local-data cleanup guidance
 - [x] Run the full automated validation matrix
 - [x] Review the final diff for privacy regressions and unnecessary complexity
-- [ ] Push all milestone commits
+- [x] Push all milestone commits
 - [x] Prepare a manual smoke-test checklist for Slack, Mail/Outlook, permissions, and recovery
 
 ## Validation Matrix
@@ -96,7 +96,7 @@ These choices make the run autonomous while favoring privacy and predictable beh
 | Shell script syntax | Passed | Passed for every `scripts/*.sh` file |
 | `task stt:help` | Not recorded | Passed without provider access |
 | Local app-bundle build | Not recorded | Built and signature verified with normal Keychain trust access |
-| Working tree clean after commits | Passed | Pending |
+| Working tree clean after commits | Passed | Passed before tracker closeout |
 
 Swift validation was run with normal developer cache access because the Codex
 filesystem sandbox cannot write Swift's user module cache. No provider, Keychain
