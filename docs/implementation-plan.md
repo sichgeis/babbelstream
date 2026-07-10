@@ -2,7 +2,7 @@
 
 ## Current Implementation Note
 
-Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-login, local personal dictionary, privacy-safe usage counters/diagnostics from Milestone 7, local packaging from Milestone 8, and the opt-in local dictation archive/monthly review feature have been implemented as one usable MVP/V1 slice: local recording, LiteLLM/OpenAI-compatible transcription, optional cleanup, cleanup-only dictionary context with a prompt-size cap, direct Accessibility insertion with clipboard fallback, Keychain API key storage, settings UI, the fixed `Control + Option + Space` hotkey, an in-app launch-at-login toggle, local usage visibility, redacted copyable diagnostics, local daily JSONL dictation archive files, monthly word-count review/export, local `.app` bundling, local DMG packaging, and a no-`sudo` Finder drag-to-Applications development install helper. Future work should add focused provider/settings tests beyond `BabbelStreamChecks`, configurable hotkeys, optional deterministic correction if needed, Developer ID signing, notarization, GitHub release automation, and an update flow.
+Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-login, local personal dictionary, privacy-safe usage counters/diagnostics from Milestone 7, local packaging from Milestone 8, and the opt-in local dictation archive/monthly review feature have been implemented as one usable MVP/V1 slice. The July 2026 reliability pass added a non-activating status HUD, operation-scoped Escape cancellation, bounded transient transcription retry, verified temporary-audio cleanup, immutable per-dictation settings snapshots, explicit Apply semantics with truthful provider destinations, non-destructive Keychain updates, target-safe Accessibility insertion, strict provider success parsing, recoverable JSONL reads, and safer personal-dictionary updates. `BabbelStreamChecks` now covers core/provider/archive policies through the canonical `task check` command. Future work should add full XCTest/Swift Testing coordinator coverage when the development toolchain exposes a runnable test framework, configurable push-to-talk hotkeys, optional deterministic correction if needed, Developer ID signing, notarization, GitHub release automation, and an update flow.
 
 ## Implemented V1 Slice: Optional Local Dictation Archive And Monthly Review
 
@@ -16,7 +16,7 @@ Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-log
 ## Milestone 0: Repo Setup
 
 - Deliverable: docs, Swift package scaffold, menu-bar shell, core defaults, basic test target.
-- Acceptance: `swift test` passes; no recording or API code exists.
+- Acceptance: the package builds and the environment's canonical behavior-check command passes. This CLT setup uses `task check` because it does not expose a runnable XCTest or Swift Testing framework through SwiftPM.
 - Manual test: open package in Xcode or build with SwiftPM.
 - Risks: SwiftPM app-bundle limitations may require an Xcode project later.
 - Complexity: S.
@@ -32,7 +32,7 @@ Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-log
 ## Milestone 2: Transcription API Call
 
 - Deliverable: configurable OpenAI-compatible transcription request using URLSession.
-- Acceptance: fixture or real endpoint returns transcript text; invalid key and timeout are handled. Implemented in usable MVP slice.
+- Acceptance: fixture or real endpoint returns transcript text; invalid key and timeout are handled; transient failures retry within a local bound while authentication and other client failures do not. Implemented in usable MVP slice and local URLProtocol checks.
 - Manual test: verify LiteLLM/LightON audio compatibility; fall back to direct OpenAI-compatible endpoint if needed.
 - Risks: proxy may not support `/v1/audio/transcriptions`.
 - Complexity: M.
@@ -48,7 +48,7 @@ Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-log
 ## Milestone 4: Clipboard Paste Into Slack
 
 - Deliverable: paste service with direct Accessibility insertion, clipboard Cmd+V fallback, and manual-copy fallback.
-- Acceptance: final draft appears in Slack desktop, Slack browser, and TextEdit. Implemented in usable MVP slice; still needs manual QA in Slack.
+- Acceptance: final draft appears in Slack desktop, Slack browser, and TextEdit only while the captured target remains focused; target changes copy with visible recovery instead. Implemented in usable MVP slice; still needs manual QA in Slack.
 - Manual test: composer, thread reply, edit message field, browser Slack.
 - Risks: Accessibility permission, clipboard timing, focus changes.
 - Complexity: M.
@@ -56,7 +56,7 @@ Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-log
 ## Milestone 5: Global Hotkey/Menu-Bar UX
 
 - Deliverable: Carbon push-to-talk hotkey wired to recording and processing state.
-- Acceptance: press starts recording, release processes, cancel is available. Fixed `Control + Option + Space` is implemented; configurable hotkeys are still future work.
+- Acceptance: press starts recording, release processes, and Escape/HUD/menu cancellation is available only during the active operation. Fixed `Control + Option + Space` is implemented; configurable push-to-talk hotkeys are still future work.
 - Manual test: use shortcut from Slack and another app.
 - Risks: release detection, shortcut conflicts, layout differences.
 - Complexity: M.
@@ -64,7 +64,7 @@ Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-log
 ## Milestone 6: Settings UI And Keychain
 
 - Deliverable: provider settings, API key storage, model names, cleanup toggle, max duration.
-- Acceptance: secrets are stored in Keychain and never in `UserDefaults`; startup uses a non-secret API-key presence marker to avoid Keychain prompts before dictation.
+- Acceptance: secrets are stored and updated non-destructively in Keychain and never in `UserDefaults`; startup uses a non-secret API-key presence marker and does not read/rewrite the secret before dictation. Edited settings remain inactive until Apply succeeds.
 - Manual test: edit settings, restart app, verify persistence and no startup Keychain prompt.
 - Risks: Keychain error handling, validation UX.
 - Complexity: M.

@@ -32,15 +32,17 @@ AppKit status-item app
 ## Data Flow
 
 1. Hotkey press starts `AudioRecorder`.
-2. Hotkey release stops recording and returns a temporary audio URL.
-3. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint.
-4. The temporary audio file is deleted after transcription completes or fails.
-5. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
-6. `CleanupProvider` lightly formats the transcript when cleanup is enabled, using dictionary context in the same model call.
-7. Usage counters are updated locally for dictation attempts, recorded duration, cleanup requests, transcription failures, and cleanup fallbacks.
-8. `TextInsertionService` first tries direct Accessibility insertion into the focused element. If the target app does not support that path, it writes the final text to the clipboard, reactivates the captured target app, and simulates Cmd+V. Because the Cmd+V path cannot be confirmed reliably across Slack, browsers, and native apps, the final draft remains on the clipboard as a visible fallback.
-9. If the optional local archive is enabled, `DictationArchiveStore` appends a text-only entry for completed dictations with the final draft, word counts, provider labels, cleanup state, and insertion outcome. Raw transcript text is stored only when a separate raw-transcript archive setting is enabled. Archive write failures are surfaced but must not undo paste or block access to the final draft.
-10. The app keeps only the latest raw/final draft in memory for copy/retry during the running session.
+2. `AppState` snapshots the saved settings and the focused application/Accessibility element for the whole dictation.
+3. The non-activating status HUD shows recording state, target, provider host, elapsed time, and cancellation controls.
+4. Hotkey release stops recording and returns a temporary audio URL.
+5. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint and retries only bounded transient failures.
+6. The temporary audio file remains tracked until verified deletion after success, failure, timeout, or cancellation. Termination performs a final synchronous cleanup attempt.
+7. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
+8. `CleanupProvider` lightly formats the transcript when cleanup is enabled, using dictionary context in the same model call.
+9. Usage counters are updated locally for dictation attempts, recorded duration, cleanup requests, transcription failures, and cleanup fallbacks.
+10. `TextInsertionService` inserts only if the captured application and focused Accessibility element still match. It never steals focus back from a different app. If the target changed or cannot be verified, the final draft is copied and the HUD instructs the user to paste manually.
+11. If the optional local archive is enabled, `DictationArchiveStore` appends a text-only entry for completed dictations with the final draft, word counts, provider labels, cleanup state, and insertion outcome. Raw transcript text is stored only when a separate raw-transcript archive setting is enabled. Archive write failures are surfaced but must not undo paste or block access to the final draft.
+12. The app keeps the latest successful raw/final draft in memory for copy/retry and does not discard it merely because a later attempt starts or fails.
 
 ## Permission Model
 
@@ -66,13 +68,15 @@ Provider settings should include:
 
 The default shape targets OpenAI-compatible LiteLLM endpoints. It is still an integration risk that a specific LiteLLM proxy may not support OpenAI-compatible audio transcription even if the app's request shape is valid.
 
+Remote provider URLs must use HTTPS. Plain HTTP is accepted only for loopback development endpoints. Base URLs with embedded credentials, query parameters, or fragments are rejected so the effective destinations remain inspectable and diagnostics-safe.
+
 ## Audio Recording Approach
 
 Use AVFoundation to record compressed audio to a temporary file. The MVP default maximum duration is 10 minutes and can be lowered in Settings. The recorder must clean up partial files on cancel, timeout, provider failure, and app quit.
 
 ## Transcription Approach
 
-Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provider should return plain transcript text plus optional metadata if available. Do not build provider-specific assumptions into UI state.
+Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provider accepts a JSON object with a string `text` field or a genuinely plain-text response; other successful JSON shapes are rejected. The default retry count permits one additional attempt for timeouts, connection loss, HTTP 408/425/429, and 5xx responses. Authentication and other client failures are not retried.
 
 ## Cleanup Approach
 
@@ -95,17 +99,18 @@ The archive should use local daily JSONL text files instead of a database for th
 - Text fields: store the final draft text by default when archive is enabled. Store raw transcript text only when the user enables an additional raw-transcript option.
 - Metadata fields: active app name/bundle id if available, cleanup enabled/fallback state, transcription and cleanup provider labels, optional language metadata, insertion mode/outcome, raw/spoken word count, final draft word count, and audio duration.
 - Query model: monthly stats read a date range of JSONL files, aggregate word counts by day/month, and render a month to Markdown for review.
+- Recovery: malformed JSONL lines are skipped with file/line warnings while valid entries remain available for review and export. The damaged local line is never silently deleted.
 - Topic review: topic summaries should be generated only on explicit user action. If summary generation uses an AI provider, the UI must show the destination and approximate content scope before sending.
 - Retention: default to "keep until deleted" for local control, with a future optional retention window.
 - Deletion: Settings should include reveal archive folder and clear archive actions; destructive clears require confirmation.
 
 ## Paste Insertion Approach
 
-Use direct Accessibility insertion when the focused element supports it. Fall back to NSPasteboard and simulated Cmd+V because it works across Slack desktop, browser Slack, and many native text fields. If paste cannot be confirmed, leave the final text on the clipboard and notify the user.
+Use direct Accessibility insertion when the captured focused element still matches. Fall back to NSPasteboard and simulated Cmd+V only while that same target remains focused. If the app or focused element changed, do not reactivate the old app or guess: leave the final text on the clipboard and explain the manual paste recovery in the HUD.
 
 ## Settings And Secrets
 
-Use `UserDefaults` for non-secret settings and Keychain for API keys. Avoid plaintext config files for secrets. The settings UI should show which provider destination will receive audio and text. Startup must not read the Keychain secret; it may use a non-secret `UserDefaults` presence marker so relaunching the app does not trigger a Keychain access prompt. The real API key should be read only when a provider request is about to run.
+Use `UserDefaults` for non-secret settings and Keychain for API keys. Avoid plaintext config files for secrets. Text settings are staged until the persistent `Apply Settings` action succeeds; the UI separately shows saved/effective and edited destinations. Each dictation uses one immutable saved-settings snapshot. Startup must not read or rewrite the Keychain secret; it may use a non-secret `UserDefaults` presence marker so relaunching the app does not trigger a Keychain access prompt. The real API key is read only when a provider request is about to run, and updates use `SecItemUpdate` rather than delete-then-add replacement.
 
 ## Launch At Login
 

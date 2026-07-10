@@ -253,7 +253,11 @@ check(
         capturedInsertionTarget,
         frontmostProcessIdentifier: 1234
     ),
-    "Insertion should remain eligible while the captured application stays focused."
+    "The application-level target check should match the captured process."
+)
+check(
+    capturedInsertionTarget.focusedElementReference == nil,
+    "An application-only fallback target must remain distinguishable from a captured focused element."
 )
 check(
     !TextInsertionTargetPolicy.applicationMatches(

@@ -213,10 +213,9 @@ public final class ClipboardTextInsertionService: TextInsertionService {
             return false
         }
 
-        guard let capturedElement = target.focusedElementReference else {
-            return true
-        }
-        guard let focusedElement = currentFocusedElement() else {
+        guard let capturedElement = target.focusedElementReference,
+              let focusedElement = currentFocusedElement()
+        else {
             return false
         }
 

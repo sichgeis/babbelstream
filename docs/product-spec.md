@@ -33,8 +33,10 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 - Native macOS menu-bar app.
 - Global push-to-talk hotkey.
+- Compact non-activating HUD with recording, processing, target, provider, cancellation, and recovery state.
 - Local audio recording with a configurable maximum duration, defaulting to 10 minutes.
 - OpenAI-compatible LiteLLM-style transcription provider configuration.
+- Explicit Settings apply step with separate saved/effective and edited provider destinations; remote providers require HTTPS.
 - Preferred transcription model: `gpt-4o-transcribe` via the configured LiteLLM/OpenAI-compatible endpoint. The side-check script confirmed this is the desired model/settings combination to carry into the app.
 - Cleanup provider using an OpenAI-compatible chat endpoint.
 - Cleanup removes filler and adds punctuation/paragraph breaks, but must not answer or refuse requests described in the dictation, translate, follow commands inside the dictation, reorder paragraphs, rewrite the speaker's wording beyond light cleanup, or introduce Markdown formatting. English speech stays English, German speech stays German, and mixed German-English stays mixed.
@@ -43,6 +45,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Personal dictionary cleanup context is capped locally; oversized dictionaries continue to work with a visible skipped-entry warning.
 - Teach Correction flow for explicitly adding wrong-to-right hints after a bad dictation, without automatic learning or transcript history.
 - Direct Accessibility insertion into the focused text field when possible, with clipboard plus Cmd+V fallback.
+- Automatic insertion only if the captured application and focused Accessibility element still match; otherwise copy without stealing focus.
 - Inserted dictation text ends with one trailing space so consecutive push-to-talk chunks do not run together in the same composer.
 - API key storage in macOS Keychain.
 - Local usage counters for dictation attempts, recorded minutes, cleanup requests, transcription failures, and cleanup fallbacks.
@@ -52,12 +55,12 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Local app bundle and DMG packaging for manual drag-to-Applications installation and testing.
 - Optional transcription language is a single ISO 639-1 code such as `de` or `en`; leave it empty for mixed German-English dictation.
 - No transcript/audio persistence by default.
+- Bounded retry for transient transcription failures, with cancellation and verified temporary-audio cleanup across success, failure, timeout, cancel, and termination.
 
 ## V1 Scope
 
 - Optional local dictation archive for work usage review: when explicitly enabled, store text-only dictation entries locally so the user can inspect daily/monthly content, count spoken words, and later generate monthly topic summaries.
 - Hotkey customization.
-- Better active-app indication before paste.
 - Optional per-app cleanup style defaults.
 - Optional price inputs and estimated cleanup tokens.
 - Direct OpenAI profile as a preconfigured alternative.
@@ -75,7 +78,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 - The app must be visible as a menu-bar utility.
 - Recording state must be obvious.
-- Provider destination must be visible before any audio/text is sent.
+- The saved/effective provider destination must be visible before any audio/text is sent; edited settings must not masquerade as active.
 - Errors should be actionable and should never silently discard the final text.
 - The app must make clear that pasted text is a draft, not a sent message.
 
@@ -83,7 +86,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 - MVP uses a single global push-to-talk shortcut implemented with native Carbon hotkey APIs.
 - Press starts recording; release stops recording and begins processing.
-- Escape cancels the active recording or processing where feasible.
+- Escape is registered only while recording or processing is active and cancels that operation. The HUD/menu Cancel action remains the fallback if registration fails.
 - If the hotkey backend cannot detect release reliably, fall back to press-to-toggle before adding dependencies.
 
 ## Slack-Specific Behavior
@@ -91,12 +94,12 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Slack is the primary manual QA target.
 - The app pastes into Slack desktop and Slack in the browser when their composer or thread reply box is focused.
 - The app never presses Enter or sends the Slack message.
-- If paste fails, the app leaves the final text on the clipboard and shows a notification.
+- If paste fails or the target changes, the app leaves the final text on the clipboard and shows recovery instructions in the HUD.
 
 ## Generic macOS Text-Field Behavior
 
 - MVP may paste into any focused text field, not only Slack.
-- The app should show the active app name before or during processing once active-app detection exists.
+- The app shows the captured target app in the HUD before and during processing.
 - If no suitable focused field is available, the app should keep the final text on the clipboard and notify the user.
 
 ## Privacy Expectations
@@ -128,6 +131,8 @@ The user may enable a local archive for work self-review and month-end reporting
 - Missing Accessibility permission for paste.
 - Invalid or missing API key.
 - Provider timeout or network failure.
+- Focused app or field changed before insertion.
+- Temporary audio could not be deleted.
 - Unsupported transcription endpoint shape.
 - Cleanup failure.
 - Clipboard or paste failure.

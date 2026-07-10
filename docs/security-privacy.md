@@ -14,7 +14,7 @@
 
 ## Storage And Lifetime
 
-- Audio: temporary file only; delete immediately after transcription succeeds, fails, times out, or is canceled.
+- Audio: temporary file only; keep its URL tracked until verified deletion after transcription succeeds, fails, times out, is canceled, or the app terminates. A deletion failure must be visible and is retried by stale-file cleanup on relaunch.
 - Transcript text: memory only by default, plus last transcript in memory for retry/paste-last during the running app session.
 - Cleaned text: memory and, when the clipboard fallback path is used, the clipboard.
 - API keys: macOS Keychain only. A non-secret `UserDefaults` marker may remember that a key was saved so the app can avoid reading Keychain on startup.
@@ -36,11 +36,13 @@
 
 ## Clipboard Implications
 
-Clipboard fallback places work text on the system clipboard. Direct Accessibility insertion should avoid clipboard writes when the focused element supports it. When the app has to use synthetic Cmd+V, paste success cannot be confirmed reliably across all targets, so the final text remains on the clipboard with a visible status message.
+Clipboard fallback places work text on the system clipboard. Direct Accessibility insertion should avoid clipboard writes when the focused element supports it. Automatic insertion is allowed only while the captured application and Accessibility element still match; otherwise the draft is copied without reactivating another app. When the app uses synthetic Cmd+V, paste success cannot be confirmed reliably across all targets, so the final text remains on the clipboard with a visible HUD message.
 
 ## Network Destinations
 
-The app sends audio to the configured transcription endpoint and transcript text to the configured cleanup endpoint when cleanup is enabled. The settings UI must show provider base URL and model names. The app must not silently switch providers.
+The app sends audio to the configured transcription endpoint and transcript text to the configured cleanup endpoint when cleanup is enabled. The settings UI distinguishes edited values from the saved/effective destinations used by requests. Each dictation snapshots those saved settings before recording. The app must not silently switch providers.
+
+Remote providers must use HTTPS. Plain HTTP is limited to loopback development endpoints, and base URLs must not embed credentials, query parameters, or fragments. API keys belong in Keychain.
 
 When cleanup is enabled, personal dictionary entries are included in the cleanup request as context. They are explicit user-maintained hints, not inferred transcript history.
 
@@ -60,14 +62,15 @@ Default logs may include timestamps, state names, durations, provider labels, co
 - Local archive disclosure if the user enables text persistence and another local process, backup, or person with account access can read those files.
 - Clipboard exposure to other apps.
 - Accessibility permission abuse if compromised.
+- A transient provider retry sends the same temporary audio request again. Retries are bounded and limited to transport, throttling, and server failures.
 
 ## Accessibility Risks
 
-Accessibility permission allows the app to synthesize paste shortcuts and may enable future focused-app inspection. The app should request it only with clear explanation, avoid broad automation beyond paste, and fail safely when permission is absent.
+Accessibility permission allows the app to inspect the focused element, insert selected text, and synthesize paste shortcuts. The app should request it only with clear explanation, avoid broad automation beyond paste, and fail safely when permission is absent or the original focused element changes.
 
 ## Provider Transparency
 
-Before first use, the app should show which provider base URL receives audio and which endpoint receives cleanup text. Changing provider settings should be explicit. Direct OpenAI and LiteLLM-compatible providers should be represented as profiles, not hidden behavior.
+Before first use, the app should show which saved provider base URL receives audio and which endpoint receives cleanup text. Changing provider settings is explicit through `Apply Settings`; edited but unapplied destinations are labeled as inactive. Direct OpenAI and LiteLLM-compatible providers should be represented as profiles, not hidden behavior.
 
 ## Work Slack Considerations
 
