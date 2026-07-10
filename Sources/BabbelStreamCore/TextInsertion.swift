@@ -86,6 +86,7 @@ public final class ClipboardTextInsertionService: TextInsertionService {
     }
 
     public func insertText(_ text: String, target: TextInsertionTarget?) async throws -> TextInsertionResult {
+        try Task.checkCancellation()
         let insertionText = try TextInsertionPayload.validated(text)
 
         guard accessibilityPermissionStatus() == .trusted else {
@@ -94,10 +95,12 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         }
 
         guard await prepareTargetForInsertion(target) else {
+            try Task.checkCancellation()
             _ = try writeToClipboard(insertionText)
             return .copiedAfterPasteShortcutFailure
         }
 
+        try Task.checkCancellation()
         if !shouldSkipDirectAccessibilityInsertion(for: target),
            insertDirectlyIntoFocusedElement(insertionText) {
             return .insertedDirectly
@@ -105,9 +108,11 @@ public final class ClipboardTextInsertionService: TextInsertionService {
 
         _ = try writeToClipboard(insertionText)
         guard await prepareTargetForInsertion(target) else {
+            try Task.checkCancellation()
             return .copiedAfterPasteShortcutFailure
         }
         await sleep(seconds: 0.15)
+        try Task.checkCancellation()
 
         guard await postPasteShortcut() else {
             return .copiedAfterPasteShortcutFailure
@@ -200,6 +205,9 @@ public final class ClipboardTextInsertionService: TextInsertionService {
     ) async -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
+            if Task.isCancelled {
+                return false
+            }
             if application.isActive ||
                 NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier {
                 return true

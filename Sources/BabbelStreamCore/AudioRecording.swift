@@ -10,6 +10,7 @@ public protocol AudioRecorder: AnyObject {
     func start(maxDuration: TimeInterval) async throws
     func stop(deleteTemporaryFile: Bool) async throws -> RecordedAudio
     func cancel() async throws
+    func cancelImmediately() throws
 }
 
 public enum MicrophonePermissionStatus: String, Equatable, Sendable {
@@ -238,7 +239,7 @@ public final class AVFoundationAudioRecorder: NSObject, AudioRecorder {
         recorder.prepareToRecord()
 
         guard recorder.record(forDuration: maxDuration) else {
-            _ = try? AudioTempFileStore.deleteTemporaryAudio(at: fileURL)
+            _ = try AudioTempFileStore.deleteTemporaryAudio(at: fileURL)
             throw AudioRecordingError.couldNotStartRecording
         }
 
@@ -267,7 +268,7 @@ public final class AVFoundationAudioRecorder: NSObject, AudioRecorder {
         do {
             byteCount = try recordingFileSize(at: recording.fileURL)
         } catch {
-            _ = try? AudioTempFileStore.deleteTemporaryAudio(at: recording.fileURL)
+            _ = try AudioTempFileStore.deleteTemporaryAudio(at: recording.fileURL)
             throw error
         }
 
@@ -285,6 +286,10 @@ public final class AVFoundationAudioRecorder: NSObject, AudioRecorder {
     }
 
     public func cancel() async throws {
+        try cancelImmediately()
+    }
+
+    public func cancelImmediately() throws {
         guard let recording = activeRecording else {
             return
         }

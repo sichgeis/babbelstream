@@ -72,6 +72,42 @@ public protocol CleanupProvider: Sendable {
     func cleanup(_ request: CleanupRequest) async throws -> String
 }
 
+public enum ProviderRetryPolicy {
+    public static let maximumRetryCount = 3
+
+    public static func isCancellation(_ error: Error) -> Bool {
+        if error is CancellationError {
+            return true
+        }
+
+        return (error as? URLError)?.code == .cancelled
+    }
+
+    public static func shouldRetry(_ error: Error) -> Bool {
+        if let providerError = error as? ProviderError,
+           case let .requestFailed(statusCode, _) = providerError {
+            return statusCode == 408
+                || statusCode == 425
+                || statusCode == 429
+                || (500...599).contains(statusCode)
+        }
+
+        guard let urlError = error as? URLError else {
+            return false
+        }
+
+        return [
+            .timedOut,
+            .cannotFindHost,
+            .cannotConnectToHost,
+            .networkConnectionLost,
+            .dnsLookupFailed,
+            .notConnectedToInternet,
+            .resourceUnavailable
+        ].contains(urlError.code)
+    }
+}
+
 public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider {
     private let urlSession: URLSession
 
@@ -120,16 +156,50 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
         urlRequest.setValue(multipart.contentType, forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("application/json, text/plain;q=0.9, */*;q=0.1", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await urlSession.data(for: urlRequest)
-        try ProviderResponseValidator.validate(response, data: data)
+        return try await ProviderRequestExecutor.perform(
+            retryCount: configuration.retryCount
+        ) { [urlSession] in
+            let (data, response) = try await urlSession.data(for: urlRequest)
+            try ProviderResponseValidator.validate(response, data: data)
 
-        let text = try TranscriptionResponseParser.parse(data: data)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else {
-            throw ProviderError.emptyTranscript
+            let text = try TranscriptionResponseParser.parse(data: data)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else {
+                throw ProviderError.emptyTranscript
+            }
+
+            return text
         }
+    }
+}
 
-        return text
+private enum ProviderRequestExecutor {
+    static func perform<Value>(
+        retryCount: Int,
+        operation: () async throws -> Value
+    ) async throws -> Value {
+        let maximumRetries = min(max(0, retryCount), ProviderRetryPolicy.maximumRetryCount)
+        var retriesPerformed = 0
+
+        while true {
+            do {
+                try Task.checkCancellation()
+                return try await operation()
+            } catch {
+                if ProviderRetryPolicy.isCancellation(error) {
+                    throw CancellationError()
+                }
+                guard retriesPerformed < maximumRetries,
+                      ProviderRetryPolicy.shouldRetry(error)
+                else {
+                    throw error
+                }
+
+                let delayNanoseconds = UInt64(350_000_000 * (1 << retriesPerformed))
+                retriesPerformed += 1
+                try await Task.sleep(nanoseconds: delayNanoseconds)
+            }
+        }
     }
 }
 
