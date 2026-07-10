@@ -56,6 +56,8 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Optional transcription language is a single ISO 639-1 code such as `de` or `en`; leave it empty for mixed German-English dictation.
 - No transcript/audio persistence by default.
 - Bounded retry for transient transcription failures, with cancellation and verified temporary-audio cleanup across success, failure, timeout, cancel, and termination.
+- A transcription attempt that has sent zero request bytes after 15 seconds is treated as a stalled connection and retried within the same bound; the longer configured request timeout remains available after sending begins.
+- Processing HUD copy shows the current attempt, total attempts, connection timeout, configured request timeout, and privacy-safe retry reason.
 
 ## V1 Scope
 

@@ -78,6 +78,8 @@ Use AVFoundation to record compressed audio to a temporary file. The MVP default
 
 Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provider accepts a JSON object with a string `text` field or a genuinely plain-text response; other successful JSON shapes are rejected. The default retry count permits one additional attempt for timeouts, connection loss, HTTP 408/425/429, and 5xx responses. Authentication and other client failures are not retried.
 
+The configured request timeout remains the allowance for an active provider request. A separate 15-second connection watchdog observes whether URLSession has begun sending request bytes. If it has not, the attempt is canceled as a connection timeout and may consume one bounded transcription retry. Once sending begins, the watchdog no longer shortens legitimate transcription processing. Cleanup requests use the same connection watchdog but keep their existing raw-transcript fallback instead of adding cleanup retries. Provider attempt events contain only attempt numbers and retry categories for HUD and diagnostics use.
+
 ## Cleanup Approach
 
 Use a chat/completions-compatible endpoint with a fixed Slack-ready cleanup system prompt and a data-only JSON user message containing the transcript. Cleanup is enabled by default and can be disabled. Cleanup must treat the transcript as content, not instructions; it must preserve wording, order, and the language of each sentence or phrase, return plain text only, and must not translate between German and English. If cleanup fails after transcription succeeds, paste the raw transcript and notify the user.
@@ -124,7 +126,7 @@ The daily developer install helper opens that DMG and lets Finder perform the co
 
 ## Logging And Debugging
 
-Default logs may include state transitions, provider names, durations, counts, build commit hash, and error categories. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, optional archive enabled state, archive entry counts, build commit hash, and recent sanitized event categories. They must not include audio, transcripts, archive contents, cleanup input, cleanup output, API keys, clipboard contents, or audio file paths. Debug persistence must be explicit and visibly enabled.
+Default logs may include state transitions, provider names, durations, counts, build commit hash, attempt numbers, timeout values, and error/retry categories. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, optional archive enabled state, archive entry counts, build commit hash, connection timeout, and recent sanitized event categories. They must not include audio, transcripts, archive contents, cleanup input, cleanup output, API keys, clipboard contents, audio file paths, or request bodies. Debug persistence must be explicit and visibly enabled.
 
 ## Security And Privacy
 

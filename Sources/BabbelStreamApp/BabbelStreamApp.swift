@@ -782,6 +782,18 @@ final class AppState: ObservableObject {
         )
     }
 
+    var providerConnectionTimeoutSummary: String {
+        Self.secondsLabel(ProjectDefaults.providerConnectionTimeoutSeconds)
+    }
+
+    var transcriptionAttemptLimitSummary: String {
+        let retries = min(
+            max(0, appSettings.providerConfiguration.retryCount),
+            ProviderRetryPolicy.maximumRetryCount
+        )
+        return "\(retries + 1)"
+    }
+
     var editedProviderDestinationSummary: String {
         "\(baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(transcriptionPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
     }
@@ -2470,7 +2482,12 @@ private struct SettingsProviderPane: View {
                 TextField("Transcription model", text: $appState.transcriptionModelText)
                 TextField("Cleanup path", text: $appState.cleanupPathText)
                 TextField("Cleanup model", text: $appState.cleanupModelText)
-                TextField("Timeout seconds", text: $appState.timeoutText)
+                TextField("Overall request timeout (seconds)", text: $appState.timeoutText)
+                LabeledContent("Connection timeout", value: appState.providerConnectionTimeoutSummary)
+                LabeledContent("Maximum transcription attempts", value: appState.transcriptionAttemptLimitSummary)
+                Text("If sending has not begun by the connection timeout, BabbelStream cancels that attempt and retries when another attempt is available. The overall timeout still allows active provider processing to take longer. A retry resends the same temporary audio.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("API Key") {

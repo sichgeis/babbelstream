@@ -2,7 +2,7 @@
 
 ## Automated Check Runner
 
-Run `task check`. It builds the app and executes `BabbelStreamChecks`, including settings validation, provider response/retry checks through a local `URLProtocol`, prompt/dictionary behavior, archive round trips and damaged-line recovery, diagnostics redaction, temp-file helpers, insertion policy, settings persistence, and usage counters.
+Run `task check`. It builds the app and executes `BabbelStreamChecks`, including settings validation, provider response/retry checks through a local `URLProtocol`, zero-byte connection-stall recovery, provider cancellation without retry, prompt/dictionary behavior, archive round trips and damaged-line recovery, diagnostics redaction, temp-file helpers, insertion policy, settings persistence, and usage counters.
 
 This CLT-only environment can compile but cannot execute XCTest or Swift Testing through SwiftPM. The empty test target was removed so `swift test` now fails honestly with `no tests found` instead of returning a false green. Coordinator behavior tied to AppKit, Accessibility, Keychain, microphone permissions, and application termination remains in the manual matrix below.
 
@@ -32,13 +32,13 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Oversized dictionary context skips entries with counts instead of failing dictation.
 - Archive integration writes one completed-dictation entry only when enabled and never writes audio paths or API keys.
 - Coordinator flow from audio URL to pasted text using fakes.
-- Timeout, retry, invalid-key, and malformed-response cases.
+- Connection timeout, request timeout, retry, cancellation, invalid-key, and malformed-response cases.
 
 ## Manual QA Checklist
 
 - App launches as a menu-bar utility.
 - Recording state is visible.
-- The HUD shows the captured target, provider host, elapsed time, and cancellation control without activating BabbelStream.
+- The HUD shows the captured target, provider host, elapsed time, cancellation control, transcription attempt count, connection/request timeout guidance, and retry reason without activating BabbelStream.
 - Escape cancels while recording and processing but behaves normally after the operation ends.
 - Cleanup can be toggled.
 - Provider destination is visible in settings.

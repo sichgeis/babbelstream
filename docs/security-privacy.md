@@ -62,7 +62,7 @@ Default logs may include timestamps, state names, durations, provider labels, co
 - Local archive disclosure if the user enables text persistence and another local process, backup, or person with account access can read those files.
 - Clipboard exposure to other apps.
 - Accessibility permission abuse if compromised.
-- A transient provider retry sends the same temporary audio request again. Retries are bounded and limited to transport, throttling, and server failures.
+- A transient provider retry sends the same temporary audio request again. Retries are bounded and limited to connection/request timeouts, transport failures, throttling, and server failures. The HUD makes the retry visible; diagnostics record only attempt counts and retry categories, never the audio or request body.
 
 ## Accessibility Risks
 

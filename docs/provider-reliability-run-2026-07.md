@@ -42,9 +42,9 @@ BabbelStream should recover promptly from a stalled provider connection and make
    - Cover timeout, retry, success, and cancellation behavior deterministically.
 2. **Completed — HUD and privacy-safe diagnostics**
    - Surface the current attempt, retry reason, and remaining timeout guidance without logging content.
-3. **In progress — Documentation and settings guidance**
+3. **Completed — Documentation and settings guidance**
    - Document timeout semantics, defaults, recovery behavior, and troubleshooting.
-4. **Pending — Final validation and handoff**
+4. **In progress — Final validation and handoff**
    - Run broad checks/build/package validation, review the full diff, and confirm clean pushed state.
 
 ## Dependencies And Risks
@@ -63,6 +63,7 @@ BabbelStream should recover promptly from a stalled provider connection and make
 
 - Stage 1: `task check` passed after adding deterministic URLProtocol checks for HTTP retry events, a zero-byte connection stall followed by successful retry, and cancellation without retry.
 - Stage 2: `task check` passed after ordering provider events onto AppState and surfacing attempt, retry reason, connection-recovery bound, and overall timeout in the HUD and redacted diagnostic event trail.
+- Stage 3: `task check` passed after clarifying the overall request timeout, fixed connection timeout, maximum attempts, and audio-resend implication in Settings and user/technical/test documentation.
 
 ## Current Blocker
 
@@ -70,4 +71,4 @@ BabbelStream should recover promptly from a stalled provider connection and make
 
 ## Next Action
 
-Clarify overall timeout semantics, connection recovery, and troubleshooting in Settings and project documentation.
+Run full checks, app bundle/DMG packaging, final privacy and concurrency diff review, then close the tracker.
