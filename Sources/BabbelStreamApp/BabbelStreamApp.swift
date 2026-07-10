@@ -618,6 +618,7 @@ final class AppState: ObservableObject {
     @Published var apiKeyInput = ""
     @Published var settingsFeedbackMessage = ""
     @Published var settingsErrorMessage: String?
+    @Published private(set) var transcriptionProgressDetail: String?
     @Published private(set) var diagnostics: [DiagnosticEvent] = []
 
     var onStateChanged: (() -> Void)?
@@ -835,6 +836,10 @@ final class AppState: ObservableObject {
         }
         if status == "Cleaning up" {
             return "Formatting the transcript. The original target will be verified before paste."
+        }
+        if (status == "Transcribing" || status == "Retrying transcription"),
+           let transcriptionProgressDetail {
+            return transcriptionProgressDetail
         }
         if status == "Pasting draft" {
             return "Verifying the original focused field before insertion."
@@ -1357,6 +1362,7 @@ final class AppState: ObservableObject {
             "transcription model: \(appSettings.providerConfiguration.transcriptionModel)",
             "cleanup model: \(appSettings.providerConfiguration.cleanupModel)",
             "timeout seconds: \(String(format: "%.1f", appSettings.providerConfiguration.timeoutSeconds))",
+            "connection timeout seconds: \(String(format: "%.1f", ProjectDefaults.providerConnectionTimeoutSeconds))",
             "max recording minutes: \(Self.durationMinutesText(for: appSettings.maxAudioDurationSeconds))",
             "cleanup enabled: \(appSettings.cleanupEnabled)",
             "api key saved: \(hasAPIKey)",
@@ -1459,6 +1465,31 @@ final class AppState: ObservableObject {
     private func saveUsageSnapshot() {
         usageTracker.save(usageSnapshot)
         notifyStateChanged()
+    }
+
+    private func handleTranscriptionEvent(_ event: ProviderRequestEvent, settings: AppSettings) {
+        let overallTimeout = settings.providerConfiguration.timeoutSeconds
+        let connectionTimeout = min(ProjectDefaults.providerConnectionTimeoutSeconds, overallTimeout)
+
+        switch event {
+        case let .attemptStarted(attempt, totalAttempts):
+            status = attempt == 1 ? "Transcribing" : "Retrying transcription"
+            transcriptionProgressDetail = "Attempt \(attempt) of \(totalAttempts) • connection timeout \(Self.secondsLabel(connectionTimeout)) • overall timeout \(Self.secondsLabel(overallTimeout)) • Escape cancels"
+            recordDiagnostic("transcription attempt \(attempt)/\(totalAttempts) started")
+        case let .retryScheduled(nextAttempt, totalAttempts, reason):
+            status = "Retrying transcription"
+            transcriptionProgressDetail = "Retrying after \(reason.displayName) • attempt \(nextAttempt) of \(totalAttempts) starts shortly • Escape cancels"
+            recordDiagnostic(
+                "transcription retry scheduled: attempt \(nextAttempt)/\(totalAttempts), \(reason.displayName)"
+            )
+        }
+    }
+
+    private static func secondsLabel(_ seconds: TimeInterval) -> String {
+        if seconds.rounded(.towardZero) == seconds {
+            return "\(Int(seconds))s"
+        }
+        return String(format: "%.1fs", seconds)
     }
 
     private func configureHotkey() {
@@ -1643,6 +1674,7 @@ final class AppState: ObservableObject {
             try await processRecording(recording, settings: settingsSnapshot, autoStopped: autoStopped)
         } catch {
             resetRecordingState()
+            transcriptionProgressDetail = nil
             if ProviderRetryPolicy.isCancellation(error) {
                 status = "Ready"
                 errorMessage = nil
@@ -1733,6 +1765,7 @@ final class AppState: ObservableObject {
 
         status = autoStopped ? "Max reached; transcribing" : "Transcribing"
         lastResult = "Sending audio to \(settings.providerConfiguration.baseURL.host ?? settings.providerConfiguration.baseURL.absoluteString)."
+        transcriptionProgressDetail = nil
         recordDiagnostic("transcription started")
 
         let rawTranscript: String
@@ -1741,10 +1774,14 @@ final class AppState: ObservableObject {
                 TranscriptionRequest(
                     audioURL: recording.temporaryFileURL,
                     settings: settings,
-                    apiKey: apiKey
+                    apiKey: apiKey,
+                    onEvent: { [weak self] event in
+                        await self?.handleTranscriptionEvent(event, settings: settings)
+                    }
                 )
             )
         } catch {
+            transcriptionProgressDetail = nil
             if ProviderRetryPolicy.isCancellation(error) {
                 throw CancellationError()
             }
@@ -1752,6 +1789,7 @@ final class AppState: ObservableObject {
             saveUsageSnapshot()
             throw error
         }
+        transcriptionProgressDetail = nil
         recordDiagnostic("transcription succeeded: \(rawTranscript.count) characters")
         try Task.checkCancellation()
 
