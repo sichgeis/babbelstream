@@ -33,6 +33,8 @@ public struct AppSettings: Equatable, Sendable {
 
 public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable {
     case invalidBaseURL
+    case insecureBaseURL
+    case ambiguousBaseURL
     case missingTranscriptionModel
     case missingCleanupModel
     case missingTranscriptionPath
@@ -45,7 +47,11 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
     public var errorDescription: String? {
         switch self {
         case .invalidBaseURL:
-            "Provider base URL must use http or https."
+            "Provider base URL must include a valid http or https host."
+        case .insecureBaseURL:
+            "Provider base URL must use https. Plain http is allowed only for local development endpoints."
+        case .ambiguousBaseURL:
+            "Provider base URL must not contain credentials, a query, or a fragment. Store credentials in Keychain and configure endpoint paths separately."
         case .missingTranscriptionModel:
             "Transcription model is required."
         case .missingCleanupModel:
@@ -71,8 +77,18 @@ public enum AppSettingsValidator {
         let configuration = settings.providerConfiguration
         let scheme = configuration.baseURL.scheme?.lowercased()
 
-        guard scheme == "https" || scheme == "http" else {
+        guard (scheme == "https" || scheme == "http"), configuration.baseURL.host?.isEmpty == false else {
             throw SettingsValidationError.invalidBaseURL
+        }
+        guard configuration.baseURL.user == nil,
+              configuration.baseURL.password == nil,
+              configuration.baseURL.query == nil,
+              configuration.baseURL.fragment == nil
+        else {
+            throw SettingsValidationError.ambiguousBaseURL
+        }
+        if scheme == "http", !ProviderTransportPolicy.isLoopback(configuration.baseURL) {
+            throw SettingsValidationError.insecureBaseURL
         }
         guard !configuration.transcriptionModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw SettingsValidationError.missingTranscriptionModel
@@ -110,6 +126,24 @@ public enum AppSettingsValidator {
         else {
             throw SettingsValidationError.invalidMaxAudioDuration
         }
+    }
+}
+
+public enum ProviderTransportPolicy {
+    public static func isLoopback(_ url: URL) -> Bool {
+        guard var host = url.host?.lowercased(), !host.isEmpty else {
+            return false
+        }
+
+        if host.hasPrefix("["), host.hasSuffix("]") {
+            host.removeFirst()
+            host.removeLast()
+        }
+
+        return host == "localhost"
+            || host.hasSuffix(".localhost")
+            || host == "127.0.0.1"
+            || host == "::1"
     }
 }
 

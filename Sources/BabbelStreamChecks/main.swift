@@ -209,6 +209,41 @@ check(!apiKeyPresenceStore.hasSavedAPIKey, "API key presence should default to f
 apiKeyPresenceStore.hasSavedAPIKey = true
 check(apiKeyPresenceStore.hasSavedAPIKey, "API key presence should persist as a non-secret UserDefaults hint.")
 try AppSettingsValidator.validate(AppSettings())
+var loopbackHTTPSettings = AppSettings()
+loopbackHTTPSettings.providerConfiguration.baseURL = URL(string: "http://127.0.0.1:4000")!
+try AppSettingsValidator.validate(loopbackHTTPSettings)
+check(
+    ProviderTransportPolicy.isLoopback(URL(string: "http://localhost:4000")!),
+    "Localhost should be recognized as an allowed loopback development endpoint."
+)
+check(
+    ProviderTransportPolicy.isLoopback(URL(string: "http://[::1]:4000")!),
+    "IPv6 loopback should be recognized as an allowed development endpoint."
+)
+do {
+    var insecureSettings = AppSettings()
+    insecureSettings.providerConfiguration.baseURL = URL(string: "http://provider.example.com")!
+    try AppSettingsValidator.validate(insecureSettings)
+    fatalError("Remote plain HTTP provider URLs should fail settings validation.")
+} catch SettingsValidationError.insecureBaseURL {
+    // Expected.
+}
+do {
+    var credentialURLSettings = AppSettings()
+    credentialURLSettings.providerConfiguration.baseURL = URL(string: "https://user:secret@provider.example.com")!
+    try AppSettingsValidator.validate(credentialURLSettings)
+    fatalError("Provider credentials in the base URL should fail settings validation.")
+} catch SettingsValidationError.ambiguousBaseURL {
+    // Expected.
+}
+do {
+    var queryURLSettings = AppSettings()
+    queryURLSettings.providerConfiguration.baseURL = URL(string: "https://provider.example.com?token=secret")!
+    try AppSettingsValidator.validate(queryURLSettings)
+    fatalError("Provider query parameters in the base URL should fail settings validation.")
+} catch SettingsValidationError.ambiguousBaseURL {
+    // Expected.
+}
 do {
     var invalidPathSettings = AppSettings()
     invalidPathSettings.providerConfiguration.transcriptionEndpointPath = "v1/audio/transcriptions"

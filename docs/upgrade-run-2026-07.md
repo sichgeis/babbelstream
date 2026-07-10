@@ -40,14 +40,14 @@ These choices make the run autonomous while favoring privacy and predictable beh
 
 ### 2. Truthful settings and credential boundary
 
-- [ ] Add a Settings-wide Apply action and unsaved-change state
-- [ ] Show saved/effective provider destinations
-- [ ] Show validation and save results inside Settings
-- [ ] Reject ambiguous provider URLs and remote plain HTTP
-- [ ] Make Keychain updates non-destructive
-- [ ] Remove the first-dictation Keychain rewrite
-- [ ] Snapshot effective settings for each dictation
-- [ ] Add focused settings, endpoint, and credential tests
+- [x] Add a Settings-wide Apply action and unsaved-change state
+- [x] Show saved/effective provider destinations
+- [x] Show validation and save results inside Settings
+- [x] Reject ambiguous provider URLs and remote plain HTTP
+- [x] Make Keychain updates non-destructive
+- [x] Remove the first-dictation Keychain rewrite
+- [x] Snapshot effective settings for each dictation
+- [x] Add focused settings and endpoint regression checks
 
 ### 3. Processing lifecycle safety
 
