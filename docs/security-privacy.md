@@ -36,7 +36,7 @@
 
 ## Clipboard Implications
 
-Clipboard fallback places work text on the system clipboard. Direct Accessibility insertion should avoid clipboard writes when the focused element supports it. Automatic insertion is allowed only while the captured application and logical field still match. Exact AX identity is preferred; replacement wrappers require a stable field identifier or compatible role, frame, and ancestor structure. Conflicting or incomplete evidence fails closed, and the draft is copied without reactivating another app. When the app uses synthetic Cmd+V, paste success cannot be confirmed reliably across all targets, so the final text remains on the clipboard with a visible HUD message.
+Clipboard fallback places work text on the system clipboard. Direct Accessibility insertion should avoid clipboard writes when the focused element supports it. Automatic insertion is allowed only while the captured application remains frontmost, but the field focused at completion may differ from the field focused at recording start. This explicit tradeoff supports VS Code, Codex, and other reactive editors that do not expose stable field identity. Switching to another application fails closed: the draft is copied without reactivating the original app. When the app uses synthetic Cmd+V, paste success cannot be confirmed reliably across all targets, so the final text remains on the clipboard with a visible HUD message.
 
 ## Network Destinations
 
