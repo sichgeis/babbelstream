@@ -827,7 +827,10 @@ final class AppState: ObservableObject {
             let target = pasteTargetSummary ?? "unverified target"
             let provider = appSettings.providerConfiguration.baseURL.host
                 ?? appSettings.providerConfiguration.baseURL.absoluteString
-            return "Target: \(target) • release to transcribe via \(provider) • \(formatDuration(elapsedSeconds))"
+            let cancelGuidance = warningMessage?.contains("Escape") == true
+                ? "use HUD Cancel"
+                : "Escape cancels"
+            return "Target: \(target) • release to transcribe via \(provider) • \(cancelGuidance) • \(formatDuration(elapsedSeconds))"
         }
         if status == "Cleaning up" {
             return "Formatting the transcript. The original target will be verified before paste."
@@ -1005,6 +1008,7 @@ final class AppState: ObservableObject {
         }
 
         isProcessing = false
+        setCancelHotkeyEnabled(false)
         notifyStateChanged()
     }
 
@@ -1319,6 +1323,7 @@ final class AppState: ObservableObject {
     func prepareForTermination() {
         stopElapsedTimer()
         processingTask?.cancel()
+        setCancelHotkeyEnabled(false)
 
         do {
             try audioRecorder.cancelImmediately()
@@ -1472,12 +1477,36 @@ final class AppState: ObservableObject {
                 await self.handleDictationHotkeyReleased()
             }
         }
+        hotkeyService.onCancel = { [weak self] in
+            Task { @MainActor in
+                guard let self else {
+                    return
+                }
+                await self.cancelRecording()
+            }
+        }
 
         do {
             try hotkeyService.register()
             hotkeyStatus = "\(ProjectDefaults.fixedHotkeyDescription) registered."
         } catch {
             hotkeyStatus = error.localizedDescription
+        }
+    }
+
+    private func setCancelHotkeyEnabled(_ isEnabled: Bool) {
+        do {
+            try hotkeyService.setCancelEnabled(isEnabled)
+        } catch {
+            if isEnabled {
+                warningMessage = combinedWarning(
+                    warningMessage,
+                    "Escape could not be registered for this dictation. Use Cancel in the status HUD or menu."
+                )
+            }
+            recordDiagnostic(
+                "cancel hotkey \(isEnabled ? "registration" : "removal") failed: \(diagnosticErrorCategory(error))"
+            )
         }
     }
 
@@ -1555,6 +1584,7 @@ final class AppState: ObservableObject {
             recordingMode = mode
             activeDictationSettings = mode == .dictation ? settingsSnapshot : nil
             isRecording = true
+            setCancelHotkeyEnabled(true)
             status = mode == .dictation ? "Recording dictation" : "Recording test"
             lastResult = mode == .dictation
                 ? "Speak, then release \(ProjectDefaults.fixedHotkeyDescription) or click Stop."
@@ -1630,6 +1660,7 @@ final class AppState: ObservableObject {
         }
 
         isProcessing = false
+        setCancelHotkeyEnabled(false)
         notifyStateChanged()
     }
 
@@ -1659,6 +1690,7 @@ final class AppState: ObservableObject {
         }
 
         isProcessing = false
+        setCancelHotkeyEnabled(false)
         notifyStateChanged()
     }
 
@@ -2203,6 +2235,17 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
             return "SettingsValidationError.invalidTimeout"
         case .invalidMaxAudioDuration:
             return "SettingsValidationError.invalidMaxAudioDuration"
+        }
+    }
+
+    if let hotkeyError = error as? HotkeyError {
+        switch hotkeyError {
+        case .couldNotInstallHandler:
+            return "HotkeyError.couldNotInstallHandler"
+        case .couldNotRegister:
+            return "HotkeyError.couldNotRegister"
+        case .couldNotRegisterCancel:
+            return "HotkeyError.couldNotRegisterCancel"
         }
     }
 

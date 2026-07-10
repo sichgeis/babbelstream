@@ -54,6 +54,7 @@ These choices make the run autonomous while favoring privacy and predictable beh
 - [x] Preserve the previous draft until a new final draft succeeds
 - [x] Represent the active processing task explicitly
 - [x] Support visible cancellation during recording and provider processing
+- [x] Register Escape as a cancel hotkey only while an operation is active, with HUD/menu fallback
 - [x] Add bounded transient transcription retry
 - [x] Surface temporary-audio deletion failures
 - [x] Clean active temporary audio on application termination
