@@ -610,6 +610,8 @@ final class AppState: ObservableObject {
     @Published var transcriptionLanguageText: String
     @Published var transcriptionPromptText: String
     @Published var apiKeyInput = ""
+    @Published var settingsFeedbackMessage = ""
+    @Published var settingsErrorMessage: String?
     @Published private(set) var diagnostics: [DiagnosticEvent] = []
 
     var onStateChanged: (() -> Void)?
@@ -638,6 +640,7 @@ final class AppState: ObservableObject {
     private var workspaceActivationObserver: NSObjectProtocol?
     private var shouldStopDictationAfterStart = false
     private var cachedAPIKey: String?
+    private var activeDictationSettings: AppSettings?
 
     init(
         audioRecorder: AudioRecorder = AVFoundationAudioRecorder(),
@@ -752,11 +755,38 @@ final class AppState: ObservableObject {
     }
 
     var providerDestinationSummary: String {
-        "\(baseURLText)\(transcriptionPathText)"
+        effectiveDestination(
+            baseURL: appSettings.providerConfiguration.baseURL,
+            path: appSettings.providerConfiguration.transcriptionEndpointPath
+        )
     }
 
     var cleanupDestinationSummary: String {
-        "\(baseURLText)\(cleanupPathText)"
+        effectiveDestination(
+            baseURL: appSettings.providerConfiguration.baseURL,
+            path: appSettings.providerConfiguration.cleanupEndpointPath
+        )
+    }
+
+    var editedProviderDestinationSummary: String {
+        "\(baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(transcriptionPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
+    }
+
+    var editedCleanupDestinationSummary: String {
+        "\(baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(cleanupPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
+    }
+
+    var hasUnsavedSettingsChanges: Bool {
+        hasUnsavedConfigurationChanges
+            || !apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var hasUnsavedConfigurationChanges: Bool {
+        guard let draft = try? settingsFromDraft() else {
+            return true
+        }
+
+        return draft != appSettings
     }
 
     var maxAudioDurationSeconds: TimeInterval {
@@ -922,45 +952,8 @@ final class AppState: ObservableObject {
     }
 
     func saveSettings() {
-        guard let baseURL = URL(string: baseURLText.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-            errorMessage = SettingsValidationError.invalidBaseURL.localizedDescription
-            return
-        }
-        guard let timeout = TimeInterval(timeoutText.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-            errorMessage = SettingsValidationError.invalidTimeout.localizedDescription
-            return
-        }
-        guard let maxAudioDurationMinutes = TimeInterval(
-            maxAudioDurationMinutesText.trimmingCharacters(in: .whitespacesAndNewlines)
-        ) else {
-            errorMessage = SettingsValidationError.invalidMaxAudioDuration.localizedDescription
-            return
-        }
-
-        let rawLanguage = transcriptionLanguageText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalizedLanguage = TranscriptionLanguageNormalizer.apiValue(from: rawLanguage) ?? rawLanguage
-        let configuration = ProviderConfiguration(
-            baseURL: baseURL,
-            transcriptionEndpointPath: transcriptionPathText,
-            cleanupEndpointPath: cleanupPathText,
-            transcriptionModel: transcriptionModelText,
-            cleanupModel: cleanupModelText,
-            timeoutSeconds: timeout,
-            retryCount: 1
-        )
-        let settings = AppSettings(
-            providerConfiguration: configuration,
-            cleanupEnabled: cleanupEnabled,
-            transcriptionResponseFormat: ProjectDefaults.defaultTranscriptionResponseFormat,
-            transcriptionLanguage: normalizedLanguage,
-            transcriptionPrompt: transcriptionPromptText,
-            maxAudioDurationSeconds: maxAudioDurationMinutes * 60,
-            dictationArchiveEnabled: dictationArchiveEnabled,
-            archiveRawTranscriptEnabled: dictationArchiveEnabled && archiveRawTranscriptEnabled
-        )
-
         do {
-            try settingsStore.save(settings)
+            let settings = try settingsFromDraft()
 
             let trimmedKey = apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmedKey.isEmpty {
@@ -970,18 +963,24 @@ final class AppState: ObservableObject {
                 apiKeyPresenceStore.hasSavedAPIKey = true
             }
 
+            try settingsStore.save(settings)
+
             appSettings = settings
             dictationArchiveEnabled = settings.dictationArchiveEnabled
             archiveRawTranscriptEnabled = settings.archiveRawTranscriptEnabled
-            transcriptionLanguageText = normalizedLanguage
+            transcriptionLanguageText = settings.transcriptionLanguage
             maxAudioDurationMinutesText = Self.durationMinutesText(for: settings.maxAudioDurationSeconds)
             hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
             warningMessage = nil
             errorMessage = nil
+            settingsErrorMessage = nil
+            settingsFeedbackMessage = "Settings applied. New dictations will use the saved destinations below."
             lastResult = "Settings saved. Provider: \(providerDestinationSummary)"
             recordDiagnostic("settings saved")
         } catch {
             errorMessage = error.localizedDescription
+            settingsErrorMessage = error.localizedDescription
+            settingsFeedbackMessage = ""
             recordDiagnostic("settings save failed: \(diagnosticErrorCategory(error))")
         }
     }
@@ -993,10 +992,14 @@ final class AppState: ObservableObject {
             apiKeyInput = ""
             apiKeyPresenceStore.hasSavedAPIKey = false
             hasAPIKey = false
+            settingsErrorMessage = nil
+            settingsFeedbackMessage = "API key deleted from Keychain."
             lastResult = "API key deleted from Keychain."
             recordDiagnostic("api key deleted")
         } catch {
             errorMessage = error.localizedDescription
+            settingsErrorMessage = error.localizedDescription
+            settingsFeedbackMessage = ""
             recordDiagnostic("api key delete failed: \(diagnosticErrorCategory(error))")
         }
     }
@@ -1259,11 +1262,11 @@ final class AppState: ObservableObject {
             "last failure category: \(lastFailureCategory)",
             "transcription destination: \(providerDestinationSummary)",
             "cleanup destination: \(cleanupDestinationSummary)",
-            "transcription model: \(transcriptionModelText)",
-            "cleanup model: \(cleanupModelText)",
-            "timeout seconds: \(timeoutText)",
-            "max recording minutes: \(maxAudioDurationMinutesText)",
-            "cleanup enabled: \(cleanupEnabled)",
+            "transcription model: \(appSettings.providerConfiguration.transcriptionModel)",
+            "cleanup model: \(appSettings.providerConfiguration.cleanupModel)",
+            "timeout seconds: \(String(format: "%.1f", appSettings.providerConfiguration.timeoutSeconds))",
+            "max recording minutes: \(Self.durationMinutesText(for: appSettings.maxAudioDurationSeconds))",
+            "cleanup enabled: \(appSettings.cleanupEnabled)",
             "api key saved: \(hasAPIKey)",
             "microphone: \(microphonePermissionStatus.displayName)",
             "accessibility: \(accessibilityPermissionStatus.displayName)",
@@ -1284,6 +1287,50 @@ final class AppState: ObservableObject {
         ]
 
         return lines.joined(separator: "\n")
+    }
+
+    private func settingsFromDraft() throws -> AppSettings {
+        guard let baseURL = URL(string: baseURLText.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            throw SettingsValidationError.invalidBaseURL
+        }
+        guard let timeout = TimeInterval(timeoutText.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            throw SettingsValidationError.invalidTimeout
+        }
+        guard let maxAudioDurationMinutes = TimeInterval(
+            maxAudioDurationMinutesText.trimmingCharacters(in: .whitespacesAndNewlines)
+        ) else {
+            throw SettingsValidationError.invalidMaxAudioDuration
+        }
+
+        let rawLanguage = transcriptionLanguageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedLanguage = TranscriptionLanguageNormalizer.apiValue(from: rawLanguage) ?? rawLanguage
+        let configuration = ProviderConfiguration(
+            baseURL: baseURL,
+            transcriptionEndpointPath: transcriptionPathText,
+            cleanupEndpointPath: cleanupPathText,
+            transcriptionModel: transcriptionModelText,
+            cleanupModel: cleanupModelText,
+            timeoutSeconds: timeout,
+            retryCount: appSettings.providerConfiguration.retryCount
+        )
+        let settings = AppSettings(
+            providerConfiguration: configuration,
+            cleanupEnabled: cleanupEnabled,
+            transcriptionResponseFormat: ProjectDefaults.defaultTranscriptionResponseFormat,
+            transcriptionLanguage: normalizedLanguage,
+            transcriptionPrompt: transcriptionPromptText,
+            maxAudioDurationSeconds: maxAudioDurationMinutes * 60,
+            dictationArchiveEnabled: dictationArchiveEnabled,
+            archiveRawTranscriptEnabled: dictationArchiveEnabled && archiveRawTranscriptEnabled
+        )
+        try AppSettingsValidator.validate(settings)
+
+        return settings
+    }
+
+    private func effectiveDestination(baseURL: URL, path: String) -> String {
+        ProviderEndpointBuilder.endpointURL(baseURL: baseURL, path: path)?.absoluteString
+            ?? "Invalid saved destination"
     }
 
     private static func durationMinutesText(for duration: TimeInterval) -> String {
@@ -1389,6 +1436,8 @@ final class AppState: ObservableObject {
             return
         }
 
+        let settingsSnapshot = appSettings
+
         if mode == .dictation {
             captureCurrentPasteTarget()
         }
@@ -1413,10 +1462,11 @@ final class AppState: ObservableObject {
         }
 
         do {
-            try await audioRecorder.start(maxDuration: appSettings.maxAudioDurationSeconds)
+            try await audioRecorder.start(maxDuration: settingsSnapshot.maxAudioDurationSeconds)
             recordingStartedAt = Date()
             elapsedSeconds = 0
             recordingMode = mode
+            activeDictationSettings = mode == .dictation ? settingsSnapshot : nil
             isRecording = true
             status = mode == .dictation ? "Recording dictation" : "Recording test"
             lastResult = mode == .dictation
@@ -1444,11 +1494,12 @@ final class AppState: ObservableObject {
         stopElapsedTimer()
 
         do {
+            let settingsSnapshot = activeDictationSettings ?? appSettings
             let recording = try await audioRecorder.stop(deleteTemporaryFile: false)
             resetRecordingState()
             elapsedSeconds = recording.duration
             recordDiagnostic("recording stopped: dictation, \(formatDuration(recording.duration))")
-            try await processRecording(recording, autoStopped: autoStopped)
+            try await processRecording(recording, settings: settingsSnapshot, autoStopped: autoStopped)
         } catch {
             resetRecordingState()
             status = "Dictation failed"
@@ -1491,12 +1542,16 @@ final class AppState: ObservableObject {
         notifyStateChanged()
     }
 
-    private func processRecording(_ recording: RecordedAudio, autoStopped: Bool) async throws {
+    private func processRecording(
+        _ recording: RecordedAudio,
+        settings: AppSettings,
+        autoStopped: Bool
+    ) async throws {
         defer {
             _ = try? AudioTempFileStore.deleteTemporaryAudio(at: recording.temporaryFileURL)
         }
 
-        if !TranscriptionLanguageNormalizer.isValidForSettings(appSettings.transcriptionLanguage) {
+        if !TranscriptionLanguageNormalizer.isValidForSettings(settings.transcriptionLanguage) {
             warningMessage = "Language setting ignored. Use a single code like de or en, or leave it empty for mixed German-English."
             recordDiagnostic("transcription language ignored: invalid language setting")
         }
@@ -1511,7 +1566,7 @@ final class AppState: ObservableObject {
         saveUsageSnapshot()
 
         status = autoStopped ? "Max reached; transcribing" : "Transcribing"
-        lastResult = "Sending audio to \(appSettings.providerConfiguration.baseURL.host ?? appSettings.providerConfiguration.baseURL.absoluteString)."
+        lastResult = "Sending audio to \(settings.providerConfiguration.baseURL.host ?? settings.providerConfiguration.baseURL.absoluteString)."
         recordDiagnostic("transcription started")
 
         let rawTranscript: String
@@ -1519,7 +1574,7 @@ final class AppState: ObservableObject {
             rawTranscript = try await transcriptionProvider.transcribe(
                 TranscriptionRequest(
                     audioURL: recording.temporaryFileURL,
-                    settings: appSettings,
+                    settings: settings,
                     apiKey: apiKey
                 )
             )
@@ -1532,7 +1587,7 @@ final class AppState: ObservableObject {
         recordDiagnostic("transcription succeeded: \(rawTranscript.count) characters")
 
         let finalDraft: String
-        let cleanupWasEnabled = cleanupEnabled
+        let cleanupWasEnabled = settings.cleanupEnabled
         var cleanupFallbackUsed = false
         if cleanupWasEnabled {
             status = "Cleaning up"
@@ -1545,7 +1600,7 @@ final class AppState: ObservableObject {
                 finalDraft = try await cleanupProvider.cleanup(
                     CleanupRequest(
                         transcript: rawTranscript,
-                        settings: appSettings,
+                        settings: settings,
                         apiKey: apiKey,
                         personalDictionary: personalDictionary
                     )
@@ -1574,6 +1629,7 @@ final class AppState: ObservableObject {
         let insertionOutcome = await insertFinalDraft(finalDraft)
         appendDictationArchiveEntry(
             recording: recording,
+            settings: settings,
             rawTranscript: rawTranscript,
             finalDraft: finalDraft,
             cleanupWasEnabled: cleanupWasEnabled,
@@ -1584,18 +1640,19 @@ final class AppState: ObservableObject {
 
     private func appendDictationArchiveEntry(
         recording: RecordedAudio,
+        settings: AppSettings,
         rawTranscript: String,
         finalDraft: String,
         cleanupWasEnabled: Bool,
         cleanupFallbackUsed: Bool,
         insertionOutcome: DictationArchiveInsertionOutcome
     ) {
-        guard appSettings.dictationArchiveEnabled else {
+        guard settings.dictationArchiveEnabled else {
             return
         }
 
         let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
-        let configuration = appSettings.providerConfiguration
+        let configuration = settings.providerConfiguration
         let entry = DictationArchiveEntry(
             startedAt: recording.createdAt,
             completedAt: Date(),
@@ -1605,13 +1662,15 @@ final class AppState: ObservableObject {
             cleanupEnabled: cleanupWasEnabled,
             cleanupFallbackUsed: cleanupFallbackUsed,
             insertionOutcome: insertionOutcome,
-            transcriptionProviderLabel: providerLabel(model: configuration.transcriptionModel),
-            cleanupProviderLabel: cleanupWasEnabled ? providerLabel(model: configuration.cleanupModel) : nil,
-            transcriptionLanguage: TranscriptionLanguageNormalizer.apiValue(from: appSettings.transcriptionLanguage),
+            transcriptionProviderLabel: providerLabel(model: configuration.transcriptionModel, settings: settings),
+            cleanupProviderLabel: cleanupWasEnabled
+                ? providerLabel(model: configuration.cleanupModel, settings: settings)
+                : nil,
+            transcriptionLanguage: TranscriptionLanguageNormalizer.apiValue(from: settings.transcriptionLanguage),
             rawWordCount: DictationWordCounter.count(in: rawTranscript),
             finalWordCount: DictationWordCounter.count(in: finalDraft),
             finalDraftText: finalDraft,
-            rawTranscriptText: appSettings.archiveRawTranscriptEnabled ? rawTranscript : nil
+            rawTranscriptText: settings.archiveRawTranscriptEnabled ? rawTranscript : nil
         )
 
         do {
@@ -1630,8 +1689,8 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func providerLabel(model: String) -> String {
-        let configuration = appSettings.providerConfiguration
+    private func providerLabel(model: String, settings: AppSettings) -> String {
+        let configuration = settings.providerConfiguration
         let host = configuration.baseURL.host ?? configuration.baseURL.absoluteString
         return "\(host) / \(model)"
     }
@@ -1676,13 +1735,6 @@ final class AppState: ObservableObject {
         cachedAPIKey = apiKey
         apiKeyPresenceStore.hasSavedAPIKey = true
         hasAPIKey = true
-
-        do {
-            try secretStore.saveAPIKey(apiKey)
-            recordDiagnostic("api key keychain item refreshed")
-        } catch {
-            recordDiagnostic("api key keychain refresh skipped: \(diagnosticErrorCategory(error))")
-        }
 
         return apiKey
     }
@@ -1787,7 +1839,8 @@ final class AppState: ObservableObject {
 
         elapsedSeconds = Date().timeIntervalSince(recordingStartedAt)
 
-        if elapsedSeconds >= appSettings.maxAudioDurationSeconds, !isProcessing {
+        let maxDuration = activeDictationSettings?.maxAudioDurationSeconds ?? appSettings.maxAudioDurationSeconds
+        if elapsedSeconds >= maxDuration, !isProcessing {
             Task {
                 switch recordingMode {
                 case .dictation:
@@ -1806,6 +1859,7 @@ final class AppState: ObservableObject {
         recordingStartedAt = nil
         recordingMode = .none
         shouldStopDictationAfterStart = false
+        activeDictationSettings = nil
     }
 
     private func cleanupStaleTemporaryAudio() {
@@ -1955,6 +2009,10 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
         switch validationError {
         case .invalidBaseURL:
             return "SettingsValidationError.invalidBaseURL"
+        case .insecureBaseURL:
+            return "SettingsValidationError.insecureBaseURL"
+        case .ambiguousBaseURL:
+            return "SettingsValidationError.ambiguousBaseURL"
         case .missingTranscriptionModel:
             return "SettingsValidationError.missingTranscriptionModel"
         case .missingCleanupModel:
@@ -1999,37 +2057,74 @@ struct SettingsView: View {
     @EnvironmentObject private var appState: AppState
 
     var body: some View {
-        TabView {
-            SettingsGeneralPane()
-                .tabItem {
-                    Label("General", systemImage: "gearshape")
-                }
+        VStack(spacing: 0) {
+            TabView {
+                SettingsGeneralPane()
+                    .tabItem {
+                        Label("General", systemImage: "gearshape")
+                    }
 
-            SettingsProviderPane()
-                .tabItem {
-                    Label("Provider", systemImage: "network")
-                }
+                SettingsProviderPane()
+                    .tabItem {
+                        Label("Provider", systemImage: "network")
+                    }
 
-            SettingsWritingPane()
-                .tabItem {
-                    Label("Writing", systemImage: "text.bubble")
-                }
+                SettingsWritingPane()
+                    .tabItem {
+                        Label("Writing", systemImage: "text.bubble")
+                    }
 
-            SettingsArchivePane()
-                .tabItem {
-                    Label("Archive", systemImage: "archivebox")
-                }
+                SettingsArchivePane()
+                    .tabItem {
+                        Label("Archive", systemImage: "archivebox")
+                    }
 
-            SettingsDiagnosticsPane()
-                .tabItem {
-                    Label("Diagnostics", systemImage: "stethoscope")
-                }
+                SettingsDiagnosticsPane()
+                    .tabItem {
+                        Label("Diagnostics", systemImage: "stethoscope")
+                    }
+            }
+
+            Divider()
+            settingsFooter
         }
         .onAppear {
             appState.refreshPermissionStatuses()
         }
         .padding(16)
         .frame(width: 680, height: 560)
+    }
+
+    private var settingsFooter: some View {
+        HStack(spacing: 12) {
+            Group {
+                if let settingsErrorMessage = appState.settingsErrorMessage {
+                    Text(settingsErrorMessage)
+                        .foregroundStyle(.red)
+                } else if appState.hasUnsavedSettingsChanges {
+                    Text("Unsaved changes are not used for dictation until applied.")
+                        .foregroundStyle(.orange)
+                } else if !appState.settingsFeedbackMessage.isEmpty {
+                    Text(appState.settingsFeedbackMessage)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Settings are up to date.")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .font(.caption)
+            .lineLimit(2)
+
+            Spacer()
+
+            Button("Apply Settings") {
+                appState.saveSettings()
+            }
+            .keyboardShortcut(.defaultAction)
+            .disabled(!appState.hasUnsavedSettingsChanges)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
     }
 }
 
@@ -2097,16 +2192,27 @@ private struct SettingsProviderPane: View {
     var body: some View {
         SettingsPane {
             Section("Provider") {
-                Text("Audio is sent to:")
+                Text("Saved audio destination:")
                     .foregroundStyle(.secondary)
                 Text(appState.providerDestinationSummary)
                     .font(.system(.caption, design: .monospaced))
                     .textSelection(.enabled)
-                Text("Cleanup text is sent to:")
+                Text("Saved cleanup destination:")
                     .foregroundStyle(.secondary)
                 Text(appState.cleanupDestinationSummary)
                     .font(.system(.caption, design: .monospaced))
                     .textSelection(.enabled)
+
+                if appState.hasUnsavedConfigurationChanges {
+                    Text("Edited destinations (not active yet):")
+                        .foregroundStyle(.secondary)
+                    Text(appState.editedProviderDestinationSummary)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                    Text(appState.editedCleanupDestinationSummary)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                }
 
                 TextField("Base URL", text: $appState.baseURLText)
                 TextField("Transcription path", text: $appState.transcriptionPathText)
@@ -2124,9 +2230,6 @@ private struct SettingsProviderPane: View {
                 LabeledContent("Keychain", value: appState.hasAPIKey ? "Saved" : "Missing")
 
                 HStack {
-                    Button("Save Settings") {
-                        appState.saveSettings()
-                    }
                     Button("Delete API Key") {
                         appState.deleteAPIKey()
                     }

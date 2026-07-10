@@ -85,9 +85,17 @@ public final class KeychainSecretStore: SecretStore {
 
     public func saveAPIKey(_ apiKey: String) throws {
         let data = Data(apiKey.utf8)
-        let deleteStatus = SecItemDelete(baseQuery() as CFDictionary)
-        guard deleteStatus == errSecSuccess || deleteStatus == errSecItemNotFound else {
-            throw SecretStoreError.keychainError(deleteStatus)
+        let attributes: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+        let updateStatus = SecItemUpdate(baseQuery() as CFDictionary, attributes as CFDictionary)
+
+        if updateStatus == errSecSuccess {
+            return
+        }
+        guard updateStatus == errSecItemNotFound else {
+            throw SecretStoreError.keychainError(updateStatus)
         }
 
         try addAPIKey(data)
