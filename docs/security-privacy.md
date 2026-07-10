@@ -48,7 +48,7 @@ When cleanup is enabled, personal dictionary entries are included in the cleanup
 
 ## Debug Logging Policy
 
-Default logs may include timestamps, state names, durations, provider labels, counts, error categories, archive enabled state, archive entry counts, and short sanitized provider error messages. Copyable diagnostics must redact API-key-like values and omit audio, transcripts, archive contents, cleanup input/output, clipboard contents, audio paths, and request bodies. Debug persistence must be opt-in and visibly enabled.
+Default logs may include timestamps, state names, durations, provider labels, counts, attempt numbers, HTTP status, URL error codes, request/response byte counts, archive enabled state, and archive entry counts. Copyable diagnostics must redact API-key-like values and omit audio, transcripts, archive contents, cleanup input/output, clipboard contents, audio paths, raw provider messages, and request/response bodies. Debug persistence must be opt-in and visibly enabled.
 
 ## Threat Model
 
@@ -62,7 +62,7 @@ Default logs may include timestamps, state names, durations, provider labels, co
 - Local archive disclosure if the user enables text persistence and another local process, backup, or person with account access can read those files.
 - Clipboard exposure to other apps.
 - Accessibility permission abuse if compromised.
-- A transient provider retry sends the same temporary audio request again. Retries are bounded and limited to connection/request timeouts, transport failures, throttling, and server failures. The HUD makes the retry visible; diagnostics record only attempt counts and retry categories, never the audio or request body.
+- A transient transcription fallback sends the same temporary audio request once to `gpt-4o-mini-transcribe`. Fallback is limited to connection/request timeouts, transport failures, throttling, and server failures. The HUD makes the fallback visible; diagnostics record stage, model role, duration, status/error category, and byte counts, never the audio or request body.
 
 ## Accessibility Risks
 

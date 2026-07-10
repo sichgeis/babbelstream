@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIGURATION="${CONFIGURATION:-debug}"
 APP_NAME="BabbelStream"
+VERSION="${VERSION:-$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")}"
 BUNDLE_IDENTIFIER="com.sichgeis.babbelstream"
 LOCAL_CODESIGN_IDENTITY="${LOCAL_CODESIGN_IDENTITY:-BabbelStream Local Code Signing}"
 CODESIGN_IDENTITY="${CODESIGN_IDENTITY:-}"
@@ -93,6 +94,24 @@ cp "$EXECUTABLE" "$MACOS_DIR/$APP_NAME"
 chmod +x "$MACOS_DIR/$APP_NAME"
 make_app_icon
 
+if command -v codesign >/dev/null 2>&1; then
+  if [[ -z "$CODESIGN_IDENTITY" ]]; then
+    if security find-identity -v -p codesigning 2>/dev/null | grep -F "\"$LOCAL_CODESIGN_IDENTITY\"" >/dev/null; then
+      CODESIGN_IDENTITY="$LOCAL_CODESIGN_IDENTITY"
+    else
+      CODESIGN_IDENTITY="-"
+    fi
+  fi
+else
+  CODESIGN_IDENTITY="not signed"
+fi
+
+if [[ "$CODESIGN_IDENTITY" == "-" ]]; then
+  CODE_SIGNING_SUMMARY="ad-hoc"
+else
+  CODE_SIGNING_SUMMARY="$CODESIGN_IDENTITY"
+fi
+
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -115,11 +134,13 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1.0</string>
+  <string>$VERSION</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>BabbelStreamGitCommit</key>
   <string>$GIT_COMMIT</string>
+  <key>BabbelStreamCodeSigning</key>
+  <string>$CODE_SIGNING_SUMMARY</string>
   <key>LSMinimumSystemVersion</key>
   <string>13.0</string>
   <key>LSUIElement</key>
@@ -135,14 +156,6 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 PLIST
 
 if command -v codesign >/dev/null 2>&1; then
-  if [[ -z "$CODESIGN_IDENTITY" ]]; then
-    if security find-identity -v -p codesigning 2>/dev/null | grep -F "\"$LOCAL_CODESIGN_IDENTITY\"" >/dev/null; then
-      CODESIGN_IDENTITY="$LOCAL_CODESIGN_IDENTITY"
-    else
-      CODESIGN_IDENTITY="-"
-    fi
-  fi
-
   codesign --force --sign "$CODESIGN_IDENTITY" "$APP_DIR" >/dev/null
   echo "Signed with identity: $CODESIGN_IDENTITY"
   if [[ "$CODESIGN_IDENTITY" == "-" ]]; then

@@ -46,8 +46,13 @@ check(
     ProjectDefaults.providerConnectionTimeoutSeconds == 15,
     "Provider connection recovery should use the documented 15-second bound."
 )
+check(ProjectDefaults.transcriptionAttemptTimeoutSeconds == 30, "Each transcription model should have a 30-second limit.")
+check(ProjectDefaults.fallbackTranscriptionModel == "gpt-4o-mini-transcribe", "Unexpected transcription fallback model.")
 check(BuildMetadata.gitCommitInfoKey == "BabbelStreamGitCommit", "Unexpected build commit Info.plist key.")
+check(BuildMetadata.codeSigningInfoKey == "BabbelStreamCodeSigning", "Unexpected code signing Info.plist key.")
 check(!BuildMetadata.gitCommitShortHash.isEmpty, "Build commit metadata should have a visible fallback.")
+check(!BuildMetadata.appVersion.isEmpty, "App version metadata should have a visible fallback.")
+check(!BuildMetadata.codeSigningSummary.isEmpty, "Code signing metadata should have a visible fallback.")
 check(configuration.transcriptionEndpointPath == "/v1/audio/transcriptions", "Unexpected transcription endpoint default.")
 check(configuration.cleanupEndpointPath == "/v1/chat/completions", "Unexpected cleanup endpoint default.")
 check(configuration.transcriptionModel == ProjectDefaults.defaultTranscriptionModel, "Provider configuration should use the default STT model.")
@@ -486,14 +491,16 @@ func runTranscriptionRetryCheck(audioURL: URL) async throws {
     )
     check(transcript == "retry succeeded", "Transcription should return the successful retry response.")
     check(attempts.value == 2, "One configured retry should make at most two transcription attempts.")
-    check(
-        events.values == [
-            .attemptStarted(attempt: 1, totalAttempts: 2),
-            .retryScheduled(nextAttempt: 2, totalAttempts: 2, reason: .httpStatus(503)),
-            .attemptStarted(attempt: 2, totalAttempts: 2)
-        ],
-        "Transcription should report bounded attempt and retry progress without provider payloads."
-    )
+    let recordedEvents = events.values
+    check(recordedEvents.count == 8, "Transcription should report the full request lifecycle.")
+    check(isPreparedEvent(recordedEvents[0], includesAudio: true), "Transcription should report privacy-safe byte counts.")
+    check(recordedEvents[1] == .attemptStarted(attempt: 1, totalAttempts: 2), "The first attempt should be reported.")
+    check(recordedEvents[2] == .responseReceived(attempt: 1, statusCode: 503, responseBytes: 40), "The retryable response should include status and byte count.")
+    check(isFailedEvent(recordedEvents[3], attempt: 1, category: .httpStatus(503), willRetry: true), "The first failure should be categorized as retryable.")
+    check(recordedEvents[4] == .retryScheduled(nextAttempt: 2, totalAttempts: 2, reason: .httpStatus(503)), "The retry reason should be reported.")
+    check(recordedEvents[5] == .attemptStarted(attempt: 2, totalAttempts: 2), "The second attempt should be reported.")
+    check(recordedEvents[6] == .responseReceived(attempt: 2, statusCode: 200, responseBytes: 26), "The successful response should include status and byte count.")
+    check(isSucceededEvent(recordedEvents[7], attempt: 2), "Terminal success should include elapsed time.")
 }
 
 func runTranscriptionConnectionTimeoutCheck(audioURL: URL) async throws {
@@ -525,14 +532,37 @@ func runTranscriptionConnectionTimeoutCheck(audioURL: URL) async throws {
     )
     check(transcript == "connection retry succeeded", "A stalled connection should recover on retry.")
     check(attempts.value == 2, "A connection stall should consume only one bounded retry.")
-    check(
-        events.values == [
-            .attemptStarted(attempt: 1, totalAttempts: 2),
-            .retryScheduled(nextAttempt: 2, totalAttempts: 2, reason: .connectionTimeout),
-            .attemptStarted(attempt: 2, totalAttempts: 2)
-        ],
-        "Connection recovery should report the retry reason and attempt number."
-    )
+    let recordedEvents = events.values
+    check(recordedEvents.count == 7, "Connection recovery should report the full request lifecycle.")
+    check(isPreparedEvent(recordedEvents[0], includesAudio: true), "Connection recovery should retain request byte metadata.")
+    check(recordedEvents[1] == .attemptStarted(attempt: 1, totalAttempts: 2), "The stalled attempt should be reported.")
+    check(isFailedEvent(recordedEvents[2], attempt: 1, category: .connectionTimeout, willRetry: true), "The stall should be categorized as a connection timeout.")
+    check(recordedEvents[3] == .retryScheduled(nextAttempt: 2, totalAttempts: 2, reason: .connectionTimeout), "The connection retry reason should be reported.")
+    check(recordedEvents[4] == .attemptStarted(attempt: 2, totalAttempts: 2), "The recovery attempt should be reported.")
+    check(recordedEvents[5] == .responseReceived(attempt: 2, statusCode: 200, responseBytes: 37), "The recovery response should include status and byte count.")
+    check(isSucceededEvent(recordedEvents[6], attempt: 2), "Connection recovery success should include elapsed time.")
+}
+
+func isPreparedEvent(_ event: ProviderRequestEvent, includesAudio: Bool) -> Bool {
+    guard case let .requestPrepared(requestBytes, audioBytes) = event else { return false }
+    return requestBytes > 0 && (audioBytes != nil) == includesAudio
+}
+
+func isFailedEvent(
+    _ event: ProviderRequestEvent,
+    attempt: Int,
+    category: ProviderFailureCategory,
+    willRetry: Bool
+) -> Bool {
+    guard case let .attemptFailed(actualAttempt, _, duration, actualCategory, actualWillRetry) = event else {
+        return false
+    }
+    return actualAttempt == attempt && duration >= 0 && actualCategory == category && actualWillRetry == willRetry
+}
+
+func isSucceededEvent(_ event: ProviderRequestEvent, attempt: Int) -> Bool {
+    guard case let .attemptSucceeded(actualAttempt, _, duration) = event else { return false }
+    return actualAttempt == attempt && duration >= 0
 }
 
 func runTranscriptionCancellationCheck(audioURL: URL) async throws {

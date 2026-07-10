@@ -60,17 +60,20 @@ public struct CleanupRequest: Sendable {
     public let settings: AppSettings
     public let apiKey: String
     public let personalDictionary: PersonalDictionary
+    public let onEvent: @Sendable (ProviderRequestEvent) async -> Void
 
     public init(
         transcript: String,
         settings: AppSettings,
         apiKey: String,
-        personalDictionary: PersonalDictionary = PersonalDictionary()
+        personalDictionary: PersonalDictionary = PersonalDictionary(),
+        onEvent: @escaping @Sendable (ProviderRequestEvent) async -> Void = { _ in }
     ) {
         self.transcript = transcript
         self.settings = settings
         self.apiKey = apiKey
         self.personalDictionary = personalDictionary
+        self.onEvent = onEvent
     }
 }
 
@@ -103,8 +106,50 @@ public enum ProviderRetryReason: Equatable, Sendable {
 }
 
 public enum ProviderRequestEvent: Equatable, Sendable {
+    case requestPrepared(requestBytes: Int, audioBytes: Int?)
     case attemptStarted(attempt: Int, totalAttempts: Int)
+    case responseReceived(attempt: Int, statusCode: Int, responseBytes: Int)
+    case attemptSucceeded(attempt: Int, totalAttempts: Int, durationMilliseconds: Int)
+    case attemptFailed(attempt: Int, totalAttempts: Int, durationMilliseconds: Int, category: ProviderFailureCategory, willRetry: Bool)
     case retryScheduled(nextAttempt: Int, totalAttempts: Int, reason: ProviderRetryReason)
+}
+
+public enum ProviderFailureCategory: Equatable, Sendable {
+    case connectionTimeout
+    case urlError(Int)
+    case httpStatus(Int)
+    case malformedResponse
+    case emptyOutput
+    case configuration
+    case other
+
+    public var displayName: String {
+        switch self {
+        case .connectionTimeout: "connection timeout"
+        case let .urlError(code): "URL error \(code)"
+        case let .httpStatus(statusCode): "HTTP \(statusCode)"
+        case .malformedResponse: "malformed response"
+        case .emptyOutput: "empty output"
+        case .configuration: "configuration error"
+        case .other: "other error"
+        }
+    }
+
+    public static func classify(_ error: Error) -> ProviderFailureCategory {
+        if let urlError = error as? URLError {
+            return .urlError(urlError.errorCode)
+        }
+        guard let providerError = error as? ProviderError else {
+            return .other
+        }
+        switch providerError {
+        case .connectionTimedOut: return .connectionTimeout
+        case let .requestFailed(statusCode, _): return .httpStatus(statusCode)
+        case .malformedResponse: return .malformedResponse
+        case .emptyTranscript, .emptyCleanupOutput: return .emptyOutput
+        case .missingAPIKey, .invalidEndpointURL, .emptyAudioFile: return .configuration
+        }
+    }
 }
 
 public enum ProviderRetryPolicy {
@@ -227,15 +272,24 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
         urlRequest.setValue(multipart.contentType, forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("application/json, text/plain;q=0.9, */*;q=0.1", forHTTPHeaderField: "Accept")
 
+        await request.onEvent(.requestPrepared(requestBytes: multipart.body.count, audioBytes: fileSize))
+
         return try await ProviderRequestExecutor.perform(
             retryCount: configuration.retryCount,
             onEvent: request.onEvent
-        ) { [urlSession] in
+        ) { [urlSession] attempt in
             let (data, response) = try await ProviderURLSessionOperation.data(
                 for: urlRequest,
                 using: urlSession,
                 connectionTimeoutSeconds: min(connectionTimeoutSeconds, configuration.timeoutSeconds)
             )
+            if let httpResponse = response as? HTTPURLResponse {
+                await request.onEvent(.responseReceived(
+                    attempt: attempt,
+                    statusCode: httpResponse.statusCode,
+                    responseBytes: data.count
+                ))
+            }
             try ProviderResponseValidator.validate(response, data: data)
 
             let text = try TranscriptionResponseParser.parse(data: data)
@@ -253,25 +307,41 @@ private enum ProviderRequestExecutor {
     static func perform<Value>(
         retryCount: Int,
         onEvent: @Sendable (ProviderRequestEvent) async -> Void,
-        operation: () async throws -> Value
+        operation: (Int) async throws -> Value
     ) async throws -> Value {
         let maximumRetries = min(max(0, retryCount), ProviderRetryPolicy.maximumRetryCount)
         var retriesPerformed = 0
         let totalAttempts = maximumRetries + 1
 
         while true {
-            await onEvent(.attemptStarted(attempt: retriesPerformed + 1, totalAttempts: totalAttempts))
+            let attempt = retriesPerformed + 1
+            await onEvent(.attemptStarted(attempt: attempt, totalAttempts: totalAttempts))
+            let startedAt = Date()
             do {
                 try Task.checkCancellation()
-                return try await operation()
+                let value = try await operation(attempt)
+                await onEvent(.attemptSucceeded(
+                    attempt: attempt,
+                    totalAttempts: totalAttempts,
+                    durationMilliseconds: elapsedMilliseconds(since: startedAt)
+                ))
+                return value
             } catch {
                 if ProviderRetryPolicy.isCancellation(error) {
                     throw CancellationError()
                 }
-                guard retriesPerformed < maximumRetries,
-                      ProviderRetryPolicy.shouldRetry(error),
-                      let retryReason = ProviderRetryPolicy.retryReason(for: error)
-                else {
+                let retryReason = ProviderRetryPolicy.retryReason(for: error)
+                let willRetry = retriesPerformed < maximumRetries
+                    && ProviderRetryPolicy.shouldRetry(error)
+                    && retryReason != nil
+                await onEvent(.attemptFailed(
+                    attempt: attempt,
+                    totalAttempts: totalAttempts,
+                    durationMilliseconds: elapsedMilliseconds(since: startedAt),
+                    category: ProviderFailureCategory.classify(error),
+                    willRetry: willRetry
+                ))
+                guard willRetry, let retryReason else {
                     throw error
                 }
 
@@ -287,6 +357,10 @@ private enum ProviderRequestExecutor {
                 try await Task.sleep(nanoseconds: delayNanoseconds)
             }
         }
+    }
+
+    private static func elapsedMilliseconds(since start: Date) -> Int {
+        max(0, Int(Date().timeIntervalSince(start) * 1_000))
     }
 }
 
@@ -338,20 +412,30 @@ public final class OpenAICompatibleCleanupProvider: CleanupProvider {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await ProviderURLSessionOperation.data(
-            for: urlRequest,
-            using: urlSession,
-            connectionTimeoutSeconds: min(connectionTimeoutSeconds, configuration.timeoutSeconds)
-        )
-        try ProviderResponseValidator.validate(response, data: data)
+        await request.onEvent(.requestPrepared(requestBytes: urlRequest.httpBody?.count ?? 0, audioBytes: nil))
 
-        let text = try CleanupResponseParser.parse(data: data)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else {
-            throw ProviderError.emptyCleanupOutput
+        return try await ProviderRequestExecutor.perform(retryCount: 0, onEvent: request.onEvent) { [urlSession] attempt in
+            let (data, response) = try await ProviderURLSessionOperation.data(
+                for: urlRequest,
+                using: urlSession,
+                connectionTimeoutSeconds: min(connectionTimeoutSeconds, configuration.timeoutSeconds)
+            )
+            if let httpResponse = response as? HTTPURLResponse {
+                await request.onEvent(.responseReceived(
+                    attempt: attempt,
+                    statusCode: httpResponse.statusCode,
+                    responseBytes: data.count
+                ))
+            }
+            try ProviderResponseValidator.validate(response, data: data)
+
+            let text = try CleanupResponseParser.parse(data: data)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else {
+                throw ProviderError.emptyCleanupOutput
+            }
+            return text
         }
-
-        return text
     }
 }
 

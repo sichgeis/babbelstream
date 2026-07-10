@@ -1,5 +1,16 @@
 # Release Guide
 
+## Versioning
+
+The root `VERSION` file is the source of truth for the app bundle version, DMG filename, and local release tooling. BabbelStream uses `MAJOR.MINOR.PATCH` Semantic Versioning:
+
+- Before 1.0, increment `MINOR` for substantial user-facing workflow, UI, or compatibility changes.
+- Increment `PATCH` for compatible fixes, reliability work, and incremental behavior improvements.
+- Create an annotated Git tag named `v<version>` on every release commit.
+- Keep `CHANGELOG.md`, `VERSION`, the release commit, and its tag aligned.
+
+Build scripts accept an explicit `VERSION=x.y.z` override for release automation, but ordinary local builds read `VERSION` automatically.
+
 ## Release Levels
 
 ### Local Testing
@@ -27,7 +38,7 @@ scripts/package-dmg.sh
 Output:
 
 ```text
-dist/BabbelStream-0.1.0.dmg
+dist/BabbelStream-$(cat VERSION).dmg
 ```
 
 The local build signs with `BabbelStream Local Code Signing` when that identity exists, otherwise it falls back to ad-hoc signing. This is not enough for public distribution.
@@ -56,12 +67,12 @@ Official references:
 Typical command shape:
 
 ```bash
-xcrun notarytool submit dist/BabbelStream-0.1.0.dmg \
+xcrun notarytool submit "dist/BabbelStream-$(cat VERSION).dmg" \
   --keychain-profile "notarytool-profile" \
   --wait
 
-xcrun stapler staple dist/BabbelStream-0.1.0.dmg
-spctl --assess --type open --verbose dist/BabbelStream-0.1.0.dmg
+xcrun stapler staple "dist/BabbelStream-$(cat VERSION).dmg"
+spctl --assess --type open --verbose "dist/BabbelStream-$(cat VERSION).dmg"
 ```
 
 ## Manual Release Checklist
@@ -84,8 +95,8 @@ spctl --assess --type open --verbose dist/BabbelStream-0.1.0.dmg
 
 Publish:
 
-- `BabbelStream-0.1.0.dmg`
-- `BabbelStream-0.1.0.dmg.sha256`
+- `BabbelStream-<VERSION>.dmg`
+- `BabbelStream-<VERSION>.dmg.sha256`
 - Release notes copied from `CHANGELOG.md`
 
 Do not publish local `.env` files or provider secrets.

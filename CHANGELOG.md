@@ -1,39 +1,46 @@
 # Changelog
 
-## Unreleased
+BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain substantial product or workflow changes; patch releases contain compatible fixes and incremental improvements.
 
-- Added a non-activating recording, processing, completion, and recovery HUD.
-- Added operation-scoped Escape cancellation with HUD and menu fallbacks.
-- Made settings changes explicit with Apply, saved/effective provider labels,
-  per-dictation snapshots, and stricter provider URL validation.
-- Made Keychain key updates non-destructive and removed unnecessary key rewrites.
-- Added bounded retry for transient transcription failures and strict JSON success
-  parsing.
-- Prevented automatic insertion after the captured application or focused field
-  changes; the draft is copied for manual recovery instead.
-- Added verified temporary-audio cleanup, visible cleanup failures, and
-  termination cleanup.
-- Made archive reads recover valid entries around damaged JSONL lines and expose
-  recovery warnings in the UI and exports.
-- Made dictionary bulk edits preserve notes and disabled entries, and made
-  correction updates replace an earlier mapping for the same heard form.
-- Added `task check` as the canonical build-and-behavior-check command and
-  documented the current SwiftPM test-runner limitation.
+## 0.2.1 - 2026-07-11
 
-## 0.1.0 - Local MVP
+- Add privacy-safe provider lifecycle observability and persistent Unified Logging.
+- Diagnose and explain stale Accessibility grants for rebuilt local apps.
+- Use a stable local code-signing identity in development builds.
+- Fall back from `gpt-4o-transcribe` to `gpt-4o-mini-transcribe` after one bounded transient failure.
 
-- Added native macOS menu-bar app bundle.
-- Added push-to-talk dictation with `Control + Option + Space`.
-- Added microphone recording and temporary audio cleanup.
-- Added configurable OpenAI-compatible transcription and cleanup providers.
-- Added Keychain-backed API key storage.
-- Added Slack-ready cleanup that preserves German, English, and mixed German-English language.
-- Added local personal dictionary context for cleanup vocabulary and correction hints.
-- Added Teach Correction flow for explicit wrong-to-right dictation hints.
-- Added direct Accessibility insertion with clipboard fallback.
-- Added configurable max recording duration, defaulting to 10 minutes.
-- Added trailing-space insertion between consecutive dictation chunks.
-- Added local usage counters and privacy-safe diagnostics.
-- Added optional local dictation archive with daily JSONL files, monthly word-count review, Markdown export, reveal-folder, and clear controls.
-- Added in-app launch-at-login toggle.
-- Added local DMG packaging script.
+## 0.2.0 - 2026-07-10
+
+- Redesign the dictation HUD as a compact bottom-centered capsule.
+- Add non-activating recording, processing, completion, and recovery states.
+
+## 0.1.3 - 2026-07-10
+
+- Use application-level paste targeting for reactive editors and safer focus handling.
+- Copy the draft for manual recovery when the captured application changes.
+
+## 0.1.2 - 2026-07-10
+
+- Recover from stalled provider connections and show bounded retry progress.
+- Add strict JSON success parsing and bounded transient-failure handling.
+
+## 0.1.1 - 2026-07-10
+
+- Complete the July settings, lifecycle, cancellation, recovery, and paste-safety upgrade.
+- Make settings changes explicit with Apply, saved/effective provider labels, per-dictation snapshots, and stricter provider URL validation.
+- Make Keychain key updates non-destructive and remove unnecessary key rewrites.
+- Add operation-scoped Escape cancellation with HUD and menu fallbacks.
+- Verify temporary-audio cleanup across completion, failure, cancellation, and termination.
+- Recover valid archive entries around damaged JSONL lines and expose recovery warnings.
+- Preserve notes and disabled entries in dictionary bulk edits, and replace earlier mappings for the same heard form.
+- Establish `task check` as the canonical build and behavior check.
+
+## 0.1.0 - 2026-07-06
+
+- Ship the first working push-to-talk dictation MVP.
+- Add the native macOS menu-bar app bundle and `Control + Option + Space` push-to-talk flow.
+- Add microphone recording, temporary-audio cleanup, and configurable OpenAI-compatible transcription and cleanup providers.
+- Store API keys in Keychain and preserve German, English, and mixed German-English dictation.
+- Add the personal dictionary, Teach Correction, Accessibility insertion, and clipboard fallback.
+- Add configurable recording duration, trailing-space insertion, usage counters, privacy-safe diagnostics, and the optional local archive.
+- Add launch-at-login and local DMG packaging.
