@@ -33,7 +33,7 @@ AppKit status-item app
 
 1. Hotkey press starts `AudioRecorder`.
 2. `AppState` snapshots the saved settings and the focused application/Accessibility element for the whole dictation.
-3. The non-activating status HUD shows recording state, target, provider host, elapsed time, and cancellation controls.
+3. The bottom-centered, non-activating capsule HUD shows live microphone activity and the target while recording, then progressively discloses only the current processing, retry, completion, or recovery state. Full provider and timeout details remain in the menu, Settings, and diagnostics.
 4. Hotkey release stops recording and returns a temporary audio URL.
 5. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint and retries only bounded transient failures.
 6. The temporary audio file remains tracked until verified deletion after success, failure, timeout, or cancellation. Termination performs a final synchronous cleanup attempt.

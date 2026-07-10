@@ -4,9 +4,9 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `AudioRecorder`
 
-- Responsibility: request microphone access, record audio to a temporary file, stop/cancel recording, enforce max duration, delete partial files.
+- Responsibility: request microphone access, record audio to a temporary file, expose a normalized live input level for the recording HUD, stop/cancel recording, enforce max duration, delete partial files.
 - Input: max duration, audio format settings.
-- Output: temporary audio file URL and duration.
+- Output: normalized live input level while recording, then the temporary audio file URL and duration.
 - Errors: permission denied, no input device, recording failed, duration exceeded, cancellation cleanup failed.
 - Test strategy: fake recorder returning fixture URLs; unit test temp-file cleanup policy separately.
 

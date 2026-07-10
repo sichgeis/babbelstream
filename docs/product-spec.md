@@ -33,7 +33,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 - Native macOS menu-bar app.
 - Global push-to-talk hotkey.
-- Compact non-activating HUD with recording, processing, target, provider, cancellation, and recovery state.
+- Minimal bottom-centered, non-activating capsule HUD. Recording shows a stop control, the target app, and live microphone activity; processing shows only the current state; completion, recovery, and errors use brief state-specific feedback.
 - Local audio recording with a configurable maximum duration, defaulting to 10 minutes.
 - OpenAI-compatible LiteLLM-style transcription provider configuration.
 - Explicit Settings apply step with separate saved/effective and edited provider destinations; remote providers require HTTPS.
@@ -57,7 +57,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - No transcript/audio persistence by default.
 - Bounded retry for transient transcription failures, with cancellation and verified temporary-audio cleanup across success, failure, timeout, cancel, and termination.
 - A transcription attempt that has sent zero request bytes after 15 seconds is treated as a stalled connection and retried within the same bound; the longer configured request timeout remains available after sending begins.
-- Processing HUD copy shows the current attempt, total attempts, connection timeout, configured request timeout, and privacy-safe retry reason.
+- The HUD uses progressive disclosure: retry state is visible while retrying, but provider destinations, timeout details, and diagnostic reasons stay in the menu, Settings, and copyable diagnostics instead of crowding the everyday overlay.
 
 ## V1 Scope
 
@@ -79,7 +79,10 @@ The primary user is a technical Mac user who writes many Slack messages during t
 ## UX Requirements
 
 - The app must be visible as a menu-bar utility.
-- Recording state must be obvious.
+- Recording and processing state must be obvious without covering meaningful workspace content or demanding attention.
+- The HUD should stay close to a 40-44 point-high capsule and use concise state labels such as Recording, Transcribing, Cleaning up, Pasting, Copied, and Error.
+- The left status sequence stays visually stable: red stop while recording, one blue waveform badge throughout transcription/cleanup/paste processing, then a green check after successful paste.
+- Detailed provider, timeout, and recovery information belongs in the menu, Settings, or diagnostics; the HUD may temporarily show a concise recovery instruction when manual action is required.
 - The saved/effective provider destination must be visible before any audio/text is sent; edited settings must not masquerade as active.
 - Errors should be actionable and should never silently discard the final text.
 - The app must make clear that pasted text is a draft, not a sent message.
@@ -96,12 +99,12 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Slack is the primary manual QA target.
 - The app pastes into Slack desktop and Slack in the browser when their composer or thread reply box is focused.
 - The app never presses Enter or sends the Slack message.
-- If paste fails or the target changes, the app leaves the final text on the clipboard and shows recovery instructions in the HUD.
+- If paste fails or the target changes, the app leaves the final text on the clipboard and briefly shows a compact Copied state; complete recovery instructions remain available in the menu.
 
 ## Generic macOS Text-Field Behavior
 
 - MVP may paste into any focused text field, not only Slack.
-- The app shows the captured target app in the HUD before and during processing.
+- The app shows the captured target app in the recording HUD. Processing may replace it with the current state label to keep the capsule minimal.
 - If no suitable focused field is available, the app should keep the final text on the clipboard and notify the user.
 
 ## Privacy Expectations
