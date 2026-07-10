@@ -282,6 +282,94 @@ check(
     !TextInsertionTargetPolicy.applicationMatches(nil, frontmostProcessIdentifier: 1234),
     "Insertion should be blocked when no target was captured."
 )
+let capturedReactiveEditorFingerprint = AccessibilityElementFingerprint(
+    role: "AXTextArea",
+    identifier: "editor-input",
+    domIdentifier: "prompt-textarea",
+    frame: AccessibilityElementFrame(x: 100, y: 700, width: 800, height: 120),
+    ancestorRoles: ["AXGroup", "AXScrollArea", "AXWindow"]
+)
+let replacementReactiveEditorFingerprint = AccessibilityElementFingerprint(
+    role: "AXTextArea",
+    identifier: "replacement-wrapper-id",
+    domIdentifier: "prompt-textarea",
+    frame: AccessibilityElementFrame(x: 100, y: 700, width: 800, height: 120),
+    ancestorRoles: ["AXGroup", "AXScrollArea", "AXWindow"]
+)
+check(
+    TextInsertionTargetPolicy.replacementElementMatches(
+        captured: capturedReactiveEditorFingerprint,
+        current: replacementReactiveEditorFingerprint
+    ),
+    "Reactive editors should remain verifiable when the AX wrapper changes but the DOM field is stable."
+)
+let differentDOMFieldFingerprint = AccessibilityElementFingerprint(
+    role: "AXTextArea",
+    domIdentifier: "search-textarea",
+    frame: AccessibilityElementFrame(x: 100, y: 700, width: 800, height: 120),
+    ancestorRoles: ["AXGroup", "AXScrollArea", "AXWindow"]
+)
+check(
+    !TextInsertionTargetPolicy.replacementElementMatches(
+        captured: capturedReactiveEditorFingerprint,
+        current: differentDOMFieldFingerprint
+    ),
+    "A different DOM field must not pass target verification even when its frame matches."
+)
+let reusedDOMIdentifierInDifferentStructure = AccessibilityElementFingerprint(
+    role: "AXTextArea",
+    domIdentifier: "prompt-textarea",
+    frame: AccessibilityElementFrame(x: 100, y: 700, width: 800, height: 120),
+    ancestorRoles: ["AXToolbar", "AXWindow"]
+)
+check(
+    !TextInsertionTargetPolicy.replacementElementMatches(
+        captured: capturedReactiveEditorFingerprint,
+        current: reusedDOMIdentifierInDifferentStructure
+    ),
+    "A reused DOM identifier outside the captured field structure must fail target verification."
+)
+let geometryOnlyEditorFingerprint = AccessibilityElementFingerprint(
+    role: "AXTextArea",
+    frame: AccessibilityElementFrame(x: 100, y: 700, width: 800, height: 120),
+    ancestorRoles: ["AXGroup", "AXScrollArea", "AXWindow"]
+)
+let replacementGeometryOnlyEditorFingerprint = AccessibilityElementFingerprint(
+    role: "AXTextArea",
+    frame: AccessibilityElementFrame(x: 101, y: 699, width: 802, height: 121),
+    ancestorRoles: ["AXGroup", "AXScrollArea", "AXWindow"]
+)
+check(
+    TextInsertionTargetPolicy.replacementElementMatches(
+        captured: geometryOnlyEditorFingerprint,
+        current: replacementGeometryOnlyEditorFingerprint
+    ),
+    "An identifier-free replacement should match only with compatible role, geometry, and ancestry."
+)
+let movedEditorFingerprint = AccessibilityElementFingerprint(
+    role: "AXTextArea",
+    frame: AccessibilityElementFrame(x: 100, y: 500, width: 800, height: 120),
+    ancestorRoles: ["AXGroup", "AXScrollArea", "AXWindow"]
+)
+check(
+    !TextInsertionTargetPolicy.replacementElementMatches(
+        captured: geometryOnlyEditorFingerprint,
+        current: movedEditorFingerprint
+    ),
+    "Moving focus to another identifier-free field should fail the geometry check."
+)
+let structurallyDifferentEditorFingerprint = AccessibilityElementFingerprint(
+    role: "AXTextArea",
+    frame: AccessibilityElementFrame(x: 100, y: 700, width: 800, height: 120),
+    ancestorRoles: ["AXToolbar", "AXWindow"]
+)
+check(
+    !TextInsertionTargetPolicy.replacementElementMatches(
+        captured: geometryOnlyEditorFingerprint,
+        current: structurallyDifferentEditorFingerprint
+    ),
+    "A structurally different field at the same position should fail target verification."
+)
 let launchAgentPlist = LaunchAtLoginService.launchAgentPropertyList(
     appURL: URL(fileURLWithPath: "/Applications/BabbelStream.app")
 )

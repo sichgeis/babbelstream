@@ -40,7 +40,7 @@ AppKit status-item app
 7. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
 8. `CleanupProvider` lightly formats the transcript when cleanup is enabled, using dictionary context in the same model call.
 9. Usage counters are updated locally for dictation attempts, recorded duration, cleanup requests, transcription failures, and cleanup fallbacks.
-10. `TextInsertionService` inserts only if the captured application and focused Accessibility element still match. It never steals focus back from a different app. If the target changed or cannot be verified, the final draft is copied and the HUD instructs the user to paste manually.
+10. `TextInsertionService` inserts only if the captured application and logical focused field still match. It accepts exact Accessibility identity or a narrowly matched replacement wrapper for reactive editors, then inserts into the current focused element. It never steals focus back from a different app. If the target changed or cannot be verified, the final draft is copied and the HUD instructs the user to paste manually.
 11. If the optional local archive is enabled, `DictationArchiveStore` appends a text-only entry for completed dictations with the final draft, word counts, provider labels, cleanup state, and insertion outcome. Raw transcript text is stored only when a separate raw-transcript archive setting is enabled. Archive write failures are surfaced but must not undo paste or block access to the final draft.
 12. The app keeps the latest successful raw/final draft in memory for copy/retry and does not discard it merely because a later attempt starts or fails.
 
@@ -108,7 +108,7 @@ The archive should use local daily JSONL text files instead of a database for th
 
 ## Paste Insertion Approach
 
-Use direct Accessibility insertion when the captured focused element still matches. Fall back to NSPasteboard and simulated Cmd+V only while that same target remains focused. If the app or focused element changed, do not reactivate the old app or guess: leave the final text on the clipboard and explain the manual paste recovery in the HUD.
+Use direct Accessibility insertion when the captured logical field still matches. Native editors normally retain the exact AX element. VS Code, Codex, and other reactive editors may recreate the AX wrapper while leaving the same field focused; in that case require the same process and compatible role plus either a stable DOM/AX identifier or matching geometry and Accessibility ancestor roles. A conflicting DOM identifier, role, frame, structure, application, or unverifiable fingerprint fails closed. Insert into the current verified element, not the captured wrapper. Fall back to NSPasteboard and simulated Cmd+V only while that verified target remains focused. If the app or field changed, do not reactivate the old app or guess: leave the final text on the clipboard and explain the manual paste recovery in the HUD.
 
 ## Settings And Secrets
 
