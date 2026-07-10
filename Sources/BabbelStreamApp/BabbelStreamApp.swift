@@ -60,6 +60,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        appState.prepareForTermination()
+    }
+
     private func installMainMenu() {
         let mainMenu = NSMenu()
 
@@ -215,9 +219,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             enabled: appState.canStop
         )
         addAction(
-            "Cancel Recording",
+            "Cancel Active Operation",
             action: #selector(cancelRecording),
-            enabled: appState.canStop
+            enabled: appState.canCancel
         )
 
         addAction(
@@ -641,6 +645,8 @@ final class AppState: ObservableObject {
     private var shouldStopDictationAfterStart = false
     private var cachedAPIKey: String?
     private var activeDictationSettings: AppSettings?
+    private var processingTask: Task<Void, Never>?
+    private var retainedTemporaryAudioURL: URL?
 
     init(
         audioRecorder: AudioRecorder = AVFoundationAudioRecorder(),
@@ -716,6 +722,10 @@ final class AppState: ObservableObject {
 
     var canStop: Bool {
         isRecording && !isProcessing
+    }
+
+    var canCancel: Bool {
+        isRecording || processingTask != nil
     }
 
     var canUseLatestDraft: Bool {
@@ -924,6 +934,16 @@ final class AppState: ObservableObject {
     }
 
     func cancelRecording() async {
+        if let processingTask {
+            status = "Canceling dictation"
+            lastResult = "Cancel requested. Stopping provider work and deleting temporary audio."
+            recordDiagnostic("processing cancellation requested")
+            processingTask.cancel()
+            await processingTask.value
+            notifyStateChanged()
+            return
+        }
+
         guard isRecording || recordingStartedAt != nil else {
             return
         }
@@ -1235,7 +1255,13 @@ final class AppState: ObservableObject {
         }
 
         captureCurrentPasteTarget()
-        _ = await insertFinalDraft(latestFinalDraft)
+        do {
+            _ = try await insertFinalDraft(latestFinalDraft)
+        } catch {
+            status = "Ready"
+            lastResult = "Paste retry canceled."
+            recordDiagnostic("paste retry canceled")
+        }
     }
 
     func openMicrophonePrivacySettings() {
@@ -1244,6 +1270,22 @@ final class AppState: ObservableObject {
 
     func openAccessibilityPrivacySettings() {
         openSystemSettings("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+    }
+
+    func prepareForTermination() {
+        stopElapsedTimer()
+        processingTask?.cancel()
+
+        do {
+            try audioRecorder.cancelImmediately()
+        } catch {
+            recordDiagnostic("termination recording cleanup failed: \(diagnosticErrorCategory(error))")
+        }
+
+        if let retainedTemporaryAudioURL {
+            deleteRetainedTemporaryAudio(at: retainedTemporaryAudioURL)
+        }
+        resetRecordingState()
     }
 
     private func recordDiagnostic(_ message: String) {
@@ -1445,8 +1487,6 @@ final class AppState: ObservableObject {
         isProcessing = true
         warningMessage = nil
         errorMessage = nil
-        latestRawTranscript = nil
-        latestFinalDraft = nil
         lastResult = "Preparing recording..."
 
         let newStatus = await audioRecorder.requestMicrophonePermission()
@@ -1486,6 +1526,28 @@ final class AppState: ObservableObject {
     }
 
     private func stopAndProcessDictation(autoStopped: Bool = false) async {
+        if let processingTask {
+            await processingTask.value
+            return
+        }
+
+        guard isRecording || recordingStartedAt != nil else {
+            return
+        }
+
+        let task = Task { @MainActor [weak self] in
+            guard let self else {
+                return
+            }
+            await self.performStopAndProcessDictation(autoStopped: autoStopped)
+        }
+        processingTask = task
+        await task.value
+        processingTask = nil
+        notifyStateChanged()
+    }
+
+    private func performStopAndProcessDictation(autoStopped: Bool) async {
         guard isRecording || recordingStartedAt != nil else {
             return
         }
@@ -1496,17 +1558,28 @@ final class AppState: ObservableObject {
         do {
             let settingsSnapshot = activeDictationSettings ?? appSettings
             let recording = try await audioRecorder.stop(deleteTemporaryFile: false)
+            retainedTemporaryAudioURL = recording.temporaryFileURL
             resetRecordingState()
             elapsedSeconds = recording.duration
             recordDiagnostic("recording stopped: dictation, \(formatDuration(recording.duration))")
             try await processRecording(recording, settings: settingsSnapshot, autoStopped: autoStopped)
         } catch {
             resetRecordingState()
-            status = "Dictation failed"
-            errorMessage = error.localizedDescription
-            lastResult = "Could not finish dictation safely."
-            lastFailureCategory = diagnosticErrorCategory(error)
-            recordDiagnostic("dictation failed: \(lastFailureCategory)")
+            if ProviderRetryPolicy.isCancellation(error) {
+                status = "Ready"
+                errorMessage = nil
+                lastResult = retainedTemporaryAudioURL == nil
+                    ? "Dictation canceled; temporary audio deleted."
+                    : "Dictation canceled. Temporary audio cleanup needs attention."
+                lastFailureCategory = "None"
+                recordDiagnostic("dictation processing canceled")
+            } else {
+                status = "Dictation failed"
+                errorMessage = error.localizedDescription
+                lastResult = "Could not finish dictation safely."
+                lastFailureCategory = diagnosticErrorCategory(error)
+                recordDiagnostic("dictation failed: \(lastFailureCategory)")
+            }
         }
 
         isProcessing = false
@@ -1547,9 +1620,22 @@ final class AppState: ObservableObject {
         settings: AppSettings,
         autoStopped: Bool
     ) async throws {
-        defer {
-            _ = try? AudioTempFileStore.deleteTemporaryAudio(at: recording.temporaryFileURL)
+        do {
+            try await processRecordedAudio(recording, settings: settings, autoStopped: autoStopped)
+        } catch {
+            deleteRetainedTemporaryAudio(at: recording.temporaryFileURL)
+            throw error
         }
+
+        deleteRetainedTemporaryAudio(at: recording.temporaryFileURL)
+    }
+
+    private func processRecordedAudio(
+        _ recording: RecordedAudio,
+        settings: AppSettings,
+        autoStopped: Bool
+    ) async throws {
+        try Task.checkCancellation()
 
         if !TranscriptionLanguageNormalizer.isValidForSettings(settings.transcriptionLanguage) {
             warningMessage = "Language setting ignored. Use a single code like de or en, or leave it empty for mixed German-English."
@@ -1579,12 +1665,15 @@ final class AppState: ObservableObject {
                 )
             )
         } catch {
+            if ProviderRetryPolicy.isCancellation(error) {
+                throw CancellationError()
+            }
             usageSnapshot.recordTranscriptionFailure()
             saveUsageSnapshot()
             throw error
         }
-        latestRawTranscript = rawTranscript
         recordDiagnostic("transcription succeeded: \(rawTranscript.count) characters")
+        try Task.checkCancellation()
 
         let finalDraft: String
         let cleanupWasEnabled = settings.cleanupEnabled
@@ -1608,6 +1697,9 @@ final class AppState: ObservableObject {
                 warningMessage = dictionaryWarning
                 recordDiagnostic("cleanup succeeded: \(finalDraft.count) characters")
             } catch {
+                if ProviderRetryPolicy.isCancellation(error) {
+                    throw CancellationError()
+                }
                 finalDraft = rawTranscript
                 cleanupFallbackUsed = true
                 warningMessage = "Cleanup failed; using raw transcript. \(error.localizedDescription)"
@@ -1622,11 +1714,13 @@ final class AppState: ObservableObject {
             recordDiagnostic("cleanup skipped")
         }
 
+        try Task.checkCancellation()
+        latestRawTranscript = rawTranscript
         latestFinalDraft = finalDraft
         if warningMessage == nil {
             lastFailureCategory = "None"
         }
-        let insertionOutcome = await insertFinalDraft(finalDraft)
+        let insertionOutcome = try await insertFinalDraft(finalDraft)
         appendDictationArchiveEntry(
             recording: recording,
             settings: settings,
@@ -1636,6 +1730,26 @@ final class AppState: ObservableObject {
             cleanupFallbackUsed: cleanupFallbackUsed,
             insertionOutcome: insertionOutcome
         )
+    }
+
+    @discardableResult
+    private func deleteRetainedTemporaryAudio(at url: URL) -> Bool {
+        do {
+            _ = try AudioTempFileStore.deleteTemporaryAudio(at: url)
+            if retainedTemporaryAudioURL == url {
+                retainedTemporaryAudioURL = nil
+            }
+            recordDiagnostic("temporary audio deleted")
+            return true
+        } catch {
+            warningMessage = combinedWarning(
+                warningMessage,
+                "Temporary audio could not be deleted. Quit and relaunch BabbelStream before continuing with sensitive dictation."
+            )
+            lastFailureCategory = diagnosticErrorCategory(error)
+            recordDiagnostic("temporary audio deletion failed: \(lastFailureCategory)")
+            return false
+        }
     }
 
     private func appendDictationArchiveEntry(
@@ -1739,7 +1853,7 @@ final class AppState: ObservableObject {
         return apiKey
     }
 
-    private func insertFinalDraft(_ finalDraft: String) async -> DictationArchiveInsertionOutcome {
+    private func insertFinalDraft(_ finalDraft: String) async throws -> DictationArchiveInsertionOutcome {
         status = "Pasting draft"
         let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
         let insertionText = DictationDraftFormatter.textWithTrailingSeparator(finalDraft)
@@ -1752,6 +1866,9 @@ final class AppState: ObservableObject {
             notifyStateChanged()
             return outcome
         } catch {
+            if ProviderRetryPolicy.isCancellation(error) {
+                throw CancellationError()
+            }
             let outcome = copyAfterInsertionFailure(insertionText, originalError: error)
             notifyStateChanged()
             return outcome

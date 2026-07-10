@@ -79,6 +79,27 @@ check(
         .contains("bad request") == true,
     "Provider HTTP failures should expose safe provider details."
 )
+check(
+    ProviderRetryPolicy.shouldRetry(ProviderError.requestFailed(statusCode: 429, message: "slow down")),
+    "Provider throttling should be retryable."
+)
+check(
+    ProviderRetryPolicy.shouldRetry(ProviderError.requestFailed(statusCode: 503, message: "unavailable")),
+    "Temporary provider server failures should be retryable."
+)
+check(
+    !ProviderRetryPolicy.shouldRetry(ProviderError.requestFailed(statusCode: 401, message: "invalid key")),
+    "Authentication failures should not be retried."
+)
+check(
+    ProviderRetryPolicy.shouldRetry(URLError(.timedOut)),
+    "Network timeouts should be retryable."
+)
+check(
+    ProviderRetryPolicy.isCancellation(URLError(.cancelled)),
+    "URLSession cancellation should be treated as task cancellation."
+)
+check(ProviderRetryPolicy.maximumRetryCount == 3, "Provider retries should stay locally bounded.")
 let emptyDictionary = PersonalDictionary()
 check(emptyDictionary.isEmpty, "Personal dictionary should default to empty.")
 check(
@@ -317,6 +338,7 @@ let multipart = try MultipartFormDataBuilder.build(
 )
 check(multipart.contentType.contains("multipart/form-data"), "Multipart content type should be form-data.")
 check(multipart.body.count > 0, "Multipart body should not be empty.")
+try await runTranscriptionRetryCheck(audioURL: deterministicAudioURL)
 _ = try AudioTempFileStore.deleteTemporaryAudio(at: deterministicAudioURL)
 check(!FileManager.default.fileExists(atPath: deterministicAudioURL.path), "Delete-check temp file should be deleted.")
 let retainedRecording = RecordedAudio(
@@ -328,7 +350,91 @@ let retainedRecording = RecordedAudio(
 )
 check(!retainedRecording.wasDeleted, "Retained recordings should report that temp audio still needs cleanup.")
 
-print("BabbelStream scaffold checks passed.")
+print("BabbelStream behavior checks passed.")
+
+func runTranscriptionRetryCheck(audioURL: URL) async throws {
+    let attempts = LockedAttemptCounter()
+    StubURLProtocol.handler = { request in
+        let attempt = attempts.increment()
+        let statusCode = attempt == 1 ? 503 : 200
+        let body = attempt == 1
+            ? Data(#"{"error":{"message":"temporary outage"}}"#.utf8)
+            : Data(#"{"text":"retry succeeded"}"#.utf8)
+        let response = HTTPURLResponse(
+            url: request.url!,
+            statusCode: statusCode,
+            httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json"]
+        )!
+        return (response, body)
+    }
+    defer {
+        StubURLProtocol.handler = nil
+    }
+
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [StubURLProtocol.self]
+    let provider = OpenAICompatibleTranscriptionProvider(
+        urlSession: URLSession(configuration: configuration)
+    )
+    var settings = AppSettings()
+    settings.providerConfiguration.baseURL = URL(string: "https://provider.example.com")!
+    settings.providerConfiguration.retryCount = 1
+
+    let transcript = try await provider.transcribe(
+        TranscriptionRequest(audioURL: audioURL, settings: settings, apiKey: "test-key")
+    )
+    check(transcript == "retry succeeded", "Transcription should return the successful retry response.")
+    check(attempts.value == 2, "One configured retry should make at most two transcription attempts.")
+}
+
+final class LockedAttemptCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    func increment() -> Int {
+        lock.lock()
+        defer { lock.unlock() }
+        count += 1
+        return count
+    }
+
+    var value: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return count
+    }
+}
+
+final class StubURLProtocol: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var handler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        guard let handler = Self.handler else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
+            return
+        }
+
+        do {
+            let (response, data) = try handler(request)
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+    }
+
+    override func stopLoading() {}
+}
 
 func runArchiveChecks() throws {
     let settingsDefaults = UserDefaults(suiteName: "com.sichgeis.babbelstream.settings-checks")!

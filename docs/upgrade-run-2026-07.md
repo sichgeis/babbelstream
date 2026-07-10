@@ -51,12 +51,12 @@ These choices make the run autonomous while favoring privacy and predictable beh
 
 ### 3. Processing lifecycle safety
 
-- [ ] Preserve the previous draft until a new final draft succeeds
-- [ ] Represent the active processing task explicitly
-- [ ] Support visible cancellation during recording and provider processing
-- [ ] Add bounded transcription retry with actionable status
-- [ ] Surface temporary-audio deletion failures
-- [ ] Clean active temporary audio on application termination
+- [x] Preserve the previous draft until a new final draft succeeds
+- [x] Represent the active processing task explicitly
+- [x] Support visible cancellation during recording and provider processing
+- [x] Add bounded transient transcription retry
+- [x] Surface temporary-audio deletion failures
+- [x] Clean active temporary audio on application termination
 - [ ] Cover success, retry, failure, cancel, and cleanup branches
 
 ### 4. Target-safe insertion and visible recovery
