@@ -732,6 +732,10 @@ final class AppState: ObservableObject {
         isRecording || processingTask != nil
     }
 
+    var currentAudioLevel: Float {
+        audioRecorder.currentLevel
+    }
+
     var canUseLatestDraft: Bool {
         latestFinalDraft?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }

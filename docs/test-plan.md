@@ -37,8 +37,11 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 ## Manual QA Checklist
 
 - App launches as a menu-bar utility.
-- Recording state is visible.
-- The HUD shows the captured target, provider host, elapsed time, cancellation control, transcription attempt count, connection/request timeout guidance, and retry reason without activating BabbelStream.
+- Recording shows a compact bottom-centered capsule with a stop control, target app, and live microphone activity without activating BabbelStream.
+- Releasing the hotkey transitions the same capsule through concise Transcribing, Retrying, Cleaning up, and Pasting states without exposing transcript text.
+- Transcribing, Retrying, Cleaning up, and Pasting keep the same blue waveform badge so state-label changes do not make the left side flicker.
+- Successful paste feedback disappears quickly; Copied and Error feedback remain visible longer, while full provider, timeout, retry, and recovery details remain available from the menu and copyable diagnostics.
+- The capsule remains correctly positioned on normal and full-screen Spaces and does not steal focus when shown or clicked.
 - Dictation pastes into the currently focused field in native Mail and in reactive editors such as VS Code and Codex.
 - Moving focus to another field inside the same app directs the draft to that current field; switching to another application blocks auto-paste and leaves the draft on the clipboard.
 - Escape cancels while recording and processing but behaves normally after the operation ends.

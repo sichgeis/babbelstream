@@ -27,6 +27,22 @@ check(ProjectDefaults.minConfigurableAudioDurationSeconds == 5, "Unexpected mini
 check(ProjectDefaults.maxConfigurableAudioDurationSeconds == 600, "Unexpected maximum configurable recording duration.")
 check(ProjectDefaults.defaultTranscriptionResponseFormat == "json", "Transcription should default to JSON responses.")
 check(
+    AudioLevelNormalizer.normalizedPower(decibels: -80) == 0,
+    "Audio below the metering floor should render as silence."
+)
+check(
+    AudioLevelNormalizer.normalizedPower(decibels: -30) == 0.5,
+    "Audio power should normalize linearly across the visible metering range."
+)
+check(
+    AudioLevelNormalizer.normalizedPower(decibels: 2) == 1,
+    "Audio above full scale should remain bounded."
+)
+check(
+    AudioLevelNormalizer.normalizedPower(decibels: .nan) == 0,
+    "Invalid audio meter values should safely render as silence."
+)
+check(
     ProjectDefaults.providerConnectionTimeoutSeconds == 15,
     "Provider connection recovery should use the documented 15-second bound."
 )

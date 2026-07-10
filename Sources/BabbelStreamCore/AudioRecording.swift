@@ -4,6 +4,7 @@ import Foundation
 @MainActor
 public protocol AudioRecorder: AnyObject {
     var isRecording: Bool { get }
+    var currentLevel: Float { get }
 
     func microphonePermissionStatus() -> MicrophonePermissionStatus
     func requestMicrophonePermission() async -> MicrophonePermissionStatus
@@ -11,6 +12,24 @@ public protocol AudioRecorder: AnyObject {
     func stop(deleteTemporaryFile: Bool) async throws -> RecordedAudio
     func cancel() async throws
     func cancelImmediately() throws
+}
+
+public enum AudioLevelNormalizer {
+    public static func normalizedPower(
+        decibels: Float,
+        silenceFloor: Float = -60
+    ) -> Float {
+        guard silenceFloor < 0, decibels.isFinite else {
+            return 0
+        }
+        if decibels <= silenceFloor {
+            return 0
+        }
+        if decibels >= 0 {
+            return 1
+        }
+        return (decibels - silenceFloor) / -silenceFloor
+    }
 }
 
 public enum MicrophonePermissionStatus: String, Equatable, Sendable {
@@ -193,6 +212,17 @@ public final class AVFoundationAudioRecorder: NSObject, AudioRecorder {
         activeRecording?.recorder.isRecording == true
     }
 
+    public var currentLevel: Float {
+        guard let recorder = activeRecording?.recorder, recorder.isRecording else {
+            return 0
+        }
+
+        recorder.updateMeters()
+        return AudioLevelNormalizer.normalizedPower(
+            decibels: recorder.averagePower(forChannel: 0)
+        )
+    }
+
     public override init() {
         super.init()
     }
@@ -236,6 +266,7 @@ public final class AVFoundationAudioRecorder: NSObject, AudioRecorder {
         ]
 
         let recorder = try AVAudioRecorder(url: fileURL, settings: settings)
+        recorder.isMeteringEnabled = true
         recorder.prepareToRecord()
 
         guard recorder.record(forDuration: maxDuration) else {
