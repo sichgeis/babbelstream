@@ -4,6 +4,7 @@ public enum ProviderError: Error, Equatable, LocalizedError, Sendable {
     case missingAPIKey
     case invalidEndpointURL
     case emptyAudioFile
+    case connectionTimedOut(seconds: Int)
     case requestFailed(statusCode: Int, message: String?)
     case malformedResponse
     case emptyTranscript
@@ -17,6 +18,8 @@ public enum ProviderError: Error, Equatable, LocalizedError, Sendable {
             "Provider endpoint URL is invalid."
         case .emptyAudioFile:
             "Recording file is empty."
+        case let .connectionTimedOut(seconds):
+            "Provider connection did not start sending within \(seconds) seconds."
         case let .requestFailed(statusCode, message):
             if let message {
                 "Provider request failed with HTTP \(statusCode): \(message)"
@@ -37,11 +40,18 @@ public struct TranscriptionRequest: Sendable {
     public let audioURL: URL
     public let settings: AppSettings
     public let apiKey: String
+    public let onEvent: @Sendable (ProviderRequestEvent) -> Void
 
-    public init(audioURL: URL, settings: AppSettings, apiKey: String) {
+    public init(
+        audioURL: URL,
+        settings: AppSettings,
+        apiKey: String,
+        onEvent: @escaping @Sendable (ProviderRequestEvent) -> Void = { _ in }
+    ) {
         self.audioURL = audioURL
         self.settings = settings
         self.apiKey = apiKey
+        self.onEvent = onEvent
     }
 }
 
@@ -72,6 +82,31 @@ public protocol CleanupProvider: Sendable {
     func cleanup(_ request: CleanupRequest) async throws -> String
 }
 
+public enum ProviderRetryReason: Equatable, Sendable {
+    case connectionTimeout
+    case requestTimeout
+    case networkUnavailable
+    case httpStatus(Int)
+
+    public var displayName: String {
+        switch self {
+        case .connectionTimeout:
+            "connection timeout"
+        case .requestTimeout:
+            "request timeout"
+        case .networkUnavailable:
+            "network unavailable"
+        case let .httpStatus(statusCode):
+            "HTTP \(statusCode)"
+        }
+    }
+}
+
+public enum ProviderRequestEvent: Equatable, Sendable {
+    case attemptStarted(attempt: Int, totalAttempts: Int)
+    case retryScheduled(nextAttempt: Int, totalAttempts: Int, reason: ProviderRetryReason)
+}
+
 public enum ProviderRetryPolicy {
     public static let maximumRetryCount = 3
 
@@ -84,12 +119,18 @@ public enum ProviderRetryPolicy {
     }
 
     public static func shouldRetry(_ error: Error) -> Bool {
-        if let providerError = error as? ProviderError,
-           case let .requestFailed(statusCode, _) = providerError {
-            return statusCode == 408
-                || statusCode == 425
-                || statusCode == 429
-                || (500...599).contains(statusCode)
+        if let providerError = error as? ProviderError {
+            switch providerError {
+            case .connectionTimedOut:
+                return true
+            case let .requestFailed(statusCode, _):
+                return statusCode == 408
+                    || statusCode == 425
+                    || statusCode == 429
+                    || (500...599).contains(statusCode)
+            default:
+                return false
+            }
         }
 
         guard let urlError = error as? URLError else {
@@ -106,13 +147,43 @@ public enum ProviderRetryPolicy {
             .resourceUnavailable
         ].contains(urlError.code)
     }
+
+    public static func retryReason(for error: Error) -> ProviderRetryReason? {
+        if let providerError = error as? ProviderError {
+            switch providerError {
+            case .connectionTimedOut:
+                return .connectionTimeout
+            case let .requestFailed(statusCode, _):
+                return .httpStatus(statusCode)
+            default:
+                return nil
+            }
+        }
+
+        guard let urlError = error as? URLError else {
+            return nil
+        }
+
+        if urlError.code == .timedOut {
+            return .requestTimeout
+        }
+        if shouldRetry(urlError) {
+            return .networkUnavailable
+        }
+        return nil
+    }
 }
 
 public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider {
     private let urlSession: URLSession
+    private let connectionTimeoutSeconds: TimeInterval
 
-    public init(urlSession: URLSession = .shared) {
+    public init(
+        urlSession: URLSession = .shared,
+        connectionTimeoutSeconds: TimeInterval = ProjectDefaults.providerConnectionTimeoutSeconds
+    ) {
         self.urlSession = urlSession
+        self.connectionTimeoutSeconds = connectionTimeoutSeconds
     }
 
     public func transcribe(_ request: TranscriptionRequest) async throws -> String {
@@ -157,9 +228,14 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
         urlRequest.setValue("application/json, text/plain;q=0.9, */*;q=0.1", forHTTPHeaderField: "Accept")
 
         return try await ProviderRequestExecutor.perform(
-            retryCount: configuration.retryCount
+            retryCount: configuration.retryCount,
+            onEvent: request.onEvent
         ) { [urlSession] in
-            let (data, response) = try await urlSession.data(for: urlRequest)
+            let (data, response) = try await ProviderURLSessionOperation.data(
+                for: urlRequest,
+                using: urlSession,
+                connectionTimeoutSeconds: min(connectionTimeoutSeconds, configuration.timeoutSeconds)
+            )
             try ProviderResponseValidator.validate(response, data: data)
 
             let text = try TranscriptionResponseParser.parse(data: data)
@@ -176,12 +252,15 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
 private enum ProviderRequestExecutor {
     static func perform<Value>(
         retryCount: Int,
+        onEvent: @Sendable (ProviderRequestEvent) -> Void,
         operation: () async throws -> Value
     ) async throws -> Value {
         let maximumRetries = min(max(0, retryCount), ProviderRetryPolicy.maximumRetryCount)
         var retriesPerformed = 0
+        let totalAttempts = maximumRetries + 1
 
         while true {
+            onEvent(.attemptStarted(attempt: retriesPerformed + 1, totalAttempts: totalAttempts))
             do {
                 try Task.checkCancellation()
                 return try await operation()
@@ -190,13 +269,21 @@ private enum ProviderRequestExecutor {
                     throw CancellationError()
                 }
                 guard retriesPerformed < maximumRetries,
-                      ProviderRetryPolicy.shouldRetry(error)
+                      ProviderRetryPolicy.shouldRetry(error),
+                      let retryReason = ProviderRetryPolicy.retryReason(for: error)
                 else {
                     throw error
                 }
 
                 let delayNanoseconds = UInt64(350_000_000 * (1 << retriesPerformed))
                 retriesPerformed += 1
+                onEvent(
+                    .retryScheduled(
+                        nextAttempt: retriesPerformed + 1,
+                        totalAttempts: totalAttempts,
+                        reason: retryReason
+                    )
+                )
                 try await Task.sleep(nanoseconds: delayNanoseconds)
             }
         }
@@ -205,9 +292,14 @@ private enum ProviderRequestExecutor {
 
 public final class OpenAICompatibleCleanupProvider: CleanupProvider {
     private let urlSession: URLSession
+    private let connectionTimeoutSeconds: TimeInterval
 
-    public init(urlSession: URLSession = .shared) {
+    public init(
+        urlSession: URLSession = .shared,
+        connectionTimeoutSeconds: TimeInterval = ProjectDefaults.providerConnectionTimeoutSeconds
+    ) {
         self.urlSession = urlSession
+        self.connectionTimeoutSeconds = connectionTimeoutSeconds
     }
 
     public func cleanup(_ request: CleanupRequest) async throws -> String {
@@ -246,7 +338,11 @@ public final class OpenAICompatibleCleanupProvider: CleanupProvider {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await urlSession.data(for: urlRequest)
+        let (data, response) = try await ProviderURLSessionOperation.data(
+            for: urlRequest,
+            using: urlSession,
+            connectionTimeoutSeconds: min(connectionTimeoutSeconds, configuration.timeoutSeconds)
+        )
         try ProviderResponseValidator.validate(response, data: data)
 
         let text = try CleanupResponseParser.parse(data: data)
@@ -256,6 +352,146 @@ public final class OpenAICompatibleCleanupProvider: CleanupProvider {
         }
 
         return text
+    }
+}
+
+private final class ProviderURLSessionOperation: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<(Data, URLResponse), Error>?
+    private var dataTask: URLSessionDataTask?
+    private var watchdogTask: Task<Void, Never>?
+    private var isFinished = false
+    private var isCancelled = false
+
+    static func data(
+        for request: URLRequest,
+        using urlSession: URLSession,
+        connectionTimeoutSeconds: TimeInterval
+    ) async throws -> (Data, URLResponse) {
+        let operation = ProviderURLSessionOperation()
+        return try await operation.run(
+            request: request,
+            urlSession: urlSession,
+            connectionTimeoutSeconds: connectionTimeoutSeconds
+        )
+    }
+
+    private func run(
+        request: URLRequest,
+        urlSession: URLSession,
+        connectionTimeoutSeconds: TimeInterval
+    ) async throws -> (Data, URLResponse) {
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                lock.lock()
+                guard !isCancelled else {
+                    lock.unlock()
+                    continuation.resume(throwing: CancellationError())
+                    return
+                }
+
+                self.continuation = continuation
+                let task = urlSession.dataTask(with: request) { [weak self] data, response, error in
+                    self?.complete(data: data, response: response, error: error)
+                }
+                dataTask = task
+                lock.unlock()
+
+                task.resume()
+                startConnectionWatchdog(seconds: connectionTimeoutSeconds)
+            }
+        } onCancel: {
+            cancel()
+        }
+    }
+
+    private func startConnectionWatchdog(seconds: TimeInterval) {
+        guard seconds > 0 else {
+            connectionTimeoutFired(seconds: seconds)
+            return
+        }
+
+        let nanoseconds = UInt64(seconds * 1_000_000_000)
+        let task = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: nanoseconds)
+            guard !Task.isCancelled else {
+                return
+            }
+            self?.connectionTimeoutFired(seconds: seconds)
+        }
+
+        lock.lock()
+        if isFinished {
+            lock.unlock()
+            task.cancel()
+            return
+        }
+        watchdogTask = task
+        lock.unlock()
+    }
+
+    private func connectionTimeoutFired(seconds: TimeInterval) {
+        lock.lock()
+        guard !isFinished, let dataTask, dataTask.countOfBytesSent == 0 else {
+            lock.unlock()
+            return
+        }
+
+        isFinished = true
+        let continuation = self.continuation
+        self.continuation = nil
+        watchdogTask = nil
+        lock.unlock()
+
+        dataTask.cancel()
+        continuation?.resume(
+            throwing: ProviderError.connectionTimedOut(seconds: max(1, Int(seconds.rounded(.up))))
+        )
+    }
+
+    private func complete(data: Data?, response: URLResponse?, error: Error?) {
+        lock.lock()
+        guard !isFinished else {
+            lock.unlock()
+            return
+        }
+
+        isFinished = true
+        let continuation = self.continuation
+        self.continuation = nil
+        let watchdogTask = self.watchdogTask
+        self.watchdogTask = nil
+        lock.unlock()
+
+        watchdogTask?.cancel()
+        if let error {
+            continuation?.resume(throwing: error)
+        } else if let data, let response {
+            continuation?.resume(returning: (data, response))
+        } else {
+            continuation?.resume(throwing: URLError(.badServerResponse))
+        }
+    }
+
+    private func cancel() {
+        lock.lock()
+        isCancelled = true
+        guard !isFinished else {
+            lock.unlock()
+            return
+        }
+
+        isFinished = true
+        let continuation = self.continuation
+        self.continuation = nil
+        let dataTask = self.dataTask
+        let watchdogTask = self.watchdogTask
+        self.watchdogTask = nil
+        lock.unlock()
+
+        watchdogTask?.cancel()
+        dataTask?.cancel()
+        continuation?.resume(throwing: CancellationError())
     }
 }
 

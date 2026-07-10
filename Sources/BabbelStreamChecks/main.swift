@@ -26,6 +26,10 @@ check(ProjectDefaults.defaultCleanupModel == "gpt-4o-mini", "Unexpected default 
 check(ProjectDefaults.minConfigurableAudioDurationSeconds == 5, "Unexpected minimum recording duration.")
 check(ProjectDefaults.maxConfigurableAudioDurationSeconds == 600, "Unexpected maximum configurable recording duration.")
 check(ProjectDefaults.defaultTranscriptionResponseFormat == "json", "Transcription should default to JSON responses.")
+check(
+    ProjectDefaults.providerConnectionTimeoutSeconds == 15,
+    "Provider connection recovery should use the documented 15-second bound."
+)
 check(BuildMetadata.gitCommitInfoKey == "BabbelStreamGitCommit", "Unexpected build commit Info.plist key.")
 check(!BuildMetadata.gitCommitShortHash.isEmpty, "Build commit metadata should have a visible fallback.")
 check(configuration.transcriptionEndpointPath == "/v1/audio/transcriptions", "Unexpected transcription endpoint default.")
@@ -100,6 +104,14 @@ check(
 check(
     ProviderRetryPolicy.shouldRetry(URLError(.timedOut)),
     "Network timeouts should be retryable."
+)
+check(
+    ProviderRetryPolicy.shouldRetry(ProviderError.connectionTimedOut(seconds: 15)),
+    "A stalled provider connection should be retryable."
+)
+check(
+    ProviderRetryPolicy.retryReason(for: ProviderError.connectionTimedOut(seconds: 15)) == .connectionTimeout,
+    "Connection timeouts should have a privacy-safe retry reason."
 )
 check(
     ProviderRetryPolicy.isCancellation(URLError(.cancelled)),
@@ -407,6 +419,8 @@ let multipart = try MultipartFormDataBuilder.build(
 check(multipart.contentType.contains("multipart/form-data"), "Multipart content type should be form-data.")
 check(multipart.body.count > 0, "Multipart body should not be empty.")
 try await runTranscriptionRetryCheck(audioURL: deterministicAudioURL)
+try await runTranscriptionConnectionTimeoutCheck(audioURL: deterministicAudioURL)
+try await runTranscriptionCancellationCheck(audioURL: deterministicAudioURL)
 _ = try AudioTempFileStore.deleteTemporaryAudio(at: deterministicAudioURL)
 check(!FileManager.default.fileExists(atPath: deterministicAudioURL.path), "Delete-check temp file should be deleted.")
 let retainedRecording = RecordedAudio(
@@ -422,6 +436,7 @@ print("BabbelStream behavior checks passed.")
 
 func runTranscriptionRetryCheck(audioURL: URL) async throws {
     let attempts = LockedAttemptCounter()
+    let events = LockedProviderEventRecorder()
     StubURLProtocol.handler = { request in
         let attempt = attempts.increment()
         let statusCode = attempt == 1 ? 503 : 200
@@ -450,10 +465,99 @@ func runTranscriptionRetryCheck(audioURL: URL) async throws {
     settings.providerConfiguration.retryCount = 1
 
     let transcript = try await provider.transcribe(
-        TranscriptionRequest(audioURL: audioURL, settings: settings, apiKey: "test-key")
+        TranscriptionRequest(
+            audioURL: audioURL,
+            settings: settings,
+            apiKey: "test-key",
+            onEvent: events.record
+        )
     )
     check(transcript == "retry succeeded", "Transcription should return the successful retry response.")
     check(attempts.value == 2, "One configured retry should make at most two transcription attempts.")
+    check(
+        events.values == [
+            .attemptStarted(attempt: 1, totalAttempts: 2),
+            .retryScheduled(nextAttempt: 2, totalAttempts: 2, reason: .httpStatus(503)),
+            .attemptStarted(attempt: 2, totalAttempts: 2)
+        ],
+        "Transcription should report bounded attempt and retry progress without provider payloads."
+    )
+}
+
+func runTranscriptionConnectionTimeoutCheck(audioURL: URL) async throws {
+    let attempts = LockedAttemptCounter()
+    let events = LockedProviderEventRecorder()
+    ConnectionStallURLProtocol.attempts = attempts
+    defer {
+        ConnectionStallURLProtocol.attempts = nil
+    }
+
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [ConnectionStallURLProtocol.self]
+    let provider = OpenAICompatibleTranscriptionProvider(
+        urlSession: URLSession(configuration: configuration),
+        connectionTimeoutSeconds: 0.05
+    )
+    var settings = AppSettings()
+    settings.providerConfiguration.baseURL = URL(string: "https://provider.example.com")!
+    settings.providerConfiguration.timeoutSeconds = 1
+    settings.providerConfiguration.retryCount = 1
+
+    let transcript = try await provider.transcribe(
+        TranscriptionRequest(
+            audioURL: audioURL,
+            settings: settings,
+            apiKey: "test-key",
+            onEvent: events.record
+        )
+    )
+    check(transcript == "connection retry succeeded", "A stalled connection should recover on retry.")
+    check(attempts.value == 2, "A connection stall should consume only one bounded retry.")
+    check(
+        events.values == [
+            .attemptStarted(attempt: 1, totalAttempts: 2),
+            .retryScheduled(nextAttempt: 2, totalAttempts: 2, reason: .connectionTimeout),
+            .attemptStarted(attempt: 2, totalAttempts: 2)
+        ],
+        "Connection recovery should report the retry reason and attempt number."
+    )
+}
+
+func runTranscriptionCancellationCheck(audioURL: URL) async throws {
+    let attempts = LockedAttemptCounter()
+    ConnectionStallURLProtocol.attempts = attempts
+    ConnectionStallURLProtocol.alwaysStall = true
+    defer {
+        ConnectionStallURLProtocol.attempts = nil
+        ConnectionStallURLProtocol.alwaysStall = false
+    }
+
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [ConnectionStallURLProtocol.self]
+    let provider = OpenAICompatibleTranscriptionProvider(
+        urlSession: URLSession(configuration: configuration),
+        connectionTimeoutSeconds: 1
+    )
+    var settings = AppSettings()
+    settings.providerConfiguration.baseURL = URL(string: "https://provider.example.com")!
+    settings.providerConfiguration.timeoutSeconds = 2
+    settings.providerConfiguration.retryCount = 1
+
+    let task = Task {
+        try await provider.transcribe(
+            TranscriptionRequest(audioURL: audioURL, settings: settings, apiKey: "test-key")
+        )
+    }
+    try await Task.sleep(nanoseconds: 30_000_000)
+    task.cancel()
+
+    do {
+        _ = try await task.value
+        fatalError("A canceled transcription should not complete or retry.")
+    } catch is CancellationError {
+        // Expected.
+    }
+    check(attempts.value == 1, "Cancellation should prevent further transcription attempts.")
 }
 
 final class LockedAttemptCounter: @unchecked Sendable {
@@ -471,6 +575,23 @@ final class LockedAttemptCounter: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         return count
+    }
+}
+
+final class LockedProviderEventRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var events: [ProviderRequestEvent] = []
+
+    func record(_ event: ProviderRequestEvent) {
+        lock.lock()
+        events.append(event)
+        lock.unlock()
+    }
+
+    var values: [ProviderRequestEvent] {
+        lock.lock()
+        defer { lock.unlock() }
+        return events
     }
 }
 
@@ -499,6 +620,38 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         } catch {
             client?.urlProtocol(self, didFailWithError: error)
         }
+    }
+
+    override func stopLoading() {}
+}
+
+final class ConnectionStallURLProtocol: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var attempts: LockedAttemptCounter?
+    nonisolated(unsafe) static var alwaysStall = false
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        let attempt = Self.attempts?.increment() ?? 1
+        guard !Self.alwaysStall, attempt > 1 else {
+            return
+        }
+
+        let response = HTTPURLResponse(
+            url: request.url!,
+            statusCode: 200,
+            httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json"]
+        )!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(#"{"text":"connection retry succeeded"}"#.utf8))
+        client?.urlProtocolDidFinishLoading(self)
     }
 
     override func stopLoading() {}
