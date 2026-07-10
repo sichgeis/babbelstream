@@ -7,10 +7,14 @@
 Use this for daily development and personal smoke testing on the development Mac:
 
 ```bash
-swift test
-swift run BabbelStreamChecks
+task check
 scripts/install-dev-app.sh
 ```
+
+`task check` builds the app and runs the dependency-free `BabbelStreamChecks`
+behavior suite. The current Command Line Tools environment does not expose a
+runnable XCTest or Swift Testing framework through SwiftPM, so `swift test` is
+not the project check command.
 
 `scripts/install-dev-app.sh` builds the app bundle, packages the local DMG, opens the Finder drag-to-Applications window, and stops any running BabbelStream copy so Finder can replace it cleanly. The script does not use `sudo`; if `/Applications` needs authorization, Finder shows the standard macOS prompt during the drag copy. After copying, run `RESTART_ONLY=1 scripts/install-dev-app.sh` to launch from `/Applications`.
 
@@ -62,8 +66,7 @@ spctl --assess --type open --verbose dist/BabbelStream-0.1.0.dmg
 
 ## Manual Release Checklist
 
-- `swift test`
-- `swift run BabbelStreamChecks`
+- `task check`
 - `scripts/package-dmg.sh`
 - Open the DMG and copy `BabbelStream.app` to `/Applications`.
 - Launch from `/Applications`.
@@ -74,6 +77,8 @@ spctl --assess --type open --verbose dist/BabbelStream-0.1.0.dmg
 - Confirm no message is auto-sent.
 - Confirm consecutive dictations are separated by a space.
 - Confirm no temporary audio remains in the BabbelStream temp directory after success, failure, and cancel.
+- Follow the current upgrade smoke test in `docs/upgrade-smoke-test-2026-07.md`
+  when validating the July 2026 reliability changes.
 
 ## GitHub Release Assets
 

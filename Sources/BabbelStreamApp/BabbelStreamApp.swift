@@ -825,8 +825,9 @@ final class AppState: ObservableObject {
     var hudDetail: String {
         if isRecording {
             let target = pasteTargetSummary ?? "unverified target"
-            let provider = appSettings.providerConfiguration.baseURL.host
-                ?? appSettings.providerConfiguration.baseURL.absoluteString
+            let settings = activeDictationSettings ?? appSettings
+            let provider = settings.providerConfiguration.baseURL.host
+                ?? settings.providerConfiguration.baseURL.absoluteString
             let cancelGuidance = warningMessage?.contains("Escape") == true
                 ? "use HUD Cancel"
                 : "Escape cancels"

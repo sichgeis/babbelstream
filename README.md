@@ -8,15 +8,19 @@ Hold `Control + Option + Space`, speak, release, and BabbelStream transcribes th
 
 - Native macOS menu-bar app.
 - Global push-to-talk hotkey: `Control + Option + Space`.
+- Compact non-activating status HUD for recording, processing, cancellation, and paste recovery.
+- Escape cancels only while a recording or provider operation is active; the HUD/menu Cancel action remains available as a fallback.
 - AVFoundation microphone recording with configurable max duration, defaulting to 10 minutes.
 - OpenAI-compatible transcription endpoint, default path `/v1/audio/transcriptions`.
 - OpenAI-compatible cleanup endpoint, default path `/v1/chat/completions`.
+- One bounded retry for transient transcription transport, throttling, and server failures.
 - Cleanup preserves German, English, and mixed German-English speech without translating.
 - Local personal dictionary injects preferred vocabulary and correction hints into cleanup.
 - Local usage counters show dictations, recorded minutes, cleanup requests, and safe failure counts.
 - Optional local dictation archive writes daily JSONL text files and provides monthly word-count review/export.
 - Copyable diagnostics summarize state and provider settings without transcripts, audio paths, or API keys.
 - Direct Accessibility insertion first, clipboard plus `Cmd+V` fallback.
+- Automatic insertion only while the originally captured app and focused Accessibility element still match.
 - One trailing space after inserted dictation chunks so repeated dictations do not run together.
 - In-app launch-at-login toggle backed by a user LaunchAgent.
 - API key stored in macOS Keychain; no transcript or audio history by default.
@@ -24,10 +28,11 @@ Hold `Control + Option + Space`, speak, release, and BabbelStream transcribes th
 ## Build Locally
 
 ```bash
-swift test
-swift run BabbelStreamChecks
+task check
 scripts/build-app.sh
 ```
+
+`task check` builds the app and runs `BabbelStreamChecks`, the dependency-free behavior-check executable. This CLT-only environment does not expose XCTest or Swift Testing through SwiftPM, so the repository intentionally has no misleading empty `swift test` target.
 
 The app bundle is written to:
 
@@ -71,11 +76,11 @@ This local DMG is suitable for personal testing. Public distribution should use 
 1. Run `scripts/install-dev-app.sh`, then drag `BabbelStream.app` onto the Applications link in Finder.
 2. Grant Microphone permission when prompted.
 3. Open Settings from the menu-bar icon.
-4. Configure provider base URL, model names, and API key.
+4. Configure provider base URL, model names, and API key, then click `Apply Settings` in the persistent Settings footer.
 5. Request Accessibility permission so BabbelStream can insert text automatically.
 6. Optionally enable `Launch at login` in Settings.
 7. Optionally enable `Archive completed dictations` if you want local daily text files and monthly word-count review.
-8. Focus Slack or another text field, hold `Control + Option + Space`, speak, and release.
+8. Focus Slack or another text field, hold `Control + Option + Space`, speak, and release. Use Escape or the HUD Cancel button to stop without pasting.
 
 For mixed German-English dictation, leave the language field blank. Use the optional transcription prompt only for transcription hints, not cleanup instructions.
 
@@ -87,7 +92,7 @@ An optional local Codex skill can edit the same file from `~/.codex/skills/babbe
 
 ## Privacy Defaults
 
-- Temporary audio is deleted after processing or cancellation.
+- Temporary audio is deleted after processing, cancellation, or app termination. A deletion failure is shown prominently and retried on relaunch.
 - Transcripts and cleaned drafts are kept only in memory for the running app session unless the local dictation archive is explicitly enabled.
 - Dictation archive is off by default. When enabled, it stores final draft text and word counts locally; raw transcript storage is a separate opt-in.
 - API keys are stored in Keychain, not in files or `UserDefaults`.
@@ -96,6 +101,17 @@ An optional local Codex skill can edit the same file from `~/.codex/skills/babbe
 - Usage counters are local `UserDefaults` numbers only; they do not contain transcript text or audio metadata.
 - Diagnostics copied from the app are redacted and omit transcripts, cleaned drafts, archive contents, audio paths, and clipboard contents.
 - No telemetry, analytics, cloud database, transcript history, or Slack API integration.
+
+## Uninstall And Local Data Cleanup
+
+1. Disable `Launch at login` and delete the API key from Settings before removing the app when possible.
+2. Quit BabbelStream and remove `BabbelStream.app` from `/Applications`.
+3. If you no longer want the dictionary or optional archive, remove `~/Library/Application Support/BabbelStream` manually after reviewing its contents.
+4. Remove the BabbelStream entry from System Settings > Privacy & Security > Microphone and Accessibility if desired.
+5. If the app was removed before launch-at-login was disabled, remove `~/Library/LaunchAgents/com.sichgeis.babbelstream.loginitem.plist` manually.
+6. The optional `BabbelStream Local Code Signing` identity can be removed in Keychain Access when it is no longer used for development builds.
+
+Removing the app bundle alone intentionally does not delete local dictionary or archive data.
 
 ## Release Status
 

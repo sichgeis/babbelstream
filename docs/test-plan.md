@@ -1,5 +1,11 @@
 # Test Plan
 
+## Automated Check Runner
+
+Run `task check`. It builds the app and executes `BabbelStreamChecks`, including settings validation, provider response/retry checks through a local `URLProtocol`, prompt/dictionary behavior, archive round trips and damaged-line recovery, diagnostics redaction, temp-file helpers, insertion policy, settings persistence, and usage counters.
+
+This CLT-only environment can compile but cannot execute XCTest or Swift Testing through SwiftPM. The empty test target was removed so `swift test` now fails honestly with `no tests found` instead of returning a false green. Coordinator behavior tied to AppKit, Accessibility, Keychain, microphone permissions, and application termination remains in the manual matrix below.
+
 ## Unit Tests
 
 - Provider configuration validation.
@@ -8,13 +14,13 @@
 - Settings defaults and migrations.
 - Configurable max recording duration defaults to 10 minutes and rejects values above the cap.
 - Usage counter arithmetic and reset behavior.
-- Dictation archive default-off behavior, JSONL round trip, word-count aggregation, monthly export rendering, and clear behavior.
+- Dictation archive default-off behavior, JSONL round trip, damaged-line recovery, word-count aggregation, monthly export rendering, and clear behavior.
 - Privacy-safe diagnostics redaction.
 - Temp-file deletion policy.
 - Text insertion result handling behind an adapter.
 - Keychain wrapper behavior with an in-memory fake.
 - Startup does not read the Keychain secret; API key presence is represented by a non-secret marker.
-- Personal dictionary JSON round trip, text parsing, disabled-entry omission, correction teaching de-duplication, cleanup prompt rendering, and prompt-size capping.
+- Personal dictionary JSON round trip, text parsing, disabled-entry preservation, correction teaching/update de-duplication, cleanup prompt rendering, and prompt-size capping.
 
 ## Integration Tests
 
@@ -32,8 +38,11 @@
 
 - App launches as a menu-bar utility.
 - Recording state is visible.
+- The HUD shows the captured target, provider host, elapsed time, and cancellation control without activating BabbelStream.
+- Escape cancels while recording and processing but behaves normally after the operation ends.
 - Cleanup can be toggled.
 - Provider destination is visible in settings.
+- Edited provider values are visibly inactive until `Apply Settings` succeeds; the saved destination remains truthful.
 - Usage counters are visible in Settings and can be reset.
 - Copy Diagnostics produces a redacted report without transcripts, audio paths, clipboard contents, or API keys.
 - Menu/Settings diagnostics show the git short commit hash for the installed build.
@@ -44,6 +53,7 @@
 - Monthly archive review can count words by day/month and export the selected month for inspection.
 - Personal dictionary edits are picked up on the next cleanup without app restart.
 - Teach Correction can add or update a correction hint without storing transcript history.
+- Starting or failing a later dictation does not erase the previous successful draft.
 
 ## Slack Desktop Cases
 
@@ -53,7 +63,7 @@
 - Empty composer.
 - Composer with existing text.
 - Consecutive dictations into the same composer leave at least one space between chunks.
-- Focus changes before paste.
+- Focus changes before paste copy the draft instead of inserting into the wrong Slack composer.
 
 ## Slack Browser Cases
 
@@ -106,12 +116,14 @@
 - Audio file paths, API keys, provider request bodies, and clipboard contents are never stored in archive entries.
 - Monthly aggregation counts words by day and month deterministically.
 - Markdown monthly export preserves entry ordering and contents.
+- A malformed JSONL line produces a visible recovery warning while valid entries remain reviewable/exportable.
 - Future topic-summary generation requires explicit user action and visible provider destination before any archive text is sent.
 - Clear archive requires confirmation and removes only archive files.
 
 ## Privacy Tests
 
-- Confirm temporary audio deletion on success, failure, timeout, and cancel.
+- Confirm temporary audio deletion on success, failure, timeout, cancel, and app termination.
+- Confirm a forced deletion failure remains visible and is retried by stale-file cleanup on relaunch.
 - Confirm no transcript history is written to disk when the archive is disabled.
 - Confirm archive files are local-only, text-only, user-visible, and absent unless explicitly enabled.
 - Confirm personal dictionary contains only explicit terms/corrections and no transcript history.

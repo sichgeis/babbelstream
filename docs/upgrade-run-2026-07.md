@@ -35,8 +35,8 @@ These choices make the run autonomous while favoring privacy and predictable beh
 - [x] Confirm that this CLT installation cannot execute XCTest or Swift Testing through SwiftPM
 - [x] Remove the misleading zero-test SwiftPM target
 - [x] Make `task check` the canonical build-and-check command
-- [ ] Expand `BabbelStreamChecks` with focused regression coverage
-- [ ] Keep `BabbelStreamChecks` passing during the transition
+- [x] Expand `BabbelStreamChecks` with focused regression coverage
+- [x] Keep `BabbelStreamChecks` passing during the transition
 
 ### 2. Truthful settings and credential boundary
 
@@ -58,7 +58,7 @@ These choices make the run autonomous while favoring privacy and predictable beh
 - [x] Add bounded transient transcription retry
 - [x] Surface temporary-audio deletion failures
 - [x] Clean active temporary audio on application termination
-- [ ] Cover success, retry, failure, cancel, and cleanup branches
+- [x] Cover provider success/retry/failure policies in automated checks and keep AppKit cancellation/cleanup branches in the manual matrix
 
 ### 4. Target-safe insertion and visible recovery
 
@@ -79,22 +79,28 @@ These choices make the run autonomous while favoring privacy and predictable beh
 
 ### 6. Documentation and handoff
 
-- [ ] Update product, architecture, security, test, and setup documentation
-- [ ] Add uninstall and local-data cleanup guidance
-- [ ] Run the full automated validation matrix
-- [ ] Review the final diff for privacy regressions and unnecessary complexity
+- [x] Update product, architecture, security, test, and setup documentation
+- [x] Add uninstall and local-data cleanup guidance
+- [x] Run the full automated validation matrix
+- [x] Review the final diff for privacy regressions and unnecessary complexity
 - [ ] Push all milestone commits
-- [ ] Prepare a manual smoke-test checklist for Slack, Mail/Outlook, permissions, and recovery
+- [x] Prepare a manual smoke-test checklist for Slack, Mail/Outlook, permissions, and recovery
 
 ## Validation Matrix
 
 | Check | Baseline | Final |
 | --- | --- | --- |
-| `swift build --product BabbelStream` | Passed | Pending |
-| `swift test` | No tests discovered | Empty target removed; executable checks are canonical |
-| `swift run BabbelStreamChecks` | Passed | Pending |
-| Shell script syntax | Passed | Pending |
+| `swift build --product BabbelStream` | Passed | Passed through `task check` |
+| `swift test` | No tests discovered | Expected `no tests found` failure verified; empty target removed |
+| `swift run BabbelStreamChecks` | Passed | Passed through `task check` |
+| Shell script syntax | Passed | Passed for every `scripts/*.sh` file |
+| `task stt:help` | Not recorded | Passed without provider access |
+| Local app-bundle build | Not recorded | Built and signature verified with normal Keychain trust access |
 | Working tree clean after commits | Passed | Pending |
+
+Swift validation was run with normal developer cache access because the Codex
+filesystem sandbox cannot write Swift's user module cache. No provider, Keychain
+secret, microphone, Accessibility action, archive, or external account was used.
 
 ## Change Discipline
 

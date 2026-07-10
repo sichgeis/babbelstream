@@ -36,23 +36,23 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `TextInsertionService`
 
-- Responsibility: insert final text into the focused app using direct Accessibility insertion when possible, with clipboard plus synthetic Cmd+V as a fallback.
-- Input: final text, optional captured target app.
-- Output: insertion result.
-- Errors: missing Accessibility permission, clipboard unavailable, paste event failed, no focused target.
-- Test strategy: unit-test insertion result handling behind an adapter; manual QA for Slack, browsers, and native text fields.
+- Responsibility: capture the intended focused Accessibility element, insert final text directly when possible, and use clipboard plus synthetic Cmd+V only while the captured application and element still match.
+- Input: final text and captured target application/element reference.
+- Output: insertion result, including an explicit copy-only recovery outcome when the target changed.
+- Errors: missing Accessibility permission, clipboard unavailable, paste event failed, no focused target, or unverifiable target.
+- Test strategy: unit-test application-level target policy and insertion result handling behind an adapter; manually verify element-level behavior in Slack, browsers, and native text fields.
 
 ## `SettingsStore`
 
-- Responsibility: persist non-secret settings such as provider URLs, endpoint paths, model names, cleanup toggle, transcription language, transcription prompt, and max recording duration.
+- Responsibility: stage and explicitly apply non-secret settings such as provider URLs, endpoint paths, model names, cleanup toggle, transcription language, transcription prompt, and max recording duration.
 - Input: typed settings values.
 - Output: current settings and validation errors.
-- Errors: invalid URL, invalid duration, missing model, unsupported endpoint path.
+- Errors: invalid URL, remote plain HTTP, embedded URL credentials/query data, invalid duration, missing model, unsupported endpoint path.
 - Test strategy: validation unit tests and migration/default tests.
 
 ## `SecretStore`
 
-- Responsibility: store and retrieve API keys from macOS Keychain.
+- Responsibility: store, update without a delete window, and retrieve API keys from macOS Keychain.
 - Input: provider identifier and secret value.
 - Output: secret value on demand.
 - Errors: key not found, Keychain read/write failure, access denied.
@@ -72,7 +72,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 - Input: vocabulary terms and wrong-to-right correction pairs.
 - Output: typed dictionary plus cleanup prompt context.
 - Errors: invalid JSON, empty terms, malformed correction pairs, file write failures.
-- Test strategy: JSON round trip, text parsing, prompt rendering, disabled-entry omission, prompt-size cap checks.
+- Test strategy: JSON round trip, text parsing, prompt rendering, disabled-entry preservation during bulk edits, correction replacement by heard form, disabled-entry omission from prompts, and prompt-size cap checks.
 
 ## `UsageTracker`
 
@@ -87,8 +87,8 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 - Responsibility: append, read, export, and delete opt-in local dictation archive entries without storing audio.
 - Input: completed dictation metadata, final draft text, raw/spoken word count, final draft word count, and optional raw transcript text only when raw transcript archiving is enabled.
 - Output: daily JSONL files, date-range archive entries, monthly word-count aggregates, and Markdown exports.
-- Errors: archive write/read/delete failures should be visible but must not block paste or lose the final draft.
-- Test strategy: disabled-by-default tests, JSONL round trip with temporary directories, word-count aggregation tests, export rendering tests, raw-transcript opt-in tests, and destructive clear confirmation coverage.
+- Errors: archive write/read/delete failures should be visible but must not block paste or lose the final draft; malformed JSONL lines should be skipped with line-specific recovery warnings while valid surrounding entries remain available.
+- Test strategy: disabled-by-default checks, JSONL round trip and damaged-line recovery with temporary directories, word-count aggregation checks, export rendering checks, raw-transcript opt-in checks, and destructive clear confirmation coverage.
 
 ## `ArchiveSummaryService` (future optional)
 
