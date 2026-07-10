@@ -40,9 +40,9 @@ BabbelStream should recover promptly from a stalled provider connection and make
    - Add a short, bounded connection-establishment timeout without reducing the configured overall provider processing timeout.
    - Expose structured attempt lifecycle events from the provider executor.
    - Cover timeout, retry, success, and cancellation behavior deterministically.
-2. **In progress — HUD and privacy-safe diagnostics**
+2. **Completed — HUD and privacy-safe diagnostics**
    - Surface the current attempt, retry reason, and remaining timeout guidance without logging content.
-3. **Pending — Documentation and settings guidance**
+3. **In progress — Documentation and settings guidance**
    - Document timeout semantics, defaults, recovery behavior, and troubleshooting.
 4. **Pending — Final validation and handoff**
    - Run broad checks/build/package validation, review the full diff, and confirm clean pushed state.
@@ -62,6 +62,7 @@ BabbelStream should recover promptly from a stalled provider connection and make
 ## Validation Evidence
 
 - Stage 1: `task check` passed after adding deterministic URLProtocol checks for HTTP retry events, a zero-byte connection stall followed by successful retry, and cancellation without retry.
+- Stage 2: `task check` passed after ordering provider events onto AppState and surfacing attempt, retry reason, connection-recovery bound, and overall timeout in the HUD and redacted diagnostic event trail.
 
 ## Current Blocker
 
@@ -69,4 +70,4 @@ BabbelStream should recover promptly from a stalled provider connection and make
 
 ## Next Action
 
-Wire structured provider attempt events into AppState, HUD copy, and privacy-safe diagnostics.
+Clarify overall timeout semantics, connection recovery, and troubleshooting in Settings and project documentation.

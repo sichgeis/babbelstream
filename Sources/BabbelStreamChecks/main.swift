@@ -469,7 +469,7 @@ func runTranscriptionRetryCheck(audioURL: URL) async throws {
             audioURL: audioURL,
             settings: settings,
             apiKey: "test-key",
-            onEvent: events.record
+            onEvent: { event in events.record(event) }
         )
     )
     check(transcript == "retry succeeded", "Transcription should return the successful retry response.")
@@ -508,7 +508,7 @@ func runTranscriptionConnectionTimeoutCheck(audioURL: URL) async throws {
             audioURL: audioURL,
             settings: settings,
             apiKey: "test-key",
-            onEvent: events.record
+            onEvent: { event in events.record(event) }
         )
     )
     check(transcript == "connection retry succeeded", "A stalled connection should recover on retry.")

@@ -40,13 +40,13 @@ public struct TranscriptionRequest: Sendable {
     public let audioURL: URL
     public let settings: AppSettings
     public let apiKey: String
-    public let onEvent: @Sendable (ProviderRequestEvent) -> Void
+    public let onEvent: @Sendable (ProviderRequestEvent) async -> Void
 
     public init(
         audioURL: URL,
         settings: AppSettings,
         apiKey: String,
-        onEvent: @escaping @Sendable (ProviderRequestEvent) -> Void = { _ in }
+        onEvent: @escaping @Sendable (ProviderRequestEvent) async -> Void = { _ in }
     ) {
         self.audioURL = audioURL
         self.settings = settings
@@ -252,7 +252,7 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
 private enum ProviderRequestExecutor {
     static func perform<Value>(
         retryCount: Int,
-        onEvent: @Sendable (ProviderRequestEvent) -> Void,
+        onEvent: @Sendable (ProviderRequestEvent) async -> Void,
         operation: () async throws -> Value
     ) async throws -> Value {
         let maximumRetries = min(max(0, retryCount), ProviderRetryPolicy.maximumRetryCount)
@@ -260,7 +260,7 @@ private enum ProviderRequestExecutor {
         let totalAttempts = maximumRetries + 1
 
         while true {
-            onEvent(.attemptStarted(attempt: retriesPerformed + 1, totalAttempts: totalAttempts))
+            await onEvent(.attemptStarted(attempt: retriesPerformed + 1, totalAttempts: totalAttempts))
             do {
                 try Task.checkCancellation()
                 return try await operation()
@@ -277,7 +277,7 @@ private enum ProviderRequestExecutor {
 
                 let delayNanoseconds = UInt64(350_000_000 * (1 << retriesPerformed))
                 retriesPerformed += 1
-                onEvent(
+                await onEvent(
                     .retryScheduled(
                         nextAttempt: retriesPerformed + 1,
                         totalAttempts: totalAttempts,
