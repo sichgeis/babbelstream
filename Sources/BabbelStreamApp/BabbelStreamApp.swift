@@ -28,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var dictationArchiveWindowController: DictationArchiveWindowController?
     private var personalDictionaryWindowController: PersonalDictionaryWindowController?
     private var teachCorrectionWindowController: TeachCorrectionWindowController?
+    private var dictationStatusHUDController: DictationStatusHUDController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         installMainMenu()
@@ -58,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             personalDictionaryWindowController: personalDictionaryWindowController,
             teachCorrectionWindowController: teachCorrectionWindowController
         )
+        dictationStatusHUDController = DictationStatusHUDController(appState: appState)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -647,6 +649,7 @@ final class AppState: ObservableObject {
     private var activeDictationSettings: AppSettings?
     private var processingTask: Task<Void, Never>?
     private var retainedTemporaryAudioURL: URL?
+    private var stateChangeObservers: [UUID: () -> Void] = [:]
 
     init(
         audioRecorder: AudioRecorder = AVFoundationAudioRecorder(),
@@ -819,6 +822,34 @@ final class AppState: ObservableObject {
         "\(archiveSnapshot.entries.count) entries, \(archiveSnapshot.totalFinalWordCount) final words"
     }
 
+    var hudDetail: String {
+        if isRecording {
+            let target = pasteTargetSummary ?? "unverified target"
+            let provider = appSettings.providerConfiguration.baseURL.host
+                ?? appSettings.providerConfiguration.baseURL.absoluteString
+            return "Target: \(target) • release to transcribe via \(provider) • \(formatDuration(elapsedSeconds))"
+        }
+        if status == "Cleaning up" {
+            return "Formatting the transcript. The original target will be verified before paste."
+        }
+        if status == "Pasting draft" {
+            return "Verifying the original focused field before insertion."
+        }
+
+        return errorMessage ?? warningMessage ?? lastResult
+    }
+
+    @discardableResult
+    func addStateChangeObserver(_ observer: @escaping () -> Void) -> UUID {
+        let id = UUID()
+        stateChangeObservers[id] = observer
+        return id
+    }
+
+    func removeStateChangeObserver(_ id: UUID) {
+        stateChangeObservers[id] = nil
+    }
+
     private func observeWorkspaceActivations() {
         workspaceActivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification,
@@ -845,7 +876,13 @@ final class AppState: ObservableObject {
 
     private func captureCurrentPasteTarget() {
         updateLatestExternalPasteTarget(from: NSWorkspace.shared.frontmostApplication)
-        latestPasteTarget = latestExternalPasteTarget
+        if let capturedTarget = textInsertionService.captureTarget(),
+           capturedTarget.processIdentifier != ProcessInfo.processInfo.processIdentifier,
+           capturedTarget.bundleIdentifier != Bundle.main.bundleIdentifier {
+            latestPasteTarget = capturedTarget
+        } else {
+            latestPasteTarget = latestExternalPasteTarget
+        }
         notifyStateChanged()
     }
 
@@ -1293,7 +1330,7 @@ final class AppState: ObservableObject {
         if diagnostics.count > 50 {
             diagnostics.removeFirst(diagnostics.count - 50)
         }
-        onStateChanged?()
+        notifyStateChanged()
     }
 
     private func diagnosticsReport() -> String {
@@ -1386,6 +1423,9 @@ final class AppState: ObservableObject {
 
     private func notifyStateChanged() {
         onStateChanged?()
+        for observer in stateChangeObservers.values {
+            observer()
+        }
     }
 
     private func validateSettingsBeforeDictation() -> Bool {
@@ -1904,6 +1944,16 @@ final class AppState: ObservableObject {
             warningMessage = priorWarning
             recordDiagnostic("paste fallback: copied for manual paste")
             return .copiedForManualPaste
+        case .copiedBecauseTargetChanged:
+            status = "Copied"
+            lastResult = "The focused field changed while processing. Draft copied; paste manually with Cmd+V."
+            errorMessage = nil
+            warningMessage = combinedWarning(
+                priorWarning,
+                "BabbelStream did not auto-paste because it could not verify the original target."
+            )
+            recordDiagnostic("paste prevented: focused target changed")
+            return .copiedBecauseTargetChanged
         case .copiedAfterPasteShortcutFailure:
             status = "Copied"
             lastResult = "Draft copied to clipboard after paste shortcut failed."

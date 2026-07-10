@@ -202,6 +202,29 @@ do {
 } catch TextInsertionError.emptyText {
     // Expected.
 }
+let capturedInsertionTarget = TextInsertionTarget(
+    processIdentifier: 1234,
+    localizedName: "Slack",
+    bundleIdentifier: "com.tinyspeck.slackmacgap"
+)
+check(
+    TextInsertionTargetPolicy.applicationMatches(
+        capturedInsertionTarget,
+        frontmostProcessIdentifier: 1234
+    ),
+    "Insertion should remain eligible while the captured application stays focused."
+)
+check(
+    !TextInsertionTargetPolicy.applicationMatches(
+        capturedInsertionTarget,
+        frontmostProcessIdentifier: 5678
+    ),
+    "Insertion should be blocked after focus moves to another application."
+)
+check(
+    !TextInsertionTargetPolicy.applicationMatches(nil, frontmostProcessIdentifier: 1234),
+    "Insertion should be blocked when no target was captured."
+)
 let launchAgentPlist = LaunchAtLoginService.launchAgentPropertyList(
     appURL: URL(fileURLWithPath: "/Applications/BabbelStream.app")
 )

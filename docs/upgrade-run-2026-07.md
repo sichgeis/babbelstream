@@ -61,11 +61,11 @@ These choices make the run autonomous while favoring privacy and predictable beh
 
 ### 4. Target-safe insertion and visible recovery
 
-- [ ] Detect whether the focused target changed during processing
-- [ ] Copy instead of auto-pasting when the target is uncertain
-- [ ] Show a compact non-activating recording/processing/recovery HUD
-- [ ] Keep clipboard recovery instructions immediately visible
-- [ ] Cover insertion policy with focused tests
+- [x] Detect whether the focused target changed during processing
+- [x] Copy instead of auto-pasting when the target is uncertain
+- [x] Show a compact non-activating recording/processing/recovery HUD
+- [x] Keep clipboard recovery instructions immediately visible
+- [x] Cover the application-level insertion policy with focused checks
 
 ### 5. Provider, archive, and dictionary resilience
 

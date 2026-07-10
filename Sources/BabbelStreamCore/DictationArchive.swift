@@ -4,6 +4,7 @@ public enum DictationArchiveInsertionOutcome: String, Codable, Equatable, Sendab
     case directAccessibilityInsertion
     case pasteShortcutPosted
     case copiedForManualPaste
+    case copiedBecauseTargetChanged
     case copiedAfterPasteShortcutFailure
     case copiedAfterPasteFailure
     case memoryOnlyAfterPasteFailure
@@ -16,6 +17,8 @@ public enum DictationArchiveInsertionOutcome: String, Codable, Equatable, Sendab
             "Paste shortcut posted"
         case .copiedForManualPaste:
             "Copied for manual paste"
+        case .copiedBecauseTargetChanged:
+            "Copied because target changed"
         case .copiedAfterPasteShortcutFailure:
             "Copied after paste shortcut failure"
         case .copiedAfterPasteFailure:
