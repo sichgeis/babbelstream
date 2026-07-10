@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="BabbelStream"
-VERSION="${VERSION:-0.1.0}"
+VERSION="${VERSION:-$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")}"
 CONFIGURATION="${CONFIGURATION:-debug}"
 INSTALL_DIR="${INSTALL_DIR:-/Applications}"
 NO_LAUNCH="${NO_LAUNCH:-0}"

@@ -1,5 +1,6 @@
 import AppKit
 import BabbelStreamCore
+import OSLog
 import SwiftUI
 
 @main
@@ -576,6 +577,10 @@ struct DiagnosticEvent: Identifiable {
 
 @MainActor
 final class AppState: ObservableObject {
+    private static let diagnosticsLogger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.sichgeis.babbelstream",
+        category: "Diagnostics"
+    )
     enum RecordingMode {
         case none
         case dictation
@@ -835,6 +840,38 @@ final class AppState: ObservableObject {
         dictationArchiveStore.archiveDirectoryURL.path
     }
 
+    var appBundlePath: String {
+        Bundle.main.bundleURL.path
+    }
+
+    var appBundleIdentifier: String {
+        Bundle.main.bundleIdentifier ?? "unknown"
+    }
+
+    var codeSigningSummary: String {
+        BuildMetadata.codeSigningSummary
+    }
+
+    var usesAdHocCodeSigning: Bool {
+        codeSigningSummary == "ad-hoc"
+    }
+
+    var accessibilityTroubleshootingSummary: String? {
+        guard accessibilityPermissionStatus != .trusted else {
+            return nil
+        }
+
+        if usesAdHocCodeSigning {
+            return "This build is ad-hoc signed. macOS may keep showing an enabled Accessibility row for an older rebuild while the running app is not trusted. Create the local signing identity, reinstall, then remove and re-add the current app in Accessibility."
+        }
+
+        if appBundlePath != "/Applications/\(ProjectDefaults.appName).app" {
+            return "This instance is running from \(appBundlePath). Accessibility must be enabled for the exact app bundle that is running."
+        }
+
+        return "If System Settings already shows this app enabled, remove and re-add /Applications/\(ProjectDefaults.appName).app in Accessibility, then restart the app."
+    }
+
     var archiveSummary: String {
         "\(archiveSnapshot.entries.count) entries, \(archiveSnapshot.totalFinalWordCount) final words"
     }
@@ -971,7 +1008,8 @@ final class AppState: ObservableObject {
             errorMessage = nil
             lastResult = "Accessibility is allowed."
         } else {
-            errorMessage = "Accessibility is still not allowed for this app instance. If System Settings already shows it enabled, remove and re-add BabbelStream after rebuilding."
+            errorMessage = accessibilityTroubleshootingSummary
+                ?? "Accessibility is still not allowed for this app instance."
         }
         recordDiagnostic("accessibility permission: \(accessibilityPermissionStatus.displayName)")
     }
@@ -1360,6 +1398,7 @@ final class AppState: ObservableObject {
     }
 
     private func recordDiagnostic(_ message: String) {
+        Self.diagnosticsLogger.info("\(message, privacy: .public)")
         diagnostics.append(DiagnosticEvent(timestamp: Date(), message: message))
         if diagnostics.count > 50 {
             diagnostics.removeFirst(diagnostics.count - 50)
@@ -1370,14 +1409,20 @@ final class AppState: ObservableObject {
     private func diagnosticsReport() -> String {
         let lines = [
             "\(ProjectDefaults.appName) diagnostics",
+            "version: \(BuildMetadata.appVersion)",
             "build commit: \(BuildMetadata.gitCommitShortHash)",
+            "bundle path: \(appBundlePath)",
+            "bundle identifier: \(appBundleIdentifier)",
+            "code signing: \(codeSigningSummary)",
             "status: \(status)",
             "last failure category: \(lastFailureCategory)",
             "transcription destination: \(providerDestinationSummary)",
             "cleanup destination: \(cleanupDestinationSummary)",
             "transcription model: \(appSettings.providerConfiguration.transcriptionModel)",
+            "fallback transcription model: \(ProjectDefaults.fallbackTranscriptionModel)",
+            "transcription timeout per model seconds: \(String(format: "%.1f", ProjectDefaults.transcriptionAttemptTimeoutSeconds))",
             "cleanup model: \(appSettings.providerConfiguration.cleanupModel)",
-            "timeout seconds: \(String(format: "%.1f", appSettings.providerConfiguration.timeoutSeconds))",
+            "cleanup timeout seconds: \(String(format: "%.1f", appSettings.providerConfiguration.timeoutSeconds))",
             "connection timeout seconds: \(String(format: "%.1f", ProjectDefaults.providerConnectionTimeoutSeconds))",
             "max recording minutes: \(Self.durationMinutesText(for: appSettings.maxAudioDurationSeconds))",
             "cleanup enabled: \(appSettings.cleanupEnabled)",
@@ -1483,20 +1528,35 @@ final class AppState: ObservableObject {
         notifyStateChanged()
     }
 
-    private func handleTranscriptionEvent(_ event: ProviderRequestEvent, settings: AppSettings) {
+    private func handleProviderEvent(
+        _ event: ProviderRequestEvent,
+        stage: String,
+        settings: AppSettings
+    ) {
         let overallTimeout = settings.providerConfiguration.timeoutSeconds
         let connectionTimeout = min(ProjectDefaults.providerConnectionTimeoutSeconds, overallTimeout)
 
         switch event {
+        case let .requestPrepared(requestBytes, audioBytes):
+            let audioDetail = audioBytes.map { ", audio \($0) bytes" } ?? ""
+            recordDiagnostic("\(stage) request prepared: \(requestBytes) bytes\(audioDetail)")
         case let .attemptStarted(attempt, totalAttempts):
-            status = attempt == 1 ? "Transcribing" : "Retrying transcription"
-            transcriptionProgressDetail = "Attempt \(attempt) of \(totalAttempts) • connection timeout \(Self.secondsLabel(connectionTimeout)) • overall timeout \(Self.secondsLabel(overallTimeout)) • Escape cancels"
-            recordDiagnostic("transcription attempt \(attempt)/\(totalAttempts) started")
+            if stage.hasPrefix("transcription") {
+                status = stage.contains("fallback") ? "Trying Mini transcription" : "Transcribing"
+                transcriptionProgressDetail = "Attempt \(attempt) of \(totalAttempts) • connection timeout \(Self.secondsLabel(connectionTimeout)) • overall timeout \(Self.secondsLabel(overallTimeout)) • Escape cancels"
+            }
+            recordDiagnostic("\(stage) attempt \(attempt)/\(totalAttempts) started")
+        case let .responseReceived(attempt, statusCode, responseBytes):
+            recordDiagnostic("\(stage) attempt \(attempt) response: HTTP \(statusCode), \(responseBytes) bytes")
+        case let .attemptSucceeded(attempt, totalAttempts, durationMilliseconds):
+            recordDiagnostic("\(stage) attempt \(attempt)/\(totalAttempts) succeeded in \(durationMilliseconds) ms")
+        case let .attemptFailed(attempt, totalAttempts, durationMilliseconds, category, willRetry):
+            recordDiagnostic("\(stage) attempt \(attempt)/\(totalAttempts) failed in \(durationMilliseconds) ms: \(category.displayName), retry \(willRetry ? "yes" : "no")")
         case let .retryScheduled(nextAttempt, totalAttempts, reason):
             status = "Retrying transcription"
             transcriptionProgressDetail = "Retrying after \(reason.displayName) • attempt \(nextAttempt) of \(totalAttempts) starts shortly • Escape cancels"
             recordDiagnostic(
-                "transcription retry scheduled: attempt \(nextAttempt)/\(totalAttempts), \(reason.displayName)"
+                "\(stage) retry scheduled: attempt \(nextAttempt)/\(totalAttempts), \(reason.displayName)"
             )
         }
     }
@@ -1784,18 +1844,58 @@ final class AppState: ObservableObject {
         transcriptionProgressDetail = nil
         recordDiagnostic("transcription started")
 
+        var configuredPrimarySettings = settings
+        configuredPrimarySettings.providerConfiguration.retryCount = 0
+        configuredPrimarySettings.providerConfiguration.timeoutSeconds = ProjectDefaults.transcriptionAttemptTimeoutSeconds
+        let primarySettings = configuredPrimarySettings
+
         let rawTranscript: String
         do {
-            rawTranscript = try await transcriptionProvider.transcribe(
-                TranscriptionRequest(
-                    audioURL: recording.temporaryFileURL,
-                    settings: settings,
-                    apiKey: apiKey,
-                    onEvent: { [weak self] event in
-                        await self?.handleTranscriptionEvent(event, settings: settings)
-                    }
+            do {
+                rawTranscript = try await transcriptionProvider.transcribe(
+                    TranscriptionRequest(
+                        audioURL: recording.temporaryFileURL,
+                        settings: primarySettings,
+                        apiKey: apiKey,
+                        onEvent: { [weak self] event in
+                            await self?.handleProviderEvent(
+                                event,
+                                stage: "transcription primary",
+                                settings: primarySettings
+                            )
+                        }
+                    )
                 )
-            )
+            } catch {
+                if ProviderRetryPolicy.isCancellation(error) {
+                    throw CancellationError()
+                }
+                guard ProviderRetryPolicy.shouldRetry(error) else {
+                    throw error
+                }
+
+                var configuredFallbackSettings = primarySettings
+                configuredFallbackSettings.providerConfiguration.transcriptionModel = ProjectDefaults.fallbackTranscriptionModel
+                let fallbackSettings = configuredFallbackSettings
+                status = "Trying Mini transcription"
+                recordDiagnostic(
+                    "transcription fallback started: \(ProjectDefaults.fallbackTranscriptionModel) after \(ProviderFailureCategory.classify(error).displayName)"
+                )
+                rawTranscript = try await transcriptionProvider.transcribe(
+                    TranscriptionRequest(
+                        audioURL: recording.temporaryFileURL,
+                        settings: fallbackSettings,
+                        apiKey: apiKey,
+                        onEvent: { [weak self] event in
+                            await self?.handleProviderEvent(
+                                event,
+                                stage: "transcription fallback",
+                                settings: fallbackSettings
+                            )
+                        }
+                    )
+                )
+            }
         } catch {
             transcriptionProgressDetail = nil
             if ProviderRetryPolicy.isCancellation(error) {
@@ -1825,7 +1925,10 @@ final class AppState: ObservableObject {
                         transcript: rawTranscript,
                         settings: settings,
                         apiKey: apiKey,
-                        personalDictionary: personalDictionary
+                        personalDictionary: personalDictionary,
+                        onEvent: { [weak self] event in
+                            await self?.handleProviderEvent(event, stage: "cleanup", settings: settings)
+                        }
                     )
                 )
                 warningMessage = dictionaryWarning
@@ -2484,12 +2587,17 @@ private struct SettingsProviderPane: View {
                 TextField("Base URL", text: $appState.baseURLText)
                 TextField("Transcription path", text: $appState.transcriptionPathText)
                 TextField("Transcription model", text: $appState.transcriptionModelText)
+                LabeledContent("Fallback transcription model", value: ProjectDefaults.fallbackTranscriptionModel)
                 TextField("Cleanup path", text: $appState.cleanupPathText)
                 TextField("Cleanup model", text: $appState.cleanupModelText)
-                TextField("Overall request timeout (seconds)", text: $appState.timeoutText)
+                LabeledContent(
+                    "Transcription timeout per model",
+                    value: "\(Int(ProjectDefaults.transcriptionAttemptTimeoutSeconds))s"
+                )
+                TextField("Cleanup timeout (seconds)", text: $appState.timeoutText)
                 LabeledContent("Connection timeout", value: appState.providerConnectionTimeoutSummary)
                 LabeledContent("Maximum transcription attempts", value: appState.transcriptionAttemptLimitSummary)
-                Text("If sending has not begun by the connection timeout, BabbelStream cancels that attempt and retries when another attempt is available. The overall timeout still allows active provider processing to take longer. A retry resends the same temporary audio.")
+                Text("If the primary transcription model has a transient failure, BabbelStream sends the same temporary audio once to the fallback model. Each model has a 30-second limit. Authentication and configuration failures do not fall back.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -2616,10 +2724,20 @@ private struct SettingsDiagnosticsPane: View {
             }
 
             Section("Diagnostics") {
+                LabeledContent("Version", value: BuildMetadata.appVersion)
                 LabeledContent("Build commit", value: BuildMetadata.gitCommitShortHash)
+                LabeledContent("App bundle", value: appState.appBundlePath)
+                LabeledContent("Bundle ID", value: appState.appBundleIdentifier)
+                LabeledContent("Code signing", value: appState.codeSigningSummary)
                 LabeledContent("Last failure", value: appState.lastFailureCategory)
                 Button("Copy Diagnostics") {
                     appState.copyDiagnosticsReport()
+                }
+
+                if let accessibilityTroubleshootingSummary = appState.accessibilityTroubleshootingSummary {
+                    Text(accessibilityTroubleshootingSummary)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
 
                 if appState.diagnosticSummaries.isEmpty {

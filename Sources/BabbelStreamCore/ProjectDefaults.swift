@@ -8,6 +8,8 @@ public enum ProjectDefaults {
     public static let minConfigurableAudioDurationSeconds: TimeInterval = 5
     public static let maxConfigurableAudioDurationSeconds: TimeInterval = 600
     public static let defaultTranscriptionModel = "gpt-4o-transcribe"
+    public static let fallbackTranscriptionModel = "gpt-4o-mini-transcribe"
+    public static let transcriptionAttemptTimeoutSeconds: TimeInterval = 30
     public static let defaultCleanupModel = "gpt-4o-mini"
     public static let defaultTranscriptionResponseFormat = "json"
     public static let providerConnectionTimeoutSeconds: TimeInterval = 15
@@ -22,11 +24,22 @@ public enum ProjectDefaults {
 }
 
 public enum BuildMetadata {
+    public static let unknownVersion = "unknown"
     public static let gitCommitInfoKey = "BabbelStreamGitCommit"
+    public static let codeSigningInfoKey = "BabbelStreamCodeSigning"
     public static let unknownGitCommit = "unknown"
+    public static let unknownCodeSigning = "unknown"
+
+    public static var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? unknownVersion
+    }
 
     public static var gitCommitShortHash: String {
         Bundle.main.object(forInfoDictionaryKey: gitCommitInfoKey) as? String ?? unknownGitCommit
+    }
+
+    public static var codeSigningSummary: String {
+        Bundle.main.object(forInfoDictionaryKey: codeSigningInfoKey) as? String ?? unknownCodeSigning
     }
 }
 

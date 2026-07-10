@@ -55,8 +55,8 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Local app bundle and DMG packaging for manual drag-to-Applications installation and testing.
 - Optional transcription language is a single ISO 639-1 code such as `de` or `en`; leave it empty for mixed German-English dictation.
 - No transcript/audio persistence by default.
-- Bounded retry for transient transcription failures, with cancellation and verified temporary-audio cleanup across success, failure, timeout, cancel, and termination.
-- A transcription attempt that has sent zero request bytes after 15 seconds is treated as a stalled connection and retried within the same bound; the longer configured request timeout remains available after sending begins.
+- Bounded transcription fallback for transient failures: try the configured primary model once for 30 seconds, then send the same temporary audio once to `gpt-4o-mini-transcribe`. Authentication, configuration, and other permanent failures do not fall back.
+- A transcription attempt that has sent zero request bytes after 15 seconds is treated as a stalled connection and may move directly to the fallback model. Temporary-audio cleanup remains verified across success, failure, timeout, cancel, and termination.
 - The HUD uses progressive disclosure: retry state is visible while retrying, but provider destinations, timeout details, and diagnostic reasons stay in the menu, Settings, and copyable diagnostics instead of crowding the everyday overlay.
 
 ## V1 Scope

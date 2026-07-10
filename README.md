@@ -67,7 +67,7 @@ scripts/package-dmg.sh
 The DMG is written to:
 
 ```text
-dist/BabbelStream-0.1.0.dmg
+dist/BabbelStream-$(cat VERSION).dmg
 ```
 
 This local DMG is suitable for personal testing. Public distribution should use a Developer ID Application certificate and Apple notarization; see [docs/release.md](docs/release.md).

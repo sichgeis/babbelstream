@@ -35,7 +35,7 @@ AppKit status-item app
 2. `AppState` snapshots the saved settings and the focused application/Accessibility element for the whole dictation.
 3. The bottom-centered, non-activating capsule HUD shows live microphone activity and the target while recording, then progressively discloses only the current processing, retry, completion, or recovery state. Full provider and timeout details remain in the menu, Settings, and diagnostics.
 4. Hotkey release stops recording and returns a temporary audio URL.
-5. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint and retries only bounded transient failures.
+5. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint. The app gives the configured primary model one 30-second attempt, then uses one 30-second `gpt-4o-mini-transcribe` fallback attempt only for transient failures.
 6. The temporary audio file remains tracked until verified deletion after success, failure, timeout, or cancellation. Termination performs a final synchronous cleanup attempt.
 7. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
 8. `CleanupProvider` lightly formats the transcript when cleanup is enabled, using dictionary context in the same model call.
@@ -76,9 +76,9 @@ Use AVFoundation to record compressed audio to a temporary file. The MVP default
 
 ## Transcription Approach
 
-Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provider accepts a JSON object with a string `text` field or a genuinely plain-text response; other successful JSON shapes are rejected. The default retry count permits one additional attempt for timeouts, connection loss, HTTP 408/425/429, and 5xx responses. Authentication and other client failures are not retried.
+Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provider accepts a JSON object with a string `text` field or a genuinely plain-text response; other successful JSON shapes are rejected. The app disables same-model retries: `gpt-4o-transcribe` (or the explicitly configured primary model) gets one 30-second attempt, followed by one `gpt-4o-mini-transcribe` attempt for timeouts, connection loss, HTTP 408/425/429, and 5xx responses. Authentication and other client failures fail immediately.
 
-The configured request timeout remains the allowance for an active provider request. A separate 15-second connection watchdog observes whether URLSession has begun sending request bytes. If it has not, the attempt is canceled as a connection timeout and may consume one bounded transcription retry. Once sending begins, the watchdog no longer shortens legitimate transcription processing. Cleanup requests use the same connection watchdog but keep their existing raw-transcript fallback instead of adding cleanup retries. Provider attempt events contain only attempt numbers and retry categories for HUD and diagnostics use.
+Each transcription model gets a 30-second request allowance. A separate 15-second connection watchdog observes whether URLSession has begun sending request bytes. If it has not, the primary attempt is canceled and may move directly to the fallback model. Cleanup keeps its separately configured timeout and raw-transcript fallback. Provider lifecycle events distinguish primary transcription, fallback transcription, and cleanup, and include attempt numbers, elapsed milliseconds, HTTP or URL error categories, and request/response byte counts for diagnostics use.
 
 ## Cleanup Approach
 
@@ -126,7 +126,7 @@ The daily developer install helper opens that DMG and lets Finder perform the co
 
 ## Logging And Debugging
 
-Default logs may include state transitions, provider names, durations, counts, build commit hash, attempt numbers, timeout values, and error/retry categories. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, optional archive enabled state, archive entry counts, build commit hash, connection timeout, and recent sanitized event categories. They must not include audio, transcripts, archive contents, cleanup input, cleanup output, API keys, clipboard contents, audio file paths, or request bodies. Debug persistence must be explicit and visibly enabled.
+Default in-memory and macOS Unified Logs may include state transitions, provider names, durations, counts, build commit hash, attempt numbers, timeout values, HTTP status, URL error codes, retry categories, and request/response byte counts. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, optional archive enabled state, archive entry counts, build commit hash, connection timeout, and recent sanitized event categories. They must not include audio, transcripts, archive contents, cleanup input, cleanup output, API keys, clipboard contents, audio file paths, raw provider messages, or request/response bodies. Debug persistence must be explicit and visibly enabled.
 
 ## Security And Privacy
 
