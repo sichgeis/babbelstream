@@ -159,12 +159,9 @@ public enum PersonalDictionaryTextCodec {
             throw PersonalDictionaryError.emptyCorrectionValue
         }
 
-        let key = correctionKey(from: from, to: to)
+        let key = correctionKey(from: from)
         for index in dictionary.corrections.indices {
-            guard correctionKey(
-                from: dictionary.corrections[index].from,
-                to: dictionary.corrections[index].to
-            ) == key else {
+            guard correctionKey(from: dictionary.corrections[index].from) == key else {
                 continue
             }
 
@@ -208,7 +205,7 @@ public enum PersonalDictionaryTextCodec {
     ) -> [PersonalVocabularyEntry] {
         let existingByKey = vocabularyByKey(existing)
 
-        return text
+        let parsed = text
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
@@ -219,6 +216,12 @@ public enum PersonalDictionaryTextCodec {
                 entry.enabled = true
                 return entry
             }
+        let parsedKeys = Set(parsed.map { normalizedKey($0.term) })
+        let preservedDisabledEntries = existing.filter {
+            !$0.enabled && !parsedKeys.contains(normalizedKey($0.term))
+        }
+
+        return parsed + preservedDisabledEntries
     }
 
     private static func parseCorrections(
@@ -227,7 +230,7 @@ public enum PersonalDictionaryTextCodec {
     ) throws -> [PersonalCorrectionEntry] {
         let existingByKey = correctionsByKey(existing)
         var parsed: [PersonalCorrectionEntry] = []
-        var seenKeys = Set<String>()
+        var parsedIndexByKey: [String: Int] = [:]
 
         for (index, rawLine) in text.components(separatedBy: .newlines).enumerated() {
             let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -245,28 +248,34 @@ public enum PersonalDictionaryTextCodec {
                 throw PersonalDictionaryError.emptyCorrectionValue
             }
 
-            let key = correctionKey(from: from, to: to)
-            guard !seenKeys.contains(key) else {
-                continue
-            }
+            let key = correctionKey(from: from)
 
             var correction = existingByKey[key] ?? PersonalCorrectionEntry(from: from, to: to)
             correction.from = from
             correction.to = to
             correction.enabled = true
-            parsed.append(correction)
-            seenKeys.insert(key)
+            if let parsedIndex = parsedIndexByKey[key] {
+                parsed[parsedIndex] = correction
+            } else {
+                parsedIndexByKey[key] = parsed.count
+                parsed.append(correction)
+            }
         }
 
-        return parsed
+        let parsedKeys = Set(parsed.map { correctionKey(from: $0.from) })
+        let preservedDisabledEntries = existing.filter {
+            !$0.enabled && !parsedKeys.contains(correctionKey(from: $0.from))
+        }
+
+        return parsed + preservedDisabledEntries
     }
 
     private static func normalizedKey(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
-    private static func correctionKey(from: String, to: String) -> String {
-        "\(normalizedKey(from))=>\(normalizedKey(to))"
+    private static func correctionKey(from: String) -> String {
+        normalizedKey(from)
     }
 
     private static func vocabularyByKey(_ entries: [PersonalVocabularyEntry]) -> [String: PersonalVocabularyEntry] {
@@ -280,7 +289,7 @@ public enum PersonalDictionaryTextCodec {
     private static func correctionsByKey(_ entries: [PersonalCorrectionEntry]) -> [String: PersonalCorrectionEntry] {
         var result: [String: PersonalCorrectionEntry] = [:]
         for entry in entries {
-            result[correctionKey(from: entry.from, to: entry.to)] = entry
+            result[correctionKey(from: entry.from)] = entry
         }
         return result
     }

@@ -69,12 +69,12 @@ These choices make the run autonomous while favoring privacy and predictable beh
 
 ### 5. Provider, archive, and dictionary resilience
 
-- [ ] Treat malformed JSON success responses as provider errors
-- [ ] Recover valid archive entries around a malformed JSONL line
-- [ ] Return archive recovery warnings without hiding valid entries
-- [ ] Update corrections by the wrong/heard form to avoid conflicting mappings
-- [ ] Preserve disabled dictionary entries and notes during bulk edits
-- [ ] Align the standalone STT checker default with its documentation
+- [x] Treat malformed JSON success responses as provider errors
+- [x] Recover valid archive entries around a malformed JSONL line
+- [x] Return archive recovery warnings without hiding valid entries
+- [x] Update corrections by the wrong/heard form to avoid conflicting mappings
+- [x] Preserve disabled dictionary entries and notes during bulk edits
+- [x] Align the standalone STT checker default with its documentation
 
 ### 6. Documentation and handoff
 
