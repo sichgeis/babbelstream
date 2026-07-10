@@ -44,7 +44,7 @@ BabbelStream should recover promptly from a stalled provider connection and make
    - Surface the current attempt, retry reason, and remaining timeout guidance without logging content.
 3. **Completed — Documentation and settings guidance**
    - Document timeout semantics, defaults, recovery behavior, and troubleshooting.
-4. **In progress — Final validation and handoff**
+4. **Completed — Final validation and handoff**
    - Run broad checks/build/package validation, review the full diff, and confirm clean pushed state.
 
 ## Dependencies And Risks
@@ -64,6 +64,13 @@ BabbelStream should recover promptly from a stalled provider connection and make
 - Stage 1: `task check` passed after adding deterministic URLProtocol checks for HTTP retry events, a zero-byte connection stall followed by successful retry, and cancellation without retry.
 - Stage 2: `task check` passed after ordering provider events onto AppState and surfacing attempt, retry reason, connection-recovery bound, and overall timeout in the HUD and redacted diagnostic event trail.
 - Stage 3: `task check` passed after clarifying the overall request timeout, fixed connection timeout, maximum attempts, and audio-resend implication in Settings and user/technical/test documentation.
+- Stage 4: final `task check` passed; `scripts/package-dmg.sh` built a locally signed app and verified the DMG checksum; `codesign --verify --deep --strict` passed; the complete diff passed `git diff --check` and a privacy-focused added-line review.
+
+## Remaining Manual Validation
+
+- Install the final DMG build and perform one normal dictation against the configured real provider.
+- If practical, reproduce or simulate a stalled VPN connection and confirm the HUD reports attempt 1, retries after 15 seconds, then either completes or shows an actionable final error.
+- Confirm Escape cancels during the connection wait and the next dictation starts normally.
 
 ## Current Blocker
 
@@ -71,4 +78,4 @@ BabbelStream should recover promptly from a stalled provider connection and make
 
 ## Next Action
 
-Run full checks, app bundle/DMG packaging, final privacy and concurrency diff review, then close the tracker.
+User installs the final DMG and performs the real-provider smoke test before merge or release.
