@@ -42,8 +42,8 @@ Ship BabbelStream 0.3.0 so a stopped dictation is not discarded when transcripti
 
 ## Stages
 
-1. **In progress — Specifications and recovery storage foundation**
-2. **Pending — Recovery lifecycle and hedged transcription**
+1. **Completed — Specifications and recovery storage foundation**
+2. **In progress — Recovery lifecycle and hedged transcription**
 3. **Pending — Recovery Center and minimal HUD status**
 4. **Pending — Full validation and v0.3.0 release**
 
@@ -66,6 +66,7 @@ Ship BabbelStream 0.3.0 so a stopped dictation is not discarded when transcripti
 ## Validation Evidence
 
 - v0.2.5 baseline behavior checks passed before this upgrade.
+- Stage 1 `task check`: recovery adoption, user-only permissions, startup interruption recovery, retry counting, export retention, deletion, app build, and existing behavior checks passed.
 
 ## Current Blocker
 
@@ -73,4 +74,4 @@ None.
 
 ## Next Action
 
-Implement and verify the recovery storage foundation.
+Integrate recovery ownership and bounded hedged transcription into the coordinator.
