@@ -40,17 +40,20 @@ public struct TranscriptionRequest: Sendable {
     public let audioURL: URL
     public let settings: AppSettings
     public let apiKey: String
+    public let retryCount: Int
     public let onEvent: @Sendable (ProviderRequestEvent) async -> Void
 
     public init(
         audioURL: URL,
         settings: AppSettings,
         apiKey: String,
+        retryCount: Int = 0,
         onEvent: @escaping @Sendable (ProviderRequestEvent) async -> Void = { _ in }
     ) {
         self.audioURL = audioURL
         self.settings = settings
         self.apiKey = apiKey
+        self.retryCount = retryCount
         self.onEvent = onEvent
     }
 }
@@ -275,7 +278,7 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
         await request.onEvent(.requestPrepared(requestBytes: multipart.body.count, audioBytes: fileSize))
 
         return try await ProviderRequestExecutor.perform(
-            retryCount: configuration.retryCount,
+            retryCount: request.retryCount,
             onEvent: request.onEvent
         ) { [urlSession] attempt in
             let (data, response) = try await ProviderURLSessionOperation.data(

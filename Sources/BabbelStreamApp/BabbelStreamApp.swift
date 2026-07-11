@@ -61,6 +61,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             teachCorrectionWindowController: teachCorrectionWindowController
         )
         dictationStatusHUDController = DictationStatusHUDController(appState: appState)
+
+        if CommandLine.arguments.contains("--settings") {
+            settingsWindowController.show()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -467,12 +471,16 @@ final class SettingsWindowController {
 
     private func makeWindowController() -> NSWindowController {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 560),
-            styleMask: [.titled, .closable, .miniaturizable],
+            contentRect: NSRect(x: 0, y: 0, width: 760, height: 640),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = "\(ProjectDefaults.appName) Settings"
+        window.minSize = NSSize(width: 700, height: 560)
+        if CommandLine.arguments.contains("--settings") {
+            window.sharingType = .readOnly
+        }
         window.contentViewController = NSHostingController(
             rootView: SettingsView()
                 .environmentObject(appState)
@@ -793,14 +801,6 @@ final class AppState: ObservableObject {
 
     var providerConnectionTimeoutSummary: String {
         Self.secondsLabel(ProjectDefaults.providerConnectionTimeoutSeconds)
-    }
-
-    var transcriptionAttemptLimitSummary: String {
-        let retries = min(
-            max(0, appSettings.providerConfiguration.retryCount),
-            ProviderRetryPolicy.maximumRetryCount
-        )
-        return "\(retries + 1)"
     }
 
     var editedProviderDestinationSummary: String {
@@ -1469,8 +1469,7 @@ final class AppState: ObservableObject {
             cleanupEndpointPath: cleanupPathText,
             transcriptionModel: transcriptionModelText,
             cleanupModel: cleanupModelText,
-            timeoutSeconds: timeout,
-            retryCount: appSettings.providerConfiguration.retryCount
+            timeoutSeconds: timeout
         )
         let settings = AppSettings(
             providerConfiguration: configuration,
@@ -1845,7 +1844,6 @@ final class AppState: ObservableObject {
         recordDiagnostic("transcription started")
 
         var configuredPrimarySettings = settings
-        configuredPrimarySettings.providerConfiguration.retryCount = 0
         configuredPrimarySettings.providerConfiguration.timeoutSeconds = ProjectDefaults.transcriptionAttemptTimeoutSeconds
         let primarySettings = configuredPrimarySettings
 
@@ -2424,36 +2422,58 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
 }
 
 struct SettingsView: View {
+    private enum Tab: String {
+        case general
+        case provider
+        case writing
+        case archive
+        case diagnostics
+    }
+
     @EnvironmentObject private var appState: AppState
+    @State private var selectedTab: Tab
+
+    init() {
+        let tabArgument = CommandLine.arguments.first { $0.hasPrefix("--settings-tab=") }
+        let tabName = tabArgument?.split(separator: "=", maxSplits: 1).last.map(String.init)
+        _selectedTab = State(initialValue: Tab(rawValue: tabName ?? "") ?? .general)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView {
+            TabView(selection: $selectedTab) {
                 SettingsGeneralPane()
                     .tabItem {
                         Label("General", systemImage: "gearshape")
                     }
+                    .tag(Tab.general)
 
                 SettingsProviderPane()
                     .tabItem {
                         Label("Provider", systemImage: "network")
                     }
+                    .tag(Tab.provider)
 
                 SettingsWritingPane()
                     .tabItem {
                         Label("Writing", systemImage: "text.bubble")
                     }
+                    .tag(Tab.writing)
 
                 SettingsArchivePane()
                     .tabItem {
                         Label("Archive", systemImage: "archivebox")
                     }
+                    .tag(Tab.archive)
 
                 SettingsDiagnosticsPane()
                     .tabItem {
                         Label("Diagnostics", systemImage: "stethoscope")
                     }
+                    .tag(Tab.diagnostics)
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
 
             Divider()
             settingsFooter
@@ -2461,8 +2481,7 @@ struct SettingsView: View {
         .onAppear {
             appState.refreshPermissionStatuses()
         }
-        .padding(16)
-        .frame(width: 680, height: 560)
+        .frame(minWidth: 700, idealWidth: 760, minHeight: 560, idealHeight: 640)
     }
 
     private var settingsFooter: some View {
@@ -2487,14 +2506,17 @@ struct SettingsView: View {
 
             Spacer()
 
-            Button("Apply Settings") {
+            Button {
                 appState.saveSettings()
+            } label: {
+                Label("Apply Settings", systemImage: "checkmark")
             }
             .keyboardShortcut(.defaultAction)
             .disabled(!appState.hasUnsavedSettingsChanges)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 14)
+        .background(.bar)
     }
 }
 
@@ -2510,7 +2532,9 @@ private struct SettingsPane<Content: View>: View {
             Form {
                 content
             }
-            .padding(16)
+            .formStyle(.grouped)
+            .padding(.vertical, 12)
+            .frame(maxWidth: 680, alignment: .top)
             .frame(maxWidth: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -2539,9 +2563,12 @@ private struct SettingsGeneralPane: View {
                 )
                 TextField("Max recording minutes", text: $appState.maxAudioDurationMinutesText)
                 LabeledContent("Hotkey", value: ProjectDefaults.fixedHotkeyDescription)
-                LabeledContent("Max duration", value: formatSettingsDuration(appState.maxAudioDurationSeconds))
+            }
+
+            Section("Safety") {
+                LabeledContent("Saved max duration", value: formatSettingsDuration(appState.maxAudioDurationSeconds))
                 LabeledContent("Auto-send", value: ProjectDefaults.autoSendEnabledByDefault ? "On" : "Off")
-                LabeledContent("History", value: ProjectDefaults.transcriptHistoryEnabledByDefault ? "On" : "Off")
+                LabeledContent("Default transcript history", value: ProjectDefaults.transcriptHistoryEnabledByDefault ? "On" : "Off")
             }
         }
     }
@@ -2561,42 +2588,41 @@ private struct SettingsProviderPane: View {
 
     var body: some View {
         SettingsPane {
-            Section("Provider") {
-                Text("Saved audio destination:")
-                    .foregroundStyle(.secondary)
-                Text(appState.providerDestinationSummary)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
-                Text("Saved cleanup destination:")
-                    .foregroundStyle(.secondary)
-                Text(appState.cleanupDestinationSummary)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
+            Section("Active Destinations") {
+                SettingsLongValue(label: "Transcription", value: appState.providerDestinationSummary)
+                SettingsLongValue(label: "Cleanup", value: appState.cleanupDestinationSummary)
 
                 if appState.hasUnsavedConfigurationChanges {
-                    Text("Edited destinations (not active yet):")
-                        .foregroundStyle(.secondary)
-                    Text(appState.editedProviderDestinationSummary)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
-                    Text(appState.editedCleanupDestinationSummary)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
+                    SettingsLongValue(
+                        label: "Edited transcription",
+                        value: appState.editedProviderDestinationSummary,
+                        isPending: true
+                    )
+                    SettingsLongValue(
+                        label: "Edited cleanup",
+                        value: appState.editedCleanupDestinationSummary,
+                        isPending: true
+                    )
                 }
+            }
 
+            Section("Connection") {
                 TextField("Base URL", text: $appState.baseURLText)
                 TextField("Transcription path", text: $appState.transcriptionPathText)
-                TextField("Transcription model", text: $appState.transcriptionModelText)
-                LabeledContent("Fallback transcription model", value: ProjectDefaults.fallbackTranscriptionModel)
                 TextField("Cleanup path", text: $appState.cleanupPathText)
+            }
+
+            Section("Models And Timeouts") {
+                TextField("Primary transcription model", text: $appState.transcriptionModelText)
+                LabeledContent("Fallback model", value: ProjectDefaults.fallbackTranscriptionModel)
                 TextField("Cleanup model", text: $appState.cleanupModelText)
                 LabeledContent(
-                    "Transcription timeout per model",
+                    "Timeout per transcription model",
                     value: "\(Int(ProjectDefaults.transcriptionAttemptTimeoutSeconds))s"
                 )
                 TextField("Cleanup timeout (seconds)", text: $appState.timeoutText)
-                LabeledContent("Connection timeout", value: appState.providerConnectionTimeoutSummary)
-                LabeledContent("Maximum transcription attempts", value: appState.transcriptionAttemptLimitSummary)
+                LabeledContent("Connection watchdog", value: appState.providerConnectionTimeoutSummary)
+                LabeledContent("Transcription attempts", value: "2 (primary + fallback)")
                 Text("If the primary transcription model has a transient failure, BabbelStream sends the same temporary audio once to the fallback model. Each model has a 30-second limit. Authentication and configuration failures do not fall back.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -2609,12 +2635,12 @@ private struct SettingsProviderPane: View {
                 )
                 LabeledContent("Keychain", value: appState.hasAPIKey ? "Saved" : "Missing")
 
-                HStack {
-                    Button("Delete API Key") {
-                        appState.deleteAPIKey()
-                    }
-                    .disabled(!appState.hasAPIKey)
+                Button(role: .destructive) {
+                    appState.deleteAPIKey()
+                } label: {
+                    Label("Delete API Key", systemImage: "trash")
                 }
+                .disabled(!appState.hasAPIKey)
             }
         }
     }
@@ -2637,8 +2663,10 @@ private struct SettingsWritingPane: View {
                     "Prompt limit",
                     value: "\(ProjectDefaults.maxPersonalDictionaryPromptCharacters) characters"
                 )
-                Button("Teach Correction...") {
+                Button {
                     appState.openTeachCorrection()
+                } label: {
+                    Label("Teach Correction...", systemImage: "text.badge.plus")
                 }
             }
         }
@@ -2668,7 +2696,7 @@ private struct SettingsArchivePane: View {
                 .disabled(!appState.dictationArchiveEnabled)
                 Text("When enabled, BabbelStream writes work text to local daily files on this Mac. Audio is never archived.")
                     .foregroundStyle(.secondary)
-                LabeledContent("Archive folder", value: appState.archiveDirectoryPath)
+                SettingsLongValue(label: "Archive folder", value: appState.archiveDirectoryPath)
             }
         }
     }
@@ -2685,8 +2713,10 @@ private struct SettingsDiagnosticsPane: View {
                 LabeledContent("Cleanup requests", value: "\(appState.usageSnapshot.cleanupRequests)")
                 LabeledContent("Transcription failures", value: "\(appState.usageSnapshot.transcriptionFailures)")
                 LabeledContent("Cleanup fallbacks", value: "\(appState.usageSnapshot.cleanupFallbacks)")
-                Button("Reset Usage Counters") {
+                Button {
                     appState.resetUsageCounters()
+                } label: {
+                    Label("Reset Usage Counters", systemImage: "arrow.counterclockwise")
                 }
             }
 
@@ -2695,11 +2725,15 @@ private struct SettingsDiagnosticsPane: View {
                 LabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
 
                 HStack {
-                    Button("Request Accessibility") {
+                    Button {
                         appState.requestAccessibilityPermission()
+                    } label: {
+                        Label("Request Accessibility", systemImage: "hand.raised")
                     }
-                    Button("Refresh") {
+                    Button {
                         appState.refreshPermissionStatuses()
+                    } label: {
+                        Label("Refresh", systemImage: "arrow.clockwise")
                     }
                 }
             }
@@ -2709,15 +2743,19 @@ private struct SettingsDiagnosticsPane: View {
                 LabeledContent("Final draft", value: appState.latestFinalDraftSummary)
 
                 HStack {
-                    Button("Copy Last Draft") {
+                    Button {
                         appState.copyLatestDraft()
+                    } label: {
+                        Label("Copy Last Draft", systemImage: "doc.on.doc")
                     }
                     .disabled(!appState.canUseLatestDraft)
 
-                    Button("Retry Paste Last Draft") {
+                    Button {
                         Task {
                             await appState.retryPasteLatestDraft()
                         }
+                    } label: {
+                        Label("Paste Last Draft", systemImage: "doc.on.clipboard")
                     }
                     .disabled(!appState.canUseLatestDraft || appState.isProcessing)
                 }
@@ -2726,12 +2764,14 @@ private struct SettingsDiagnosticsPane: View {
             Section("Diagnostics") {
                 LabeledContent("Version", value: BuildMetadata.appVersion)
                 LabeledContent("Build commit", value: BuildMetadata.gitCommitShortHash)
-                LabeledContent("App bundle", value: appState.appBundlePath)
+                SettingsLongValue(label: "App bundle", value: appState.appBundlePath)
                 LabeledContent("Bundle ID", value: appState.appBundleIdentifier)
                 LabeledContent("Code signing", value: appState.codeSigningSummary)
                 LabeledContent("Last failure", value: appState.lastFailureCategory)
-                Button("Copy Diagnostics") {
+                Button {
                     appState.copyDiagnosticsReport()
+                } label: {
+                    Label("Copy Diagnostics", systemImage: "doc.on.doc")
                 }
 
                 if let accessibilityTroubleshootingSummary = appState.accessibilityTroubleshootingSummary {
@@ -2751,6 +2791,24 @@ private struct SettingsDiagnosticsPane: View {
                     }
                 }
             }
+        }
+    }
+}
+
+private struct SettingsLongValue: View {
+    let label: String
+    let value: String
+    var isPending = false
+
+    var body: some View {
+        LabeledContent(label) {
+            Text(value)
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(isPending ? .orange : .secondary)
+                .multilineTextAlignment(.trailing)
+                .lineLimit(3)
+                .textSelection(.enabled)
+                .frame(maxWidth: 420, alignment: .trailing)
         }
     }
 }

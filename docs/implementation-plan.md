@@ -2,7 +2,7 @@
 
 ## Current Implementation Note
 
-Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-login, local personal dictionary, privacy-safe usage counters/diagnostics from Milestone 7, local packaging from Milestone 8, and the opt-in local dictation archive/monthly review feature have been implemented as one usable MVP/V1 slice. The July 2026 reliability passes added a minimal bottom-centered capsule HUD with live microphone activity and progressive state disclosure, operation-scoped Escape cancellation, bounded transient transcription retry, prompt recovery from zero-byte connection stalls, visible retry state, verified temporary-audio cleanup, immutable per-dictation settings snapshots, explicit Apply semantics with truthful provider destinations, non-destructive Keychain updates, target-safe Accessibility insertion, strict provider success parsing, recoverable JSONL reads, and safer personal-dictionary updates. `BabbelStreamChecks` now covers core/provider/archive policies through the canonical `task check` command. Future work should add full XCTest/Swift Testing coordinator coverage when the development toolchain exposes a runnable test framework, configurable push-to-talk hotkeys, optional deterministic correction if needed, Developer ID signing, notarization, GitHub release automation, and an update flow.
+Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-login, local personal dictionary, privacy-safe usage counters/diagnostics from Milestone 7, local packaging from Milestone 8, and the opt-in local dictation archive/monthly review feature have been implemented as one usable MVP/V1 slice. The July 2026 reliability passes added a minimal bottom-centered capsule HUD with live microphone activity and progressive state disclosure, operation-scoped Escape cancellation, a one-shot `gpt-4o-mini-transcribe` fallback after transient primary-model failure, prompt recovery from zero-byte connection stalls, visible fallback state, verified temporary-audio cleanup, immutable per-dictation settings snapshots, explicit Apply semantics with truthful provider destinations, non-destructive Keychain updates, target-safe Accessibility insertion, strict provider success parsing, recoverable JSONL reads, safer personal-dictionary updates, and privacy-safe persistent provider lifecycle logs. `BabbelStreamChecks` covers core/provider/archive policies through the canonical `task check` command. Future work should add full XCTest/Swift Testing coordinator coverage when the development toolchain exposes a runnable test framework, configurable push-to-talk hotkeys, optional deterministic correction if needed, Developer ID signing, notarization, GitHub release automation, and an update flow.
 
 ## Implemented V1 Slice: Optional Local Dictation Archive And Monthly Review
 
@@ -32,7 +32,7 @@ Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-log
 ## Milestone 2: Transcription API Call
 
 - Deliverable: configurable OpenAI-compatible transcription request using URLSession.
-- Acceptance: fixture or real endpoint returns transcript text; invalid key and timeout are handled; transient failures retry within a local bound while authentication and other client failures do not. Implemented in usable MVP slice and local URLProtocol checks.
+- Acceptance: fixture or real endpoint returns transcript text; invalid key and timeout are handled; the configured primary model gets one 30-second attempt and transient failures may fall back once to `gpt-4o-mini-transcribe`; authentication and other permanent client failures do not fall back. Implemented in the usable MVP slice with provider-policy URLProtocol checks and manual coordinator coverage.
 - Manual test: verify LiteLLM/LightON audio compatibility; fall back to direct OpenAI-compatible endpoint if needed.
 - Risks: proxy may not support `/v1/audio/transcriptions`.
 - Complexity: M.
@@ -48,7 +48,7 @@ Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-log
 ## Milestone 4: Clipboard Paste Into Slack
 
 - Deliverable: paste service with direct Accessibility insertion, clipboard Cmd+V fallback, and manual-copy fallback.
-- Acceptance: final draft appears in Slack desktop, Slack browser, and TextEdit only while the captured target remains focused; target changes copy with visible recovery instead. Implemented in usable MVP slice; still needs manual QA in Slack.
+- Acceptance: final draft appears in Slack desktop, Slack browser, and TextEdit only while the captured application remains frontmost; the field focused at paste time receives it. Switching applications copies with visible recovery instead. Implemented in the usable MVP slice; still needs manual QA in Slack.
 - Manual test: composer, thread reply, edit message field, browser Slack.
 - Risks: Accessibility permission, clipboard timing, focus changes.
 - Complexity: M.

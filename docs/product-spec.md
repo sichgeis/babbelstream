@@ -57,7 +57,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - No transcript/audio persistence by default.
 - Bounded transcription fallback for transient failures: try the configured primary model once for 30 seconds, then send the same temporary audio once to `gpt-4o-mini-transcribe`. Authentication, configuration, and other permanent failures do not fall back.
 - A transcription attempt that has sent zero request bytes after 15 seconds is treated as a stalled connection and may move directly to the fallback model. Temporary-audio cleanup remains verified across success, failure, timeout, cancel, and termination.
-- The HUD uses progressive disclosure: retry state is visible while retrying, but provider destinations, timeout details, and diagnostic reasons stay in the menu, Settings, and copyable diagnostics instead of crowding the everyday overlay.
+- The HUD uses progressive disclosure: the Mini fallback state is visible while active, but provider destinations, timeout details, and diagnostic reasons stay in the menu, Settings, and copyable diagnostics instead of crowding the everyday overlay.
 
 ## V1 Scope
 
@@ -84,6 +84,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - The left status sequence stays visually stable: red stop while recording, one blue waveform badge throughout transcription/cleanup/paste processing, then a green check after successful paste.
 - Detailed provider, timeout, and recovery information belongs in the menu, Settings, or diagnostics; the HUD may temporarily show a concise recovery instruction when manual action is required.
 - The saved/effective provider destination must be visible before any audio/text is sent; edited settings must not masquerade as active.
+- Settings retain five task-focused tabs (General, Provider, Writing, Archive, and Diagnostics), a persistent Apply footer, grouped sections with aligned values, and independent scrolling inside a resizable window.
 - Errors should be actionable and should never silently discard the final text.
 - The app must make clear that pasted text is a draft, not a sent message.
 

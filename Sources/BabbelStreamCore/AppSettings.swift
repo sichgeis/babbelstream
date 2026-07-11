@@ -190,7 +190,6 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         static let transcriptionModel = "provider.transcriptionModel"
         static let cleanupModel = "provider.cleanupModel"
         static let timeoutSeconds = "provider.timeoutSeconds"
-        static let retryCount = "provider.retryCount"
         static let cleanupEnabled = "cleanup.enabled"
         static let transcriptionResponseFormat = "transcription.responseFormat"
         static let transcriptionLanguage = "transcription.language"
@@ -215,9 +214,6 @@ public final class UserDefaultsSettingsStore: SettingsStore {
 
         let timeout = userDefaults.object(forKey: Key.timeoutSeconds) as? Double
             ?? defaultConfiguration.timeoutSeconds
-        let retryCount = userDefaults.object(forKey: Key.retryCount) as? Int
-            ?? defaultConfiguration.retryCount
-
         let configuration = ProviderConfiguration(
             baseURL: baseURL,
             transcriptionEndpointPath: userDefaults.string(forKey: Key.transcriptionEndpointPath)
@@ -228,8 +224,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
                 ?? defaultConfiguration.transcriptionModel,
             cleanupModel: userDefaults.string(forKey: Key.cleanupModel)
                 ?? defaultConfiguration.cleanupModel,
-            timeoutSeconds: timeout,
-            retryCount: retryCount
+            timeoutSeconds: timeout
         )
 
         let dictationArchiveEnabled = userDefaults.object(forKey: Key.dictationArchiveEnabled) as? Bool
@@ -265,7 +260,6 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         userDefaults.set(configuration.transcriptionModel, forKey: Key.transcriptionModel)
         userDefaults.set(configuration.cleanupModel, forKey: Key.cleanupModel)
         userDefaults.set(configuration.timeoutSeconds, forKey: Key.timeoutSeconds)
-        userDefaults.set(configuration.retryCount, forKey: Key.retryCount)
         userDefaults.set(settings.cleanupEnabled, forKey: Key.cleanupEnabled)
         userDefaults.set(settings.transcriptionResponseFormat, forKey: Key.transcriptionResponseFormat)
         userDefaults.set(settings.transcriptionLanguage, forKey: Key.transcriptionLanguage)

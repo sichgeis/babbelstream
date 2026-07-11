@@ -50,7 +50,6 @@ public struct ProviderConfiguration: Equatable, Sendable {
     public var transcriptionModel: String
     public var cleanupModel: String
     public var timeoutSeconds: TimeInterval
-    public var retryCount: Int
 
     public init(
         baseURL: URL = URL(string: "https://litellm.example.local")!,
@@ -58,8 +57,7 @@ public struct ProviderConfiguration: Equatable, Sendable {
         cleanupEndpointPath: String = "/v1/chat/completions",
         transcriptionModel: String = ProjectDefaults.defaultTranscriptionModel,
         cleanupModel: String = ProjectDefaults.defaultCleanupModel,
-        timeoutSeconds: TimeInterval = 30,
-        retryCount: Int = 1
+        timeoutSeconds: TimeInterval = 30
     ) {
         self.baseURL = baseURL
         self.transcriptionEndpointPath = transcriptionEndpointPath
@@ -67,7 +65,6 @@ public struct ProviderConfiguration: Equatable, Sendable {
         self.transcriptionModel = transcriptionModel
         self.cleanupModel = cleanupModel
         self.timeoutSeconds = timeoutSeconds
-        self.retryCount = retryCount
     }
 }
 

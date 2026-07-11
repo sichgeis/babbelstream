@@ -2,6 +2,13 @@
 
 BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain substantial product or workflow changes; patch releases contain compatible fixes and incremental improvements.
 
+## 0.2.2 - 2026-07-11
+
+- Refine the five-tab Settings layout with a resizable window, consistent grouped sections, aligned long values, and a stable Apply footer.
+- Split provider settings into active destinations, connection, models/timeouts, and API-key sections.
+- Add deterministic window-only Settings visual-QA launch options.
+- Audit all human-readable project documentation and resolve fallback, targeting, testing, and release-state drift.
+
 ## 0.2.1 - 2026-07-11
 
 - Add privacy-safe provider lifecycle observability and persistent Unified Logging.

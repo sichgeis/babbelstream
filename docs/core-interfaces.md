@@ -22,9 +22,9 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 - Responsibility: upload audio and return transcript text.
 - Input: audio URL, provider configuration, API key.
-- Output: transcript text, optional language/duration metadata.
+- Output: transcript text plus privacy-safe lifecycle events.
 - Errors: missing key, invalid endpoint, unsupported request format, timeout, network failure, malformed response.
-- Test strategy: URLProtocol/mock server tests for request shape, timeout, retry, and response parsing.
+- Test strategy: URLProtocol/mock server tests for request shape, timeout, lifecycle events, transient-failure classification, and response parsing. App coordinator tests/manual QA cover the one-shot primary-to-Mini fallback policy.
 
 ## `CleanupProvider`
 
@@ -44,7 +44,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `SettingsStore`
 
-- Responsibility: stage and explicitly apply non-secret settings such as provider URLs, endpoint paths, model names, cleanup toggle, transcription language, transcription prompt, and max recording duration.
+- Responsibility: stage and explicitly apply non-secret settings such as provider URLs, endpoint paths, the primary transcription model, cleanup model/timeout, cleanup toggle, transcription language, transcription prompt, and max recording duration. The Mini fallback model and per-model transcription timeout are visible fixed policy values.
 - Input: typed settings values.
 - Output: current settings and validation errors.
 - Errors: invalid URL, remote plain HTTP, embedded URL credentials/query data, invalid duration, missing model, unsupported endpoint path.

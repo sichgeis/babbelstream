@@ -2,7 +2,7 @@
 
 ## Automated Check Runner
 
-Run `task check`. It builds the app and executes `BabbelStreamChecks`, including settings validation, provider response/retry checks through a local `URLProtocol`, zero-byte connection-stall recovery, provider cancellation without retry, prompt/dictionary behavior, archive round trips and damaged-line recovery, diagnostics redaction, temp-file helpers, insertion policy, settings persistence, and usage counters.
+Run `task check`. It builds the app and executes `BabbelStreamChecks`, including settings validation, provider lifecycle/transient-failure checks through a local `URLProtocol`, zero-byte connection-stall recovery, provider cancellation without a second attempt, prompt/dictionary behavior, archive round trips and damaged-line recovery, diagnostics redaction, temp-file helpers, insertion policy, settings persistence, version metadata, and usage counters.
 
 This CLT-only environment can compile but cannot execute XCTest or Swift Testing through SwiftPM. The empty test target was removed so `swift test` now fails honestly with `no tests found` instead of returning a false green. Coordinator behavior tied to AppKit, Accessibility, Keychain, microphone permissions, and application termination remains in the manual matrix below.
 
@@ -32,15 +32,15 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Oversized dictionary context skips entries with counts instead of failing dictation.
 - Archive integration writes one completed-dictation entry only when enabled and never writes audio paths or API keys.
 - Coordinator flow from audio URL to pasted text using fakes.
-- Connection timeout, request timeout, retry, cancellation, invalid-key, and malformed-response cases.
+- Connection timeout, request timeout, primary-to-Mini fallback policy, cancellation, invalid-key, and malformed-response cases.
 
 ## Manual QA Checklist
 
 - App launches as a menu-bar utility.
 - Recording shows a compact bottom-centered capsule with a stop control, target app, and live microphone activity without activating BabbelStream.
-- Releasing the hotkey transitions the same capsule through concise Transcribing, Retrying, Cleaning up, and Pasting states without exposing transcript text.
-- Transcribing, Retrying, Cleaning up, and Pasting keep the same blue waveform badge so state-label changes do not make the left side flicker.
-- Successful paste feedback disappears quickly; Copied and Error feedback remain visible longer, while full provider, timeout, retry, and recovery details remain available from the menu and copyable diagnostics.
+- Releasing the hotkey transitions the same capsule through concise Transcribing, Trying Mini transcription when needed, Cleaning up, and Pasting states without exposing transcript text.
+- Transcribing, Mini fallback, Cleaning up, and Pasting keep the same blue waveform badge so state-label changes do not make the left side flicker.
+- Successful paste feedback disappears quickly; Copied and Error feedback remain visible longer, while full provider, timeout, fallback, and recovery details remain available from the menu and copyable diagnostics.
 - The capsule remains correctly positioned on normal and full-screen Spaces and does not steal focus when shown or clicked.
 - Dictation pastes into the currently focused field in native Mail and in reactive editors such as VS Code and Codex.
 - Moving focus to another field inside the same app directs the draft to that current field; switching to another application blocks auto-paste and leaves the draft on the clipboard.
@@ -48,9 +48,10 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Cleanup can be toggled.
 - Provider destination is visible in settings.
 - Edited provider values are visibly inactive until `Apply Settings` succeeds; the saved destination remains truthful.
+- All five Settings tabs fit at the minimum window size; long destinations and paths wrap or compress inside their rows, and scrolling does not move the Apply footer.
 - Usage counters are visible in Settings and can be reset.
 - Copy Diagnostics produces a redacted report without transcripts, audio paths, clipboard contents, or API keys.
-- Menu/Settings diagnostics show the git short commit hash for the installed build.
+- Menu/Settings diagnostics show the semantic version and git short commit hash for the installed build.
 - No message is auto-sent.
 - No transcript or audio file remains after normal use when the archive is disabled.
 - Optional archive is visibly disabled by default.
@@ -101,7 +102,7 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 
 - 5-second, 15-second, 60-second, and long-form dictations up to the 10-minute cap.
 - Transcription-only versus transcription plus cleanup.
-- Provider timeout and retry behavior.
+- Primary and Mini transcription timeout/fallback behavior.
 
 ## Usage And API-Cost Tests
 

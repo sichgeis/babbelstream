@@ -8,9 +8,9 @@ Default: `gpt-4o-transcribe`.
 
 This is the preferred model for the product because it has the best speech-to-text quality among the OpenAI transcription models we evaluated and works with the configured LiteLLM/OpenAI-compatible `.env` setup.
 
-Fallbacks to try if access changes:
+Alternative probes:
 
-- `gpt-4o-mini-transcribe` for the likely cheaper modern transcription model.
+- `gpt-4o-mini-transcribe`, which the app uses as its one-shot transient-failure fallback.
 - `whisper-1` for the most conservative legacy compatibility probe.
 
 The script does not assume the proxy supports any specific model; it prints the raw response so we can see exactly what the proxy allows.
