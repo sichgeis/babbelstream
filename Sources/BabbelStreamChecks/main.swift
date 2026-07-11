@@ -282,6 +282,14 @@ let capturedInsertionTarget = TextInsertionTarget(
     bundleIdentifier: "com.tinyspeck.slackmacgap"
 )
 check(
+    capturedInsertionTarget.displayName == "Slack",
+    "Paste-target summaries should use the captured application name."
+)
+check(
+    TextInsertionTarget(processIdentifier: 1234, localizedName: nil).displayName == "previous app",
+    "Paste-target summaries should have a safe fallback when the application name is unavailable."
+)
+check(
     TextInsertionTargetPolicy.applicationMatches(
         capturedInsertionTarget,
         frontmostProcessIdentifier: 1234

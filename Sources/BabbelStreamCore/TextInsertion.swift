@@ -52,7 +52,11 @@ public struct TextInsertionTarget: Equatable, Sendable {
     }
 
     public var displayName: String {
-        localizedName?.isEmpty == false ? localizedName! : "previous app"
+        guard let localizedName, !localizedName.isEmpty else {
+            return "previous app"
+        }
+
+        return localizedName
     }
 }
 

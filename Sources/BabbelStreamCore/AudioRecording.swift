@@ -265,21 +265,25 @@ public final class AVFoundationAudioRecorder: NSObject, AudioRecorder {
             AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
         ]
 
-        let recorder = try AVAudioRecorder(url: fileURL, settings: settings)
-        recorder.isMeteringEnabled = true
-        recorder.prepareToRecord()
+        do {
+            let recorder = try AVAudioRecorder(url: fileURL, settings: settings)
+            recorder.isMeteringEnabled = true
+            recorder.prepareToRecord()
 
-        guard recorder.record(forDuration: maxDuration) else {
+            guard recorder.record(forDuration: maxDuration) else {
+                throw AudioRecordingError.couldNotStartRecording
+            }
+
+            activeRecording = ActiveRecording(
+                recorder: recorder,
+                fileURL: fileURL,
+                createdAt: Date(),
+                maxDuration: maxDuration
+            )
+        } catch {
             _ = try AudioTempFileStore.deleteTemporaryAudio(at: fileURL)
-            throw AudioRecordingError.couldNotStartRecording
+            throw error
         }
-
-        activeRecording = ActiveRecording(
-            recorder: recorder,
-            fileURL: fileURL,
-            createdAt: Date(),
-            maxDuration: maxDuration
-        )
     }
 
     public func stop(deleteTemporaryFile: Bool = true) async throws -> RecordedAudio {

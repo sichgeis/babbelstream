@@ -2,6 +2,14 @@
 
 BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain substantial product or workflow changes; patch releases contain compatible fixes and incremental improvements.
 
+## 0.2.3 - 2026-07-11
+
+- Split application startup, status-menu orchestration, window construction, dictation coordination, and settings/editor views into responsibility-based source files.
+- Refactor the dictation coordinator around explicit transcription-with-fallback and cleanup-with-raw-fallback actions while preserving the visible workflow.
+- Reuse the coordinator's menu-bar state instead of duplicating recording/processing icon decisions.
+- Delete temporary audio when AVFoundation recorder setup or startup fails.
+- Remove an avoidable force unwrap from paste-target display names and cover the fallback with behavior checks.
+
 ## 0.2.2 - 2026-07-11
 
 - Refine the five-tab Settings layout with a resizable window, consistent grouped sections, aligned long values, and a stable Apply footer.
