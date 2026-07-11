@@ -70,7 +70,7 @@ Accessibility permission allows the app to inspect the focused element, insert s
 
 ## Provider Transparency
 
-Before first use, the app should show which saved provider base URL receives audio and which endpoint receives cleanup text. Changing provider settings is explicit through `Apply Settings`; edited but unapplied destinations are labeled as inactive. Direct OpenAI and LiteLLM-compatible providers should be represented as profiles, not hidden behavior.
+Before first use, the app shows which saved provider base URL receives audio and which endpoint receives cleanup text. Changing provider settings is explicit through `Apply Settings`; edited but unapplied destinations are labeled as inactive. Direct OpenAI and LiteLLM-compatible destinations remain explicit base URL/path settings in v0.2.x; named provider profiles are future convenience UI, not hidden routing behavior.
 
 ## Work Slack Considerations
 

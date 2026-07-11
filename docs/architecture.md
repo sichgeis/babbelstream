@@ -33,7 +33,7 @@ AppKit status-item app
 
 1. Hotkey press starts `AudioRecorder`.
 2. `AppState` snapshots the saved settings and the focused application/Accessibility element for the whole dictation.
-3. The bottom-centered, non-activating capsule HUD shows live microphone activity and the target while recording, then progressively discloses only the current processing, retry, completion, or recovery state. Full provider and timeout details remain in the menu, Settings, and diagnostics.
+3. The bottom-centered, non-activating capsule HUD shows live microphone activity and the target while recording, then progressively discloses only the current processing, Mini fallback, completion, or recovery state. Full provider and timeout details remain in the menu, Settings, and diagnostics.
 4. Hotkey release stops recording and returns a temporary audio URL.
 5. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint. The app gives the configured primary model one 30-second attempt, then uses one 30-second `gpt-4o-mini-transcribe` fallback attempt only for transient failures.
 6. The temporary audio file remains tracked until verified deletion after success, failure, timeout, or cancellation. Termination performs a final synchronous cleanup attempt.
@@ -126,7 +126,7 @@ The daily developer install helper opens that DMG and lets Finder perform the co
 
 ## Logging And Debugging
 
-Default in-memory and macOS Unified Logs may include state transitions, provider names, durations, counts, build commit hash, attempt numbers, timeout values, HTTP status, URL error codes, retry categories, and request/response byte counts. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, optional archive enabled state, archive entry counts, build commit hash, connection timeout, and recent sanitized event categories. They must not include audio, transcripts, archive contents, cleanup input, cleanup output, API keys, clipboard contents, audio file paths, raw provider messages, or request/response bodies. Debug persistence must be explicit and visibly enabled.
+Default in-memory and macOS Unified Logs may include state transitions, provider names, durations, counts, semantic version, build commit hash, attempt numbers, timeout values, HTTP status, URL error codes, fallback/retry categories, and request/response byte counts. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, optional archive enabled state, archive entry counts, version/build metadata, connection timeout, and recent sanitized event categories. They must not include audio, transcripts, archive contents, cleanup input, cleanup output, API keys, clipboard contents, audio file paths, raw provider messages, or request/response bodies. Debug persistence must be explicit and visibly enabled.
 
 ## Security And Privacy
 

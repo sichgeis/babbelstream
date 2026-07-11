@@ -1,5 +1,7 @@
 # July 2026 Upgrade Smoke Test
 
+This checklist tracks the current v0.2.x behavior. Historical same-model retry language has been replaced by the primary-to-Mini fallback policy.
+
 Use this checklist after installing the branch build on the Mac where BabbelStream
 is normally used. It deliberately leaves real provider credentials, microphone
 audio, Accessibility actions, Slack, and email clients out of automated validation.
@@ -50,7 +52,7 @@ audio, Accessibility actions, Slack, and email clients out of automated validati
   not steal focus or paste into either app; it copies the draft and shows manual
   `Command + V` recovery guidance.
 - During processing, move to a different editable field in the same application.
-  Confirm the same copy-only recovery behavior.
+  Confirm the draft goes to the field focused at paste time.
 - Temporarily revoke Accessibility permission and dictate once. Confirm the draft
   is copied with understandable recovery guidance rather than silently lost.
 
@@ -74,6 +76,9 @@ audio, Accessibility actions, Slack, and email clients out of automated validati
   cleanup leaves no recording behind.
 - Confirm copyable diagnostics contain provider configuration and counters but no
   API key, transcript, audio path, clipboard content, or provider body.
+- Force or observe a transient primary transcription failure. Confirm the HUD shows
+  **Trying Mini transcription**, only one Mini attempt occurs, and diagnostics
+  distinguish primary from fallback without including audio or transcript content.
 
 ## Startup And Sign-Off
 

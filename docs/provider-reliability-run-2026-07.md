@@ -1,5 +1,7 @@
 # Provider Reliability Run — July 2026
 
+> Historical record for the v0.1.2 same-model retry implementation. Since v0.2.1, the coordinator disables same-model retries and uses one bounded `gpt-4o-mini-transcribe` fallback for transient primary-model failures. Current behavior is defined in `product-spec.md` and `architecture.md`.
+
 ## Outcome
 
 BabbelStream should recover promptly from a stalled provider connection and make timeout and retry activity understandable while preserving the existing private, cancelable push-to-talk workflow.

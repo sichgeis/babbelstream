@@ -1,5 +1,7 @@
 # BabbelStream Upgrade Run - July 2026
 
+> Historical implementation record. Its bounded same-model retry statements describe the v0.1.x milestone; v0.2.1 replaced coordinator retries with a one-shot Mini model fallback. Current behavior is defined in `product-spec.md` and `architecture.md`.
+
 ## Objective
 
 Turn the July 2026 repository audit into a smoke-test-ready upgrade while preserving BabbelStream's product boundary: a dependable native macOS push-to-talk helper that never auto-sends, keeps persistence opt-in, and stays understandable as a personal tool.

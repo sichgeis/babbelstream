@@ -13,8 +13,8 @@ Hold `Control + Option + Space`, speak, release, and BabbelStream transcribes th
 - AVFoundation microphone recording with configurable max duration, defaulting to 10 minutes.
 - OpenAI-compatible transcription endpoint, default path `/v1/audio/transcriptions`.
 - OpenAI-compatible cleanup endpoint, default path `/v1/chat/completions`.
-- One bounded retry for transient transcription transport, throttling, and server failures; a zero-byte connection stall is canceled after 15 seconds instead of waiting for the longer provider request timeout.
-- The HUD shows transcription attempt count, timeout guidance, and the privacy-safe reason for a retry.
+- One bounded model fallback for transient transcription transport, throttling, and server failures: the configured primary model gets 30 seconds, then `gpt-4o-mini-transcribe` gets one 30-second attempt. A zero-byte connection stall is canceled after 15 seconds.
+- The HUD distinguishes primary transcription from the Mini fallback; privacy-safe diagnostics record stage, timing, status/error category, and byte counts.
 - Cleanup preserves German, English, and mixed German-English speech without translating.
 - Local personal dictionary injects preferred vocabulary and correction hints into cleanup.
 - Local usage counters show dictations, recorded minutes, cleanup requests, and safe failure counts.
@@ -77,7 +77,7 @@ This local DMG is suitable for personal testing. Public distribution should use 
 1. Run `scripts/install-dev-app.sh`, then drag `BabbelStream.app` onto the Applications link in Finder.
 2. Grant Microphone permission when prompted.
 3. Open Settings from the menu-bar icon.
-4. Configure provider base URL, model names, overall request timeout, and API key, then click `Apply Settings` in the persistent Settings footer. Connection establishment has a separate fixed 15-second timeout; the Provider pane shows the maximum attempt count and explains that a retry resends the same temporary audio.
+4. Configure the provider base URL, primary transcription model, cleanup model/timeout, and API key, then click `Apply Settings` in the persistent Settings footer. The Provider pane shows the fixed Mini fallback, the 30-second limit per transcription model, and the separate 15-second connection watchdog. A fallback resends the same temporary audio once.
 5. Request Accessibility permission so BabbelStream can insert text automatically.
 6. Optionally enable `Launch at login` in Settings.
 7. Optionally enable `Archive completed dictations` if you want local daily text files and monthly word-count review.

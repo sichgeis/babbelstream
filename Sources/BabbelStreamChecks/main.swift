@@ -479,13 +479,13 @@ func runTranscriptionRetryCheck(audioURL: URL) async throws {
     )
     var settings = AppSettings()
     settings.providerConfiguration.baseURL = URL(string: "https://provider.example.com")!
-    settings.providerConfiguration.retryCount = 1
 
     let transcript = try await provider.transcribe(
         TranscriptionRequest(
             audioURL: audioURL,
             settings: settings,
             apiKey: "test-key",
+            retryCount: 1,
             onEvent: { event in events.record(event) }
         )
     )
@@ -520,13 +520,13 @@ func runTranscriptionConnectionTimeoutCheck(audioURL: URL) async throws {
     var settings = AppSettings()
     settings.providerConfiguration.baseURL = URL(string: "https://provider.example.com")!
     settings.providerConfiguration.timeoutSeconds = 1
-    settings.providerConfiguration.retryCount = 1
 
     let transcript = try await provider.transcribe(
         TranscriptionRequest(
             audioURL: audioURL,
             settings: settings,
             apiKey: "test-key",
+            retryCount: 1,
             onEvent: { event in events.record(event) }
         )
     )
@@ -583,11 +583,10 @@ func runTranscriptionCancellationCheck(audioURL: URL) async throws {
     var settings = AppSettings()
     settings.providerConfiguration.baseURL = URL(string: "https://provider.example.com")!
     settings.providerConfiguration.timeoutSeconds = 2
-    settings.providerConfiguration.retryCount = 1
 
     let task = Task {
         try await provider.transcribe(
-            TranscriptionRequest(audioURL: audioURL, settings: settings, apiKey: "test-key")
+            TranscriptionRequest(audioURL: audioURL, settings: settings, apiKey: "test-key", retryCount: 1)
         )
     }
     try await Task.sleep(nanoseconds: 30_000_000)
