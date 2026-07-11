@@ -14,7 +14,7 @@
 
 ## Storage And Lifetime
 
-- Audio: temporary file only; keep its URL tracked until verified deletion after transcription succeeds, fails, times out, is canceled, or the app terminates. A deletion failure must be visible and is retried by stale-file cleanup on relaunch.
+- Audio: temporary while recording, then safeguarded under Application Support before provider processing. Delete immediately after transcription and any enabled cleanup succeed. Preserve failed, canceled-after-stop, or interrupted processing until retry succeeds or the user explicitly deletes it.
 - Transcript text: memory only by default, plus last transcript in memory for retry/paste-last during the running app session.
 - Cleaned text: memory and, when the clipboard fallback path is used, the clipboard.
 - API keys: macOS Keychain only. A non-secret `UserDefaults` marker may remember that a key was saved so the app can avoid reading Keychain on startup.
@@ -23,6 +23,16 @@
 - Local install: development scripts open a DMG for manual Finder drag-to-Applications installation. They do not store administrator credentials or invoke `sudo`; Finder handles any required `/Applications` authorization prompt.
 - Usage counters: local non-secret `UserDefaults` storage only, with counts and durations but no transcript, draft text, audio file path, provider body, or clipboard content.
 - Optional local archive: disabled by default. When enabled, store text-only daily JSONL files in Application Support with final draft text, word counts, timestamps, provider labels, cleanup state, insertion outcome, and optional raw transcript text only if separately enabled. Never store audio in the archive.
+- Failed recording recovery: user-only M4A and privacy-safe metadata under `Application Support/BabbelStream/Recovery`; excluded from backup where supported, never included in archive exports or diagnostics, and never silently expired.
+
+## Failed Recording Recovery Privacy Rules
+
+- The app visibly states when a recording has been saved because processing did not complete normally.
+- Metadata must not contain transcripts, cleanup input/output, API keys, clipboard content, request/response bodies, or audio paths in copied diagnostics.
+- Retry may submit the same audio to primary and Mini during a rare hedge; the configured destination remains explicit and no third provider attempt is allowed.
+- Recovery retry uses current saved settings and never auto-pastes into the historical target.
+- Save Audio As does not imply deletion. Individual and bulk deletion are explicit; bulk deletion requires confirmation.
+- POSIX permissions are `0700` for directories and `0600` for files. Custom encryption and cloud backup are out of scope for this release.
 
 ## Optional Archive Privacy Rules
 
@@ -59,6 +69,7 @@ Default logs may include timestamps, state names, durations, provider labels, co
 - Personal dictionary leakage through cleanup context.
 - Repeated Keychain prompts caused by startup secret reads or unstable local code signatures.
 - Transcript/audio persistence through logs or temp files.
+- Disclosure of locally retained failed-recording audio to another process or person with access to the macOS account.
 - Local archive disclosure if the user enables text persistence and another local process, backup, or person with account access can read those files.
 - Clipboard exposure to other apps.
 - Accessibility permission abuse if compromised.

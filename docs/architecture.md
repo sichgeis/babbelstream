@@ -26,6 +26,7 @@ AppKit status-item app
   -> SecretStore
   -> PersonalDictionaryStore
   -> DictationArchiveStore
+  -> DictationRecoveryStore
   -> SwiftUI SettingsView
 ```
 
@@ -47,15 +48,16 @@ This boundary keeps lifecycle and UI wiring out of the dictation flow without in
 1. Hotkey press starts `AudioRecorder`.
 2. `AppState` snapshots the saved settings and the focused application/Accessibility element for the whole dictation.
 3. The bottom-centered, non-activating capsule HUD shows live microphone activity and the target while recording, then progressively discloses only the current processing, Mini fallback, completion, or recovery state. Full provider and timeout details remain in the menu, Settings, and diagnostics.
-4. Hotkey release stops recording and returns a temporary audio URL.
-5. `TranscriptionProvider` uploads audio to the configured OpenAI-compatible endpoint. The app gives the configured primary model one 30-second attempt, then uses one 30-second `gpt-4o-mini-transcribe` fallback attempt only for transient failures.
-6. The temporary audio file remains tracked until verified deletion after success, failure, timeout, or cancellation. Termination performs a final synchronous cleanup attempt.
+4. Hotkey release stops recording and returns a temporary audio URL. `DictationRecoveryStore` copies it into user-only Application Support storage before provider work and only then removes the temporary source.
+5. The configured primary transcription begins immediately. If it remains pending for 10 seconds, an independent Mini request starts; the first valid response wins within one 75-second overall deadline.
+6. Recovery audio is deleted only after transcription and any enabled cleanup succeed. Provider failure, cleanup fallback, processing cancellation, and interruption retain it for menu-driven retry or explicit deletion.
 7. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
 8. `CleanupProvider` lightly formats the transcript when cleanup is enabled, using dictionary context in the same model call.
 9. Usage counters are updated locally for dictation attempts, recorded duration, cleanup requests, transcription failures, and cleanup fallbacks.
 10. `TextInsertionService` inserts only if the captured application remains frontmost, using that application's currently focused Accessibility element or a clipboard plus Cmd+V fallback. It never steals focus back from a different app. If the active application changed, the final draft is copied and the HUD instructs the user to paste manually.
 11. If the optional local archive is enabled, `DictationArchiveStore` appends a text-only entry for completed dictations with the final draft, word counts, provider labels, cleanup state, and insertion outcome. Raw transcript text is stored only when a separate raw-transcript archive setting is enabled. Archive write failures are surfaced but must not undo paste or block access to the final draft.
 12. The app keeps the latest successful raw/final draft in memory for copy/retry and does not discard it merely because a later attempt starts or fails.
+13. Recovery retry always uses current saved settings and copies the result to the clipboard rather than auto-pasting into the historical target.
 
 ## Permission Model
 
@@ -91,7 +93,11 @@ Use AVFoundation to record compressed audio to a temporary file. The MVP default
 
 Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provider accepts a JSON object with a string `text` field or a genuinely plain-text response; other successful JSON shapes are rejected. The app disables same-model retries: `gpt-4o-transcribe` (or the explicitly configured primary model) gets one 30-second attempt, followed by one `gpt-4o-mini-transcribe` attempt for timeouts, connection loss, HTTP 408/425/429, and 5xx responses. Authentication and other client failures fail immediately.
 
-Each transcription model gets a 30-second request allowance. A separate 15-second connection watchdog observes whether URLSession has begun sending request bytes. If it has not, the primary attempt is canceled and may move directly to the fallback model. Cleanup keeps its separately configured timeout and raw-transcript fallback. Provider lifecycle events distinguish primary transcription, fallback transcription, and cleanup, and include attempt numbers, elapsed milliseconds, HTTP or URL error categories, and request/response byte counts for diagnostics use.
+Primary transcription begins immediately and Mini is hedged after 10 seconds only when primary is still pending. An early retryable primary failure starts Mini immediately; permanent failures stop. First valid output wins and the complete transcription phase is bounded to 75 seconds. A separate 15-second zero-byte connection watchdog remains per request. Cleanup keeps its separately configured timeout and raw-transcript fallback. Provider lifecycle events distinguish primary, hedge, winner, loser cancellation, and cleanup without recording content.
+
+## Failed Recording Recovery Approach
+
+Use one directory per stopped recording under Application Support. The audio remains a normal M4A, directories use `0700`, files use `0600`, and recovery storage is excluded from backup where supported. Metadata writes are atomic and contain only operational labels and counts. Malformed metadata is reconstructed from the audio file so the recording is not hidden. There is no automatic expiry or silent quota eviction. Recovery Center actions own retry, Save Audio As, individual deletion, and confirmed delete-all. The HUD remains a fixed 220×44 passive indicator.
 
 ## Cleanup Approach
 

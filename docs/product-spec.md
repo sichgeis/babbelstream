@@ -54,10 +54,11 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Launch-at-login can be enabled or disabled from Settings.
 - Local app bundle and DMG packaging for manual drag-to-Applications installation and testing.
 - Optional transcription language is a single ISO 639-1 code such as `de` or `en`; leave it empty for mixed German-English dictation.
-- No transcript/audio persistence by default.
-- Bounded transcription fallback for transient failures: try the configured primary model once for 30 seconds, then send the same temporary audio once to `gpt-4o-mini-transcribe`. Authentication, configuration, and other permanent failures do not fall back.
+- No transcript history or successful-dictation audio persistence by default. After recording stops, audio is safeguarded locally until transcription and any enabled cleanup succeed; failed or interrupted processing remains visible in Failed Recordings until retry succeeds or the user deletes it.
+- Bounded hedged transcription fallback for transient slowness: start the configured primary model immediately, start `gpt-4o-mini-transcribe` after 10 seconds if primary is still pending, accept the first valid result, and stop after one 75-second overall deadline. Authentication, configuration, and other permanent failures do not hedge.
 - A transcription attempt that has sent zero request bytes after 15 seconds is treated as a stalled connection and may move directly to the fallback model. Temporary-audio cleanup remains verified across success, failure, timeout, cancel, and termination.
 - The HUD uses progressive disclosure: the Mini fallback state is visible while active, but provider destinations, timeout details, and diagnostic reasons stay in the menu, Settings, and copyable diagnostics instead of crowding the everyday overlay.
+- Failed-recording recovery actions live in the menu and Failed Recordings window. The HUD remains a passive, fixed-size status indicator and shows only a concise recording-saved error state.
 
 ## V1 Scope
 
@@ -111,13 +112,23 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 ## Privacy Expectations
 
-- Temporary audio is deleted immediately after processing unless debug mode is explicitly enabled.
+- Successfully processed audio is deleted immediately. Failed, canceled-after-stop, or interrupted processing keeps the audio in the local Failed Recordings store until retry succeeds or the user explicitly deletes it.
 - Transcript text is kept only in memory for current processing and optional paste-last behavior.
 - Transcripts and audio are not logged or archived by default.
 - Optional archive persistence is disabled by default and must clearly explain that work text will be written to local disk.
 - When the archive is enabled, audio is still never archived; the default archive entry stores the final generated draft plus word counts and metadata, while raw transcript text remains optional and disabled by default.
 - API keys are stored in Keychain.
 - Network destinations are configurable and visible.
+
+## Failed Recording Recovery
+
+- Location: `~/Library/Application Support/BabbelStream/Recovery/<recording-id>/`.
+- Audio is promoted into recovery storage after recording stops and before provider work begins.
+- Recovery metadata contains timestamps, duration, byte count, target/provider labels, sanitized failure stage, and retry count, but no transcript, cleanup text, API key, clipboard content, or provider body.
+- Recovery retry uses the currently applied provider settings, copies the recovered draft to the clipboard instead of pasting into a historical target, and deletes the item only after processing and clipboard copy succeed.
+- Cleanup failure may still deliver the raw transcript, but retains the audio for an optional full retry.
+- Users can save an M4A copy, delete individual items, or delete all items with confirmation. The app does not silently expire or evict failed recordings.
+- Canceling while actively recording discards the partial recording. Canceling provider processing preserves the stopped recording.
 
 ## Optional Local Dictation Archive
 
@@ -138,6 +149,7 @@ The user may enable a local archive for work self-review and month-end reporting
 - Missing Accessibility permission for paste.
 - Invalid or missing API key.
 - Provider timeout or network failure.
+- Failed recording saved for retry.
 - Focused app or field changed before insertion.
 - Temporary audio could not be deleted.
 - Unsupported transcription endpoint shape.

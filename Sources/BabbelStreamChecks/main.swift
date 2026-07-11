@@ -412,6 +412,7 @@ check(usageTracker.load() == usageSnapshot, "Usage counters should persist as lo
 usageTracker.reset()
 check(usageTracker.load() == UsageSnapshot(), "Usage counters should reset locally.")
 try runArchiveChecks()
+try runRecoveryStoreChecks()
 let diagnosticsText = PrivacyDiagnosticsBuilder.redactSecrets(
     in: "api key: sk-testSecret123456789 Authorization: Bearer secret-token"
 )
@@ -704,6 +705,63 @@ final class ConnectionStallURLProtocol: URLProtocol, @unchecked Sendable {
     }
 
     override func stopLoading() {}
+}
+
+func runRecoveryStoreChecks() throws {
+    let fileManager = FileManager.default
+    let root = fileManager.temporaryDirectory
+        .appendingPathComponent("BabbelStreamRecoveryChecks-\(UUID().uuidString)", isDirectory: true)
+    let recoveryURL = root.appendingPathComponent("Recovery", isDirectory: true)
+    let sourceURL = root.appendingPathComponent("source.m4a")
+    try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
+    try Data("recovery-audio-fixture".utf8).write(to: sourceURL)
+    defer { try? fileManager.removeItem(at: root) }
+
+    let store = FileDictationRecoveryStore(recoveryDirectoryURL: recoveryURL)
+    let recordedAt = Date(timeIntervalSince1970: 1_752_000_000)
+    let recording = RecordedAudio(
+        temporaryFileURL: sourceURL,
+        duration: 42,
+        byteCount: Int64((try Data(contentsOf: sourceURL)).count),
+        createdAt: recordedAt,
+        deletedAt: nil
+    )
+    let settings = AppSettings()
+    let item = try store.adopt(recording, target: nil, settings: settings)
+
+    check(!fileManager.fileExists(atPath: sourceURL.path), "Recovery adoption should remove the original only after copying it.")
+    let storedAudioURL = try store.audioURL(for: item)
+    check(fileManager.fileExists(atPath: storedAudioURL.path), "Recovery adoption should preserve the recording.")
+    let storedAudioPermissions = try fileManager.attributesOfItem(atPath: storedAudioURL.path)[.posixPermissions] as? NSNumber
+    check(
+        storedAudioPermissions?.intValue == 0o600,
+        "Recovery audio should be readable only by the current user."
+    )
+
+    let processingSnapshot = try store.loadSnapshot(markProcessingAsInterrupted: false)
+    check(processingSnapshot.recordings.count == 1, "Recovery snapshots should load stored metadata.")
+    check(processingSnapshot.recordings.first?.id == item.id, "Recovery snapshots should retain stable identifiers.")
+    check(processingSnapshot.recordings.first?.state == .processing, "New recovery items should remain in processing state.")
+    let interruptedSnapshot = try store.loadSnapshot(markProcessingAsInterrupted: true)
+    check(interruptedSnapshot.recordings.first?.state == .interrupted, "Startup should mark in-flight work as interrupted.")
+
+    let interrupted = interruptedSnapshot.recordings[0]
+    let retrying = try store.update(
+        interrupted,
+        state: .processing,
+        failureCategory: nil,
+        incrementRetryCount: true
+    )
+    check(retrying.retryCount == 1, "Recovery retry attempts should be counted.")
+
+    let exportURL = root.appendingPathComponent("exported.m4a")
+    try store.exportAudio(for: retrying, to: exportURL)
+    check(fileManager.fileExists(atPath: exportURL.path), "Recovery audio should export without deleting the stored item.")
+    check(fileManager.fileExists(atPath: storedAudioURL.path), "Export should retain the recovery recording.")
+
+    try store.delete(retrying)
+    let emptySnapshot = try store.loadSnapshot(markProcessingAsInterrupted: false)
+    check(emptySnapshot.recordings.isEmpty, "Explicit delete should remove one recovery item.")
 }
 
 func runArchiveChecks() throws {
