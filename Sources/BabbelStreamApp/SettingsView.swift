@@ -183,14 +183,12 @@ private struct SettingsProviderPane: View {
                 TextField("Primary transcription model", text: $appState.transcriptionModelText)
                 LabeledContent("Fallback model", value: ProjectDefaults.fallbackTranscriptionModel)
                 TextField("Cleanup model", text: $appState.cleanupModelText)
-                LabeledContent(
-                    "Timeout per transcription model",
-                    value: "\(Int(ProjectDefaults.transcriptionAttemptTimeoutSeconds))s"
-                )
+                LabeledContent("Mini hedge delay", value: "\(Int(ProjectDefaults.transcriptionHedgeDelaySeconds))s")
+                LabeledContent("Overall transcription deadline", value: "\(Int(ProjectDefaults.transcriptionOverallTimeoutSeconds))s")
                 TextField("Cleanup timeout (seconds)", text: $appState.timeoutText)
                 LabeledContent("Connection watchdog", value: appState.providerConnectionTimeoutSummary)
-                LabeledContent("Transcription attempts", value: "2 (primary + fallback)")
-                Text("If the primary transcription model has a transient failure, BabbelStream sends the same temporary audio once to the fallback model. Each model has a 30-second limit. Authentication and configuration failures do not fall back.")
+                LabeledContent("Transcription requests", value: "Primary + one bounded Mini hedge")
+                Text("If primary transcription is still pending after 10 seconds, BabbelStream may send the same safeguarded audio once to Mini. The first valid result wins and both requests share one 75-second deadline. This rare recovery path may incur two transcription charges. Authentication and configuration failures do not hedge.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

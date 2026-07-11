@@ -9,7 +9,8 @@ public enum ProjectDefaults {
     public static let maxConfigurableAudioDurationSeconds: TimeInterval = 600
     public static let defaultTranscriptionModel = "gpt-4o-transcribe"
     public static let fallbackTranscriptionModel = "gpt-4o-mini-transcribe"
-    public static let transcriptionAttemptTimeoutSeconds: TimeInterval = 30
+    public static let transcriptionHedgeDelaySeconds: TimeInterval = 10
+    public static let transcriptionOverallTimeoutSeconds: TimeInterval = 75
     public static let defaultCleanupModel = "gpt-4o-mini"
     public static let defaultTranscriptionResponseFormat = "json"
     public static let providerConnectionTimeoutSeconds: TimeInterval = 15
