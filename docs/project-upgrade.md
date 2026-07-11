@@ -45,7 +45,7 @@ Ship BabbelStream 0.3.0 so a stopped dictation is not discarded when transcripti
 1. **Completed — Specifications and recovery storage foundation**
 2. **Completed — Recovery lifecycle and hedged transcription**
 3. **Completed — Recovery Center and minimal HUD status**
-4. **In progress — Full validation and v0.3.0 release**
+4. **Completed — Full validation and v0.3.0 release**
 
 ## Dependencies And Risks
 
@@ -74,6 +74,9 @@ Ship BabbelStream 0.3.0 so a stopped dictation is not discarded when transcripti
 - Release-candidate `task check` passed from a clean detached worktree.
 - Clean release packaging produced version `0.3.0` at commit `5cf2b59` with `BabbelStream Local Code Signing`.
 - `codesign --verify --deep --strict`, `hdiutil verify`, and SHA-256 checksum verification passed for the release-candidate app and DMG.
+- Release commit `b891267` was fast-forwarded to `main` and published with annotated tag `v0.3.0`.
+- `/Applications/BabbelStream.app` reports version `0.3.0`, commit `b891267`, and a valid `BabbelStream Local Code Signing` signature.
+- The installed app launched successfully and remained running after the smoke check.
 
 ## Current Blocker
 
@@ -81,4 +84,4 @@ None.
 
 ## Next Action
 
-Publish the final release commit to `main`, tag `v0.3.0`, rebuild from that commit, install, launch, and verify metadata.
+Use the installed 0.3.0 app normally. Failed or interrupted stopped dictations are available from **Failed Recordings…** in the menu.
