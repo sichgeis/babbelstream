@@ -71,6 +71,9 @@ Ship BabbelStream 0.3.0 so a stopped dictation is not discarded when transcripti
 - Stage 3 `task check`: Recovery Center, retry/copy retention semantics, export/delete actions, menu wiring, deterministic launch mode, passive HUD status, app build, and all behavior checks passed.
 - Recovery Center visual QA passed at 720×620 and 620×500, including empty and populated synthetic states. Evidence is under `/private/tmp/babbelstream-recovery-screenshots/`; it contains no real transcript or provider response content.
 - The HUD implementation remains fixed at 220×44 and gained no controls, layout branches, or interactive recovery actions.
+- Release-candidate `task check` passed from a clean detached worktree.
+- Clean release packaging produced version `0.3.0` at commit `5cf2b59` with `BabbelStream Local Code Signing`.
+- `codesign --verify --deep --strict`, `hdiutil verify`, and SHA-256 checksum verification passed for the release-candidate app and DMG.
 
 ## Current Blocker
 
@@ -78,4 +81,4 @@ None.
 
 ## Next Action
 
-Run release validation, package from a clean worktree, publish, install, and verify v0.3.0.
+Publish the final release commit to `main`, tag `v0.3.0`, rebuild from that commit, install, launch, and verify metadata.
