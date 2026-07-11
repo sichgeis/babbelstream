@@ -22,12 +22,13 @@ final class DictationArchiveWindowController {
 
     private func makeWindowController() -> NSWindowController {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 640),
-            styleMask: [.titled, .closable, .miniaturizable],
+            contentRect: NSRect(x: 0, y: 0, width: 760, height: 640),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = "\(ProjectDefaults.appName) Dictation Archive"
+        window.minSize = NSSize(width: 680, height: 520)
         window.contentViewController = NSHostingController(
             rootView: DictationArchiveView()
                 .environmentObject(appState)
@@ -43,22 +44,16 @@ struct DictationArchiveView: View {
     @EnvironmentObject private var appState: AppState
 
     var body: some View {
-        Form {
+        AppDialogScaffold(maxContentWidth: 680) {
             Section("Month") {
                 TextField("Month (YYYY-MM)", text: $appState.archiveMonthText)
-                HStack {
-                    Button("Reload") {
-                        appState.loadArchiveMonth()
-                    }
-                    Button("Copy Markdown Export") {
-                        appState.copyArchiveMarkdownExport()
-                    }
-                    Button("Reveal Folder") {
-                        appState.revealArchiveFolder()
-                    }
-                    Button("Clear Archive") {
-                        confirmClearArchive()
-                    }
+                Text("Review local, text-only entries for one calendar month.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Button {
+                    appState.loadArchiveMonth()
+                } label: {
+                    Label("Reload Month", systemImage: "arrow.clockwise")
                 }
             }
 
@@ -67,14 +62,6 @@ struct DictationArchiveView: View {
                 LabeledContent("Raw words", value: "\(appState.archiveSnapshot.totalRawWordCount)")
                 LabeledContent("Final words", value: "\(appState.archiveSnapshot.totalFinalWordCount)")
                 LabeledContent("Archive", value: appState.dictationArchiveEnabled ? "Enabled" : "Disabled")
-
-                if let archiveErrorMessage = appState.archiveErrorMessage {
-                    Text(archiveErrorMessage)
-                        .foregroundStyle(.red)
-                } else {
-                    Text(appState.archiveStatusMessage)
-                        .foregroundStyle(.secondary)
-                }
             }
 
             Section("Daily Totals") {
@@ -102,13 +89,47 @@ struct DictationArchiveView: View {
             }
 
             Section("Storage") {
-                Text(appState.archiveDirectoryPath)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
+                AppLongValue(label: "Archive folder", value: appState.archiveDirectoryPath)
+                Text("Archive contents stay on this Mac. Audio is never stored here.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                HStack {
+                    Button {
+                        appState.revealArchiveFolder()
+                    } label: {
+                        Label("Reveal Folder", systemImage: "folder")
+                    }
+                    Button(role: .destructive) {
+                        confirmClearArchive()
+                    } label: {
+                        Label("Clear Archive", systemImage: "trash")
+                    }
+                }
+            }
+        } status: {
+            if let archiveErrorMessage = appState.archiveErrorMessage {
+                Text(archiveErrorMessage)
+                    .foregroundStyle(.red)
+            } else if appState.archiveStatusMessage.isEmpty {
+                Text("Archive review is local-only and never sends content to a provider.")
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(appState.archiveStatusMessage)
+                    .foregroundStyle(.secondary)
+            }
+        } actions: {
+            Button {
+                NSApp.keyWindow?.performClose(nil)
+            } label: {
+                Label("Close", systemImage: "xmark")
+            }
+            Button {
+                appState.copyArchiveMarkdownExport()
+            } label: {
+                Label("Copy Markdown Export", systemImage: "doc.on.doc")
             }
         }
-        .padding(24)
-        .frame(width: 680)
+        .frame(minWidth: 680, idealWidth: 760, minHeight: 520, idealHeight: 640)
     }
 
     private func confirmClearArchive() {

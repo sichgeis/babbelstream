@@ -66,7 +66,7 @@ struct SettingsView: View {
     }
 
     private var settingsFooter: some View {
-        HStack(spacing: 12) {
+        AppDialogFooter {
             Group {
                 if let settingsErrorMessage = appState.settingsErrorMessage {
                     Text(settingsErrorMessage)
@@ -82,11 +82,7 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .font(.caption)
-            .lineLimit(2)
-
-            Spacer()
-
+        } actions: {
             Button {
                 appState.saveSettings()
             } label: {
@@ -95,9 +91,6 @@ struct SettingsView: View {
             .keyboardShortcut(.defaultAction)
             .disabled(!appState.hasUnsavedSettingsChanges)
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 14)
-        .background(.bar)
     }
 }
 
@@ -109,16 +102,9 @@ private struct SettingsPane<Content: View>: View {
     }
 
     var body: some View {
-        ScrollView {
-            Form {
-                content
-            }
-            .formStyle(.grouped)
-            .padding(.vertical, 12)
-            .frame(maxWidth: 680, alignment: .top)
-            .frame(maxWidth: .infinity, alignment: .top)
+        AppGroupedForm {
+            content
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 }
 
@@ -170,16 +156,16 @@ private struct SettingsProviderPane: View {
     var body: some View {
         SettingsPane {
             Section("Active Destinations") {
-                SettingsLongValue(label: "Transcription", value: appState.providerDestinationSummary)
-                SettingsLongValue(label: "Cleanup", value: appState.cleanupDestinationSummary)
+                AppLongValue(label: "Transcription", value: appState.providerDestinationSummary)
+                AppLongValue(label: "Cleanup", value: appState.cleanupDestinationSummary)
 
                 if appState.hasUnsavedConfigurationChanges {
-                    SettingsLongValue(
+                    AppLongValue(
                         label: "Edited transcription",
                         value: appState.editedProviderDestinationSummary,
                         isPending: true
                     )
-                    SettingsLongValue(
+                    AppLongValue(
                         label: "Edited cleanup",
                         value: appState.editedCleanupDestinationSummary,
                         isPending: true
@@ -277,7 +263,7 @@ private struct SettingsArchivePane: View {
                 .disabled(!appState.dictationArchiveEnabled)
                 Text("When enabled, BabbelStream writes work text to local daily files on this Mac. Audio is never archived.")
                     .foregroundStyle(.secondary)
-                SettingsLongValue(label: "Archive folder", value: appState.archiveDirectoryPath)
+                AppLongValue(label: "Archive folder", value: appState.archiveDirectoryPath)
             }
         }
     }
@@ -345,7 +331,7 @@ private struct SettingsDiagnosticsPane: View {
             Section("Diagnostics") {
                 LabeledContent("Version", value: BuildMetadata.appVersion)
                 LabeledContent("Build commit", value: BuildMetadata.gitCommitShortHash)
-                SettingsLongValue(label: "App bundle", value: appState.appBundlePath)
+                AppLongValue(label: "App bundle", value: appState.appBundlePath)
                 LabeledContent("Bundle ID", value: appState.appBundleIdentifier)
                 LabeledContent("Code signing", value: appState.codeSigningSummary)
                 LabeledContent("Last failure", value: appState.lastFailureCategory)
@@ -376,24 +362,6 @@ private struct SettingsDiagnosticsPane: View {
     }
 }
 
-private struct SettingsLongValue: View {
-    let label: String
-    let value: String
-    var isPending = false
-
-    var body: some View {
-        LabeledContent(label) {
-            Text(value)
-                .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(isPending ? .orange : .secondary)
-                .multilineTextAlignment(.trailing)
-                .lineLimit(3)
-                .textSelection(.enabled)
-                .frame(maxWidth: 420, alignment: .trailing)
-        }
-    }
-}
-
 struct PersonalDictionaryView: View {
     let store: PersonalDictionaryStore
     let onTeachCorrection: () -> Void
@@ -405,55 +373,66 @@ struct PersonalDictionaryView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        Form {
+        AppDialogScaffold(maxContentWidth: 680) {
             Section("Vocabulary") {
+                Text("Add one preferred term per line. BabbelStream uses enabled entries as cleanup context.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 TextEditor(text: $vocabularyText)
                     .font(.system(.body, design: .monospaced))
                     .frame(minHeight: 140)
             }
 
             Section("Corrections") {
+                Text("Use one mapping per line in the form heard text => preferred spelling.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 TextEditor(text: $correctionsText)
                     .font(.system(.body, design: .monospaced))
                     .frame(minHeight: 140)
             }
 
             Section("Storage") {
-                Text(store.fileURL.path)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
-            }
-
-            Section {
-                HStack {
-                    Button("Save") {
-                        save()
-                    }
-                    Button("Reload") {
-                        load()
-                    }
-                    Button("Teach Correction...") {
-                        onTeachCorrection()
-                    }
-                    Button("Close") {
-                        NSApp.keyWindow?.performClose(nil)
-                    }
-                }
-
-                if let errorMessage {
-                    Text(errorMessage)
-                        .foregroundStyle(.red)
-                } else if !statusMessage.isEmpty {
-                    Text(statusMessage)
-                        .foregroundStyle(.secondary)
+                AppLongValue(label: "Dictionary file", value: store.fileURL.path)
+                Button {
+                    onTeachCorrection()
+                } label: {
+                    Label("Teach Correction...", systemImage: "text.badge.plus")
                 }
             }
+        } status: {
+            if let errorMessage {
+                Text(errorMessage)
+                    .foregroundStyle(.red)
+            } else if !statusMessage.isEmpty {
+                Text(statusMessage)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Edit explicit local vocabulary and correction hints.")
+                    .foregroundStyle(.secondary)
+            }
+        } actions: {
+            Button {
+                NSApp.keyWindow?.performClose(nil)
+            } label: {
+                Label("Close", systemImage: "xmark")
+            }
+            Button {
+                load()
+            } label: {
+                Label("Reload", systemImage: "arrow.clockwise")
+            }
+            Button {
+                save()
+            } label: {
+                Label("Save", systemImage: "checkmark")
+            }
+            .keyboardShortcut(.defaultAction)
         }
         .onAppear {
             load()
         }
-        .padding(24)
-        .frame(width: 620)
+        .frame(minWidth: 620, idealWidth: 720, minHeight: 520, idealHeight: 640)
     }
 
     private func load() {
@@ -500,11 +479,12 @@ struct TeachCorrectionView: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        Form {
+        AppDialogScaffold(maxContentWidth: 520) {
             Section("Correction") {
                 TextField("Wrong / heard as", text: $wrongText)
                 TextField("Preferred spelling", text: $preferredText)
                 Text("Used as a cleanup hint, not transcript history.")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
@@ -525,33 +505,36 @@ struct TeachCorrectionView: View {
                 }
             }
 
-            Section {
-                HStack {
-                    Button("Save Correction") {
-                        save()
-                    }
-                    .keyboardShortcut(.defaultAction)
-
-                    Button("Clear") {
-                        clear()
-                    }
-
-                    Button("Close") {
-                        NSApp.keyWindow?.performClose(nil)
-                    }
-                }
-
-                if let errorMessage {
-                    Text(errorMessage)
-                        .foregroundStyle(.red)
-                } else if !statusMessage.isEmpty {
-                    Text(statusMessage)
-                        .foregroundStyle(.secondary)
-                }
+        } status: {
+            if let errorMessage {
+                Text(errorMessage)
+                    .foregroundStyle(.red)
+            } else if !statusMessage.isEmpty {
+                Text(statusMessage)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Corrections are stored locally and used only as cleanup hints.")
+                    .foregroundStyle(.secondary)
             }
+        } actions: {
+            Button {
+                NSApp.keyWindow?.performClose(nil)
+            } label: {
+                Label("Close", systemImage: "xmark")
+            }
+            Button {
+                clear()
+            } label: {
+                Label("Clear", systemImage: "xmark.circle")
+            }
+            Button {
+                save()
+            } label: {
+                Label("Save Correction", systemImage: "checkmark")
+            }
+            .keyboardShortcut(.defaultAction)
         }
-        .padding(24)
-        .frame(width: 460)
+        .frame(minWidth: 500, idealWidth: 560, minHeight: 420, idealHeight: 500)
     }
 
     private func save() {

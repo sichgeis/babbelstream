@@ -62,12 +62,13 @@ final class PersonalDictionaryWindowController {
 
     private func makeWindowController() -> NSWindowController {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 620, height: 560),
-            styleMask: [.titled, .closable, .miniaturizable],
+            contentRect: NSRect(x: 0, y: 0, width: 720, height: 640),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = "\(ProjectDefaults.appName) Personal Dictionary"
+        window.minSize = NSSize(width: 620, height: 520)
         window.contentViewController = NSHostingController(
             rootView: PersonalDictionaryView(
                 store: store,
@@ -102,12 +103,13 @@ final class TeachCorrectionWindowController {
 
     private func makeWindowController() -> NSWindowController {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 360),
-            styleMask: [.titled, .closable, .miniaturizable],
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 500),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = "\(ProjectDefaults.appName) Teach Correction"
+        window.minSize = NSSize(width: 500, height: 420)
         window.contentViewController = NSHostingController(
             rootView: TeachCorrectionView(store: store)
                 .environmentObject(appState)
