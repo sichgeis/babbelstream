@@ -1,74 +1,71 @@
-# Unified Dialogs Patch Release
+# Dictation Recovery And Hedged Transcription Release
 
 ## Outcome
 
-Ship BabbelStream 0.2.5 with Teach Correction, Personal Dictionary, and Dictation Archive using the same grouped, scrollable, resizable macOS design language as Settings, without changing dictation, persistence, provider, or privacy behavior.
+Ship BabbelStream 0.3.0 so a stopped dictation is not discarded when transcription or cleanup fails, and rare provider stalls recover through a bounded hedged Mini request without enlarging or adding controls to the compact HUD.
 
 ## Accepted Scope
 
-- Add small reusable SwiftUI primitives for grouped dialog content and persistent action/status footers.
-- Apply them to Teach Correction, Personal Dictionary, and Dictation Archive.
-- Make the three windows resizable with documented default and minimum sizes.
-- Add deterministic window-only launch arguments for visual QA.
-- Update release/test documentation, `VERSION`, and `CHANGELOG.md`.
-- Run behavior checks, builds, visual QA, DMG/signature verification, publish `main` and `v0.2.5`, then install and launch the local signed build.
+- Safeguard stopped audio in a local Recovery store before provider processing.
+- Delete safeguarded audio only after transcription and any enabled cleanup succeed.
+- Preserve audio after transcription failure, cleanup fallback, processing cancellation, or interruption.
+- Add a menu-accessible Recovery Center with retry, Save Audio As, delete, and delete-all actions.
+- Recovery retries use current saved settings, copy the result instead of auto-pasting, and delete the item only after success and clipboard copy.
+- Start Mini after a 10-second hedge delay, accept the first valid transcription, and enforce one 75-second transcription deadline.
+- Keep the HUD at its current size and interaction model; show only a concise failure/saved status.
+- Update diagnostics, checks, privacy/product documentation, version, changelog, packaging, and release metadata.
 
 ## Non-goals
 
-- No dictation, provider, cleanup, dictionary-storage, or archive-storage behavior changes.
-- No new dependencies, Slack integration, tabs for single-purpose dialogs, telemetry, or cloud services.
-- No Developer ID or notarized public binary; the release artifact is for local installation.
+- No interactive recovery buttons or layout growth in the HUD.
+- No LiteLLM work-environment access, cloud sync, transcript history, local Whisper, playback/editor, automatic retention expiry, silent eviction, telemetry, or new dependency.
+- No Developer ID/notarized public binary release.
 
 ## Acceptance Criteria
 
-- All three dialogs share Settings' grouped sections, spacing, scrolling, footer treatment, status hierarchy, and native button roles.
-- Every dialog remains usable at its minimum size and supports resizing.
-- Existing actions, keyboard defaults, errors, confirmations, and privacy copy remain functional.
-- Deterministic QA launch arguments open each dialog without requiring menu navigation.
-- `task check`, release build, visual inspection, DMG verification, code-signature verification, and installed-app smoke checks pass.
-- `main` and annotated tag `v0.2.5` are pushed; the installed app reports version 0.2.5 and the release commit.
+- Normal successful processing leaves no recovery audio.
+- Transcription failure, cleanup failure, processing cancellation, and interrupted processing leave a visible recovery item.
+- Recording cancellation continues to discard the partial recording.
+- Recovery retry copies the final draft and deletes the item; failed retry or clipboard copy retains it.
+- Primary success before ten seconds does not start Mini; slow primary starts Mini; first valid result wins; total transcription time is bounded to 75 seconds.
+- Recovery files use user-only permissions, diagnostics contain no audio/text/path content, and deletion is explicit or success-driven.
+- The HUD stays 220×44 with its existing layout and shows a concise error/saved state only.
+- Behavior checks, build, packaging, signature/DMG verification, and installed-app smoke checks pass.
+- `main` and annotated tag `v0.3.0` are pushed.
 
 ## Baseline
 
-- Branch: `codex/unified-dialogs-0.2.5`
-- Commit: `5c12523`
+- Branch: `codex/dictation-recovery-v030`
+- Commit: `1bf66e0`
 - Baseline branch pushed to `origin`.
-- Existing provider-benchmark work remains untouched in the original workspace.
+- Existing provider-benchmark files remain local and excluded from implementation commits after safe publishing was denied for the audio fixture.
 
 ## Stages
 
-1. **Completed — Shared dialog design and window behavior**
-2. **Completed — Deterministic visual QA and release documentation**
-3. **Completed — Full validation and release artifact**
-4. **Completed — Publish, install, launch, and verify**
+1. **In progress — Specifications and recovery storage foundation**
+2. **Pending — Recovery lifecycle and hedged transcription**
+3. **Pending — Recovery Center and minimal HUD status**
+4. **Pending — Full validation and v0.3.0 release**
 
 ## Dependencies And Risks
 
-- SwiftUI layout must remain compatible with macOS 13.
-- Footer actions must not obscure long status/error messages.
-- Archive recovery rows and dictionary editors must scroll without moving their footers.
-- Local signing must continue using `BabbelStream Local Code Signing` so macOS permissions retain a stable identity.
+- Durable audio changes the default privacy lifecycle and must remain visible and user-controlled.
+- Recovery promotion and metadata updates must survive partial failures without silently deleting the source audio.
+- Hedging may submit the same audio to two models and may incur two charges during rare slow requests.
+- Recovery retries must never paste into a stale historical target.
+- Local benchmark work keeps the primary workspace dirty; release packaging must use a clean temporary worktree.
 
 ## Decisions
 
-- Use shared layout primitives, but keep each dialog's domain content explicit.
-- Keep confirmation for archive deletion and additionally present the action with a destructive role.
-- Use a clean temporary Git worktree so unrelated local files cannot enter the release.
+- Recovery audio uses ordinary M4A files with `0700` directories and `0600` files; no custom encrypted container is introduced in this release.
+- No automatic retention or quota eviction; successful retry deletes automatically and explicit deletion requires confirmation.
+- Cleanup fallback still delivers raw text but preserves the audio for a later full retry.
+- Processing cancellation preserves stopped audio; cancellation while actively recording discards the partial recording.
+- The HUD remains a passive compact indicator. Recovery actions belong in the menu and Recovery Center.
 
 ## Validation Evidence
 
-- Baseline `task check`: passed on 2026-07-11.
-- Stage 1 `task check`: app compiled and all behavior checks passed after the shared scaffold and window updates.
-- Stage 2 `task check`: deterministic launch modes, version metadata, and release documentation compiled; all behavior checks passed.
-- Stage 3 `task check`: passed after visual-QA sizing fixes.
-- Default-size visual inspection passed for Teach Correction, Personal Dictionary, and Dictation Archive using an isolated temporary Application Support directory.
-- Minimum-size inspection passed at 500×420, 620×520, and 680×520 respectively; the first pass exposed footer clipping, which commit `efd6ec6` corrected before revalidation.
-- Release app metadata: version `0.2.5`, commit `efd6ec6`, stable local signing identity.
-- `codesign --verify --deep --strict`, `hdiutil verify`, and SHA-256 checksum verification passed.
-- Visual evidence is stored under `/private/tmp/babbelstream-dialog-screenshots/` and contains no real dictionary or archive contents.
-- Release commit `5c04549` was fast-forwarded to `main` and published with annotated tag `v0.2.5`.
-- `/Applications/BabbelStream.app` reports version `0.2.5`, commit `5c04549`, and `BabbelStream Local Code Signing`; its signature verifies and its executable hash matches the validated build.
-- The installed app launched successfully from `/Applications` and remained running after the smoke check.
+- v0.2.5 baseline behavior checks passed before this upgrade.
 
 ## Current Blocker
 
@@ -76,4 +73,4 @@ None.
 
 ## Next Action
 
-Use the installed 0.2.5 app normally; no further release action is required.
+Implement and verify the recovery storage foundation.
