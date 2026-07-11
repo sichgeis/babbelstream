@@ -18,6 +18,7 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Privacy-safe diagnostics redaction.
 - Temp-file deletion policy.
 - Text insertion result handling behind an adapter.
+- Hybrid hotkey release classification below, at, and above the 0.5-second threshold.
 - Keychain wrapper behavior with an in-memory fake.
 - Startup does not read the Keychain secret; API key presence is represented by a non-secret marker.
 - Personal dictionary JSON round trip, text parsing, disabled-entry preservation, correction teaching/update de-duplication, cleanup prompt rendering, and prompt-size capping.
@@ -37,6 +38,10 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 ## Manual QA Checklist
 
 - App launches as a menu-bar utility.
+- Tapping `Control + Option + Space` latches hands-free recording; releasing all keys does not process it, and the next press stops it exactly once.
+- Holding `Control + Option + Space` for at least 0.5 seconds retains release-to-process push-to-talk behavior.
+- The recording HUD uses a lock for hands-free and a hand for held recording while preserving the target-app label and waveform.
+- Menu Start enters hands-free mode, and the hybrid shortcut, HUD Stop, and menu Stop all process it.
 - Recording shows a compact bottom-centered capsule with a stop control, target app, and live microphone activity without activating BabbelStream.
 - Releasing the hotkey transitions the same capsule through concise Transcribing, Trying Mini transcription when needed, Cleaning up, and Pasting states without exposing transcript text.
 - Transcribing, Mini fallback, Cleaning up, and Pasting keep the same blue waveform badge so state-label changes do not make the left side flicker.

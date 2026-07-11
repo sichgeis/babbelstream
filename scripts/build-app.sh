@@ -148,7 +148,7 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
   <key>NSHighResolutionCapable</key>
   <true/>
   <key>NSMicrophoneUsageDescription</key>
-  <string>BabbelStream records audio only when you start a test recording or use push-to-talk, then deletes temporary audio after processing.</string>
+  <string>BabbelStream records audio only when you start a test recording or use its tap-or-hold dictation shortcut, then deletes temporary audio after processing.</string>
   <key>NSPrincipalClass</key>
   <string>NSApplication</string>
 </dict>

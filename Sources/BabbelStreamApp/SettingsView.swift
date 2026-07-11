@@ -129,7 +129,8 @@ private struct SettingsGeneralPane: View {
                     )
                 )
                 TextField("Max recording minutes", text: $appState.maxAudioDurationMinutesText)
-                LabeledContent("Hotkey", value: ProjectDefaults.fixedHotkeyDescription)
+                LabeledContent("Hybrid hotkey", value: ProjectDefaults.fixedHotkeyDescription)
+                LabeledContent("Shortcut behavior", value: ProjectDefaults.hybridHotkeyUsageDescription)
             }
 
             Section("Safety") {

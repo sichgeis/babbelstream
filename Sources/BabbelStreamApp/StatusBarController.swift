@@ -69,7 +69,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private func addStatusSection() {
         addInfo(appState.status)
         addInfo("Build: \(BuildMetadata.gitCommitShortHash)")
-        addInfo("Hotkey: \(ProjectDefaults.fixedHotkeyDescription)")
+        addInfo("Hybrid hotkey: \(ProjectDefaults.fixedHotkeyDescription)")
+        addInfo(ProjectDefaults.hybridHotkeyUsageDescription)
         addInfo(appState.hotkeyStatus)
         addInfo("Microphone: \(appState.microphonePermissionStatus.displayName)")
         addInfo("Accessibility: \(appState.accessibilityPermissionStatus.displayName)")
@@ -107,12 +108,12 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         cleanupItem.state = appState.cleanupEnabled ? .on : .off
 
         addAction(
-            "Start Dictation",
+            "Start Hands-Free Dictation",
             action: #selector(startDictation),
             enabled: appState.canStart
         )
         addAction(
-            "Stop + Transcribe",
+            appState.isHandsFreeRecording ? "Stop Hands-Free + Transcribe" : "Stop + Transcribe",
             action: #selector(stopActiveRecording),
             enabled: appState.canStop
         )

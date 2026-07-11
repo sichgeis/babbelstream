@@ -4,7 +4,7 @@ This project is spec-driven. Start each implementation session by reading the re
 
 ## Product Direction
 
-- Build a native macOS push-to-talk dictation helper for Slack first, while keeping generic macOS text fields in scope.
+- Build a native macOS hybrid dictation helper for Slack first: tap the global shortcut for hands-free recording or hold it for push-to-talk, while keeping generic macOS text fields in scope.
 - Keep the MVP as a local macOS-level helper, not a Slack app, Slack bot, browser extension, subscription product, or cloud service.
 - Do not implement Slack API integration unless explicitly requested.
 - Preserve the German, English, and mixed German-English technical dictation use case.

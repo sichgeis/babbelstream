@@ -2,7 +2,16 @@
 
 ## Current Implementation Note
 
-Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-login, local personal dictionary, privacy-safe usage counters/diagnostics from Milestone 7, local packaging from Milestone 8, and the opt-in local dictation archive/monthly review feature have been implemented as one usable MVP/V1 slice. The July 2026 reliability passes added a minimal bottom-centered capsule HUD with live microphone activity and progressive state disclosure, operation-scoped Escape cancellation, bounded transcription fallback, prompt recovery from zero-byte connection stalls, verified temporary-audio handling, immutable settings snapshots, truthful provider destinations, target-safe insertion, strict provider parsing, recoverable JSONL reads, and privacy-safe provider lifecycle logs. Versions 0.2.3–0.2.5 improved composition, complete diagnostics, and consistent auxiliary dialogs. Version 0.3 adds durable failed-recording recovery plus bounded hedged primary/Mini transcription while keeping the HUD passive and fixed-size. `BabbelStreamChecks` covers core/provider/archive/recovery policies through `task check`. Future work should add full coordinator testing when the toolchain exposes it, configurable hotkeys, local transcription, Developer ID signing, notarization, and update automation.
+Milestones 1-8, the opt-in local archive, and the local v0.3 recovery slice are implemented. Version 0.4 adds a hybrid fixed hotkey: tap to latch hands-free recording and hold for push-to-talk, with one deterministic threshold policy and unchanged provider/recovery behavior. The July 2026 reliability passes also include the compact HUD, operation-scoped cancellation, bounded hedged transcription, verified temporary-audio handling, immutable settings snapshots, truthful provider destinations, target-safe insertion, strict provider parsing, recoverable JSONL reads, and privacy-safe diagnostics. `BabbelStreamChecks` covers core/provider/archive/recovery and hybrid-gesture policy through `task check`. Future work should add full coordinator testing when the toolchain exposes it, configurable hotkeys, local transcription, Developer ID signing, notarization, and update automation.
+
+## Version 0.4: Hybrid Tap/Hold Dictation
+
+- Deliverable: keep `Control + Option + Space`; tap for hands-free, hold for push-to-talk, press again or click Stop to process a latched recording.
+- Acceptance: a release before 0.5 seconds latches; release at or after 0.5 seconds processes; menu Start enters hands-free; HUD exposes a lock/hand state without losing target or waveform; startup races reset safely.
+- Automated test: cover both sides of the threshold, the exact boundary, and invalid negative duration normalization in `BabbelStreamChecks`.
+- Manual test: follow `docs/hybrid-hotkey-spec.md`, including startup, duplicate/late-event, processing-busy, HUD Stop, menu Stop, Escape, and max-duration cases.
+- Privacy: no new storage, provider, permission, logging, or transcript behavior.
+- Complexity: M.
 
 ## Version 0.3: Failed Recording Recovery And Hedged Transcription
 
@@ -62,8 +71,8 @@ Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-log
 
 ## Milestone 5: Global Hotkey/Menu-Bar UX
 
-- Deliverable: Carbon push-to-talk hotkey wired to recording and processing state.
-- Acceptance: press starts recording, release processes, and Escape/HUD/menu cancellation is available only during the active operation. Fixed `Control + Option + Space` is implemented; configurable push-to-talk hotkeys are still future work.
+- Deliverable: Carbon hybrid hotkey wired to recording and processing state.
+- Acceptance: press starts recording; tap latches hands-free; hold retains release-to-process; the next press or Stop processes hands-free; Escape/HUD/menu cancellation is available only during the active operation. Fixed `Control + Option + Space` is implemented; configurable hotkeys remain future work.
 - Manual test: use shortcut from Slack and another app.
 - Risks: release detection, shortcut conflicts, layout differences.
 - Complexity: M.

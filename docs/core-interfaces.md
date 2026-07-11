@@ -12,11 +12,11 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `HotkeyService`
 
-- Responsibility: register global push-to-talk hotkey and emit press/release/cancel events.
+- Responsibility: register the global hybrid dictation hotkey and emit press/release/cancel events. The service reports native events; the coordinator uses the pure `HybridDictationHotkeyPolicy` to classify tap versus hold.
 - Input: hotkey configuration.
 - Output: event stream or callbacks.
 - Errors: shortcut unavailable, registration failed, release not detectable.
-- Test strategy: pure event-state tests with a fake implementation; manual QA for Carbon integration.
+- Test strategy: threshold-boundary policy checks plus pure event-state tests with a fake implementation; manual QA for Carbon registration and press/release ordering.
 
 ## `TranscriptionProvider`
 

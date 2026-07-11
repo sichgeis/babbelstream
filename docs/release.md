@@ -100,6 +100,7 @@ spctl --assess --type open --verbose "dist/BabbelStream-$(cat VERSION).dmg"
 - Confirm Dictation Archive renders at 680×520 minimum and 760×640 default sizes; long daily/recovery content scrolls without moving its footer.
 - Confirm Microphone and Accessibility prompts are understandable.
 - Dictate English, German, and mixed German-English samples into Slack or TextEdit.
+- Run the hybrid tap/hold smoke test in `docs/hybrid-hotkey-spec.md`.
 - Confirm no message is auto-sent.
 - Confirm consecutive dictations are separated by a space.
 - Confirm no temporary audio remains after success; failed or canceled-after-stop processing appears under Failed Recordings; recording cancellation removes its partial file.

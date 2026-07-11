@@ -45,10 +45,10 @@ This boundary keeps lifecycle and UI wiring out of the dictation flow without in
 
 ## Data Flow
 
-1. Hotkey press starts `AudioRecorder`.
+1. Hotkey press starts `AudioRecorder` immediately. `HybridDictationHotkeyPolicy` classifies release before 0.5 seconds as hands-free latch and release at or after 0.5 seconds as push-to-talk completion.
 2. `AppState` snapshots the saved settings and the focused application/Accessibility element for the whole dictation.
 3. The bottom-centered, non-activating capsule HUD shows live microphone activity and the target while recording, then progressively discloses only the current processing, Mini fallback, completion, or recovery state. Full provider and timeout details remain in the menu, Settings, and diagnostics.
-4. Hotkey release stops recording and returns a temporary audio URL. `DictationRecoveryStore` copies it into user-only Application Support storage before provider work and only then removes the temporary source.
+4. A held-hotkey release, a second press while hands-free, or an explicit Stop action stops recording and returns a temporary audio URL. All paths converge on the same coordinator action. `DictationRecoveryStore` copies the file into user-only Application Support storage before provider work and only then removes the temporary source.
 5. The configured primary transcription begins immediately. If it remains pending for 10 seconds, an independent Mini request starts; the first valid response wins within one 75-second overall deadline.
 6. Recovery audio is deleted only after transcription and any enabled cleanup succeed. Provider failure, cleanup fallback, processing cancellation, and interruption retain it for menu-driven retry or explicit deletion.
 7. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
