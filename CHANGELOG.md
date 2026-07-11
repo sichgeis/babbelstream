@@ -2,6 +2,12 @@
 
 BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain substantial product or workflow changes; patch releases contain compatible fixes and incremental improvements.
 
+## 0.2.5 - 2026-07-11
+
+- Unify Teach Correction, Personal Dictionary, and Dictation Archive with the grouped, scrollable Settings design language and persistent status/action footers.
+- Make all three auxiliary windows resizable with practical minimum sizes and consistent native button roles.
+- Add deterministic window-only launch options for visual QA of every redesigned dialog.
+
 ## 0.2.4 - 2026-07-11
 
 - Keep privacy-safe diagnostics grouped by dictation operation and export the complete latest dictation timeline instead of only its final ten events.

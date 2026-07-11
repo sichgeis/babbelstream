@@ -43,10 +43,13 @@ dist/BabbelStream-$(cat VERSION).dmg
 
 The local build signs with `BabbelStream Local Code Signing` when that identity exists, otherwise it falls back to ad-hoc signing. This is not enough for public distribution.
 
-For deterministic Settings layout screenshots, launch a local build with `--settings` and an optional tab selector:
+For deterministic window layout screenshots, launch a local build with one window selector:
 
 ```bash
 open -na dist/BabbelStream.app --args --settings --settings-tab=provider
+open -na dist/BabbelStream.app --args --teach-correction
+open -na dist/BabbelStream.app --args --personal-dictionary
+open -na dist/BabbelStream.app --args --dictation-archive
 ```
 
 Supported tab names are `general`, `provider`, `writing`, `archive`, and `diagnostics`. Window sharing is enabled only for this explicit QA mode; normal launches retain the default non-shareable window behavior.
@@ -92,6 +95,9 @@ spctl --assess --type open --verbose "dist/BabbelStream-$(cat VERSION).dmg"
 - Confirm menu-bar icon appears.
 - Confirm Settings opens.
 - Confirm all five Settings tabs render without clipping at the 700×560 minimum and 760×640 default window sizes; Provider and Diagnostics should scroll without moving the Apply footer.
+- Confirm Teach Correction renders at 500×420 minimum and 560×500 default sizes; grouped content scrolls without moving its footer.
+- Confirm Personal Dictionary renders at 620×520 minimum and 720×640 default sizes; both editors remain usable and the footer stays fixed.
+- Confirm Dictation Archive renders at 680×520 minimum and 760×640 default sizes; long daily/recovery content scrolls without moving its footer.
 - Confirm Microphone and Accessibility prompts are understandable.
 - Dictate English, German, and mixed German-English samples into Slack or TextEdit.
 - Confirm no message is auto-sent.

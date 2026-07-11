@@ -85,6 +85,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Detailed provider, timeout, and recovery information belongs in the menu, Settings, or diagnostics; the HUD may temporarily show a concise recovery instruction when manual action is required.
 - The saved/effective provider destination must be visible before any audio/text is sent; edited settings must not masquerade as active.
 - Settings retain five task-focused tabs (General, Provider, Writing, Archive, and Diagnostics), a persistent Apply footer, grouped sections with aligned values, and independent scrolling inside a resizable window.
+- Teach Correction, Personal Dictionary, and Dictation Archive reuse the same grouped sections, independent scrolling, persistent status/action footer, and resizable-window design language as Settings.
 - Errors should be actionable and should never silently discard the final text.
 - The app must make clear that pasted text is a draft, not a sent message.
 

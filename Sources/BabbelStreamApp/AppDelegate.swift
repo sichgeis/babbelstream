@@ -47,8 +47,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         dictationStatusHUDController = DictationStatusHUDController(appState: appState)
 
-        if CommandLine.arguments.contains("--settings") {
+        switch AppWindowLaunchMode.requested {
+        case .settings:
             settingsWindowController.show()
+        case .personalDictionary:
+            personalDictionaryWindowController.show()
+        case .teachCorrection:
+            teachCorrectionWindowController.show()
+        case .dictationArchive:
+            dictationArchiveWindowController.show()
+        case nil:
+            break
         }
     }
 
