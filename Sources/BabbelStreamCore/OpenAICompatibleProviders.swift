@@ -1,5 +1,14 @@
 import Foundation
 
+private func providerElapsedMilliseconds(since start: Date) -> Int {
+    max(0, Int(Date().timeIntervalSince(start) * 1_000))
+}
+
+private func providerElapsedMilliseconds(since start: ContinuousClock.Instant) -> Int {
+    let duration = start.duration(to: ContinuousClock.now).components
+    return max(0, Int(duration.seconds * 1_000) + Int(duration.attoseconds / 1_000_000_000_000_000))
+}
+
 public enum ProviderError: Error, Equatable, LocalizedError, Sendable {
     case missingAPIKey
     case invalidEndpointURL
@@ -109,7 +118,7 @@ public enum ProviderRetryReason: Equatable, Sendable {
 }
 
 public enum ProviderRequestEvent: Equatable, Sendable {
-    case requestPrepared(requestBytes: Int, audioBytes: Int?)
+    case requestPrepared(requestBytes: Int, audioBytes: Int?, preparationMilliseconds: Int)
     case attemptStarted(attempt: Int, totalAttempts: Int)
     case responseReceived(attempt: Int, statusCode: Int, responseBytes: Int)
     case attemptSucceeded(attempt: Int, totalAttempts: Int, durationMilliseconds: Int)
@@ -250,6 +259,7 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
             throw ProviderError.invalidEndpointURL
         }
 
+        let preparationStartedAt = ContinuousClock.now
         let attributes = try FileManager.default.attributesOfItem(atPath: request.audioURL.path)
         let fileSize = (attributes[.size] as? NSNumber)?.intValue ?? 0
         guard fileSize > 0 else {
@@ -275,7 +285,11 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
         urlRequest.setValue(multipart.contentType, forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("application/json, text/plain;q=0.9, */*;q=0.1", forHTTPHeaderField: "Accept")
 
-        await request.onEvent(.requestPrepared(requestBytes: multipart.body.count, audioBytes: fileSize))
+        await request.onEvent(.requestPrepared(
+            requestBytes: multipart.body.count,
+            audioBytes: fileSize,
+            preparationMilliseconds: providerElapsedMilliseconds(since: preparationStartedAt)
+        ))
 
         return try await ProviderRequestExecutor.perform(
             retryCount: request.retryCount,
@@ -326,7 +340,7 @@ private enum ProviderRequestExecutor {
                 await onEvent(.attemptSucceeded(
                     attempt: attempt,
                     totalAttempts: totalAttempts,
-                    durationMilliseconds: elapsedMilliseconds(since: startedAt)
+                    durationMilliseconds: providerElapsedMilliseconds(since: startedAt)
                 ))
                 return value
             } catch {
@@ -340,7 +354,7 @@ private enum ProviderRequestExecutor {
                 await onEvent(.attemptFailed(
                     attempt: attempt,
                     totalAttempts: totalAttempts,
-                    durationMilliseconds: elapsedMilliseconds(since: startedAt),
+                    durationMilliseconds: providerElapsedMilliseconds(since: startedAt),
                     category: ProviderFailureCategory.classify(error),
                     willRetry: willRetry
                 ))
@@ -362,9 +376,6 @@ private enum ProviderRequestExecutor {
         }
     }
 
-    private static func elapsedMilliseconds(since start: Date) -> Int {
-        max(0, Int(Date().timeIntervalSince(start) * 1_000))
-    }
 }
 
 public final class OpenAICompatibleCleanupProvider: CleanupProvider {
@@ -395,6 +406,7 @@ public final class OpenAICompatibleCleanupProvider: CleanupProvider {
             throw ProviderError.invalidEndpointURL
         }
 
+        let preparationStartedAt = ContinuousClock.now
         let payload: [String: Any] = [
             "model": configuration.cleanupModel,
             "temperature": 0,
@@ -415,7 +427,11 @@ public final class OpenAICompatibleCleanupProvider: CleanupProvider {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        await request.onEvent(.requestPrepared(requestBytes: urlRequest.httpBody?.count ?? 0, audioBytes: nil))
+        await request.onEvent(.requestPrepared(
+            requestBytes: urlRequest.httpBody?.count ?? 0,
+            audioBytes: nil,
+            preparationMilliseconds: providerElapsedMilliseconds(since: preparationStartedAt)
+        ))
 
         return try await ProviderRequestExecutor.perform(retryCount: 0, onEvent: request.onEvent) { [urlSession] attempt in
             let (data, response) = try await ProviderURLSessionOperation.data(
