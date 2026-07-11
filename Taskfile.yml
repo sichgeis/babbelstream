@@ -44,3 +44,9 @@ tasks:
     dir: tools/litellm-stt-check
     cmds:
       - python3 check_stt.py {{.CLI_ARGS}}
+
+  provider:benchmark:
+    desc: Benchmark transcription and cleanup provider latency and jitter
+    dir: tools/provider-benchmark
+    cmds:
+      - python3 benchmark.py {{.CLI_ARGS}}
