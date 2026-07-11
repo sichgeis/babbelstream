@@ -37,8 +37,8 @@ Ship BabbelStream 0.2.5 with Teach Correction, Personal Dictionary, and Dictatio
 
 ## Stages
 
-1. **In progress — Shared dialog design and window behavior**
-2. **Pending — Deterministic visual QA and release documentation**
+1. **Completed — Shared dialog design and window behavior**
+2. **In progress — Deterministic visual QA and release documentation**
 3. **Pending — Full validation and release artifact**
 4. **Pending — Publish, install, launch, and verify**
 
@@ -58,6 +58,7 @@ Ship BabbelStream 0.2.5 with Teach Correction, Personal Dictionary, and Dictatio
 ## Validation Evidence
 
 - Baseline `task check`: passed on 2026-07-11.
+- Stage 1 `task check`: app compiled and all behavior checks passed after the shared scaffold and window updates.
 
 ## Current Blocker
 
@@ -65,4 +66,4 @@ None.
 
 ## Next Action
 
-Implement the shared dialog scaffold and update the three window controllers.
+Add deterministic QA launch modes and prepare the 0.2.5 release documentation.
