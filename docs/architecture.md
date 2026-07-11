@@ -29,6 +29,19 @@ AppKit status-item app
   -> SwiftUI SettingsView
 ```
 
+## Application Composition
+
+The executable target keeps the application shell separate from the behavior-heavy coordinator:
+
+- `BabbelStreamApp.swift` owns only the native application entry point.
+- `AppDelegate.swift` is the composition root that creates stores, `AppState`, window controllers, the status item, and the HUD.
+- `StatusBarController.swift` owns menu-bar presentation and actions.
+- `AppWindowControllers.swift`, `SettingsView.swift`, `DictationArchiveUI.swift`, and `DictationStatusHUD.swift` own their respective AppKit/SwiftUI presentation concerns.
+- `AppState.swift` remains the main-actor workflow coordinator. Its top-level dictation path delegates the provider details to explicit transcription-with-fallback and cleanup-with-raw-fallback actions.
+- `BabbelStreamCore` owns reusable policy, provider, storage, recording, hotkey, secret, and insertion implementations and does not depend on the app target.
+
+This boundary keeps lifecycle and UI wiring out of the dictation flow without introducing a second coordinator or hiding simple decisions behind trivial abstractions.
+
 ## Data Flow
 
 1. Hotkey press starts `AudioRecorder`.
