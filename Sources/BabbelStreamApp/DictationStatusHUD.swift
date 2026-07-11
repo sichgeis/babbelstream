@@ -303,6 +303,12 @@ private struct DictationStatusHUDView: View {
         if appState.status == "Copied" {
             return "Copied"
         }
+        if appState.status == "Recording saved"
+            || appState.lastResult.localizedCaseInsensitiveContains("Failed Recordings")
+            || appState.lastResult.localizedCaseInsensitiveContains("recording retained")
+        {
+            return "Recording saved"
+        }
         if appState.errorMessage != nil || appState.status.localizedCaseInsensitiveContains("failed") {
             return "Error"
         }
@@ -321,7 +327,7 @@ private struct DictationStatusHUDView: View {
         switch compactStatus {
         case "Copied":
             return "doc.on.doc.fill"
-        case "Error":
+        case "Error", "Recording saved":
             return "exclamationmark.triangle.fill"
         case "Canceled":
             return "xmark.circle.fill"
@@ -334,7 +340,7 @@ private struct DictationStatusHUDView: View {
         switch compactStatus {
         case "Copied":
             return .orange
-        case "Error":
+        case "Error", "Recording saved":
             return .red
         case "Canceled":
             return .secondary

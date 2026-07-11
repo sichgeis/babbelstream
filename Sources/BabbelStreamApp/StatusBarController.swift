@@ -6,6 +6,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private let appState: AppState
     private let settingsWindowController: SettingsWindowController
     private let dictationArchiveWindowController: DictationArchiveWindowController
+    private let dictationRecoveryWindowController: DictationRecoveryWindowController
     private let personalDictionaryWindowController: PersonalDictionaryWindowController
     private let teachCorrectionWindowController: TeachCorrectionWindowController
     private let statusItem: NSStatusItem
@@ -15,12 +16,14 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         appState: AppState,
         settingsWindowController: SettingsWindowController,
         dictationArchiveWindowController: DictationArchiveWindowController,
+        dictationRecoveryWindowController: DictationRecoveryWindowController,
         personalDictionaryWindowController: PersonalDictionaryWindowController,
         teachCorrectionWindowController: TeachCorrectionWindowController
     ) {
         self.appState = appState
         self.settingsWindowController = settingsWindowController
         self.dictationArchiveWindowController = dictationArchiveWindowController
+        self.dictationRecoveryWindowController = dictationRecoveryWindowController
         self.personalDictionaryWindowController = personalDictionaryWindowController
         self.teachCorrectionWindowController = teachCorrectionWindowController
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -178,6 +181,11 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         addAction("Teach Correction...", action: #selector(openTeachCorrection), enabled: true)
         addAction("Personal Dictionary...", action: #selector(openPersonalDictionary), enabled: true)
         addAction("Dictation Archive...", action: #selector(openDictationArchive), enabled: true)
+        addAction(
+            "Failed Recordings... (\(appState.recoverySnapshot.recordings.count))",
+            action: #selector(openFailedRecordings),
+            enabled: true
+        )
         addAction("Settings...", action: #selector(openSettings), enabled: true)
         addAction("Quit", action: #selector(quit), enabled: true)
     }
@@ -329,6 +337,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func openDictationArchive() {
         dictationArchiveWindowController.show()
+    }
+
+    @objc private func openFailedRecordings() {
+        dictationRecoveryWindowController.show()
     }
 
     @objc private func openTeachCorrection() {
