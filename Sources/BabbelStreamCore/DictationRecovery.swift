@@ -6,6 +6,7 @@ public enum DictationRecoveryState: String, Codable, CaseIterable, Sendable {
     case cleanupFailed
     case processingCanceled
     case interrupted
+    case copyFailed
 
     public var displayName: String {
         switch self {
@@ -14,6 +15,7 @@ public enum DictationRecoveryState: String, Codable, CaseIterable, Sendable {
         case .cleanupFailed: "Cleanup failed"
         case .processingCanceled: "Processing canceled"
         case .interrupted: "Processing interrupted"
+        case .copyFailed: "Draft copy failed"
         }
     }
 }

@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController?
     private var settingsWindowController: SettingsWindowController?
     private var dictationArchiveWindowController: DictationArchiveWindowController?
+    private var dictationRecoveryWindowController: DictationRecoveryWindowController?
     private var personalDictionaryWindowController: PersonalDictionaryWindowController?
     private var teachCorrectionWindowController: TeachCorrectionWindowController?
     private var dictationStatusHUDController: DictationStatusHUDController?
@@ -21,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appState = appState
         let settingsWindowController = SettingsWindowController(appState: appState)
         let dictationArchiveWindowController = DictationArchiveWindowController(appState: appState)
+        let dictationRecoveryWindowController = DictationRecoveryWindowController(appState: appState)
         let teachCorrectionWindowController = TeachCorrectionWindowController(
             store: personalDictionaryStore,
             appState: appState
@@ -33,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         self.settingsWindowController = settingsWindowController
         self.dictationArchiveWindowController = dictationArchiveWindowController
+        self.dictationRecoveryWindowController = dictationRecoveryWindowController
         self.personalDictionaryWindowController = personalDictionaryWindowController
         self.teachCorrectionWindowController = teachCorrectionWindowController
         appState.onTeachCorrectionRequested = { [weak teachCorrectionWindowController] in
@@ -42,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             appState: appState,
             settingsWindowController: settingsWindowController,
             dictationArchiveWindowController: dictationArchiveWindowController,
+            dictationRecoveryWindowController: dictationRecoveryWindowController,
             personalDictionaryWindowController: personalDictionaryWindowController,
             teachCorrectionWindowController: teachCorrectionWindowController
         )
@@ -56,6 +60,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             teachCorrectionWindowController.show()
         case .dictationArchive:
             dictationArchiveWindowController.show()
+        case .failedRecordings:
+            dictationRecoveryWindowController.show()
         case nil:
             break
         }

@@ -1609,7 +1609,7 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func loadRecoveryRecordings(markProcessingAsInterrupted: Bool) {
+    func loadRecoveryRecordings(markProcessingAsInterrupted: Bool = false) {
         do {
             recoverySnapshot = try dictationRecoveryStore.loadSnapshot(
                 markProcessingAsInterrupted: markProcessingAsInterrupted
@@ -1630,6 +1630,153 @@ final class AppState: ObservableObject {
 
     private func refreshRecoveryRecordings() {
         loadRecoveryRecordings(markProcessingAsInterrupted: false)
+        notifyStateChanged()
+    }
+
+    func retryRecoveryRecording(_ recording: DictationRecoveryRecording) async {
+        guard canStart else {
+            return
+        }
+        let task = Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.performRecoveryRetry(recording)
+        }
+        processingTask = task
+        await task.value
+        processingTask = nil
+        notifyStateChanged()
+    }
+
+    func exportRecoveryRecording(_ recording: DictationRecoveryRecording, to destinationURL: URL) {
+        do {
+            try dictationRecoveryStore.exportAudio(for: recording, to: destinationURL)
+            recoveryErrorMessage = nil
+            recoveryStatusMessage = "Recording exported. The recovery copy was retained."
+            recordDiagnostic("failed recording exported")
+        } catch {
+            recoveryErrorMessage = error.localizedDescription
+            recoveryStatusMessage = "Recording could not be exported."
+            recordDiagnostic("failed recording export failed: \(diagnosticErrorCategory(error))")
+        }
+        notifyStateChanged()
+    }
+
+    func deleteRecoveryRecording(_ recording: DictationRecoveryRecording) {
+        do {
+            try dictationRecoveryStore.delete(recording)
+            recoveryErrorMessage = nil
+            recoveryStatusMessage = "Failed recording deleted."
+            recordDiagnostic("failed recording deleted by user")
+            refreshRecoveryRecordings()
+        } catch {
+            recoveryErrorMessage = error.localizedDescription
+            recoveryStatusMessage = "Failed recording could not be deleted."
+            recordDiagnostic("failed recording delete failed: \(diagnosticErrorCategory(error))")
+            notifyStateChanged()
+        }
+    }
+
+    func deleteAllRecoveryRecordings() {
+        do {
+            try dictationRecoveryStore.deleteAll()
+            recoveryErrorMessage = nil
+            recoveryStatusMessage = "All failed recordings deleted."
+            recordDiagnostic("all failed recordings deleted by user")
+            refreshRecoveryRecordings()
+        } catch {
+            recoveryErrorMessage = error.localizedDescription
+            recoveryStatusMessage = "Failed recordings could not be deleted."
+            recordDiagnostic("failed recordings delete all failed: \(diagnosticErrorCategory(error))")
+            notifyStateChanged()
+        }
+    }
+
+    func revealRecoveryFolder() {
+        let directory = dictationRecoveryStore.recoveryDirectoryURL
+        let target = FileManager.default.fileExists(atPath: directory.path)
+            ? directory
+            : directory.deletingLastPathComponent()
+        NSWorkspace.shared.open(target)
+        recoveryStatusMessage = "Failed Recordings folder opened."
+        recordDiagnostic("failed recordings folder reveal requested")
+        notifyStateChanged()
+    }
+
+    private func performRecoveryRetry(_ recording: DictationRecoveryRecording) async {
+        isProcessing = true
+        activeRecoveryRecording = recording
+        status = "Retrying saved recording"
+        errorMessage = nil
+        warningMessage = nil
+        lastResult = "Retrying failed recording with the currently applied provider settings."
+        activeDiagnosticOperationID = UUID()
+        activeDiagnosticOperationStartedAt = ContinuousClock.now
+        recordDiagnostic("failed recording retry started")
+
+        do {
+            let updated = try dictationRecoveryStore.update(
+                recording,
+                state: .processing,
+                failureCategory: nil,
+                incrementRetryCount: true
+            )
+            activeRecoveryRecording = updated
+            refreshRecoveryRecordings()
+            let apiKey = try loadAPIKeyForDictation()
+            let settings = appSettings
+            let rawTranscript = try await transcribeRecording(
+                at: dictationRecoveryStore.audioURL(for: updated),
+                settings: settings,
+                apiKey: apiKey
+            )
+            let preparedDraft = try await prepareDraft(from: rawTranscript, settings: settings, apiKey: apiKey)
+            try Task.checkCancellation()
+            latestRawTranscript = preparedDraft.rawTranscript
+            latestFinalDraft = preparedDraft.finalDraft
+
+            if preparedDraft.cleanupFallbackUsed {
+                try textInsertionService.copyText(
+                    DictationDraftFormatter.textWithTrailingSeparator(preparedDraft.finalDraft)
+                )
+                preserveActiveRecoveryRecording(state: .cleanupFailed, failureCategory: lastFailureCategory)
+                status = "Recording saved"
+                lastResult = "Cleanup failed; raw draft copied and recording retained."
+            } else {
+                try textInsertionService.copyText(
+                    DictationDraftFormatter.textWithTrailingSeparator(preparedDraft.finalDraft)
+                )
+                deleteActiveRecoveryRecording()
+                status = "Copied"
+                errorMessage = nil
+                warningMessage = nil
+                lastResult = "Recovered draft copied; saved recording deleted."
+                recordDiagnostic("failed recording recovered and copied")
+            }
+        } catch {
+            let state: DictationRecoveryState
+            if ProviderRetryPolicy.isCancellation(error) {
+                state = .processingCanceled
+                status = "Recording saved"
+                errorMessage = nil
+                lastResult = "Retry canceled; recording retained."
+            } else if error is TextInsertionError {
+                state = .copyFailed
+                status = "Recording saved"
+                errorMessage = error.localizedDescription
+                lastResult = "Recovered draft could not be copied; recording retained."
+            } else {
+                state = .transcriptionFailed
+                status = "Recording saved"
+                errorMessage = error.localizedDescription
+                lastResult = "Retry failed; recording retained."
+            }
+            preserveActiveRecoveryRecording(state: state, failureCategory: diagnosticErrorCategory(error))
+            recordDiagnostic("failed recording retry failed: \(diagnosticErrorCategory(error))")
+        }
+
+        activeRecoveryRecording = nil
+        isProcessing = false
+        completeDiagnosticOperation()
         notifyStateChanged()
     }
 

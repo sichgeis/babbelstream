@@ -44,8 +44,8 @@ Ship BabbelStream 0.3.0 so a stopped dictation is not discarded when transcripti
 
 1. **Completed — Specifications and recovery storage foundation**
 2. **Completed — Recovery lifecycle and hedged transcription**
-3. **In progress — Recovery Center and minimal HUD status**
-4. **Pending — Full validation and v0.3.0 release**
+3. **Completed — Recovery Center and minimal HUD status**
+4. **In progress — Full validation and v0.3.0 release**
 
 ## Dependencies And Risks
 
@@ -68,6 +68,9 @@ Ship BabbelStream 0.3.0 so a stopped dictation is not discarded when transcripti
 - v0.2.5 baseline behavior checks passed before this upgrade.
 - Stage 1 `task check`: recovery adoption, user-only permissions, startup interruption recovery, retry counting, export retention, deletion, app build, and existing behavior checks passed.
 - Stage 2 `task check`: fast-primary/no-hedge, slow-primary/Mini winner, immediate transient fallback, overall deadline, independent fallback transport, recovery ownership, app build, and all existing behavior checks passed.
+- Stage 3 `task check`: Recovery Center, retry/copy retention semantics, export/delete actions, menu wiring, deterministic launch mode, passive HUD status, app build, and all behavior checks passed.
+- Recovery Center visual QA passed at 720×620 and 620×500, including empty and populated synthetic states. Evidence is under `/private/tmp/babbelstream-recovery-screenshots/`; it contains no real transcript or provider response content.
+- The HUD implementation remains fixed at 220×44 and gained no controls, layout branches, or interactive recovery actions.
 
 ## Current Blocker
 
@@ -75,4 +78,4 @@ None.
 
 ## Next Action
 
-Add the menu Recovery Center and concise fixed-size HUD failure state.
+Run release validation, package from a clean worktree, publish, install, and verify v0.3.0.

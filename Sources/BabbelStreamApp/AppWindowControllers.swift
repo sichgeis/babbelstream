@@ -7,6 +7,7 @@ enum AppWindowLaunchMode: String, CaseIterable {
     case personalDictionary = "--personal-dictionary"
     case teachCorrection = "--teach-correction"
     case dictationArchive = "--dictation-archive"
+    case failedRecordings = "--failed-recordings"
 
     static var requested: AppWindowLaunchMode? {
         allCases.first { CommandLine.arguments.contains($0.rawValue) }
