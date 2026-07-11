@@ -39,8 +39,8 @@ Ship BabbelStream 0.2.5 with Teach Correction, Personal Dictionary, and Dictatio
 
 1. **Completed — Shared dialog design and window behavior**
 2. **Completed — Deterministic visual QA and release documentation**
-3. **In progress — Full validation and release artifact**
-4. **Pending — Publish, install, launch, and verify**
+3. **Completed — Full validation and release artifact**
+4. **In progress — Publish, install, launch, and verify**
 
 ## Dependencies And Risks
 
@@ -60,6 +60,12 @@ Ship BabbelStream 0.2.5 with Teach Correction, Personal Dictionary, and Dictatio
 - Baseline `task check`: passed on 2026-07-11.
 - Stage 1 `task check`: app compiled and all behavior checks passed after the shared scaffold and window updates.
 - Stage 2 `task check`: deterministic launch modes, version metadata, and release documentation compiled; all behavior checks passed.
+- Stage 3 `task check`: passed after visual-QA sizing fixes.
+- Default-size visual inspection passed for Teach Correction, Personal Dictionary, and Dictation Archive using an isolated temporary Application Support directory.
+- Minimum-size inspection passed at 500×420, 620×520, and 680×520 respectively; the first pass exposed footer clipping, which commit `efd6ec6` corrected before revalidation.
+- Release app metadata: version `0.2.5`, commit `efd6ec6`, stable local signing identity.
+- `codesign --verify --deep --strict`, `hdiutil verify`, and SHA-256 checksum verification passed.
+- Visual evidence is stored under `/private/tmp/babbelstream-dialog-screenshots/` and contains no real dictionary or archive contents.
 
 ## Current Blocker
 
@@ -67,4 +73,4 @@ None.
 
 ## Next Action
 
-Commit the release metadata stage, then build and visually inspect every redesigned window.
+Publish the release commit and annotated tag, install the local app bundle, launch it, and verify the installed metadata and process.
