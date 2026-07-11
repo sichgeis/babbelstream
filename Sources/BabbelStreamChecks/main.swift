@@ -46,7 +46,8 @@ check(
     ProjectDefaults.providerConnectionTimeoutSeconds == 15,
     "Provider connection recovery should use the documented 15-second bound."
 )
-check(ProjectDefaults.transcriptionAttemptTimeoutSeconds == 30, "Each transcription model should have a 30-second limit.")
+check(ProjectDefaults.transcriptionHedgeDelaySeconds == 10, "Slow primary transcription should hedge after 10 seconds.")
+check(ProjectDefaults.transcriptionOverallTimeoutSeconds == 75, "Transcription should have one 75-second deadline.")
 check(ProjectDefaults.fallbackTranscriptionModel == "gpt-4o-mini-transcribe", "Unexpected transcription fallback model.")
 check(BuildMetadata.gitCommitInfoKey == "BabbelStreamGitCommit", "Unexpected build commit Info.plist key.")
 check(BuildMetadata.codeSigningInfoKey == "BabbelStreamCodeSigning", "Unexpected code signing Info.plist key.")
@@ -447,6 +448,7 @@ check(multipart.body.count > 0, "Multipart body should not be empty.")
 try await runTranscriptionRetryCheck(audioURL: deterministicAudioURL)
 try await runTranscriptionConnectionTimeoutCheck(audioURL: deterministicAudioURL)
 try await runTranscriptionCancellationCheck(audioURL: deterministicAudioURL)
+try await runHedgedTranscriptionChecks()
 _ = try AudioTempFileStore.deleteTemporaryAudio(at: deterministicAudioURL)
 check(!FileManager.default.fileExists(atPath: deterministicAudioURL.path), "Delete-check temp file should be deleted.")
 let retainedRecording = RecordedAudio(
@@ -608,6 +610,70 @@ func runTranscriptionCancellationCheck(audioURL: URL) async throws {
         // Expected.
     }
     check(attempts.value == 1, "Cancellation should prevent further transcription attempts.")
+}
+
+func runHedgedTranscriptionChecks() async throws {
+    let fallbackStarts = LockedAttemptCounter()
+    let primaryResult = try await HedgedTranscriptionRunner.run(
+        hedgeDelaySeconds: 0.05,
+        deadlineSeconds: 0.2,
+        shouldHedgeAfterError: ProviderRetryPolicy.shouldRetry,
+        primary: {
+            try await Task.sleep(nanoseconds: 2_000_000)
+            return "primary"
+        },
+        fallback: {
+            _ = fallbackStarts.increment()
+            return "fallback"
+        }
+    )
+    check(primaryResult.winningRole == .primary, "Fast primary transcription should win.")
+    check(!primaryResult.hedgeStarted, "Fast primary transcription should not start Mini.")
+    check(fallbackStarts.value == 0, "Mini should not be called before the hedge delay.")
+
+    let hedgeResult = try await HedgedTranscriptionRunner.run(
+        hedgeDelaySeconds: 0.01,
+        deadlineSeconds: 0.2,
+        shouldHedgeAfterError: ProviderRetryPolicy.shouldRetry,
+        primary: {
+            try await Task.sleep(nanoseconds: 100_000_000)
+            return "slow primary"
+        },
+        fallback: {
+            try await Task.sleep(nanoseconds: 2_000_000)
+            return "fast fallback"
+        }
+    )
+    check(hedgeResult.winningRole == .fallback, "Mini should win when primary remains slow.")
+    check(hedgeResult.hedgeStarted, "Slow primary transcription should start the hedge.")
+
+    let earlyFailureResult = try await HedgedTranscriptionRunner.run(
+        hedgeDelaySeconds: 0.1,
+        deadlineSeconds: 0.2,
+        shouldHedgeAfterError: ProviderRetryPolicy.shouldRetry,
+        primary: { throw URLError(.timedOut) },
+        fallback: { "fallback after early failure" }
+    )
+    check(earlyFailureResult.winningRole == .fallback, "Retryable primary failure should start Mini immediately.")
+
+    do {
+        _ = try await HedgedTranscriptionRunner.run(
+            hedgeDelaySeconds: 0.005,
+            deadlineSeconds: 0.02,
+            shouldHedgeAfterError: ProviderRetryPolicy.shouldRetry,
+            primary: {
+                try await Task.sleep(nanoseconds: 1_000_000_000)
+                return "late primary"
+            },
+            fallback: {
+                try await Task.sleep(nanoseconds: 1_000_000_000)
+                return "late fallback"
+            }
+        )
+        check(false, "Hedged transcription should enforce its overall deadline.")
+    } catch let error as HedgedTranscriptionError {
+        check(error == .deadlineExceeded(seconds: 1), "Deadline errors should remain bounded and categorized.")
+    }
 }
 
 final class LockedAttemptCounter: @unchecked Sendable {

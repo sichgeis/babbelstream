@@ -62,6 +62,9 @@ final class AppState: ObservableObject {
     @Published var archiveSnapshot: DictationArchiveMonthSnapshot
     @Published var archiveStatusMessage = "Archive not loaded yet."
     @Published var archiveErrorMessage: String?
+    @Published private(set) var recoverySnapshot = DictationRecoverySnapshot(recordings: [])
+    @Published private(set) var recoveryStatusMessage = "No failed recordings."
+    @Published private(set) var recoveryErrorMessage: String?
 
     @Published var baseURLText: String
     @Published var transcriptionPathText: String
@@ -86,6 +89,7 @@ final class AppState: ObservableObject {
     private let secretStore: SecretStore
     private let apiKeyPresenceStore: APIKeyPresenceStore
     private let transcriptionProvider: TranscriptionProvider
+    private let fallbackTranscriptionProvider: TranscriptionProvider
     private let cleanupProvider: CleanupProvider
     private let textInsertionService: TextInsertionService
     private let hotkeyService: HotkeyService
@@ -93,6 +97,7 @@ final class AppState: ObservableObject {
     private let personalDictionaryStore: PersonalDictionaryStore
     private let usageTracker: UsageTracker
     private let dictationArchiveStore: DictationArchiveStore
+    private let dictationRecoveryStore: DictationRecoveryStore
 
     private var appSettings: AppSettings
     private var recordingStartedAt: Date?
@@ -107,6 +112,7 @@ final class AppState: ObservableObject {
     private var activeDictationSettings: AppSettings?
     private var processingTask: Task<Void, Never>?
     private var retainedTemporaryAudioURL: URL?
+    private var activeRecoveryRecording: DictationRecoveryRecording?
     private var stateChangeObservers: [UUID: () -> Void] = [:]
     private var activeDiagnosticOperationID: UUID?
     private var activeDiagnosticOperationStartedAt: ContinuousClock.Instant?
@@ -118,19 +124,24 @@ final class AppState: ObservableObject {
         secretStore: SecretStore = KeychainSecretStore(),
         apiKeyPresenceStore: APIKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(),
         transcriptionProvider: TranscriptionProvider = OpenAICompatibleTranscriptionProvider(),
+        fallbackTranscriptionProvider: TranscriptionProvider = OpenAICompatibleTranscriptionProvider(
+            urlSession: URLSession(configuration: .ephemeral)
+        ),
         cleanupProvider: CleanupProvider = OpenAICompatibleCleanupProvider(),
         textInsertionService: TextInsertionService = ClipboardTextInsertionService(),
         hotkeyService: HotkeyService = CarbonHotkeyService(),
         launchAtLoginService: LaunchAtLoginService = LaunchAtLoginService(),
         personalDictionaryStore: PersonalDictionaryStore = JSONPersonalDictionaryStore(),
         usageTracker: UsageTracker = UserDefaultsUsageTracker(),
-        dictationArchiveStore: DictationArchiveStore = JSONLDictationArchiveStore()
+        dictationArchiveStore: DictationArchiveStore = JSONLDictationArchiveStore(),
+        dictationRecoveryStore: DictationRecoveryStore = FileDictationRecoveryStore()
     ) {
         self.audioRecorder = audioRecorder
         self.settingsStore = settingsStore
         self.secretStore = secretStore
         self.apiKeyPresenceStore = apiKeyPresenceStore
         self.transcriptionProvider = transcriptionProvider
+        self.fallbackTranscriptionProvider = fallbackTranscriptionProvider
         self.cleanupProvider = cleanupProvider
         self.textInsertionService = textInsertionService
         self.hotkeyService = hotkeyService
@@ -138,6 +149,7 @@ final class AppState: ObservableObject {
         self.personalDictionaryStore = personalDictionaryStore
         self.usageTracker = usageTracker
         self.dictationArchiveStore = dictationArchiveStore
+        self.dictationRecoveryStore = dictationRecoveryStore
 
         let loadedSettings = settingsStore.load()
         let loadedUsageSnapshot = usageTracker.load()
@@ -167,6 +179,7 @@ final class AppState: ObservableObject {
         updateLatestExternalPasteTarget(from: NSWorkspace.shared.frontmostApplication)
         observeWorkspaceActivations()
         cleanupStaleTemporaryAudio()
+        loadRecoveryRecordings(markProcessingAsInterrupted: true)
         configureHotkey()
     }
 
@@ -293,6 +306,14 @@ final class AppState: ObservableObject {
 
     var archiveDirectoryPath: String {
         dictationArchiveStore.archiveDirectoryURL.path
+    }
+
+    var recoveryDirectoryPath: String {
+        dictationRecoveryStore.recoveryDirectoryURL.path
+    }
+
+    var recoverySummary: String {
+        "\(recoverySnapshot.recordings.count) recording\(recoverySnapshot.recordings.count == 1 ? "" : "s"), \(ByteCountFormatter.string(fromByteCount: recoverySnapshot.totalByteCount, countStyle: .file))"
     }
 
     var appBundlePath: String {
@@ -850,7 +871,8 @@ final class AppState: ObservableObject {
         }
 
         if let retainedTemporaryAudioURL {
-            deleteRetainedTemporaryAudio(at: retainedTemporaryAudioURL)
+            recordDiagnostic("termination left unsafeguarded temporary audio for startup recovery attention")
+            self.retainedTemporaryAudioURL = retainedTemporaryAudioURL
         }
         resetRecordingState()
     }
@@ -884,7 +906,8 @@ final class AppState: ObservableObject {
             "cleanup destination: \(cleanupDestinationSummary)",
             "transcription model: \(appSettings.providerConfiguration.transcriptionModel)",
             "fallback transcription model: \(ProjectDefaults.fallbackTranscriptionModel)",
-            "transcription timeout per model seconds: \(String(format: "%.1f", ProjectDefaults.transcriptionAttemptTimeoutSeconds))",
+            "transcription hedge delay seconds: \(String(format: "%.1f", ProjectDefaults.transcriptionHedgeDelaySeconds))",
+            "transcription overall deadline seconds: \(String(format: "%.1f", ProjectDefaults.transcriptionOverallTimeoutSeconds))",
             "cleanup model: \(appSettings.providerConfiguration.cleanupModel)",
             "cleanup timeout seconds: \(String(format: "%.1f", appSettings.providerConfiguration.timeoutSeconds))",
             "connection timeout seconds: \(String(format: "%.1f", ProjectDefaults.providerConnectionTimeoutSeconds))",
@@ -900,6 +923,8 @@ final class AppState: ObservableObject {
             "archive path: \(archiveDirectoryPath)",
             "archive loaded month: \(archiveSnapshot.month.directoryName)",
             "archive loaded entries: \(archiveSnapshot.entries.count)",
+            "failed recordings: \(recoverySnapshot.recordings.count)",
+            "failed recording bytes: \(recoverySnapshot.totalByteCount)",
             "usage dictations: \(usageSnapshot.totalDictations)",
             "usage recorded seconds: \(String(format: "%.1f", usageSnapshot.totalRecordedSeconds))",
             "cleanup requests: \(usageSnapshot.cleanupRequests)",
@@ -1224,7 +1249,23 @@ final class AppState: ObservableObject {
             resetRecordingState()
             elapsedSeconds = recording.duration
             recordDiagnostic("recording stopped: dictation, \(formatDuration(recording.duration))")
-            try await processRecording(recording, settings: settingsSnapshot, autoStopped: autoStopped)
+            let recoveryRecording = try dictationRecoveryStore.adopt(
+                recording,
+                target: latestPasteTarget ?? latestExternalPasteTarget,
+                settings: settingsSnapshot
+            )
+            activeRecoveryRecording = recoveryRecording
+            retainedTemporaryAudioURL = nil
+            let safeguardedRecording = RecordedAudio(
+                temporaryFileURL: try dictationRecoveryStore.audioURL(for: recoveryRecording),
+                duration: recording.duration,
+                byteCount: recording.byteCount,
+                createdAt: recording.createdAt,
+                deletedAt: nil
+            )
+            recordDiagnostic("recording safeguarded for processing: \(recording.byteCount) bytes")
+            refreshRecoveryRecordings()
+            try await processRecording(safeguardedRecording, settings: settingsSnapshot, autoStopped: autoStopped)
         } catch {
             resetRecordingState()
             transcriptionProgressDetail = nil
@@ -1232,14 +1273,16 @@ final class AppState: ObservableObject {
                 status = "Ready"
                 errorMessage = nil
                 lastResult = retainedTemporaryAudioURL == nil
-                    ? "Dictation canceled; temporary audio deleted."
+                    ? "Processing canceled; recording saved in Failed Recordings."
                     : "Dictation canceled. Temporary audio cleanup needs attention."
                 lastFailureCategory = "None"
                 recordDiagnostic("dictation processing canceled")
             } else {
                 status = "Dictation failed"
                 errorMessage = error.localizedDescription
-                lastResult = "Could not finish dictation safely."
+                lastResult = activeRecoveryRecording == nil
+                    ? "Could not finish dictation safely."
+                    : "Recording saved in Failed Recordings."
                 lastFailureCategory = diagnosticErrorCategory(error)
                 recordDiagnostic("dictation failed: \(lastFailureCategory)")
             }
@@ -1247,6 +1290,7 @@ final class AppState: ObservableObject {
 
         isProcessing = false
         setCancelHotkeyEnabled(false)
+        activeRecoveryRecording = nil
         completeDiagnosticOperation()
         notifyStateChanged()
     }
@@ -1287,20 +1331,32 @@ final class AppState: ObservableObject {
         autoStopped: Bool
     ) async throws {
         do {
-            try await processRecordedAudio(recording, settings: settings, autoStopped: autoStopped)
+            let cleanupFallbackUsed = try await processRecordedAudio(
+                recording,
+                settings: settings,
+                autoStopped: autoStopped
+            )
+            if cleanupFallbackUsed {
+                preserveActiveRecoveryRecording(state: .cleanupFailed, failureCategory: lastFailureCategory)
+                status = "Cleanup failed"
+                lastResult = "Raw draft delivered; recording saved in Failed Recordings."
+            } else {
+                deleteActiveRecoveryRecording()
+            }
         } catch {
-            deleteRetainedTemporaryAudio(at: recording.temporaryFileURL)
+            let state: DictationRecoveryState = ProviderRetryPolicy.isCancellation(error)
+                ? .processingCanceled
+                : .transcriptionFailed
+            preserveActiveRecoveryRecording(state: state, failureCategory: diagnosticErrorCategory(error))
             throw error
         }
-
-        deleteRetainedTemporaryAudio(at: recording.temporaryFileURL)
     }
 
     private func processRecordedAudio(
         _ recording: RecordedAudio,
         settings: AppSettings,
         autoStopped: Bool
-    ) async throws {
+    ) async throws -> Bool {
         try Task.checkCancellation()
 
         if !TranscriptionLanguageNormalizer.isValidForSettings(settings.transcriptionLanguage) {
@@ -1352,6 +1408,7 @@ final class AppState: ObservableObject {
             cleanupFallbackUsed: preparedDraft.cleanupFallbackUsed,
             insertionOutcome: insertionOutcome
         )
+        return preparedDraft.cleanupFallbackUsed
     }
 
     private func transcribeRecording(
@@ -1360,13 +1417,24 @@ final class AppState: ObservableObject {
         apiKey: String
     ) async throws -> String {
         var configuredPrimarySettings = settings
-        configuredPrimarySettings.providerConfiguration.timeoutSeconds = ProjectDefaults.transcriptionAttemptTimeoutSeconds
+        configuredPrimarySettings.providerConfiguration.timeoutSeconds = ProjectDefaults.transcriptionOverallTimeoutSeconds
         let primarySettings = configuredPrimarySettings
 
         do {
-            let rawTranscript: String
-            do {
-                rawTranscript = try await transcriptionProvider.transcribe(
+            var configuredFallbackSettings = primarySettings
+            configuredFallbackSettings.providerConfiguration.transcriptionModel = ProjectDefaults.fallbackTranscriptionModel
+            let fallbackSettings = configuredFallbackSettings
+            let result = try await HedgedTranscriptionRunner.run(
+                shouldHedgeAfterError: ProviderRetryPolicy.shouldRetry,
+                onHedgeStarted: { [weak self] in
+                    await MainActor.run {
+                        guard let self else { return }
+                        self.status = "Trying Mini transcription"
+                        self.recordDiagnostic("transcription hedge started: \(ProjectDefaults.fallbackTranscriptionModel)")
+                    }
+                },
+                primary: { [transcriptionProvider] in
+                    try await transcriptionProvider.transcribe(
                     TranscriptionRequest(
                         audioURL: audioURL,
                         settings: primarySettings,
@@ -1379,23 +1447,10 @@ final class AppState: ObservableObject {
                             )
                         }
                     )
-                )
-            } catch {
-                if ProviderRetryPolicy.isCancellation(error) {
-                    throw CancellationError()
-                }
-                guard ProviderRetryPolicy.shouldRetry(error) else {
-                    throw error
-                }
-
-                var configuredFallbackSettings = primarySettings
-                configuredFallbackSettings.providerConfiguration.transcriptionModel = ProjectDefaults.fallbackTranscriptionModel
-                let fallbackSettings = configuredFallbackSettings
-                status = "Trying Mini transcription"
-                recordDiagnostic(
-                    "transcription fallback started: \(ProjectDefaults.fallbackTranscriptionModel) after \(ProviderFailureCategory.classify(error).displayName)"
-                )
-                rawTranscript = try await transcriptionProvider.transcribe(
+                    )
+                },
+                fallback: { [fallbackTranscriptionProvider] in
+                    try await fallbackTranscriptionProvider.transcribe(
                     TranscriptionRequest(
                         audioURL: audioURL,
                         settings: fallbackSettings,
@@ -1408,13 +1463,14 @@ final class AppState: ObservableObject {
                             )
                         }
                     )
-                )
-            }
+                    )
+                }
+            )
 
             transcriptionProgressDetail = nil
-            recordDiagnostic("transcription succeeded: \(rawTranscript.count) characters")
+            recordDiagnostic("transcription succeeded via \(result.winningRole.rawValue): \(result.transcript.count) characters")
             try Task.checkCancellation()
-            return rawTranscript
+            return result.transcript
         } catch {
             transcriptionProgressDetail = nil
             if ProviderRetryPolicy.isCancellation(error) {
@@ -1508,6 +1564,73 @@ final class AppState: ObservableObject {
             recordDiagnostic("temporary audio deletion failed: \(lastFailureCategory)")
             return false
         }
+    }
+
+    private func preserveActiveRecoveryRecording(
+        state: DictationRecoveryState,
+        failureCategory: String?
+    ) {
+        guard let activeRecoveryRecording else {
+            return
+        }
+        do {
+            self.activeRecoveryRecording = try dictationRecoveryStore.update(
+                activeRecoveryRecording,
+                state: state,
+                failureCategory: failureCategory,
+                incrementRetryCount: false
+            )
+            recordDiagnostic("failed recording retained: \(state.rawValue)")
+            refreshRecoveryRecordings()
+        } catch {
+            warningMessage = combinedWarning(
+                warningMessage,
+                "Recording audio still exists, but its recovery status could not be updated."
+            )
+            recordDiagnostic("failed recording metadata update failed: \(diagnosticErrorCategory(error))")
+        }
+    }
+
+    private func deleteActiveRecoveryRecording() {
+        guard let activeRecoveryRecording else {
+            return
+        }
+        do {
+            try dictationRecoveryStore.delete(activeRecoveryRecording)
+            self.activeRecoveryRecording = nil
+            recordDiagnostic("safeguarded recording deleted after successful processing")
+            refreshRecoveryRecordings()
+        } catch {
+            warningMessage = combinedWarning(
+                warningMessage,
+                "Successful dictation audio could not be deleted. Remove it from Failed Recordings."
+            )
+            recordDiagnostic("safeguarded recording deletion failed: \(diagnosticErrorCategory(error))")
+        }
+    }
+
+    private func loadRecoveryRecordings(markProcessingAsInterrupted: Bool) {
+        do {
+            recoverySnapshot = try dictationRecoveryStore.loadSnapshot(
+                markProcessingAsInterrupted: markProcessingAsInterrupted
+            )
+            recoveryStatusMessage = recoverySnapshot.recordings.isEmpty
+                ? "No failed recordings."
+                : recoverySummary
+            recoveryErrorMessage = nil
+            if recoverySnapshot.recoveredMetadataCount > 0 {
+                recordDiagnostic("failed recording metadata recovered: \(recoverySnapshot.recoveredMetadataCount)")
+            }
+        } catch {
+            recoveryErrorMessage = error.localizedDescription
+            recoveryStatusMessage = "Failed recordings could not be loaded."
+            recordDiagnostic("failed recordings load failed: \(diagnosticErrorCategory(error))")
+        }
+    }
+
+    private func refreshRecoveryRecordings() {
+        loadRecoveryRecordings(markProcessingAsInterrupted: false)
+        notifyStateChanged()
     }
 
     private func appendDictationArchiveEntry(
