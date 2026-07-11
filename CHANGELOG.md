@@ -2,6 +2,12 @@
 
 BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain substantial product or workflow changes; patch releases contain compatible fixes and incremental improvements.
 
+## 0.2.4 - 2026-07-11
+
+- Keep privacy-safe diagnostics grouped by dictation operation and export the complete latest dictation timeline instead of only its final ten events.
+- Add millisecond timestamps and monotonic elapsed time to diagnostic events.
+- Measure recorder finalization, API-key loading, provider request preparation, paste, archive writing, and temporary-audio deletion without logging audio or text content.
+
 ## 0.2.3 - 2026-07-11
 
 - Split application startup, status-menu orchestration, window construction, dictation coordination, and settings/editor views into responsibility-based source files.

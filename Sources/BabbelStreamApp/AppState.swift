@@ -7,12 +7,16 @@ struct DiagnosticEvent: Identifiable {
     let id = UUID()
     let timestamp: Date
     let message: String
+    let operationID: UUID?
+    let elapsedMilliseconds: Int?
 
     var displayText: String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss"
+        formatter.dateFormat = "HH:mm:ss.SSS"
 
-        return "\(formatter.string(from: timestamp)) \(message)"
+        let operation = operationID.map { " [\($0.uuidString.prefix(8))]" } ?? ""
+        let elapsed = elapsedMilliseconds.map { " +\($0)ms" } ?? ""
+        return "\(formatter.string(from: timestamp))\(operation)\(elapsed) \(message)"
     }
 }
 
@@ -104,6 +108,9 @@ final class AppState: ObservableObject {
     private var processingTask: Task<Void, Never>?
     private var retainedTemporaryAudioURL: URL?
     private var stateChangeObservers: [UUID: () -> Void] = [:]
+    private var activeDiagnosticOperationID: UUID?
+    private var activeDiagnosticOperationStartedAt: ContinuousClock.Instant?
+    private var lastCompletedDiagnosticOperationID: UUID?
 
     init(
         audioRecorder: AudioRecorder = AVFoundationAudioRecorder(),
@@ -223,6 +230,14 @@ final class AppState: ObservableObject {
 
     var diagnosticSummaries: [String] {
         diagnostics.suffix(10).map(\.displayText)
+    }
+
+    var diagnosticReportSummaries: [String] {
+        let operationID = activeDiagnosticOperationID ?? lastCompletedDiagnosticOperationID
+        guard let operationID else {
+            return diagnostics.map(\.displayText)
+        }
+        return diagnostics.filter { $0.operationID == operationID }.map(\.displayText)
     }
 
     var providerDestinationSummary: String {
@@ -480,6 +495,7 @@ final class AppState: ObservableObject {
             recordDiagnostic("processing cancellation requested")
             processingTask.cancel()
             await processingTask.value
+            completeDiagnosticOperation()
             notifyStateChanged()
             return
         }
@@ -499,12 +515,14 @@ final class AppState: ObservableObject {
             warningMessage = nil
             lastResult = "Recording canceled; temporary file deleted."
             recordDiagnostic("recording canceled; temporary audio deleted")
+            completeDiagnosticOperation()
         } catch {
             resetRecordingState()
             status = "Cancel failed"
             errorMessage = error.localizedDescription
             lastResult = "Could not cancel recording safely."
             recordDiagnostic("recording cancel failed: \(diagnosticErrorCategory(error))")
+            completeDiagnosticOperation()
         }
 
         isProcessing = false
@@ -839,7 +857,13 @@ final class AppState: ObservableObject {
 
     private func recordDiagnostic(_ message: String) {
         Self.diagnosticsLogger.info("\(message, privacy: .public)")
-        diagnostics.append(DiagnosticEvent(timestamp: Date(), message: message))
+        let elapsedMilliseconds = activeDiagnosticOperationStartedAt.map { self.elapsedMilliseconds(since: $0) }
+        diagnostics.append(DiagnosticEvent(
+            timestamp: Date(),
+            message: message,
+            operationID: activeDiagnosticOperationID,
+            elapsedMilliseconds: elapsedMilliseconds
+        ))
         if diagnostics.count > 50 {
             diagnostics.removeFirst(diagnostics.count - 50)
         }
@@ -882,7 +906,7 @@ final class AppState: ObservableObject {
             "transcription failures: \(usageSnapshot.transcriptionFailures)",
             "cleanup fallbacks: \(usageSnapshot.cleanupFallbacks)",
             "recent events:",
-            diagnosticSummaries.joined(separator: "\n")
+            diagnosticReportSummaries.joined(separator: "\n")
         ]
 
         return lines.joined(separator: "\n")
@@ -976,9 +1000,9 @@ final class AppState: ObservableObject {
         let connectionTimeout = min(ProjectDefaults.providerConnectionTimeoutSeconds, overallTimeout)
 
         switch event {
-        case let .requestPrepared(requestBytes, audioBytes):
+        case let .requestPrepared(requestBytes, audioBytes, preparationMilliseconds):
             let audioDetail = audioBytes.map { ", audio \($0) bytes" } ?? ""
-            recordDiagnostic("\(stage) request prepared: \(requestBytes) bytes\(audioDetail)")
+            recordDiagnostic("\(stage) request prepared in \(preparationMilliseconds) ms: \(requestBytes) bytes\(audioDetail)")
         case let .attemptStarted(attempt, totalAttempts):
             if stage.hasPrefix("transcription") {
                 status = stage.contains("fallback") ? "Trying Mini transcription" : "Transcribing"
@@ -1058,11 +1082,14 @@ final class AppState: ObservableObject {
     }
 
     private func handleDictationHotkeyPressed() async {
-        recordDiagnostic("hotkey pressed")
         guard canStart else {
             recordDiagnostic("hotkey press ignored: busy")
             return
         }
+
+        activeDiagnosticOperationID = UUID()
+        activeDiagnosticOperationStartedAt = ContinuousClock.now
+        recordDiagnostic("hotkey pressed")
 
         shouldStopDictationAfterStart = false
         await startRecording(mode: .dictation)
@@ -1097,6 +1124,12 @@ final class AppState: ObservableObject {
             return
         }
 
+        if mode == .dictation, activeDiagnosticOperationID == nil {
+            activeDiagnosticOperationID = UUID()
+            activeDiagnosticOperationStartedAt = ContinuousClock.now
+            recordDiagnostic("dictation started from app control")
+        }
+
         if mode == .dictation, !validateSettingsBeforeDictation() {
             return
         }
@@ -1121,6 +1154,7 @@ final class AppState: ObservableObject {
             errorMessage = microphoneGuidance(for: newStatus)
             isProcessing = false
             recordDiagnostic("recording not started: microphone \(newStatus.displayName)")
+            completeDiagnosticOperation()
             return
         }
 
@@ -1143,6 +1177,7 @@ final class AppState: ObservableObject {
             lastResult = "Recording not started."
             errorMessage = error.localizedDescription
             recordDiagnostic("recording start failed: \(diagnosticErrorCategory(error))")
+            completeDiagnosticOperation()
         }
 
         isProcessing = false
@@ -1181,7 +1216,10 @@ final class AppState: ObservableObject {
 
         do {
             let settingsSnapshot = activeDictationSettings ?? appSettings
+            recordDiagnostic("recording stop started")
+            let stopStartedAt = ContinuousClock.now
             let recording = try await audioRecorder.stop(deleteTemporaryFile: false)
+            recordDiagnostic("recording stop completed in \(elapsedMilliseconds(since: stopStartedAt)) ms")
             retainedTemporaryAudioURL = recording.temporaryFileURL
             resetRecordingState()
             elapsedSeconds = recording.duration
@@ -1209,6 +1247,7 @@ final class AppState: ObservableObject {
 
         isProcessing = false
         setCancelHotkeyEnabled(false)
+        completeDiagnosticOperation()
         notifyStateChanged()
     }
 
@@ -1269,7 +1308,9 @@ final class AppState: ObservableObject {
             recordDiagnostic("transcription language ignored: invalid language setting")
         }
 
+        let keyLoadStartedAt = ContinuousClock.now
         let apiKey = try loadAPIKeyForDictation()
+        recordDiagnostic("api key loaded in \(elapsedMilliseconds(since: keyLoadStartedAt)) ms")
         guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             recordDiagnostic("transcription not started: missing API key")
             throw ProviderError.missingAPIKey
@@ -1450,12 +1491,13 @@ final class AppState: ObservableObject {
 
     @discardableResult
     private func deleteRetainedTemporaryAudio(at url: URL) -> Bool {
+        let startedAt = ContinuousClock.now
         do {
             _ = try AudioTempFileStore.deleteTemporaryAudio(at: url)
             if retainedTemporaryAudioURL == url {
                 retainedTemporaryAudioURL = nil
             }
-            recordDiagnostic("temporary audio deleted")
+            recordDiagnostic("temporary audio deleted in \(elapsedMilliseconds(since: startedAt)) ms")
             return true
         } catch {
             warningMessage = combinedWarning(
@@ -1504,8 +1546,9 @@ final class AppState: ObservableObject {
         )
 
         do {
+            let startedAt = ContinuousClock.now
             try dictationArchiveStore.append(entry)
-            recordDiagnostic("archive entry written: \(entry.finalWordCount) final words")
+            recordDiagnostic("archive entry written in \(elapsedMilliseconds(since: startedAt)) ms: \(entry.finalWordCount) final words")
             if DictationArchiveMonth(string: archiveMonthText) == DictationArchiveMonth.containing(entry.startedAt) {
                 loadArchiveMonth()
             }
@@ -1571,12 +1614,15 @@ final class AppState: ObservableObject {
 
     private func insertFinalDraft(_ finalDraft: String) async throws -> DictationArchiveInsertionOutcome {
         status = "Pasting draft"
+        let startedAt = ContinuousClock.now
+        recordDiagnostic("paste started")
         let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
         let insertionText = DictationDraftFormatter.textWithTrailingSeparator(finalDraft)
         let priorWarning = warningMessage
 
         do {
             let insertionResult = try await textInsertionService.insertText(insertionText, target: pasteTarget)
+            recordDiagnostic("paste operation completed in \(elapsedMilliseconds(since: startedAt)) ms")
             accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
             let outcome = applySuccessfulInsertionResult(insertionResult, priorWarning: priorWarning)
             notifyStateChanged()
@@ -1735,6 +1781,21 @@ final class AppState: ObservableObject {
         }
 
         return directories
+    }
+
+    private func elapsedMilliseconds(since start: ContinuousClock.Instant) -> Int {
+        let duration = start.duration(to: ContinuousClock.now).components
+        return max(0, Int(duration.seconds * 1_000) + Int(duration.attoseconds / 1_000_000_000_000_000))
+    }
+
+    private func completeDiagnosticOperation() {
+        guard let operationID = activeDiagnosticOperationID else {
+            return
+        }
+        recordDiagnostic("dictation operation completed")
+        lastCompletedDiagnosticOperationID = operationID
+        activeDiagnosticOperationID = nil
+        activeDiagnosticOperationStartedAt = nil
     }
 
     private func resultMessage(for recording: RecordedAudio, autoStopped: Bool) -> String {

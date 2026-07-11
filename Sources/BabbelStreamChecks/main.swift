@@ -552,8 +552,8 @@ func runTranscriptionConnectionTimeoutCheck(audioURL: URL) async throws {
 }
 
 func isPreparedEvent(_ event: ProviderRequestEvent, includesAudio: Bool) -> Bool {
-    guard case let .requestPrepared(requestBytes, audioBytes) = event else { return false }
-    return requestBytes > 0 && (audioBytes != nil) == includesAudio
+    guard case let .requestPrepared(requestBytes, audioBytes, preparationMilliseconds) = event else { return false }
+    return requestBytes > 0 && preparationMilliseconds >= 0 && (audioBytes != nil) == includesAudio
 }
 
 func isFailedEvent(
