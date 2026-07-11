@@ -9,12 +9,13 @@ Hold `Control + Option + Space`, speak, release, and BabbelStream transcribes th
 - Native macOS menu-bar app.
 - Global push-to-talk hotkey: `Control + Option + Space`.
 - Compact non-activating status HUD for recording, processing, cancellation, and paste recovery.
-- Escape cancels only while a recording or provider operation is active; the HUD/menu Cancel action remains available as a fallback.
+- Escape cancels only while a recording or provider operation is active; canceling a stopped recording's provider work preserves it under Failed Recordings.
 - AVFoundation microphone recording with configurable max duration, defaulting to 10 minutes.
 - OpenAI-compatible transcription endpoint, default path `/v1/audio/transcriptions`.
 - OpenAI-compatible cleanup endpoint, default path `/v1/chat/completions`.
-- One bounded model fallback for transient transcription transport, throttling, and server failures: the configured primary model gets 30 seconds, then `gpt-4o-mini-transcribe` gets one 30-second attempt. A zero-byte connection stall is canceled after 15 seconds.
-- The HUD distinguishes primary transcription from the Mini fallback; privacy-safe diagnostics record stage, timing, status/error category, and byte counts.
+- One bounded hedge for transient transcription slowness: primary starts immediately, Mini starts after 10 seconds if needed, the first valid result wins, and both share a 75-second deadline. A zero-byte connection stall is canceled after 15 seconds.
+- Failed or interrupted processing keeps the stopped M4A in a local, user-only Failed Recordings store. Retry uses current provider settings and copies the result instead of auto-pasting into a historical target.
+- The HUD stays compact and passive; it distinguishes primary/Mini processing and shows Recording saved after failure. Privacy-safe diagnostics record stage, timing, status/error category, and byte counts.
 - Cleanup preserves German, English, and mixed German-English speech without translating.
 - Local personal dictionary injects preferred vocabulary and correction hints into cleanup.
 - Local usage counters show dictations, recorded minutes, cleanup requests, and safe failure counts.
@@ -77,11 +78,12 @@ This local DMG is suitable for personal testing. Public distribution should use 
 1. Run `scripts/install-dev-app.sh`, then drag `BabbelStream.app` onto the Applications link in Finder.
 2. Grant Microphone permission when prompted.
 3. Open Settings from the menu-bar icon.
-4. Configure the provider base URL, primary transcription model, cleanup model/timeout, and API key, then click `Apply Settings` in the persistent Settings footer. The Provider pane shows the fixed Mini fallback, the 30-second limit per transcription model, and the separate 15-second connection watchdog. A fallback resends the same temporary audio once.
-5. Request Accessibility permission so BabbelStream can insert text automatically.
-6. Optionally enable `Launch at login` in Settings.
-7. Optionally enable `Archive completed dictations` if you want local daily text files and monthly word-count review.
-8. Focus Slack or another text field, hold `Control + Option + Space`, speak, and release. Use Escape or the HUD Cancel button to stop without pasting.
+4. Configure the provider base URL, primary transcription model, cleanup model/timeout, and API key, then click `Apply Settings` in the persistent Settings footer. The Provider pane shows the fixed Mini hedge, 10-second hedge delay, 75-second overall deadline, and separate 15-second connection watchdog. During rare slow requests the same safeguarded audio may be sent to both models and may incur two transcription charges.
+5. If processing fails, open **Failed Recordings…** from the menu to retry and copy the draft, save the M4A elsewhere, or explicitly delete it.
+6. Request Accessibility permission so BabbelStream can insert text automatically.
+7. Optionally enable `Launch at login` in Settings.
+8. Optionally enable `Archive completed dictations` if you want local daily text files and monthly word-count review.
+9. Focus Slack or another text field, hold `Control + Option + Space`, speak, and release. Use Escape or the HUD Cancel button to stop without pasting.
 
 For mixed German-English dictation, leave the language field blank. Use the optional transcription prompt only for transcription hints, not cleanup instructions.
 
@@ -93,7 +95,7 @@ An optional local Codex skill can edit the same file from `~/.codex/skills/babbe
 
 ## Privacy Defaults
 
-- Temporary audio is deleted after processing, cancellation, or app termination. A deletion failure is shown prominently and retried on relaunch.
+- Audio is safeguarded after recording stops and deleted after transcription and any enabled cleanup succeed. Failed, canceled-after-stop, or interrupted work remains local under Failed Recordings until retry succeeds or you delete it.
 - Transcripts and cleaned drafts are kept only in memory for the running app session unless the local dictation archive is explicitly enabled.
 - Dictation archive is off by default. When enabled, it stores final draft text and word counts locally; raw transcript storage is a separate opt-in.
 - API keys are stored in Keychain, not in files or `UserDefaults`.

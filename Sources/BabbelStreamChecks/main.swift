@@ -656,6 +656,23 @@ func runHedgedTranscriptionChecks() async throws {
     )
     check(earlyFailureResult.winningRole == .fallback, "Retryable primary failure should start Mini immediately.")
 
+    let permanentFallbackStarts = LockedAttemptCounter()
+    do {
+        _ = try await HedgedTranscriptionRunner.run(
+            hedgeDelaySeconds: 0.1,
+            deadlineSeconds: 0.2,
+            shouldHedgeAfterError: ProviderRetryPolicy.shouldRetry,
+            primary: { throw ProviderError.missingAPIKey },
+            fallback: {
+                _ = permanentFallbackStarts.increment()
+                return "unexpected fallback"
+            }
+        )
+        check(false, "Permanent primary failures should stop without a hedge.")
+    } catch ProviderError.missingAPIKey {
+        check(permanentFallbackStarts.value == 0, "Permanent primary failures must not submit audio to Mini.")
+    }
+
     do {
         _ = try await HedgedTranscriptionRunner.run(
             hedgeDelaySeconds: 0.005,

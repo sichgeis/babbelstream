@@ -2,6 +2,13 @@
 
 BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain substantial product or workflow changes; patch releases contain compatible fixes and incremental improvements.
 
+## 0.3.0 - 2026-07-11
+
+- Safeguard stopped audio locally until transcription and any enabled cleanup succeed, preserving failed, canceled-after-stop, and interrupted dictations for recovery.
+- Add a menu-accessible Failed Recordings window with retry-and-copy, Save Audio As, individual deletion, confirmed bulk deletion, disk usage, and privacy-safe metadata.
+- Hedge slow primary transcription with one Mini request after 10 seconds, accept the first valid result, and bound the complete transcription phase to 75 seconds.
+- Keep the 220×44 HUD passive and layout-stable while showing a concise Recording saved failure state.
+
 ## 0.2.5 - 2026-07-11
 
 - Unify Teach Correction, Personal Dictionary, and Dictation Archive with the grouped, scrollable Settings design language and persistent status/action footers.

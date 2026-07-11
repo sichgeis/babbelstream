@@ -243,7 +243,7 @@ private struct DictationStatusHUDView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Cancel active dictation")
-                .accessibilityHint("Stops provider work and deletes temporary audio.")
+                .accessibilityHint("Stops active work. A stopped dictation remains available under Failed Recordings.")
             }
         }
     }

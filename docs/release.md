@@ -102,7 +102,7 @@ spctl --assess --type open --verbose "dist/BabbelStream-$(cat VERSION).dmg"
 - Dictate English, German, and mixed German-English samples into Slack or TextEdit.
 - Confirm no message is auto-sent.
 - Confirm consecutive dictations are separated by a space.
-- Confirm no temporary audio remains in the BabbelStream temp directory after success, failure, and cancel.
+- Confirm no temporary audio remains after success; failed or canceled-after-stop processing appears under Failed Recordings; recording cancellation removes its partial file.
 - Follow the current upgrade smoke test in `docs/upgrade-smoke-test-2026-07.md`
   when validating the July 2026 reliability changes.
 

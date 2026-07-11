@@ -39,7 +39,7 @@ Milestones 1-4, the fixed-hotkey part of Milestone 5, Milestone 6, launch-at-log
 ## Milestone 2: Transcription API Call
 
 - Deliverable: configurable OpenAI-compatible transcription request using URLSession.
-- Acceptance: fixture or real endpoint returns transcript text; invalid key and timeout are handled; the configured primary model gets one 30-second attempt and transient failures may fall back once to `gpt-4o-mini-transcribe`; authentication and other permanent client failures do not fall back. Implemented in the usable MVP slice with provider-policy URLProtocol checks and manual coordinator coverage.
+- Acceptance: fixture or real endpoint returns transcript text; invalid key and timeout are handled; primary starts immediately, Mini is hedged once after 10 seconds of slowness or an early transient failure, first valid output wins, and the phase stops at 75 seconds. Authentication and other permanent client failures do not hedge.
 - Manual test: verify LiteLLM/LightON audio compatibility; fall back to direct OpenAI-compatible endpoint if needed.
 - Risks: proxy may not support `/v1/audio/transcriptions`.
 - Complexity: M.

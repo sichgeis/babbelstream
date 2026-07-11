@@ -32,7 +32,7 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Oversized dictionary context skips entries with counts instead of failing dictation.
 - Archive integration writes one completed-dictation entry only when enabled and never writes audio paths or API keys.
 - Coordinator flow from audio URL to pasted text using fakes.
-- Connection timeout, request timeout, primary-to-Mini fallback policy, cancellation, invalid-key, and malformed-response cases.
+- Connection timeout, request timeout, primary/Mini hedge policy, overall deadline, cancellation, invalid-key, and malformed-response cases.
 
 ## Manual QA Checklist
 
@@ -104,7 +104,7 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 
 - 5-second, 15-second, 60-second, and long-form dictations up to the 10-minute cap.
 - Transcription-only versus transcription plus cleanup.
-- Primary and Mini transcription timeout/fallback behavior.
+- Primary/Mini hedge timing, first-success selection, and overall deadline behavior.
 
 ## Usage And API-Cost Tests
 
@@ -130,7 +130,8 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 
 ## Privacy Tests
 
-- Confirm temporary audio deletion on success, failure, timeout, cancel, and app termination.
+- Confirm successful dictation audio deletion; confirm failure, timeout, processing cancellation, and interruption retention; confirm recording cancellation still deletes the partial file.
+- Confirm Failed Recordings retry copies rather than auto-pastes, deletes only after full success, and retains audio after provider, cleanup, or clipboard failure.
 - Confirm a forced deletion failure remains visible and is retried by stale-file cleanup on relaunch.
 - Confirm no transcript history is written to disk when the archive is disabled.
 - Confirm archive files are local-only, text-only, user-visible, and absent unless explicitly enabled.
