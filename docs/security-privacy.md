@@ -73,7 +73,7 @@ Default logs may include timestamps, state names, durations, provider labels, co
 - Local archive disclosure if the user enables text persistence and another local process, backup, or person with account access can read those files.
 - Clipboard exposure to other apps.
 - Accessibility permission abuse if compromised.
-- A transient transcription fallback sends the same temporary audio request once to `gpt-4o-mini-transcribe`. Fallback is limited to connection/request timeouts, transport failures, throttling, and server failures. The HUD makes the fallback visible; diagnostics record stage, model role, duration, status/error category, and byte counts, never the audio or request body.
+- A slow or transiently failing primary transcription may send the same safeguarded audio once to `gpt-4o-mini-transcribe`. The 10-second hedge and 75-second overall deadline are fixed and visible; diagnostics record stage, model role, duration, status/error category, and byte counts, never audio content or request bodies.
 
 ## Accessibility Risks
 

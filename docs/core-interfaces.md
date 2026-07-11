@@ -24,7 +24,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 - Input: audio URL, provider configuration, API key.
 - Output: transcript text plus privacy-safe lifecycle events.
 - Errors: missing key, invalid endpoint, unsupported request format, timeout, network failure, malformed response.
-- Test strategy: URLProtocol/mock server tests for request shape, timeout, lifecycle events, transient-failure classification, and response parsing. App coordinator tests/manual QA cover the one-shot primary-to-Mini fallback policy.
+- Test strategy: URLProtocol/mock server tests for request shape, timeout, lifecycle events, transient-failure classification, response parsing, and deterministic primary/Mini hedge outcomes.
 
 ## `CleanupProvider`
 
@@ -44,10 +44,18 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `SettingsStore`
 
-- Responsibility: stage and explicitly apply non-secret settings such as provider URLs, endpoint paths, the primary transcription model, cleanup model/timeout, cleanup toggle, transcription language, transcription prompt, and max recording duration. The Mini fallback model and per-model transcription timeout are visible fixed policy values.
+- Responsibility: stage and explicitly apply non-secret settings such as provider URLs, endpoint paths, the primary transcription model, cleanup model/timeout, cleanup toggle, transcription language, transcription prompt, and max recording duration. The Mini model, hedge delay, overall deadline, and connection watchdog are visible fixed policy values.
 - Input: typed settings values.
 - Output: current settings and validation errors.
 - Errors: invalid URL, remote plain HTTP, embedded URL credentials/query data, invalid duration, missing model, unsupported endpoint path.
+
+## `DictationRecoveryStore`
+
+- Responsibility: safeguard stopped M4A audio before provider processing, persist privacy-safe failure metadata, reconstruct interrupted items, and own retry/export/deletion file operations.
+- Input: recorded audio, target/provider labels, state transitions, export destination, and explicit deletion requests.
+- Output: sorted recovery snapshots with count/size metadata and stable recording identifiers.
+- Errors: missing source audio, failed copy or metadata write, missing recovery item, invalid export destination, or failed deletion.
+- Test strategy: adoption removes the source only after a durable copy, `0700`/`0600` permissions, startup interruption recovery, malformed metadata recovery, export retention, retry counting, individual deletion, and confirmed UI bulk deletion.
 - Test strategy: validation unit tests and migration/default tests.
 
 ## `SecretStore`

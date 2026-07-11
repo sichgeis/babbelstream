@@ -512,7 +512,7 @@ final class AppState: ObservableObject {
     func cancelRecording() async {
         if let processingTask {
             status = "Canceling dictation"
-            lastResult = "Cancel requested. Stopping provider work and deleting temporary audio."
+            lastResult = "Cancel requested. Stopping provider work and preserving stopped audio for recovery."
             recordDiagnostic("processing cancellation requested")
             processingTask.cancel()
             await processingTask.value
