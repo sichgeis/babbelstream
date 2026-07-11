@@ -1,6 +1,22 @@
 import Carbon.HIToolbox
 import Foundation
 
+public enum HybridDictationHotkeyReleaseAction: Equatable, Sendable {
+    case latchHandsFree
+    case stopAndProcess
+}
+
+public enum HybridDictationHotkeyPolicy {
+    public static func releaseAction(
+        pressDuration: TimeInterval,
+        holdThreshold: TimeInterval = ProjectDefaults.hybridHotkeyHoldThresholdSeconds
+    ) -> HybridDictationHotkeyReleaseAction {
+        let normalizedDuration = max(0, pressDuration)
+        let normalizedThreshold = max(0, holdThreshold)
+        return normalizedDuration < normalizedThreshold ? .latchHandsFree : .stopAndProcess
+    }
+}
+
 @MainActor
 public protocol HotkeyService: AnyObject {
     var isRegistered: Bool { get }
@@ -23,7 +39,7 @@ public enum HotkeyError: Error, Equatable, LocalizedError, Sendable {
         case let .couldNotInstallHandler(status):
             "Could not install hotkey handler: \(status)."
         case let .couldNotRegister(status):
-            "Could not register \(ProjectDefaults.fixedHotkeyDescription): \(status)."
+            "Could not register hybrid hotkey \(ProjectDefaults.fixedHotkeyDescription): \(status)."
         case let .couldNotRegisterCancel(status):
             "Could not register Escape for canceling the active dictation: \(status)."
         }

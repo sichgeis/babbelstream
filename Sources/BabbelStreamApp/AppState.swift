@@ -32,6 +32,12 @@ final class AppState: ObservableObject {
         case test
     }
 
+    enum DictationControlStyle {
+        case none
+        case holdCandidate
+        case handsFree
+    }
+
     private struct PreparedDraft {
         let rawTranscript: String
         let finalDraft: String
@@ -46,6 +52,7 @@ final class AppState: ObservableObject {
     @Published var isRecording = false
     @Published var isProcessing = false
     @Published var recordingMode: RecordingMode = .none
+    @Published private(set) var dictationControlStyle: DictationControlStyle = .none
     @Published var cleanupEnabled: Bool
     @Published var lastResult = "No dictation yet."
     @Published var warningMessage: String?
@@ -108,6 +115,7 @@ final class AppState: ObservableObject {
     private var latestExternalPasteTarget: TextInsertionTarget?
     private var workspaceActivationObserver: NSObjectProtocol?
     private var shouldStopDictationAfterStart = false
+    private var dictationHotkeyPressedAt: ContinuousClock.Instant?
     private var cachedAPIKey: String?
     private var activeDictationSettings: AppSettings?
     private var processingTask: Task<Void, Never>?
@@ -203,6 +211,10 @@ final class AppState: ObservableObject {
 
     var canCancel: Bool {
         isRecording || processingTask != nil
+    }
+
+    var isHandsFreeRecording: Bool {
+        recordingMode == .dictation && dictationControlStyle == .handsFree
     }
 
     var currentAudioLevel: Float {
@@ -358,10 +370,13 @@ final class AppState: ObservableObject {
             let settings = activeDictationSettings ?? appSettings
             let provider = settings.providerConfiguration.baseURL.host
                 ?? settings.providerConfiguration.baseURL.absoluteString
+            let stopGuidance = isHandsFreeRecording
+                ? "press \(ProjectDefaults.fixedHotkeyDescription) or click Stop to transcribe"
+                : "release to transcribe"
             let cancelGuidance = warningMessage?.contains("Escape") == true
                 ? "use HUD Cancel"
                 : "Escape cancels"
-            return "Target: \(target) • release to transcribe via \(provider) • \(cancelGuidance) • \(formatDuration(elapsedSeconds))"
+            return "Target: \(target) • \(stopGuidance) via \(provider) • \(cancelGuidance) • \(formatDuration(elapsedSeconds))"
         }
         if status == "Cleaning up" {
             return "Formatting the transcript. The original target will be verified before paste."
@@ -491,7 +506,22 @@ final class AppState: ObservableObject {
     }
 
     func startDictation() async {
+        guard canStart else {
+            return
+        }
+
+        dictationControlStyle = .handsFree
+        shouldStopDictationAfterStart = false
         await startRecording(mode: .dictation)
+        if !isRecording, recordingStartedAt == nil {
+            resetDictationControlState()
+            return
+        }
+
+        if shouldStopDictationAfterStart, recordingMode == .dictation {
+            shouldStopDictationAfterStart = false
+            await stopAndProcessDictation()
+        }
     }
 
     func startTestRecording() async {
@@ -1084,7 +1114,7 @@ final class AppState: ObservableObject {
 
         do {
             try hotkeyService.register()
-            hotkeyStatus = "\(ProjectDefaults.fixedHotkeyDescription) registered."
+            hotkeyStatus = "\(ProjectDefaults.fixedHotkeyDescription) registered. \(ProjectDefaults.hybridHotkeyUsageDescription)."
         } catch {
             hotkeyStatus = error.localizedDescription
         }
@@ -1107,6 +1137,22 @@ final class AppState: ObservableObject {
     }
 
     private func handleDictationHotkeyPressed() async {
+        if dictationControlStyle == .handsFree {
+            if recordingMode == .dictation {
+                recordDiagnostic("hotkey pressed: stopping hands-free recording")
+                await stopAndProcessDictation()
+                return
+            }
+
+            if isProcessing {
+                shouldStopDictationAfterStart = true
+                lastResult = "Stop requested; finishing recorder startup first."
+                recordDiagnostic("hands-free stop queued until recording starts")
+                notifyStateChanged()
+                return
+            }
+        }
+
         guard canStart else {
             recordDiagnostic("hotkey press ignored: busy")
             return
@@ -1114,10 +1160,17 @@ final class AppState: ObservableObject {
 
         activeDiagnosticOperationID = UUID()
         activeDiagnosticOperationStartedAt = ContinuousClock.now
-        recordDiagnostic("hotkey pressed")
+        recordDiagnostic("hybrid hotkey pressed")
 
         shouldStopDictationAfterStart = false
+        dictationControlStyle = .holdCandidate
+        dictationHotkeyPressedAt = ContinuousClock.now
         await startRecording(mode: .dictation)
+
+        if !isRecording, recordingStartedAt == nil {
+            resetDictationControlState()
+            return
+        }
 
         guard shouldStopDictationAfterStart else {
             return
@@ -1130,16 +1183,43 @@ final class AppState: ObservableObject {
     }
 
     private func handleDictationHotkeyReleased() async {
-        recordDiagnostic("hotkey released")
-        if recordingMode == .dictation {
-            await stopAndProcessDictation()
+        guard let pressedAt = dictationHotkeyPressedAt else {
+            recordDiagnostic("hybrid hotkey release ignored: no matching press")
+            return
+        }
+        dictationHotkeyPressedAt = nil
+
+        guard dictationControlStyle == .holdCandidate else {
+            recordDiagnostic("hybrid hotkey release ignored: not a hold candidate")
             return
         }
 
-        if isProcessing {
-            shouldStopDictationAfterStart = true
-            lastResult = "Release received; stopping as soon as recording starts."
-            recordDiagnostic("hotkey release queued until recording starts")
+        let pressDuration = elapsedSeconds(since: pressedAt)
+        let releaseAction = HybridDictationHotkeyPolicy.releaseAction(pressDuration: pressDuration)
+        let durationLabel = String(format: "%.3fs", pressDuration)
+
+        switch releaseAction {
+        case .latchHandsFree:
+            dictationControlStyle = .handsFree
+            shouldStopDictationAfterStart = false
+            lastResult = "Hands-free recording active. Press \(ProjectDefaults.fixedHotkeyDescription) again or click Stop to transcribe."
+            recordDiagnostic("hybrid hotkey released after \(durationLabel): hands-free latched")
+            notifyStateChanged()
+
+        case .stopAndProcess:
+            recordDiagnostic("hybrid hotkey released after \(durationLabel): push-to-talk stop")
+            if recordingMode == .dictation {
+                await stopAndProcessDictation()
+                return
+            }
+
+            if isProcessing {
+                shouldStopDictationAfterStart = true
+                lastResult = "Push-to-talk release received; stopping as soon as recording starts."
+                recordDiagnostic("push-to-talk release queued until recording starts")
+            } else {
+                resetDictationControlState()
+            }
         }
     }
 
@@ -1192,9 +1272,13 @@ final class AppState: ObservableObject {
             isRecording = true
             setCancelHotkeyEnabled(true)
             status = mode == .dictation ? "Recording dictation" : "Recording test"
-            lastResult = mode == .dictation
-                ? "Speak, then release \(ProjectDefaults.fixedHotkeyDescription) or click Stop."
-                : "Test recording only; no transcription will run."
+            if mode == .dictation {
+                lastResult = dictationControlStyle == .handsFree
+                    ? "Hands-free recording active. Press \(ProjectDefaults.fixedHotkeyDescription) again or click Stop to transcribe."
+                    : "Keep holding for push-to-talk, or release within \(ProjectDefaults.hybridHotkeyHoldThresholdSeconds)s for hands-free."
+            } else {
+                lastResult = "Test recording only; no transcription will run."
+            }
             startElapsedTimer()
             recordDiagnostic("recording started: \(mode == .dictation ? "dictation" : "local test")")
         } catch {
@@ -2017,8 +2101,14 @@ final class AppState: ObservableObject {
         isRecording = false
         recordingStartedAt = nil
         recordingMode = .none
-        shouldStopDictationAfterStart = false
+        resetDictationControlState()
         activeDictationSettings = nil
+    }
+
+    private func resetDictationControlState() {
+        dictationControlStyle = .none
+        dictationHotkeyPressedAt = nil
+        shouldStopDictationAfterStart = false
     }
 
     private func cleanupStaleTemporaryAudio() {
@@ -2056,6 +2146,14 @@ final class AppState: ObservableObject {
     private func elapsedMilliseconds(since start: ContinuousClock.Instant) -> Int {
         let duration = start.duration(to: ContinuousClock.now).components
         return max(0, Int(duration.seconds * 1_000) + Int(duration.attoseconds / 1_000_000_000_000_000))
+    }
+
+    private func elapsedSeconds(since start: ContinuousClock.Instant) -> TimeInterval {
+        let duration = start.duration(to: ContinuousClock.now).components
+        return max(
+            0,
+            TimeInterval(duration.seconds) + TimeInterval(duration.attoseconds) / 1_000_000_000_000_000_000
+        )
     }
 
     private func completeDiagnosticOperation() {

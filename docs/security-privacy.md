@@ -79,6 +79,8 @@ Default logs may include timestamps, state names, durations, provider labels, co
 
 Accessibility permission allows the app to inspect the focused element, insert selected text, and synthesize paste shortcuts. The app should request it only with clear explanation, avoid broad automation beyond paste, and fail safely when permission is absent or the original focused element changes.
 
+The hybrid hotkey does not require Input Monitoring or any new permission. A tap-latched recording remains visibly active in the HUD and menu until the same shortcut, an explicit Stop action, Escape/Cancel, or the configured maximum duration ends it. Tap/hold classification and activation style are privacy-safe state only and must not be persisted or included with transcript content.
+
 ## Provider Transparency
 
 Before first use, the app shows which saved provider base URL receives audio and which endpoint receives cleanup text. Changing provider settings is explicit through `Apply Settings`; edited but unapplied destinations are labeled as inactive. Direct OpenAI and LiteLLM-compatible destinations remain explicit base URL/path settings in v0.2.x; named provider profiles are future convenience UI, not hidden routing behavior.

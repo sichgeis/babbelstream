@@ -203,15 +203,22 @@ private struct DictationStatusHUDView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Stop recording and process dictation")
 
-            Text(recordingBadge)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.9))
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 4)
-                .background(.white.opacity(0.14), in: Capsule())
-                .frame(maxWidth: 72)
+            HStack(spacing: 4) {
+                Image(systemName: appState.isHandsFreeRecording ? "lock.fill" : "hand.raised.fill")
+                    .font(.system(size: 9, weight: .semibold))
+
+                Text(recordingBadge)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.white.opacity(0.9))
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .background(.white.opacity(0.14), in: Capsule())
+            .frame(maxWidth: 82)
+            .accessibilityLabel(appState.isHandsFreeRecording ? "Hands-free recording" : "Push-to-talk recording")
+            .accessibilityValue(recordingBadge)
 
             LiveAudioWaveform(samples: metrics.samples)
                 .frame(maxWidth: .infinity)

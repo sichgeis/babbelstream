@@ -1,6 +1,6 @@
 # July 2026 Upgrade Smoke Test
 
-This checklist tracks the current v0.2.x behavior. Historical same-model retry language has been replaced by the primary-to-Mini fallback policy.
+This checklist tracks the current v0.4 behavior. Historical same-model retry language has been replaced by the primary-to-Mini fallback policy, and the fixed shortcut now supports both tap-latched hands-free and held push-to-talk dictation.
 
 Use this checklist after installing the branch build on the Mac where BabbelStream
 is normally used. It deliberately leaves real provider credentials, microphone
@@ -31,8 +31,12 @@ audio, Accessibility actions, Slack, and email clients out of automated validati
 
 ## Core Dictation Workflow
 
+- In Slack, tap `Control + Option + Space`, release within 0.5 seconds, and confirm
+  recording remains active with the HUD lock indicator. Speak without holding the
+  keys, press the shortcut again, and confirm processing begins exactly once.
 - In Slack, hold `Control + Option + Space`, dictate English, release, and confirm
-  the HUD moves through recording and processing before inserting a draft.
+  the HUD hand indicator moves through recording and processing before inserting
+  a draft.
 - Repeat with German and mixed German-English technical speech, including one or
   two personal-dictionary terms.
 - Confirm the message remains an unsent draft and consecutive dictations receive

@@ -2,6 +2,13 @@
 
 BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain substantial product or workflow changes; patch releases contain compatible fixes and incremental improvements.
 
+## 0.4.0 - 2026-07-11
+
+- Turn the fixed `Control + Option + Space` shortcut into a hybrid control: tap to latch hands-free recording or hold for push-to-talk.
+- Stop a hands-free recording with the same shortcut, the HUD Stop control, or the menu while preserving the existing transcription, cleanup, paste, and recovery pipeline.
+- Show a lock or hand indicator in the compact recording HUD and cover the deterministic 0.5-second gesture boundary with behavior checks.
+- Add a dedicated interaction, race-handling, privacy, and manual-QA specification for future implementation work.
+
 ## 0.3.0 - 2026-07-11
 
 - Safeguard stopped audio locally until transcription and any enabled cleanup succeed, preserving failed, canceled-after-stop, and interrupted dictations for recovery.

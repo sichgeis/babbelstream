@@ -49,6 +49,27 @@ check(
 check(ProjectDefaults.transcriptionHedgeDelaySeconds == 10, "Slow primary transcription should hedge after 10 seconds.")
 check(ProjectDefaults.transcriptionOverallTimeoutSeconds == 75, "Transcription should have one 75-second deadline.")
 check(ProjectDefaults.fallbackTranscriptionModel == "gpt-4o-mini-transcribe", "Unexpected transcription fallback model.")
+check(ProjectDefaults.hybridHotkeyHoldThresholdSeconds == 0.5, "Hybrid hotkey should use the documented 0.5-second threshold.")
+check(
+    HybridDictationHotkeyPolicy.releaseAction(pressDuration: 0) == .latchHandsFree,
+    "An immediate release should latch hands-free recording."
+)
+check(
+    HybridDictationHotkeyPolicy.releaseAction(pressDuration: 0.499) == .latchHandsFree,
+    "A release below the hold threshold should latch hands-free recording."
+)
+check(
+    HybridDictationHotkeyPolicy.releaseAction(pressDuration: 0.5) == .stopAndProcess,
+    "The exact hold threshold should preserve push-to-talk behavior."
+)
+check(
+    HybridDictationHotkeyPolicy.releaseAction(pressDuration: 1.0) == .stopAndProcess,
+    "A release above the hold threshold should stop and process."
+)
+check(
+    HybridDictationHotkeyPolicy.releaseAction(pressDuration: -1) == .latchHandsFree,
+    "Invalid negative press durations should normalize safely."
+)
 check(BuildMetadata.gitCommitInfoKey == "BabbelStreamGitCommit", "Unexpected build commit Info.plist key.")
 check(BuildMetadata.codeSigningInfoKey == "BabbelStreamCodeSigning", "Unexpected code signing Info.plist key.")
 check(!BuildMetadata.gitCommitShortHash.isEmpty, "Build commit metadata should have a visible fallback.")

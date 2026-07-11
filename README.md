@@ -1,13 +1,13 @@
 # BabbelStream
 
-BabbelStream is a native macOS menu-bar push-to-talk dictation helper for Slack and other focused text fields.
+BabbelStream is a native macOS menu-bar hybrid dictation helper for Slack and other focused text fields.
 
-Hold `Control + Option + Space`, speak, release, and BabbelStream transcribes through an OpenAI-compatible endpoint, optionally cleans the draft for Slack, and inserts it into the focused field. It never auto-sends messages.
+Tap `Control + Option + Space` for hands-free recording or hold it for push-to-talk. BabbelStream transcribes through an OpenAI-compatible endpoint, optionally cleans the draft for Slack, and inserts it into the focused field. It never auto-sends messages.
 
 ## Current MVP
 
 - Native macOS menu-bar app.
-- Global push-to-talk hotkey: `Control + Option + Space`.
+- Global hybrid hotkey: tap `Control + Option + Space` to record hands-free; hold it for at least 0.5 seconds for push-to-talk.
 - Compact non-activating status HUD for recording, processing, cancellation, and paste recovery.
 - Escape cancels only while a recording or provider operation is active; canceling a stopped recording's provider work preserves it under Failed Recordings.
 - AVFoundation microphone recording with configurable max duration, defaulting to 10 minutes.
@@ -83,7 +83,7 @@ This local DMG is suitable for personal testing. Public distribution should use 
 6. Request Accessibility permission so BabbelStream can insert text automatically.
 7. Optionally enable `Launch at login` in Settings.
 8. Optionally enable `Archive completed dictations` if you want local daily text files and monthly word-count review.
-9. Focus Slack or another text field, hold `Control + Option + Space`, speak, and release. Use Escape or the HUD Cancel button to stop without pasting.
+9. Focus Slack or another text field. Tap `Control + Option + Space`, release, speak hands-free, then press it again to process; or hold it while speaking and release for push-to-talk. The HUD Stop button also processes. Escape or the menu Cancel action discards/cancels instead of pasting.
 
 For mixed German-English dictation, leave the language field blank. Use the optional transcription prompt only for transcription hints, not cleanup instructions.
 

@@ -11,9 +11,9 @@ The primary user is a technical Mac user who writes many Slack messages during t
 ## Primary Workflow
 
 1. The user focuses the Slack message box or another macOS text field.
-2. The user holds a global push-to-talk hotkey.
+2. The user either holds the global hybrid hotkey for push-to-talk or taps it to start hands-free recording.
 3. The app records local microphone audio and shows a clear recording state.
-4. The user releases the hotkey.
+4. The user releases a held hotkey, or presses the hotkey/HUD Stop control again after a tap-latched recording.
 5. The app sends the temporary audio file to the configured transcription provider.
 6. The app optionally runs the transcript through Slack-ready cleanup, enabled by default.
 7. The app pastes the final draft into the focused field.
@@ -32,7 +32,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 ## MVP Scope
 
 - Native macOS menu-bar app.
-- Global push-to-talk hotkey.
+- Global hybrid dictation hotkey: hold for push-to-talk or tap to latch hands-free recording.
 - Minimal bottom-centered, non-activating capsule HUD. Recording shows a stop control, the target app, and live microphone activity; processing shows only the current state; completion, recovery, and errors use brief state-specific feedback.
 - Local audio recording with a configurable maximum duration, defaulting to 10 minutes.
 - OpenAI-compatible LiteLLM-style transcription provider configuration.
@@ -46,7 +46,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Teach Correction flow for explicitly adding wrong-to-right hints after a bad dictation, without automatic learning or transcript history.
 - Direct Accessibility insertion into the focused text field when possible, with clipboard plus Cmd+V fallback.
 - Automatic insertion only if the captured application remains frontmost. Insert into whichever field is focused in that application when processing completes; this deliberately supports reactive editors whose Accessibility element cannot be verified reliably. If another application becomes active, copy without stealing focus.
-- Inserted dictation text ends with one trailing space so consecutive push-to-talk chunks do not run together in the same composer.
+- Inserted dictation text ends with one trailing space so consecutive dictation chunks do not run together in the same composer.
 - API key storage in macOS Keychain.
 - Local usage counters for dictation attempts, recorded minutes, cleanup requests, transcription failures, and cleanup fallbacks.
 - Copyable privacy-safe diagnostics with provider settings, state, counters, and redacted event categories.
@@ -63,7 +63,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 ## V1 Scope
 
 - Optional local dictation archive for work usage review: when explicitly enabled, store text-only dictation entries locally so the user can inspect daily/monthly content, count spoken words, and later generate monthly topic summaries.
-- Hotkey customization.
+- Hotkey customization; the hybrid interaction ships first with the fixed shortcut.
 - Optional per-app cleanup style defaults.
 - Optional price inputs and estimated cleanup tokens.
 - Direct OpenAI profile as a preconfigured alternative.
@@ -92,10 +92,14 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 ## Keyboard And Hotkey Behavior
 
-- MVP uses a single global push-to-talk shortcut implemented with native Carbon hotkey APIs.
-- Press starts recording; release stops recording and begins processing.
+- The app uses one global hybrid shortcut implemented with native Carbon hotkey APIs: fixed `Control + Option + Space` until shortcut customization is implemented.
+- Press starts recording immediately. Releasing before 0.5 seconds latches hands-free recording; holding for at least 0.5 seconds preserves push-to-talk and release begins processing.
+- During latched hands-free recording, pressing the same shortcut again stops recording and begins processing; the paired release is ignored.
+- Starting dictation from the menu enters hands-free mode directly and can be stopped with the hybrid shortcut, HUD Stop, or menu Stop.
+- The recording HUD distinguishes the held and hands-free states without hiding the target application or waveform.
 - Escape is registered only while recording or processing is active and cancels that operation. The HUD/menu Cancel action remains the fallback if registration fails.
-- If the hotkey backend cannot detect release reliably, fall back to press-to-toggle before adding dependencies.
+- Gesture state resets after permission, validation, or recorder-start failure so late key events cannot affect the next dictation.
+- The detailed interaction and race contract lives in `docs/hybrid-hotkey-spec.md`.
 
 ## Slack-Specific Behavior
 
@@ -160,6 +164,8 @@ The user may enable a local archive for work self-review and month-end reporting
 ## Acceptance Criteria
 
 - A short English Slack message can be dictated and pasted as a draft.
+- A tap starts a hands-free dictation that continues after shortcut release and stops on the next press or explicit Stop control.
+- A hold of at least 0.5 seconds retains release-to-process push-to-talk behavior.
 - A short German Slack message can be dictated and pasted as German.
 - Mixed German-English technical speech preserves terms such as repository names, ticket IDs, acronyms, URLs, and code identifiers.
 - No message is auto-sent.
