@@ -52,7 +52,7 @@ open -na dist/BabbelStream.app --args --personal-dictionary
 open -na dist/BabbelStream.app --args --dictation-archive
 ```
 
-Supported tab names are `general`, `provider`, `writing`, `archive`, and `diagnostics`. Window sharing is enabled only for this explicit QA mode; normal launches retain the default non-shareable window behavior.
+Add `--minimum-window-size` to an auxiliary-window command to inspect its documented minimum size. Supported Settings tab names are `general`, `provider`, `writing`, `archive`, and `diagnostics`. Window sharing is enabled only for this explicit QA mode; normal launches retain the default non-shareable window behavior.
 
 ### GitHub Release Candidate
 

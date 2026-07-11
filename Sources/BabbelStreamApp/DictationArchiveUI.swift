@@ -36,6 +36,7 @@ final class DictationArchiveWindowController {
             rootView: DictationArchiveView()
                 .environmentObject(appState)
         )
+        window.setDialogInitialContentSize(NSSize(width: 760, height: 640))
         window.isReleasedWhenClosed = false
         window.center()
 
@@ -132,7 +133,7 @@ struct DictationArchiveView: View {
                 Label("Copy Markdown Export", systemImage: "doc.on.doc")
             }
         }
-        .frame(minWidth: 680, idealWidth: 760, minHeight: 520, idealHeight: 640)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func confirmClearArchive() {
