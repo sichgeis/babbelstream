@@ -58,11 +58,11 @@ The provider reliability tracker then added accepted scope, non-goals, baseline,
 
 The v0.2.5 and v0.3.0 trackers show the strongest process in the history. They made UI, privacy, recovery ownership, clean-worktree packaging, manual QA, installed-app verification, branch publication, and tags part of one explicit definition of done.
 
-The weakness is organizational: `docs/project-upgrade.md` was reused for different releases. Git preserves the old text, but a future agent reading the filesystem sees only the latest run. A run artifact should have a stable feature-specific path and later move to an archive.
+The weakness was organizational: `docs/project-upgrade.md` was reused for different releases. Git preserves the overwritten versions, but a future agent reading the filesystem would have seen only the latest run. The retained v0.3 record now has the stable archive path `docs/runs/archive/dictation-recovery-v0.3.0.md`; new runs use feature-specific active and archive paths.
 
 ### Phase 6: v0.4.0 added a strong feature contract but compressed the gates
 
-`docs/hybrid-hotkey-spec.md` is a good feature specification. It captures the threshold boundary, visible states, startup races, privacy invariants, acceptance criteria, implementation advice, and a manual smoke test. The pure threshold policy and user smoke test followed directly from it.
+`docs/features/hybrid-hotkey/spec.md` is a good feature specification. It captures the threshold boundary, visible states, startup races, privacy invariants, acceptance criteria, implementation advice, and a manual smoke test. The pure threshold policy and user smoke test followed directly from it.
 
 However, the spec, implementation, version bump, and final release tag were created together, and the tag was pushed before the user's successful smoke test and before `main` was advanced. The result worked, but the safer sequence is release candidate first, human smoke second, then main and final tag.
 
@@ -290,13 +290,11 @@ A feature is done when:
 - main/tag/push/install state matches the authorized release level;
 - the working tree is clean and the next action is unambiguous.
 
-## Recommended BabbelStream Documentation Cleanup
+## Current BabbelStream Documentation Model
 
-Do this incrementally rather than in one disruptive rewrite:
-
-1. Keep `docs/product-spec.md`, `architecture.md`, `security-privacy.md`, `test-plan.md`, and `release.md` as durable truth.
-2. Split current implementation status from roadmap history. A small `docs/project-status.md` should describe only the current release, known limitations, and next candidates.
-3. Move historical trackers into `docs/runs/archive/` and give every new run a unique path.
-4. Put feature-specific contracts under `docs/features/<feature>/spec.md`; retain `hybrid-hotkey-spec.md` until a deliberate move avoids broken references.
-5. Keep `implementation-plan.md` focused on remaining milestones and delivery order instead of duplicating the changelog.
-6. Revisit `AGENTS.md` whenever the project changes its canonical validation, release, or approval workflow—not only when product behavior changes.
+- `docs/project-status.md` is the concise current-release and next-action entry point.
+- `docs/implementation-plan.md` contains only unapproved candidate work and delivery dependencies.
+- Durable product, architecture, privacy, test, and release truth remains in the specialized specifications.
+- Feature contracts live under `docs/features/<feature>/spec.md`.
+- Active execution state lives under `docs/runs/active/`; completed evidence moves to `docs/runs/archive/` without reusing generic tracker paths.
+- `AGENTS.md` is revisited whenever canonical validation, source ownership, release, or approval behavior changes.

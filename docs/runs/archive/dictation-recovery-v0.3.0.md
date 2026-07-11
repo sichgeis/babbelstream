@@ -1,5 +1,8 @@
 # Dictation Recovery And Hedged Transcription Release
 
+> Historical implementation and release record for v0.3.0. Current behavior is
+> defined by the durable product, architecture, privacy, and test specifications.
+
 ## Outcome
 
 Ship BabbelStream 0.3.0 so a stopped dictation is not discarded when transcription or cleanup fails, and rare provider stalls recover through a bounded hedged Mini request without enlarging or adding controls to the compact HUD.

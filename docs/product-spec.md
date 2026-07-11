@@ -99,7 +99,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - The recording HUD distinguishes the held and hands-free states without hiding the target application or waveform.
 - Escape is registered only while recording or processing is active and cancels that operation. The HUD/menu Cancel action remains the fallback if registration fails.
 - Gesture state resets after permission, validation, or recorder-start failure so late key events cannot affect the next dictation.
-- The detailed interaction and race contract lives in `docs/hybrid-hotkey-spec.md`.
+- The detailed interaction and race contract lives in `docs/features/hybrid-hotkey/spec.md`.
 
 ## Slack-Specific Behavior
 

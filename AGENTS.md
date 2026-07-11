@@ -8,6 +8,7 @@ Build BabbelStream as a native macOS hybrid dictation helper for Slack and other
    - `docs/product-spec.md`
    - `docs/security-privacy.md`
    - `docs/architecture.md`
+   - `docs/project-status.md`
    - `docs/implementation-plan.md`
    - `docs/test-plan.md`
    - `docs/release.md` for release or installation work
@@ -27,6 +28,8 @@ The project playbook is `docs/spec-driven-development.md`. New feature and run d
 - `docs/product-spec.md`: user-visible behavior, scope, non-goals, and product acceptance criteria.
 - `docs/security-privacy.md`: non-negotiable data, permission, provider, logging, and retention rules.
 - `docs/architecture.md`: component boundaries, data flow, invariants, and accepted technical direction.
+- `docs/project-status.md`: current release, active feature and tracker, known limitations, candidate-work pointer, and exactly one next action.
+- `docs/implementation-plan.md`: remaining candidate work and delivery dependencies, not current status or release history.
 - `docs/features/<feature>/spec.md`: the approved interaction and edge-case contract for one feature.
 - `docs/runs/active/<feature>.md`: temporary execution state, baseline, stages, decisions, validation evidence, blocker, and next action.
 - `docs/test-plan.md`: durable automated and manual validation coverage.
