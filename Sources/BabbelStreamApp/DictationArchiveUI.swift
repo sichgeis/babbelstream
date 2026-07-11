@@ -29,6 +29,9 @@ final class DictationArchiveWindowController {
         )
         window.title = "\(ProjectDefaults.appName) Dictation Archive"
         window.minSize = NSSize(width: 680, height: 520)
+        if AppWindowLaunchMode.requested == .dictationArchive {
+            window.sharingType = .readOnly
+        }
         window.contentViewController = NSHostingController(
             rootView: DictationArchiveView()
                 .environmentObject(appState)

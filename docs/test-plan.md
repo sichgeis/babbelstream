@@ -49,6 +49,8 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Provider destination is visible in settings.
 - Edited provider values are visibly inactive until `Apply Settings` succeeds; the saved destination remains truthful.
 - All five Settings tabs fit at the minimum window size; long destinations and paths wrap or compress inside their rows, and scrolling does not move the Apply footer.
+- Teach Correction, Personal Dictionary, and Dictation Archive use the same grouped sections and stable footer design language as Settings.
+- All three auxiliary windows remain usable at their documented minimum sizes, resize cleanly, and scroll without moving their footer actions or status.
 - Usage counters are visible in Settings and can be reset.
 - Copy Diagnostics produces a redacted report without transcripts, audio paths, clipboard contents, or API keys.
 - Menu/Settings diagnostics show the semantic version and git short commit hash for the installed build.

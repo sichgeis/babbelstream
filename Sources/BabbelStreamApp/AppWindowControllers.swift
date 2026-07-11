@@ -2,6 +2,17 @@ import AppKit
 import BabbelStreamCore
 import SwiftUI
 
+enum AppWindowLaunchMode: String, CaseIterable {
+    case settings = "--settings"
+    case personalDictionary = "--personal-dictionary"
+    case teachCorrection = "--teach-correction"
+    case dictationArchive = "--dictation-archive"
+
+    static var requested: AppWindowLaunchMode? {
+        allCases.first { CommandLine.arguments.contains($0.rawValue) }
+    }
+}
+
 @MainActor
 final class SettingsWindowController {
     private let appState: AppState
@@ -28,7 +39,7 @@ final class SettingsWindowController {
         )
         window.title = "\(ProjectDefaults.appName) Settings"
         window.minSize = NSSize(width: 700, height: 560)
-        if CommandLine.arguments.contains("--settings") {
+        if AppWindowLaunchMode.requested == .settings {
             window.sharingType = .readOnly
         }
         window.contentViewController = NSHostingController(
@@ -69,6 +80,9 @@ final class PersonalDictionaryWindowController {
         )
         window.title = "\(ProjectDefaults.appName) Personal Dictionary"
         window.minSize = NSSize(width: 620, height: 520)
+        if AppWindowLaunchMode.requested == .personalDictionary {
+            window.sharingType = .readOnly
+        }
         window.contentViewController = NSHostingController(
             rootView: PersonalDictionaryView(
                 store: store,
@@ -110,6 +124,9 @@ final class TeachCorrectionWindowController {
         )
         window.title = "\(ProjectDefaults.appName) Teach Correction"
         window.minSize = NSSize(width: 500, height: 420)
+        if AppWindowLaunchMode.requested == .teachCorrection {
+            window.sharingType = .readOnly
+        }
         window.contentViewController = NSHostingController(
             rootView: TeachCorrectionView(store: store)
                 .environmentObject(appState)
