@@ -432,7 +432,7 @@ struct PersonalDictionaryView: View {
         .onAppear {
             load()
         }
-        .frame(minWidth: 620, idealWidth: 720, minHeight: 520, idealHeight: 640)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func load() {
@@ -534,7 +534,7 @@ struct TeachCorrectionView: View {
             }
             .keyboardShortcut(.defaultAction)
         }
-        .frame(minWidth: 500, idealWidth: 560, minHeight: 420, idealHeight: 500)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func save() {

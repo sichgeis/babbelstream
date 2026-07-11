@@ -11,6 +11,20 @@ enum AppWindowLaunchMode: String, CaseIterable {
     static var requested: AppWindowLaunchMode? {
         allCases.first { CommandLine.arguments.contains($0.rawValue) }
     }
+
+    static var usesMinimumWindowSize: Bool {
+        CommandLine.arguments.contains("--minimum-window-size")
+    }
+}
+
+extension NSWindow {
+    func setDialogInitialContentSize(_ defaultContentSize: NSSize) {
+        if AppWindowLaunchMode.usesMinimumWindowSize {
+            setFrame(NSRect(origin: .zero, size: minSize), display: false)
+        } else {
+            setContentSize(defaultContentSize)
+        }
+    }
 }
 
 @MainActor
@@ -89,6 +103,7 @@ final class PersonalDictionaryWindowController {
                 onTeachCorrection: onTeachCorrection
             )
         )
+        window.setDialogInitialContentSize(NSSize(width: 720, height: 640))
         window.isReleasedWhenClosed = false
         window.center()
 
@@ -131,6 +146,7 @@ final class TeachCorrectionWindowController {
             rootView: TeachCorrectionView(store: store)
                 .environmentObject(appState)
         )
+        window.setDialogInitialContentSize(NSSize(width: 560, height: 500))
         window.isReleasedWhenClosed = false
         window.center()
 
