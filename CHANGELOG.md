@@ -2,6 +2,14 @@
 
 BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain substantial product or workflow changes; patch releases contain compatible fixes and incremental improvements.
 
+## 0.4.1 - 2026-07-20
+
+- Show the bounded Mini transcription hedge truthfully as `Trying Mini` in the compact HUD.
+- Replace the handwritten LaunchAgent with macOS `SMAppService`, including safe migration that preserves the legacy login item until registration succeeds.
+- Calm the everyday menu while keeping **Copy Last Draft** directly available; move local test recording into Diagnostics and show repair actions only when permissions need attention.
+- Add a compact General Settings readiness section for permissions, Keychain configuration, the active provider, and launch-at-login approval.
+- Share stable audio-to-draft preparation between normal dictation and failed-recording recovery, and split behavior-check support by concern without adding dependencies.
+
 ## 0.4.0 - 2026-07-11
 
 - Turn the fixed `Control + Option + Space` shortcut into a hybrid control: tap to latch hands-free recording or hold for push-to-talk.

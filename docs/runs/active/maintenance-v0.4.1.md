@@ -96,15 +96,18 @@ calmer daily UI, and more maintainable coordination/check structure.
 
 ### 5. Daily UX Polish
 
-- Status: Pending
-- [ ] Simplify the main menu without removing Copy Last Draft.
-- [ ] Add compact readiness information to General Settings.
-- [ ] Update UX/manual validation documentation.
-- Evidence: Pending
+- Status: Completed
+- [x] Simplify the main menu without removing Copy Last Draft.
+- [x] Add compact readiness information to General Settings.
+- [x] Update UX/manual validation documentation.
+- Evidence: static build/hotkey/permission/draft/usage lines no longer crowd the
+  menu; Copy Last Draft remains first-level, permission repair actions are
+  contextual, Local Test Recording moved under Diagnostics, and General Settings
+  exposes readiness with login-item approval repair. `task check` passed.
 
 ### 6. Candidate Validation
 
-- Status: Pending
+- Status: In progress
 - [ ] Reconcile durable docs and dependency audit.
 - [ ] Run focused checks, `task check`, clean build, packaging, and diff/privacy review.
 - [ ] Bump version/changelog for the candidate, commit, and push final evidence.
@@ -136,8 +139,8 @@ None.
 
 ## Next Action
 
-Calm the status menu while retaining Copy Last Draft as a direct action, then
-add the compact General Settings readiness view.
+Reconcile the final diff and privacy posture, commit the `0.4.1` candidate, then
+run canonical validation and package from that clean commit.
 
 ## Closeout
 

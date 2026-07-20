@@ -94,6 +94,9 @@ spctl --assess --type open --verbose "dist/BabbelStream-$(cat VERSION).dmg"
 - Launch from `/Applications`.
 - Confirm menu-bar icon appears.
 - Confirm Settings opens.
+- Confirm the menu is concise and Copy Last Draft remains a direct action; confirm Local Test Recording is available under Diagnostics.
+- Confirm General Settings readiness matches permissions, Keychain/provider configuration, and the Login Items state.
+- Toggle Launch at login and confirm the app appears in System Settings > General > Login Items; when upgrading an older installation, confirm the legacy LaunchAgent is removed only after registration succeeds.
 - Confirm all five Settings tabs render without clipping at the 700×560 minimum and 760×640 default window sizes; Provider and Diagnostics should scroll without moving the Apply footer.
 - Confirm Teach Correction renders at 500×420 minimum and 560×500 default sizes; grouped content scrolls without moving its footer.
 - Confirm Personal Dictionary renders at 620×520 minimum and 720×640 default sizes; both editors remain usable and the footer stays fixed.

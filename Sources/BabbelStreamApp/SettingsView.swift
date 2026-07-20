@@ -113,6 +113,38 @@ private struct SettingsGeneralPane: View {
 
     var body: some View {
         SettingsPane {
+            Section("Readiness") {
+                LabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
+                LabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
+                LabeledContent("API key", value: appState.hasAPIKey ? "Saved in Keychain" : "Missing")
+                LabeledContent("Launch at login", value: appState.launchAtLoginStatusSummary)
+                AppLongValue(label: "Provider", value: appState.providerDestinationSummary)
+
+                if appState.microphonePermissionStatus != .authorized
+                    || appState.accessibilityPermissionStatus != .trusted
+                    || appState.launchAtLoginRequiresApproval {
+                    HStack {
+                        if appState.microphonePermissionStatus != .authorized {
+                            Button("Request Microphone") {
+                                Task {
+                                    await appState.requestMicrophonePermission()
+                                }
+                            }
+                        }
+                        if appState.accessibilityPermissionStatus != .trusted {
+                            Button("Request Accessibility") {
+                                appState.requestAccessibilityPermission()
+                            }
+                        }
+                        if appState.launchAtLoginRequiresApproval {
+                            Button("Open Login Items") {
+                                appState.openLoginItemsSettings()
+                            }
+                        }
+                    }
+                }
+            }
+
             Section("Behavior") {
                 Toggle(
                     "Cleanup enabled",

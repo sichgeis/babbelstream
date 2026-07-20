@@ -56,3 +56,21 @@ These remain unsequenced until the user selects them:
 - A preconfigured direct OpenAI provider profile.
 - Deterministic local dictionary replacements.
 - Preview/editor and email-specific cleanup modes.
+
+## Maintenance And UX Path
+
+- Keep the dependency policy intentionally native-first. The current package has
+  no third-party dependencies, so maintenance should review the Swift tools
+  version, deployment target, deprecated Apple APIs, and release tooling rather
+  than adding an updater merely to have one.
+- Re-run the dependency/platform audit before each planned release or after a
+  major macOS/Xcode upgrade. Local `task check` remains sufficient for this
+  personal-only project; CI can be reconsidered only if distribution or outside
+  contributors make it useful.
+- Option B: make secondary tools contextual, showing recovery/archive entries
+  only when they contain data. This would shorten the menu further but makes
+  stable tool locations less predictable.
+- Option C: replace the menu with a small status popover that combines readiness,
+  recent draft recovery, and richer live state. This offers more visual polish
+  but adds interaction and focus complexity to a utility whose strongest trait
+  is immediacy.

@@ -42,6 +42,7 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Holding `Control + Option + Space` for at least 0.5 seconds retains release-to-process push-to-talk behavior.
 - The recording HUD uses a lock for hands-free and a hand for held recording while preserving the target-app label and waveform.
 - Menu Start enters hands-free mode, and the hybrid shortcut, HUD Stop, and menu Stop all process it.
+- The everyday menu stays concise, keeps Copy Last Draft directly available, and shows permission repair actions only while they are needed; local test recording remains available under Diagnostics.
 - Recording shows a compact bottom-centered capsule with a stop control, target app, and live microphone activity without activating BabbelStream.
 - Releasing the hotkey transitions the same capsule through concise Transcribing, Trying Mini transcription when needed, Cleaning up, and Pasting states without exposing transcript text.
 - Transcribing, Mini fallback, Cleaning up, and Pasting keep the same blue waveform badge so state-label changes do not make the left side flicker.
@@ -54,6 +55,7 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Provider destination is visible in settings.
 - Edited provider values are visibly inactive until `Apply Settings` succeeds; the saved destination remains truthful.
 - All five Settings tabs fit at the minimum window size; long destinations and paths wrap or compress inside their rows, and scrolling does not move the Apply footer.
+- General Settings readiness truthfully reflects microphone, Accessibility, API-key, active-provider, and launch-at-login state; approval-required login items offer a direct route to System Settings.
 - Teach Correction, Personal Dictionary, and Dictation Archive use the same grouped sections and stable footer design language as Settings.
 - All three auxiliary windows remain usable at their documented minimum sizes, resize cleanly, and scroll without moving their footer actions or status.
 - Usage counters are visible in Settings and can be reset.

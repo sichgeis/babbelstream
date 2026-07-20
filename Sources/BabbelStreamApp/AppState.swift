@@ -61,6 +61,7 @@ final class AppState: ObservableObject {
     @Published var hasAPIKey = false
     @Published var launchAtLoginEnabled = false
     @Published private(set) var launchAtLoginStatusSummary = "Unknown"
+    @Published private(set) var launchAtLoginRequiresApproval = false
     @Published var usageSnapshot: UsageSnapshot
     @Published var personalDictionarySummary = "Not loaded yet."
     @Published var lastFailureCategory = "None"
@@ -185,6 +186,7 @@ final class AppState: ObservableObject {
         self.hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
         self.launchAtLoginEnabled = launchAtLoginService.snapshot.isEnabled
         self.launchAtLoginStatusSummary = launchAtLoginService.snapshot.displayName
+        self.launchAtLoginRequiresApproval = launchAtLoginService.snapshot.requiresApproval
 
         do {
             try launchAtLoginService.migrateLegacyRegistrationIfNeeded()
@@ -750,6 +752,7 @@ final class AppState: ObservableObject {
         let snapshot = launchAtLoginService.snapshot
         launchAtLoginEnabled = snapshot.isEnabled
         launchAtLoginStatusSummary = snapshot.displayName
+        launchAtLoginRequiresApproval = snapshot.requiresApproval
     }
 
     func copyLatestDraft() {
