@@ -69,10 +69,14 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 ## `LaunchAtLoginService`
 
 - Responsibility: enable, disable, and report local launch-at-login state.
-- Input: current app bundle URL.
-- Output: user LaunchAgent presence and launchctl load/unload result.
-- Errors: LaunchAgent write/remove failure, launchctl bootstrap/bootout failure.
-- Test strategy: unit-test plist generation; manual QA state detection and enable/disable against the real user LaunchAgent.
+- Input: the system main-app login service plus any legacy LaunchAgent state.
+- Output: a snapshot distinguishing enabled, disabled, approval-required,
+  unavailable, and preserved legacy intent.
+- Errors: system registration/unregistration failure, approval required, service
+  unavailable, or legacy cleanup failure.
+- Test strategy: fake the system-service adapter; verify register-before-remove
+  migration, preservation after failed registration, truthful snapshot state,
+  and manual enable/disable against macOS Login Items.
 
 ## `PersonalDictionaryStore`
 

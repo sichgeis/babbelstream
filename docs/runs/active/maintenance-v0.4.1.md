@@ -76,15 +76,16 @@ calmer daily UI, and more maintainable coordination/check structure.
 
 ### 3. Launch At Login
 
-- Status: In progress
-- [ ] Adopt `SMAppService` behind a testable adapter.
-- [ ] Add safe legacy migration and truthful UI state.
-- [ ] Update privacy, architecture, and manual checks.
-- Evidence: Pending
+- Status: Completed
+- [x] Adopt `SMAppService` behind a testable adapter.
+- [x] Add safe legacy migration and truthful UI state.
+- [x] Update privacy, architecture, and manual checks.
+- Evidence: `task check` passed; fake-service checks prove register-before-remove
+  migration and preservation of legacy intent when system approval is required.
 
 ### 4. GM Refactor
 
-- Status: Pending
+- Status: In progress
 - [ ] Extract meaningful shared audio-to-draft preparation.
 - [ ] Keep normal delivery and recovery-copy outcomes visible.
 - [ ] Split executable checks by concern with a readable runner.
@@ -132,8 +133,8 @@ None.
 
 ## Next Action
 
-Replace handwritten LaunchAgent registration with a testable `SMAppService`
-integration and safe legacy migration.
+Extract shared audio-to-draft preparation while keeping delivery/recovery
+outcomes visible, then split the executable checks by concern.
 
 ## Closeout
 

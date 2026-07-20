@@ -60,6 +60,7 @@ final class AppState: ObservableObject {
     @Published var hotkeyStatus = "Hotkey not registered yet."
     @Published var hasAPIKey = false
     @Published var launchAtLoginEnabled = false
+    @Published private(set) var launchAtLoginStatusSummary = "Unknown"
     @Published var usageSnapshot: UsageSnapshot
     @Published var personalDictionarySummary = "Not loaded yet."
     @Published var lastFailureCategory = "None"
@@ -100,7 +101,7 @@ final class AppState: ObservableObject {
     private let cleanupProvider: CleanupProvider
     private let textInsertionService: TextInsertionService
     private let hotkeyService: HotkeyService
-    private let launchAtLoginService: LaunchAtLoginService
+    private let launchAtLoginService: any LaunchAtLoginManaging
     private let personalDictionaryStore: PersonalDictionaryStore
     private let usageTracker: UsageTracker
     private let dictationArchiveStore: DictationArchiveStore
@@ -138,7 +139,7 @@ final class AppState: ObservableObject {
         cleanupProvider: CleanupProvider = OpenAICompatibleCleanupProvider(),
         textInsertionService: TextInsertionService = ClipboardTextInsertionService(),
         hotkeyService: HotkeyService = CarbonHotkeyService(),
-        launchAtLoginService: LaunchAtLoginService = LaunchAtLoginService(),
+        launchAtLoginService: any LaunchAtLoginManaging = LaunchAtLoginService(),
         personalDictionaryStore: PersonalDictionaryStore = JSONPersonalDictionaryStore(),
         usageTracker: UsageTracker = UserDefaultsUsageTracker(),
         dictationArchiveStore: DictationArchiveStore = JSONLDictationArchiveStore(),
@@ -182,7 +183,17 @@ final class AppState: ObservableObject {
         self.microphonePermissionStatus = audioRecorder.microphonePermissionStatus()
         self.accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
         self.hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
-        self.launchAtLoginEnabled = launchAtLoginService.isEnabled
+        self.launchAtLoginEnabled = launchAtLoginService.snapshot.isEnabled
+        self.launchAtLoginStatusSummary = launchAtLoginService.snapshot.displayName
+
+        do {
+            try launchAtLoginService.migrateLegacyRegistrationIfNeeded()
+            refreshLaunchAtLoginStatus()
+        } catch {
+            refreshLaunchAtLoginStatus()
+            warningMessage = "Launch-at-login migration needs attention. \(error.localizedDescription)"
+            recordDiagnostic("launch at login migration failed: \(diagnosticErrorCategory(error))")
+        }
 
         updateLatestExternalPasteTarget(from: NSWorkspace.shared.frontmostApplication)
         observeWorkspaceActivations()
@@ -472,6 +483,7 @@ final class AppState: ObservableObject {
     func refreshPermissionStatuses() {
         microphonePermissionStatus = audioRecorder.microphonePermissionStatus()
         accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
+        refreshLaunchAtLoginStatus()
         notifyStateChanged()
     }
 
@@ -716,17 +728,28 @@ final class AppState: ObservableObject {
                 try launchAtLoginService.disable()
             }
 
-            launchAtLoginEnabled = launchAtLoginService.isEnabled
+            refreshLaunchAtLoginStatus()
             errorMessage = nil
             lastResult = isEnabled
                 ? "BabbelStream will launch when you log in."
                 : "BabbelStream will no longer launch at login."
             recordDiagnostic("launch at login \(launchAtLoginEnabled ? "enabled" : "disabled")")
         } catch {
-            launchAtLoginEnabled = launchAtLoginService.isEnabled
+            refreshLaunchAtLoginStatus()
             errorMessage = error.localizedDescription
             recordDiagnostic("launch at login update failed: \(diagnosticErrorCategory(error))")
         }
+    }
+
+    func openLoginItemsSettings() {
+        launchAtLoginService.openSystemSettings()
+        recordDiagnostic("login items settings opened")
+    }
+
+    private func refreshLaunchAtLoginStatus() {
+        let snapshot = launchAtLoginService.snapshot
+        launchAtLoginEnabled = snapshot.isEnabled
+        launchAtLoginStatusSummary = snapshot.displayName
     }
 
     func copyLatestDraft() {
@@ -2319,12 +2342,16 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
 
     if let launchAtLoginError = error as? LaunchAtLoginError {
         switch launchAtLoginError {
-        case .couldNotWriteLaunchAgent:
-            return "LaunchAtLoginError.couldNotWriteLaunchAgent"
-        case .couldNotRemoveLaunchAgent:
-            return "LaunchAtLoginError.couldNotRemoveLaunchAgent"
-        case let .launchctlFailed(command, status):
-            return "LaunchAtLoginError.launchctlFailed(\(command), \(status))"
+        case .registrationFailed:
+            return "LaunchAtLoginError.registrationFailed"
+        case .unregistrationFailed:
+            return "LaunchAtLoginError.unregistrationFailed"
+        case .approvalRequired:
+            return "LaunchAtLoginError.approvalRequired"
+        case .serviceUnavailable:
+            return "LaunchAtLoginError.serviceUnavailable"
+        case .legacyRemovalFailed:
+            return "LaunchAtLoginError.legacyRemovalFailed"
         }
     }
 
