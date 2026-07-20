@@ -6,7 +6,7 @@ by their dedicated specifications.
 
 ## Current Release
 
-- Latest release: `0.4.0` (`v0.4.0`)
+- Latest release: `0.4.1` (`v0.4.1`)
 - Supported workflow: hybrid tap-for-hands-free and hold-for-push-to-talk
   dictation into Slack and other focused macOS text fields.
 - Canonical validation: `task check`.
@@ -15,11 +15,9 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active feature: `docs/features/maintenance-v0.4.1/spec.md`.
-- Active run tracker: `docs/runs/active/maintenance-v0.4.1.md`.
-- Candidate posture: clean local candidate `0.4.1` (`8ee4c47`) is installed and
-  running from `/Applications`; the human smoke gate remains before `main` or
-  the final `v0.4.1` tag.
+- Active feature: none selected.
+- Active run tracker: none.
+- Completed maintenance evidence: `docs/runs/archive/maintenance-v0.4.1.md`.
 - Completed run evidence is retained under `docs/runs/archive/`.
 
 ## Known Limitations
@@ -40,5 +38,5 @@ recorded.
 
 ## Next Action
 
-Run the `0.4.1` feature smoke test with the installed candidate before any
-`main` update or final tag.
+Select the next candidate from `docs/implementation-plan.md`, approve its feature
+contract, and create a matching active run tracker.
