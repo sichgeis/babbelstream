@@ -24,7 +24,7 @@ Tap `Control + Option + Space` for hands-free recording or hold it for push-to-t
 - Direct Accessibility insertion first, clipboard plus `Cmd+V` fallback.
 - Automatic insertion only while the originally captured app remains frontmost; the currently focused field in that app receives the draft, including in VS Code, Codex, and other reactive editors.
 - One trailing space after inserted dictation chunks so repeated dictations do not run together.
-- In-app launch-at-login toggle backed by a user LaunchAgent.
+- In-app launch-at-login toggle backed by macOS ServiceManagement.
 - API key stored in macOS Keychain; no transcript or audio history by default.
 
 ## Build Locally
@@ -111,7 +111,10 @@ An optional local Codex skill can edit the same file from `~/.codex/skills/babbe
 2. Quit BabbelStream and remove `BabbelStream.app` from `/Applications`.
 3. If you no longer want the dictionary or optional archive, remove `~/Library/Application Support/BabbelStream` manually after reviewing its contents.
 4. Remove the BabbelStream entry from System Settings > Privacy & Security > Microphone and Accessibility if desired.
-5. If the app was removed before launch-at-login was disabled, remove `~/Library/LaunchAgents/com.sichgeis.babbelstream.loginitem.plist` manually.
+5. Remove BabbelStream from System Settings > General > Login Items if it is
+   still listed. Installations older than v0.4.1 may also leave
+   `~/Library/LaunchAgents/com.sichgeis.babbelstream.loginitem.plist`; v0.4.1
+   migrates and removes that legacy file after successful system registration.
 6. The optional `BabbelStream Local Code Signing` identity can be removed in Keychain Access when it is no longer used for development builds.
 
 Removing the app bundle alone intentionally does not delete local dictionary or archive data.

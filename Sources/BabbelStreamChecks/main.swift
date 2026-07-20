@@ -7,6 +7,39 @@ func check(_ condition: @autoclosure () -> Bool, _ message: String) {
     }
 }
 
+enum LoginItemCheckError: Error {
+    case denied
+}
+
+final class FakeSystemLoginItemService: SystemLoginItemService {
+    var status: SystemLoginItemStatus
+    var registrationError: Error?
+    private(set) var registerCallCount = 0
+    private(set) var unregisterCallCount = 0
+    private(set) var openSettingsCallCount = 0
+
+    init(status: SystemLoginItemStatus) {
+        self.status = status
+    }
+
+    func register() throws {
+        registerCallCount += 1
+        if let registrationError {
+            throw registrationError
+        }
+        status = .enabled
+    }
+
+    func unregister() throws {
+        unregisterCallCount += 1
+        status = .notRegistered
+    }
+
+    func openSystemSettings() {
+        openSettingsCallCount += 1
+    }
+}
+
 let configuration = ProviderConfiguration()
 let tempDirectory = AudioTempFileStore.temporaryDirectory()
 let deterministicAudioURL = try AudioTempFileStore.makeTemporaryAudioURL(
@@ -363,23 +396,54 @@ check(
     !TextInsertionTargetPolicy.applicationMatches(nil, frontmostProcessIdentifier: 1234),
     "Insertion should be blocked when no target was captured."
 )
-let launchAgentPlist = LaunchAtLoginService.launchAgentPropertyList(
-    appURL: URL(fileURLWithPath: "/Applications/BabbelStream.app")
+let launchAtLoginCheckRoot = FileManager.default.temporaryDirectory
+    .appendingPathComponent("BabbelStreamLaunchAtLoginChecks-\(UUID().uuidString)", isDirectory: true)
+let legacyLaunchAgentURL = launchAtLoginCheckRoot.appendingPathComponent("legacy.plist")
+try FileManager.default.createDirectory(at: launchAtLoginCheckRoot, withIntermediateDirectories: true)
+defer { try? FileManager.default.removeItem(at: launchAtLoginCheckRoot) }
+try Data("legacy launch agent".utf8).write(to: legacyLaunchAgentURL)
+let enabledSystemLoginItem = FakeSystemLoginItemService(status: .notRegistered)
+let migratingLaunchAtLoginService = LaunchAtLoginService(
+    systemService: enabledSystemLoginItem,
+    legacyLaunchAgentURL: legacyLaunchAgentURL
+)
+try migratingLaunchAtLoginService.migrateLegacyRegistrationIfNeeded()
+check(
+    enabledSystemLoginItem.registerCallCount == 1,
+    "Legacy launch-at-login intent should register the supported system login item."
 )
 check(
-    launchAgentPlist["Label"] as? String == LaunchAtLoginService.defaultLabel,
-    "Launch-at-login should use the stable BabbelStream LaunchAgent label."
+    migratingLaunchAtLoginService.snapshot.systemStatus == .enabled,
+    "Successful migration should report the system login item as enabled."
 )
 check(
-    launchAgentPlist["RunAtLoad"] as? Bool == true,
-    "Launch-at-login should run BabbelStream at user login."
+    !FileManager.default.fileExists(atPath: legacyLaunchAgentURL.path),
+    "The legacy LaunchAgent should be removed only after system registration succeeds."
+)
+try Data("legacy launch agent".utf8).write(to: legacyLaunchAgentURL)
+let approvalRequiredSystemLoginItem = FakeSystemLoginItemService(status: .requiresApproval)
+approvalRequiredSystemLoginItem.registrationError = LoginItemCheckError.denied
+let approvalRequiredLaunchAtLoginService = LaunchAtLoginService(
+    systemService: approvalRequiredSystemLoginItem,
+    legacyLaunchAgentURL: legacyLaunchAgentURL
+)
+do {
+    try approvalRequiredLaunchAtLoginService.migrateLegacyRegistrationIfNeeded()
+    fatalError("A login item awaiting approval should not complete legacy migration.")
+} catch LaunchAtLoginError.approvalRequired {
+    // Expected.
+}
+check(
+    FileManager.default.fileExists(atPath: legacyLaunchAgentURL.path),
+    "Failed system registration must preserve the working legacy LaunchAgent."
 )
 check(
-    launchAgentPlist["ProgramArguments"] as? [String] == [
-        "/usr/bin/open",
-        "/Applications/BabbelStream.app"
-    ],
-    "Launch-at-login should open the configured app bundle path."
+    approvalRequiredLaunchAtLoginService.snapshot.isEnabled,
+    "A preserved legacy LaunchAgent should keep launch-at-login intent enabled."
+)
+check(
+    approvalRequiredLaunchAtLoginService.snapshot.requiresApproval,
+    "The launch-at-login snapshot should expose pending system approval."
 )
 let presenceDefaults = UserDefaults(suiteName: "com.sichgeis.babbelstream.checks")!
 presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")

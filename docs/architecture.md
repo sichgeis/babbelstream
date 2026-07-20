@@ -135,7 +135,16 @@ Use `UserDefaults` for non-secret settings and Keychain for API keys. Avoid plai
 
 ## Launch At Login
 
-The app can create or remove a user LaunchAgent at `~/Library/LaunchAgents/com.sichgeis.babbelstream.loginitem.plist` from Settings. The LaunchAgent runs `/usr/bin/open` against the current app bundle path at login. This keeps launch-at-login local and reversible without adding a helper app or installer package for the MVP.
+The app registers or unregisters `SMAppService.mainApp` from Settings and reports
+the system's enabled, disabled, approval-required, or unavailable state. This
+uses the supported macOS 13 ServiceManagement path without a helper executable
+or a stored application path.
+
+For upgrades from v0.4.0 and earlier, BabbelStream recognizes the legacy
+`~/Library/LaunchAgents/com.sichgeis.babbelstream.loginitem.plist`. It registers
+the main-app service first and removes the legacy plist only after registration
+succeeds. If registration needs approval or fails, the legacy file remains so
+the previous launch-at-login intent is not silently lost.
 
 ## Packaging And Local Install
 
