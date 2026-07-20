@@ -85,11 +85,14 @@ calmer daily UI, and more maintainable coordination/check structure.
 
 ### 4. GM Refactor
 
-- Status: In progress
-- [ ] Extract meaningful shared audio-to-draft preparation.
-- [ ] Keep normal delivery and recovery-copy outcomes visible.
-- [ ] Split executable checks by concern with a readable runner.
-- Evidence: Pending
+- Status: Completed
+- [x] Extract meaningful shared audio-to-draft preparation.
+- [x] Keep normal delivery and recovery-copy outcomes visible.
+- [x] Split executable checks by concern with a readable runner.
+- Evidence: normal and recovery processing now share one API-key/transcription/
+  cleanup action while retaining their distinct delivery decisions; the check
+  executable has a minimal runner and separate login/provider fixtures;
+  `task check` passed.
 
 ### 5. Daily UX Polish
 
@@ -133,8 +136,8 @@ None.
 
 ## Next Action
 
-Extract shared audio-to-draft preparation while keeping delivery/recovery
-outcomes visible, then split the executable checks by concern.
+Calm the status menu while retaining Copy Last Draft as a direct action, then
+add the compact General Settings readiness view.
 
 ## Closeout
 

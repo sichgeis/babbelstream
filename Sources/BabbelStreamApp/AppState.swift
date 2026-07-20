@@ -1471,14 +1471,6 @@ final class AppState: ObservableObject {
             recordDiagnostic("transcription language ignored: invalid language setting")
         }
 
-        let keyLoadStartedAt = ContinuousClock.now
-        let apiKey = try loadAPIKeyForDictation()
-        recordDiagnostic("api key loaded in \(elapsedMilliseconds(since: keyLoadStartedAt)) ms")
-        guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            recordDiagnostic("transcription not started: missing API key")
-            throw ProviderError.missingAPIKey
-        }
-
         usageSnapshot.recordDictation(duration: recording.duration)
         saveUsageSnapshot()
 
@@ -1487,15 +1479,9 @@ final class AppState: ObservableObject {
         transcriptionProgressDetail = nil
         recordDiagnostic("transcription started")
 
-        let rawTranscript = try await transcribeRecording(
+        let preparedDraft = try await prepareDraftFromAudio(
             at: recording.temporaryFileURL,
-            settings: settings,
-            apiKey: apiKey
-        )
-        let preparedDraft = try await prepareDraft(
-            from: rawTranscript,
-            settings: settings,
-            apiKey: apiKey
+            settings: settings
         )
 
         try Task.checkCancellation()
@@ -1516,6 +1502,30 @@ final class AppState: ObservableObject {
             insertionOutcome: insertionOutcome
         )
         return preparedDraft.cleanupFallbackUsed
+    }
+
+    private func prepareDraftFromAudio(
+        at audioURL: URL,
+        settings: AppSettings
+    ) async throws -> PreparedDraft {
+        let keyLoadStartedAt = ContinuousClock.now
+        let apiKey = try loadAPIKeyForDictation()
+        recordDiagnostic("api key loaded in \(elapsedMilliseconds(since: keyLoadStartedAt)) ms")
+        guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            recordDiagnostic("transcription not started: missing API key")
+            throw ProviderError.missingAPIKey
+        }
+
+        let rawTranscript = try await transcribeRecording(
+            at: audioURL,
+            settings: settings,
+            apiKey: apiKey
+        )
+        return try await prepareDraft(
+            from: rawTranscript,
+            settings: settings,
+            apiKey: apiKey
+        )
     }
 
     private func transcribeRecording(
@@ -1829,29 +1839,23 @@ final class AppState: ObservableObject {
             )
             activeRecoveryRecording = updated
             refreshRecoveryRecordings()
-            let apiKey = try loadAPIKeyForDictation()
             let settings = appSettings
-            let rawTranscript = try await transcribeRecording(
+            let preparedDraft = try await prepareDraftFromAudio(
                 at: dictationRecoveryStore.audioURL(for: updated),
-                settings: settings,
-                apiKey: apiKey
+                settings: settings
             )
-            let preparedDraft = try await prepareDraft(from: rawTranscript, settings: settings, apiKey: apiKey)
             try Task.checkCancellation()
             latestRawTranscript = preparedDraft.rawTranscript
             latestFinalDraft = preparedDraft.finalDraft
+            try textInsertionService.copyText(
+                DictationDraftFormatter.textWithTrailingSeparator(preparedDraft.finalDraft)
+            )
 
             if preparedDraft.cleanupFallbackUsed {
-                try textInsertionService.copyText(
-                    DictationDraftFormatter.textWithTrailingSeparator(preparedDraft.finalDraft)
-                )
                 preserveActiveRecoveryRecording(state: .cleanupFailed, failureCategory: lastFailureCategory)
                 status = "Recording saved"
                 lastResult = "Cleanup failed; raw draft copied and recording retained."
             } else {
-                try textInsertionService.copyText(
-                    DictationDraftFormatter.textWithTrailingSeparator(preparedDraft.finalDraft)
-                )
                 deleteActiveRecoveryRecording()
                 status = "Copied"
                 errorMessage = nil
