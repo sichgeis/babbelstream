@@ -68,14 +68,15 @@ calmer daily UI, and more maintainable coordination/check structure.
 
 ### 2. HUD Correctness
 
-- Status: In progress
-- [ ] Extract deterministic HUD presentation policy.
-- [ ] Fix Mini fallback label and add focused checks.
-- Evidence: Pending
+- Status: Completed
+- [x] Extract deterministic HUD presentation policy.
+- [x] Fix Mini fallback label and add focused checks.
+- Evidence: `task check` passed; Mini, recovery, and pasted outcomes are
+  covered by `BabbelStreamChecks`.
 
 ### 3. Launch At Login
 
-- Status: Pending
+- Status: In progress
 - [ ] Adopt `SMAppService` behind a testable adapter.
 - [ ] Add safe legacy migration and truthful UI state.
 - [ ] Update privacy, architecture, and manual checks.
@@ -131,7 +132,8 @@ None.
 
 ## Next Action
 
-Extract the deterministic HUD presentation policy and cover the Mini state.
+Replace handwritten LaunchAgent registration with a testable `SMAppService`
+integration and safe legacy migration.
 
 ## Closeout
 
