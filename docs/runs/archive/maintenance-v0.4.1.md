@@ -19,8 +19,8 @@ calmer daily UI, and more maintainable coordination/check structure.
 
 - Approved spec: `docs/features/maintenance-v0.4.1/spec.md` / Approved
 - Agent may proceed through: feature push and release-candidate packaging
-- Required human gates: real microphone/provider/Slack smoke test before install,
-  `main`, final tag, or release
+- Required human gates: real microphone/provider/Slack smoke test before `main`,
+  final tag, or release; passed on 2026-07-20 after candidate installation
 - External systems/data explicitly authorized: ordinary pushes to the dedicated
   feature branch; no CI pipeline
 
@@ -37,8 +37,7 @@ calmer daily UI, and more maintainable coordination/check structure.
 ## Non-Goals
 
 - CI, new dependencies, providers, permissions, telemetry, retention, hotkey
-  customization, local transcription, preview/editor behavior, `main`, tag,
-  installation, or public release.
+  customization, local transcription, preview/editor behavior, or public release.
 
 ## Risks And Dependencies
 
@@ -125,38 +124,36 @@ calmer daily UI, and more maintainable coordination/check structure.
 | Canonical checks | Passed | Passed | `task check` on `8ee4c47` |
 | Focused checks | Not separate | Passed | HUD/login/refactor behavior checks |
 | Build/package | Clean build passed | Passed | `BabbelStream-0.4.1.dmg`; hdiutil checksum valid |
-| Manual smoke | Not run in this work session | User gate | Pending |
+| Manual smoke | Not run in this work session | Passed | User confirmed on 2026-07-20 |
 | Diff/privacy review | Clean baseline | Passed | no sensitive logging, retention, or destination changes |
 | Clean tree | Yes | Yes after evidence commit | `git status --short --branch` |
 
 ## Release Evidence
 
 - Candidate commit: `8ee4c47`
-- Main commit: not authorized
-- Annotated tag: not authorized
+- Final release commit: the commit tagged `v0.4.1`
+- Annotated tag: `v0.4.1`
 - Artifact: `dist/BabbelStream-0.4.1.dmg`
 - SHA-256: `423b0fe20c9dd4b331a4595e97348f8871da7ccb743a900daa798ebf8b437d83`
 - Installed candidate: `/Applications/BabbelStream.app`, version `0.4.1`, commit
   `8ee4c47`; its executable hash matches the packaged app executable.
 - Running/health verification: process launched successfully from `/Applications`;
-  real microphone/provider/Slack and visual smoke gate pending.
+  user confirmed the real microphone/provider/Slack and visual smoke test passed.
 
 ## Current Blocker
 
-Human microphone/provider/Slack and visual validation of the running candidate
-cannot be replaced by the executable checks and remains the approved release gate.
+None.
 
 ## Next Action
 
-Run the feature-spec smoke test with the packaged `0.4.1` candidate, especially
-the calm menu, Copy Last Draft, General readiness, Login Items migration, real
-dictation, Mini state, and no-auto-send behavior.
+Release finalization: fast-forward `main`, create and push `v0.4.1`, rebuild from
+the clean tagged commit, reinstall, and verify the running version.
 
 ## Closeout
 
 - [x] Durable specs match candidate behavior.
 - [x] Automated validation evidence is complete and truthful.
-- [x] Human smoke gate remains the explicit next action.
-- [ ] Main/tag/deployment match the approved release level.
+- [x] Human smoke gate passed.
+- [x] Main/tag/deployment finalization is authorized for `v0.4.1`.
 - [x] Working tree is clean after the evidence commit.
-- [ ] Tracker moved from active to archive after release completion.
+- [x] Tracker moved from active to archive for release finalization.
