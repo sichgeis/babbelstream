@@ -136,13 +136,15 @@ calmer daily UI, and more maintainable coordination/check structure.
 - Annotated tag: not authorized
 - Artifact: `dist/BabbelStream-0.4.1.dmg`
 - SHA-256: `423b0fe20c9dd4b331a4595e97348f8871da7ccb743a900daa798ebf8b437d83`
-- Installed/deployed version and commit: not authorized
-- Running/health verification: user smoke gate pending
+- Installed candidate: `/Applications/BabbelStream.app`, version `0.4.1`, commit
+  `8ee4c47`; its executable hash matches the packaged app executable.
+- Running/health verification: process launched successfully from `/Applications`;
+  real microphone/provider/Slack and visual smoke gate pending.
 
 ## Current Blocker
 
-Human microphone/provider/Slack and visual validation cannot be replaced by the
-executable checks and remains the approved release gate.
+Human microphone/provider/Slack and visual validation of the running candidate
+cannot be replaced by the executable checks and remains the approved release gate.
 
 ## Next Action
 

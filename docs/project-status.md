@@ -17,8 +17,9 @@ by their dedicated specifications.
 
 - Active feature: `docs/features/maintenance-v0.4.1/spec.md`.
 - Active run tracker: `docs/runs/active/maintenance-v0.4.1.md`.
-- Candidate posture: implementation and clean local package complete; the human
-  smoke gate remains before installation, `main`, or `v0.4.1`.
+- Candidate posture: clean local candidate `0.4.1` (`8ee4c47`) is installed and
+  running from `/Applications`; the human smoke gate remains before `main` or
+  the final `v0.4.1` tag.
 - Completed run evidence is retained under `docs/runs/archive/`.
 
 ## Known Limitations
@@ -39,5 +40,5 @@ recorded.
 
 ## Next Action
 
-Run the `0.4.1` feature smoke test from the packaged candidate before any
-installation, `main` update, or final tag.
+Run the `0.4.1` feature smoke test with the installed candidate before any
+`main` update or final tag.
