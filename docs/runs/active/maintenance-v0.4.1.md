@@ -107,46 +107,54 @@ calmer daily UI, and more maintainable coordination/check structure.
 
 ### 6. Candidate Validation
 
-- Status: In progress
-- [ ] Reconcile durable docs and dependency audit.
-- [ ] Run focused checks, `task check`, clean build, packaging, and diff/privacy review.
-- [ ] Bump version/changelog for the candidate, commit, and push final evidence.
-- Evidence: Pending
+- Status: Completed
+- [x] Reconcile durable docs and dependency audit.
+- [x] Run focused checks, `task check`, clean build, packaging, and diff/privacy review.
+- [x] Bump version/changelog for the candidate, commit, and push final evidence.
+- Evidence: `swift package show-dependencies` reports no external dependencies;
+  `task check` passed from clean candidate commit `8ee4c47`; packaging produced a
+  valid `BabbelStream-0.4.1.dmg` whose app reports version `0.4.1` and commit
+  `8ee4c47`; diff and privacy review found no new sensitive logging or retention.
+  The package uses the existing local signing identity, which is suitable only
+  for this Mac and is not trusted for public distribution.
 
 ## Validation Matrix
 
 | Check | Baseline | Current/final | Evidence |
 | --- | --- | --- | --- |
-| Canonical checks | Passed | Pending | `task check` |
-| Focused checks | Not separate | Pending | HUD/login/refactor checks |
-| Build/package | Clean build passed | Pending | candidate app/DMG |
+| Canonical checks | Passed | Passed | `task check` on `8ee4c47` |
+| Focused checks | Not separate | Passed | HUD/login/refactor behavior checks |
+| Build/package | Clean build passed | Passed | `BabbelStream-0.4.1.dmg`; hdiutil checksum valid |
 | Manual smoke | Not run in this work session | User gate | Pending |
-| Diff/privacy review | Clean baseline | Pending | Pending |
-| Clean tree | Yes | Pending | `git status --short --branch` |
+| Diff/privacy review | Clean baseline | Passed | no sensitive logging, retention, or destination changes |
+| Clean tree | Yes | Yes after evidence commit | `git status --short --branch` |
 
 ## Release Evidence
 
-- Release commit: pending
+- Candidate commit: `8ee4c47`
 - Main commit: not authorized
 - Annotated tag: not authorized
-- Artifact/checksum: pending
+- Artifact: `dist/BabbelStream-0.4.1.dmg`
+- SHA-256: `423b0fe20c9dd4b331a4595e97348f8871da7ccb743a900daa798ebf8b437d83`
 - Installed/deployed version and commit: not authorized
 - Running/health verification: user smoke gate pending
 
 ## Current Blocker
 
-None.
+Human microphone/provider/Slack and visual validation cannot be replaced by the
+executable checks and remains the approved release gate.
 
 ## Next Action
 
-Reconcile the final diff and privacy posture, commit the `0.4.1` candidate, then
-run canonical validation and package from that clean commit.
+Run the feature-spec smoke test with the packaged `0.4.1` candidate, especially
+the calm menu, Copy Last Draft, General readiness, Login Items migration, real
+dictation, Mini state, and no-auto-send behavior.
 
 ## Closeout
 
-- [ ] Durable specs match shipped behavior.
-- [ ] Validation evidence is complete and truthful.
-- [ ] Human smoke gate passed or remains the explicit next action.
+- [x] Durable specs match candidate behavior.
+- [x] Automated validation evidence is complete and truthful.
+- [x] Human smoke gate remains the explicit next action.
 - [ ] Main/tag/deployment match the approved release level.
-- [ ] Working tree is clean.
+- [x] Working tree is clean after the evidence commit.
 - [ ] Tracker moved from active to archive after release completion.
