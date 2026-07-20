@@ -287,56 +287,28 @@ private struct DictationStatusHUDView: View {
         return appState.pasteTargetSummary ?? "Recording"
     }
 
+    private var hudPhase: DictationHUDPhase {
+        DictationHUDPresentation.phase(
+            isRecording: appState.isRecording,
+            isProcessing: appState.isProcessing,
+            canCancel: appState.canCancel,
+            status: appState.status,
+            lastResult: appState.lastResult,
+            hasError: appState.errorMessage != nil
+        )
+    }
+
     private var compactStatus: String {
-        if appState.isRecording {
-            return "Recording"
-        }
-        if appState.isProcessing || appState.canCancel {
-            switch appState.status {
-            case "Transcribing", "Max reached; transcribing":
-                return "Transcribing"
-            case "Retrying transcription":
-                return "Retrying"
-            case "Cleaning up":
-                return "Cleaning up"
-            case "Pasting draft":
-                return "Pasting"
-            case "Canceling dictation":
-                return "Canceling"
-            default:
-                return "Processing"
-            }
-        }
-        if appState.status == "Copied" {
-            return "Copied"
-        }
-        if appState.status == "Recording saved"
-            || appState.lastResult.localizedCaseInsensitiveContains("Failed Recordings")
-            || appState.lastResult.localizedCaseInsensitiveContains("recording retained")
-        {
-            return "Recording saved"
-        }
-        if appState.errorMessage != nil || appState.status.localizedCaseInsensitiveContains("failed") {
-            return "Error"
-        }
-        if appState.lastResult.localizedCaseInsensitiveContains("canceled") {
-            return "Canceled"
-        }
-        if appState.lastResult.localizedCaseInsensitiveContains("draft inserted")
-            || appState.lastResult.localizedCaseInsensitiveContains("paste shortcut")
-        {
-            return "Pasted"
-        }
-        return "Done"
+        hudPhase.displayName
     }
 
     private var completionIcon: String {
-        switch compactStatus {
-        case "Copied":
+        switch hudPhase {
+        case .copied:
             return "doc.on.doc.fill"
-        case "Error", "Recording saved":
+        case .error, .recordingSaved:
             return "exclamationmark.triangle.fill"
-        case "Canceled":
+        case .canceled:
             return "xmark.circle.fill"
         default:
             return "checkmark.circle.fill"
@@ -344,12 +316,12 @@ private struct DictationStatusHUDView: View {
     }
 
     private var completionColor: Color {
-        switch compactStatus {
-        case "Copied":
+        switch hudPhase {
+        case .copied:
             return .orange
-        case "Error", "Recording saved":
+        case .error, .recordingSaved:
             return .red
-        case "Canceled":
+        case .canceled:
             return .secondary
         default:
             return .green

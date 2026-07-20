@@ -70,6 +70,40 @@ check(
     HybridDictationHotkeyPolicy.releaseAction(pressDuration: -1) == .latchHandsFree,
     "Invalid negative press durations should normalize safely."
 )
+check(
+    DictationHUDPresentation.phase(
+        isRecording: false,
+        isProcessing: true,
+        canCancel: true,
+        status: "Trying Mini transcription",
+        lastResult: "",
+        hasError: false
+    ) == .tryingMini,
+    "The active Mini hedge should be named in the HUD."
+)
+check(
+    DictationHUDPresentation.phase(
+        isRecording: false,
+        isProcessing: false,
+        canCancel: false,
+        status: "Recording saved",
+        lastResult: "Recording retained for recovery.",
+        hasError: true
+    ) == .recordingSaved,
+    "Recording recovery should take precedence over a generic HUD error."
+)
+check(
+    DictationHUDPresentation.phase(
+        isRecording: false,
+        isProcessing: false,
+        canCancel: false,
+        status: "Ready",
+        lastResult: "Draft inserted. Review it before sending.",
+        hasError: false
+    ) == .pasted,
+    "Successful insertion should retain the concise Pasted HUD state."
+)
+check(DictationHUDPhase.tryingMini.displayName == "Trying Mini", "Mini HUD copy should stay compact.")
 check(BuildMetadata.gitCommitInfoKey == "BabbelStreamGitCommit", "Unexpected build commit Info.plist key.")
 check(BuildMetadata.codeSigningInfoKey == "BabbelStreamCodeSigning", "Unexpected code signing Info.plist key.")
 check(!BuildMetadata.gitCommitShortHash.isEmpty, "Build commit metadata should have a visible fallback.")
