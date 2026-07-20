@@ -58,8 +58,11 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         addStatusSection()
         menu.addItem(.separator())
         addDictationActions()
-        menu.addItem(.separator())
-        addPermissionActions()
+        if appState.microphonePermissionStatus != .authorized
+            || appState.accessibilityPermissionStatus != .trusted {
+            menu.addItem(.separator())
+            addReadinessActions()
+        }
         menu.addItem(.separator())
         addDiagnosticsSubmenu()
         menu.addItem(.separator())
@@ -68,12 +71,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     private func addStatusSection() {
         addInfo(appState.status)
-        addInfo("Build: \(BuildMetadata.gitCommitShortHash)")
-        addInfo("Hybrid hotkey: \(ProjectDefaults.fixedHotkeyDescription)")
-        addInfo(ProjectDefaults.hybridHotkeyUsageDescription)
-        addInfo(appState.hotkeyStatus)
-        addInfo("Microphone: \(appState.microphonePermissionStatus.displayName)")
-        addInfo("Accessibility: \(appState.accessibilityPermissionStatus.displayName)")
         if let pasteTargetSummary = appState.pasteTargetSummary {
             addInfo("Paste target: \(pasteTargetSummary)")
         }
@@ -82,7 +79,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             addInfo("Elapsed: \(elapsedText)")
         }
 
-        addInfo(appState.lastResult)
+        if appState.lastResult != "No dictation yet.", appState.lastResult != appState.status {
+            addInfo(appState.lastResult)
+        }
 
         if let warningMessage = appState.warningMessage {
             addInfo("Warning: \(warningMessage)")
@@ -90,13 +89,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         if let errorMessage = appState.errorMessage {
             addInfo("Error: \(errorMessage)")
         }
-
-        if appState.canUseLatestDraft {
-            addInfo("Last raw transcript: \(appState.latestRawTranscriptSummary)")
-            addInfo("Last final draft: \(appState.latestFinalDraftSummary)")
-        }
-
-        addInfo("Usage: \(appState.usageSummary)")
     }
 
     private func addDictationActions() {
@@ -124,11 +116,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         )
 
         addAction(
-            "Start Local Test Recording",
-            action: #selector(startLocalTestRecording),
-            enabled: appState.canStart
-        )
-        addAction(
             "Copy Last Draft",
             action: #selector(copyLastDraft),
             enabled: appState.canUseLatestDraft
@@ -140,7 +127,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         )
     }
 
-    private func addPermissionActions() {
+    private func addReadinessActions() {
         if appState.microphonePermissionStatus != .authorized {
             addAction(
                 "Request Microphone Permission",
@@ -152,27 +139,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             addAction(
                 "Request Accessibility Permission",
                 action: #selector(requestAccessibilityPermission),
-                enabled: true
-            )
-        }
-        addAction(
-            "Refresh Permissions",
-            action: #selector(refreshPermissions),
-            enabled: true
-        )
-
-        if appState.microphonePermissionStatus == .denied || appState.microphonePermissionStatus == .restricted {
-            addAction(
-                "Open Microphone Settings",
-                action: #selector(openMicrophoneSettings),
-                enabled: true
-            )
-        }
-
-        if appState.accessibilityPermissionStatus == .notTrusted {
-            addAction(
-                "Open Accessibility Settings",
-                action: #selector(openAccessibilitySettings),
                 enabled: true
             )
         }
@@ -229,6 +195,15 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         }
 
         submenu.addItem(.separator())
+        let localTestItem = NSMenuItem(
+            title: "Start Local Test Recording",
+            action: #selector(startLocalTestRecording),
+            keyEquivalent: ""
+        )
+        localTestItem.target = self
+        localTestItem.isEnabled = appState.canStart
+        submenu.addItem(localTestItem)
+
         let copyItem = NSMenuItem(title: "Copy Diagnostics", action: #selector(copyDiagnostics), keyEquivalent: "")
         copyItem.target = self
         submenu.addItem(copyItem)
@@ -313,19 +288,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     @objc private func requestAccessibilityPermission() {
         appState.requestAccessibilityPermission()
         rebuildMenu()
-    }
-
-    @objc private func refreshPermissions() {
-        appState.refreshPermissionStatuses()
-        rebuildMenu()
-    }
-
-    @objc private func openMicrophoneSettings() {
-        appState.openMicrophonePrivacySettings()
-    }
-
-    @objc private func openAccessibilitySettings() {
-        appState.openAccessibilityPrivacySettings()
     }
 
     @objc private func openSettings() {

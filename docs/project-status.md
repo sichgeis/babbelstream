@@ -15,8 +15,10 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active feature: none selected.
-- Active run tracker: none.
+- Active feature: `docs/features/maintenance-v0.4.1/spec.md`.
+- Active run tracker: `docs/runs/active/maintenance-v0.4.1.md`.
+- Candidate posture: implementation complete; clean package and human smoke gate
+  remain before installation, `main`, or `v0.4.1`.
 - Completed run evidence is retained under `docs/runs/archive/`.
 
 ## Known Limitations
@@ -37,5 +39,5 @@ recorded.
 
 ## Next Action
 
-Select the next candidate, write or approve its feature specification, and then
-create the matching tracker under `docs/runs/active/`.
+Package the clean `0.4.1` candidate, then run the feature smoke test before any
+installation, `main` update, or final tag.
