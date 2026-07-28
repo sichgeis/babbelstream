@@ -134,13 +134,13 @@ Mini hedge.
 
 ### 7. Per-Installation Model Routing
 
-- Status: In progress
+- Status: Completed
 - [x] Record the personal official-OpenAI and work LiteLLM installation contract.
 - [x] Add standard and LiteLLM `openai/` routing with a persisted Settings picker.
 - [x] Route both primary and Mini wire IDs while preserving logical model behavior.
 - [x] Add the one-time Hypatos-host migration, effective-ID UI/diagnostics, checks,
   and durable documentation.
-- [ ] Review, commit/push, merge/push `main`, package, install, launch, and verify.
+- [x] Review, commit/push, merge/push `main`, package, install, launch, and verify.
 - Evidence: authorized synthetic-silence A/B smoke test established
   `openai/gpt-transcribe` succeeds through the existing `openai/*` deployment
   while bare `gpt-transcribe` fails. Initial `task check` passed after the
@@ -149,15 +149,21 @@ Mini hedge.
   `LiteLLM (openai/ model prefix)` with its explanatory copy at the default
   window size; temporary cropped screenshot:
   `/private/tmp/babbelstream-routing-screenshots/provider-settings-cropped.png`.
+  Feature commit `ce1a0f8` was pushed, fast-forwarded to `main`, and pushed.
+  The clean `0.4.1` bundle was packaged, installed, launched from
+  `/Applications`, and verified with matching installed/packaged executable
+  hashes. The work installation now stores `gpt-transcribe` plus
+  `litellm-openai-namespace`, producing effective model ID
+  `openai/gpt-transcribe`.
 
 ## Validation Matrix
 
 | Check | Baseline | Current/final | Evidence |
 | --- | --- | --- | --- |
-| Canonical checks | Passed | Passed | `task check`; baseline and final passed with normal developer cache access |
-| Focused checks | Covered by runner | Passed | Picker options, defaults, migration, selection persistence, validation, request fields, response metadata |
+| Canonical checks | Passed | Passed | `task check`; baseline and final routing checks passed with normal developer cache access |
+| Focused checks | Covered by runner | Passed | Picker options, defaults, model/routing migrations, selection persistence, both effective primary/Mini IDs, language fields, response metadata |
 | Build/package | Build passed | Passed | `task check`; signed app and verified `BabbelStream-0.4.1.dmg` |
-| Manual smoke | Not run | Provider Settings visual check passed; real dictation remains manual | Deterministic Provider-tab launch and screenshot |
+| Manual smoke | Not run | Provider Settings visual check and installed process verification passed; real dictation remains manual | Deterministic Provider-tab launch, screenshot, installed settings, and process path |
 | Diff/privacy review | Clean baseline | Passed | No new data, destination, permission, retention, or logs; `git diff --check` passed |
 | Clean tree | Clean | Clean after tracker evidence commit | `main` synchronized with `origin/main` |
 
@@ -165,18 +171,22 @@ Mini hedge.
 
 - Feature implementation commit: `39ab8ac`
 - Release commit: not requested
-- Main feature commit: `2f6b507` (fast-forwarded and pushed)
+- Main feature commits: `2f6b507` (model picker) and `ce1a0f8`
+  (per-installation routing), both fast-forwarded and pushed
 - Annotated tag: not authorized
 - Artifact/checksum: `dist/BabbelStream-0.4.1.dmg`;
-  SHA-256 `586c30988e01d89ba70641b9c5f1c835555c711b989ad2d710d854a354c74870`
-- Installed/deployed version and commit: `0.4.1` / `655a470`
+  SHA-256 `e8651ce51983bcb4630a8761729a1da5accce0eb5aa8942a5add10f6e888b215`
+- Installed/deployed version and commit: `0.4.1` / `ce1a0f8`
 - Installed signing: `BabbelStream Local Code Signing`; the self-issued local
   certificate retains the documented strict trust warning
-- Running/health verification: `/Applications/BabbelStream.app/Contents/MacOS/BabbelStream`
-  running as PID `43966`, a launchd child; installed and packaged executable
-  hashes match
+- Running/health verification:
+  `/Applications/BabbelStream.app/Contents/MacOS/BabbelStream` running as PID
+  `53070`; installed and packaged executable SHA-256 hashes both equal
+  `3b64d7d150fadec363d589df42d82c8eebddaa17dfc3f32409c1f03025a37812`.
+  Saved work settings are `gpt-transcribe` plus
+  `litellm-openai-namespace`.
 - Recovery backup: previous app retained temporarily under
-  `/private/tmp/babbelstream-transcription-fix-backup.3hUkrD/`
+  `/private/tmp/babbelstream-routing-install-backup.Wo8W02/`
 
 ## Current Blocker
 
@@ -185,8 +195,8 @@ routing path without changing the company-owned proxy.
 
 ## Next Action
 
-Complete clean-branch validation, integration, local installation, and the
-remaining real dictation smoke tests.
+Run one real work-proxy dictation and one personal official-OpenAI dictation,
+then confirm both use `gpt-transcribe` successfully.
 
 ## Closeout
 
