@@ -96,15 +96,17 @@ Mini hedge.
 
 ### 5. Real-Provider Empty-Language Fix
 
-- Status: In progress
+- Status: Completed
 - [x] Record the HTTP 400 real-provider smoke-test failure.
 - [x] Trace the request to an invalid empty `languages[]` multipart field.
 - [x] Omit language fields when the setting is blank and add regression coverage.
-- [ ] Run checks, commit/push, merge/push `main`, and reinstall.
+- [x] Run checks, commit/push, merge/push `main`, and reinstall.
 - Evidence: 2026-07-28 diagnostics show a 2.5-second recording was uploaded and
   rejected with HTTP 400 in 192 ms while `gpt-transcribe` was selected and the
   language setting was blank. Current OpenAI guidance says language hints are
-  optional and rejects invalid language codes.
+  optional and rejects invalid language codes. `task check` and
+  `git diff --check` passed; fix commit `655a470` was pushed to the feature
+  branch and `main`, packaged, installed, launched, and verified.
 
 ## Validation Matrix
 
@@ -123,24 +125,26 @@ Mini hedge.
 - Release commit: not requested
 - Main feature commit: `2f6b507` (fast-forwarded and pushed)
 - Annotated tag: not authorized
-- Artifact/checksum: `dist/BabbelStream-0.4.1.dmg`; SHA-256 sidecar verified
-- Installed/deployed version and commit: `0.4.1` / `2f6b507`
-- Installed signing: `BabbelStream Local Code Signing`; strict code-sign verification passed
+- Artifact/checksum: `dist/BabbelStream-0.4.1.dmg`;
+  SHA-256 `586c30988e01d89ba70641b9c5f1c835555c711b989ad2d710d854a354c74870`
+- Installed/deployed version and commit: `0.4.1` / `655a470`
+- Installed signing: `BabbelStream Local Code Signing`; the self-issued local
+  certificate retains the documented strict trust warning
 - Running/health verification: `/Applications/BabbelStream.app/Contents/MacOS/BabbelStream`
-  running as a launchd child; installed and packaged executable hashes match
+  running as PID `43966`, a launchd child; installed and packaged executable
+  hashes match
 - Recovery backup: previous app retained temporarily under
-  `/private/tmp/babbelstream-install-backup.j9mcHf/`
+  `/private/tmp/babbelstream-transcription-fix-backup.3hUkrD/`
 
 ## Current Blocker
 
-The first real-provider smoke test exposed an empty-language HTTP 400. The
-client-side contract violation is fixed locally; provider routing remains to be
-confirmed by retrying the retained recording after installation.
+Provider routing remains to be confirmed by retrying a retained recording with
+the corrected installed build.
 
 ## Next Action
 
-Validate, publish, and install the empty-language fix, then retry the retained
-recording with `gpt-transcribe`.
+Retry one retained recording with `gpt-transcribe`; if it succeeds, complete the
+German/English/mixed-language smoke test and archive this run.
 
 ## Closeout
 
