@@ -10,6 +10,9 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 - Replace the primary transcription model free-text setting with a menu containing
   `gpt-transcribe`, `gpt-4o-transcribe`, and `gpt-4o-mini-transcribe`, normalizing
   unsupported saved values to the default.
+- Recover launch-at-login migration when macOS initially reports the main-app
+  service as unavailable, while retaining the legacy LaunchAgent until modern
+  registration is confirmed.
 
 ## 0.4.1 - 2026-07-20
 

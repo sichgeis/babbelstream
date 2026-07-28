@@ -160,7 +160,8 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - App restart after permission changes.
 - App restart with a saved API key does not show a Keychain prompt before dictation starts.
 - Launch-at-login uses the macOS main-app login service, reports approval-required
-  state truthfully, safely migrates a legacy LaunchAgent, and survives app restart.
+  state truthfully, safely migrates a legacy LaunchAgent, attempts registration
+  even when the initial system status is unavailable, and survives app restart.
 
 ## Failure Mode Tests
 

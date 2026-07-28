@@ -145,7 +145,10 @@ For upgrades from v0.4.0 and earlier, BabbelStream recognizes the legacy
 `~/Library/LaunchAgents/com.sichgeis.babbelstream.loginitem.plist`. It registers
 the main-app service first and removes the legacy plist only after registration
 succeeds. If registration needs approval or fails, the legacy file remains so
-the previous launch-at-login intent is not silently lost.
+the previous launch-at-login intent is not silently lost. A pre-registration
+`.notFound` status does not suppress the registration attempt: the result of
+`register()` and the post-registration status determine whether migration may
+complete.
 
 ## Packaging And Local Install
 

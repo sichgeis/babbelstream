@@ -15,9 +15,13 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active feature: GPT Transcribe migration.
-- Active feature spec: `docs/features/gpt-transcribe/spec.md`.
-- Active run tracker: `docs/runs/active/gpt-transcribe.md`.
+- Active feature: launch-at-login migration recovery.
+- Active feature spec:
+  `docs/features/launch-at-login-migration-fix/spec.md`.
+- Active run tracker:
+  `docs/runs/active/launch-at-login-migration-fix.md`.
+- GPT Transcribe implementation is installed; its remaining real-provider
+  smoke test is tracked in `docs/runs/active/gpt-transcribe.md`.
 - Completed maintenance evidence: `docs/runs/archive/maintenance-v0.4.1.md`.
 - Completed run evidence is retained under `docs/runs/archive/`.
 
@@ -39,5 +43,4 @@ recorded.
 
 ## Next Action
 
-Complete the real-provider German/English/mixed-language smoke test for the GPT
-Transcribe feature branch before deciding whether to package a release candidate.
+Validate, package, and install the launch-at-login migration recovery candidate.

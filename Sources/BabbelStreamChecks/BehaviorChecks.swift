@@ -423,6 +423,46 @@ check(
     "The legacy LaunchAgent should be removed only after system registration succeeds."
 )
 try Data("legacy launch agent".utf8).write(to: legacyLaunchAgentURL)
+let initiallyMissingSystemLoginItem = FakeSystemLoginItemService(status: .notFound)
+let missingStatusMigrationService = LaunchAtLoginService(
+    systemService: initiallyMissingSystemLoginItem,
+    legacyLaunchAgentURL: legacyLaunchAgentURL
+)
+try missingStatusMigrationService.migrateLegacyRegistrationIfNeeded()
+check(
+    initiallyMissingSystemLoginItem.registerCallCount == 1,
+    "A missing pre-registration status should still attempt system registration."
+)
+check(
+    missingStatusMigrationService.snapshot.systemStatus == .enabled,
+    "Successful registration should recover from a missing pre-registration status."
+)
+check(
+    !FileManager.default.fileExists(atPath: legacyLaunchAgentURL.path),
+    "Recovered registration should remove the legacy LaunchAgent only after enablement."
+)
+try Data("legacy launch agent".utf8).write(to: legacyLaunchAgentURL)
+let unavailableSystemLoginItem = FakeSystemLoginItemService(status: .notFound)
+unavailableSystemLoginItem.registrationError = LoginItemCheckError.denied
+let unavailableMigrationService = LaunchAtLoginService(
+    systemService: unavailableSystemLoginItem,
+    legacyLaunchAgentURL: legacyLaunchAgentURL
+)
+do {
+    try unavailableMigrationService.migrateLegacyRegistrationIfNeeded()
+    fatalError("An unavailable login item should not complete legacy migration.")
+} catch LaunchAtLoginError.serviceUnavailable {
+    // Expected.
+}
+check(
+    unavailableSystemLoginItem.registerCallCount == 1,
+    "An unavailable login item should fail only after attempting registration."
+)
+check(
+    FileManager.default.fileExists(atPath: legacyLaunchAgentURL.path),
+    "Unavailable system registration must preserve the working legacy LaunchAgent."
+)
+try Data("legacy launch agent".utf8).write(to: legacyLaunchAgentURL)
 let approvalRequiredSystemLoginItem = FakeSystemLoginItemService(status: .requiresApproval)
 approvalRequiredSystemLoginItem.registrationError = LoginItemCheckError.denied
 let approvalRequiredLaunchAtLoginService = LaunchAtLoginService(
