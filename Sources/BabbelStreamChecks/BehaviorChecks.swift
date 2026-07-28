@@ -158,6 +158,11 @@ check(
     TranscriptionLanguageNormalizer.apiValue(from: "German, English") == nil,
     "Mixed-language hints must not be sent as the transcription language parameter."
 )
+let automaticLanguageFields = TranscriptionFormFields.make(settings: AppSettings())
+check(
+    automaticLanguageFields["languages[]"] == nil && automaticLanguageFields["language"] == nil,
+    "Automatic language detection should omit both language fields."
+)
 var gptTranscribeSettings = AppSettings()
 gptTranscribeSettings.transcriptionLanguage = "de"
 let gptTranscribeFields = TranscriptionFormFields.make(settings: gptTranscribeSettings)

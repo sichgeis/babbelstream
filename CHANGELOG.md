@@ -13,6 +13,8 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 - Recover launch-at-login migration when macOS initially reports the main-app
   service as unavailable, while retaining the legacy LaunchAgent until modern
   registration is confirmed.
+- Omit empty transcription language fields so `gpt-transcribe` can use
+  mixed-language auto-detection without an HTTP 400 validation failure.
 
 ## 0.4.1 - 2026-07-20
 

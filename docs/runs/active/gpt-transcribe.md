@@ -94,6 +94,18 @@ Mini hedge.
   Feature commit `2f6b507` was pushed, fast-forwarded to `main`, validated there,
   packaged, installed, launched, and verified from `/Applications`.
 
+### 5. Real-Provider Empty-Language Fix
+
+- Status: In progress
+- [x] Record the HTTP 400 real-provider smoke-test failure.
+- [x] Trace the request to an invalid empty `languages[]` multipart field.
+- [x] Omit language fields when the setting is blank and add regression coverage.
+- [ ] Run checks, commit/push, merge/push `main`, and reinstall.
+- Evidence: 2026-07-28 diagnostics show a 2.5-second recording was uploaded and
+  rejected with HTTP 400 in 192 ms while `gpt-transcribe` was selected and the
+  language setting was blank. Current OpenAI guidance says language hints are
+  optional and rejects invalid language codes.
+
 ## Validation Matrix
 
 | Check | Baseline | Current/final | Evidence |
@@ -121,13 +133,14 @@ Mini hedge.
 
 ## Current Blocker
 
-Real-provider microphone/language smoke testing remains a manual user action; it
-did not block the explicitly authorized merge and local installation.
+The first real-provider smoke test exposed an empty-language HTTP 400. The
+client-side contract violation is fixed locally; provider routing remains to be
+confirmed by retrying the retained recording after installation.
 
 ## Next Action
 
-Run the real-provider German/English/mixed-language smoke test against the newly
-installed app, then record approval and archive this run.
+Validate, publish, and install the empty-language fix, then retry the retained
+recording with `gpt-transcribe`.
 
 ## Closeout
 

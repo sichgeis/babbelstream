@@ -126,13 +126,15 @@ models through a picker, while the bounded Mini hedge remains compatible.
 - An explicit supported-model selection persists across restart.
 - `gpt-transcribe` sends `languages[]` and never `language`.
 - Older compatible models send `language` and never `languages[]`.
+- An empty language setting sends neither field so mixed-language
+  auto-detection does not submit an invalid empty language code.
 - Existing endpoint, response parser, hedge, privacy, recovery, and no-auto-send behavior remain unchanged.
 
 ## Automated Validation
 
 - Behavior checks cover picker options, defaults, one-time migration, unsupported
-  normalization, explicit selection persistence, validation, and model-specific
-  language fields.
+  normalization, explicit selection persistence, validation, model-specific
+  language fields, and omission of an empty language hint.
 - Canonical command: `task check`.
 
 ## Manual Smoke Test
