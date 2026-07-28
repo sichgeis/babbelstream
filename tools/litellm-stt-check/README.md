@@ -4,9 +4,12 @@ Tiny, isolated Python script to test whether a LiteLLM/OpenAI-compatible endpoin
 
 ## Which model?
 
-Default: `gpt-4o-transcribe`.
+Default: `gpt-transcribe`.
 
-This is the preferred model for the product because it has the best speech-to-text quality among the OpenAI transcription models we evaluated and works with the configured LiteLLM/OpenAI-compatible `.env` setup.
+This is OpenAI's current high-accuracy file-transcription model and the preferred
+model for BabbelStream. The configured LiteLLM/OpenAI-compatible endpoint must
+expose it; use the script to confirm deployment compatibility before relying on
+it.
 
 Alternative probes:
 
@@ -27,11 +30,15 @@ Edit `.env`:
 ```dotenv
 LITELLM_BASE_URL=https://your-litellm-host
 LITELLM_API_KEY=your-token
-LITELLM_STT_MODEL=gpt-4o-transcribe
+LITELLM_STT_MODEL=gpt-transcribe
 # Optional: a single ISO 639-1 language code such as de or en.
 # Leave empty for mixed German-English dictation.
 LITELLM_LANGUAGE=
 ```
+
+For `gpt-transcribe`, the script sends the optional language as `languages[]`,
+matching OpenAI's current API contract. Older model selections receive the
+singular `language` field.
 
 ## Run
 

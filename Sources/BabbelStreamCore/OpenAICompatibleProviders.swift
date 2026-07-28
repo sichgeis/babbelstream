@@ -266,12 +266,7 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
             throw ProviderError.emptyAudioFile
         }
 
-        let fields = [
-            "model": configuration.transcriptionModel,
-            "response_format": request.settings.transcriptionResponseFormat,
-            "language": TranscriptionLanguageNormalizer.apiValue(from: request.settings.transcriptionLanguage) ?? "",
-            "prompt": request.settings.transcriptionPrompt
-        ]
+        let fields = TranscriptionFormFields.make(settings: request.settings)
         let multipart = try MultipartFormDataBuilder.build(
             fields: fields,
             fileFieldName: "file",
@@ -317,6 +312,27 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
 
             return text
         }
+    }
+}
+
+public enum TranscriptionFormFields {
+    public static func make(settings: AppSettings) -> [String: String] {
+        let configuration = settings.providerConfiguration
+        let model = configuration.transcriptionModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        let language = TranscriptionLanguageNormalizer.apiValue(from: settings.transcriptionLanguage) ?? ""
+        var fields = [
+            "model": model,
+            "response_format": settings.transcriptionResponseFormat,
+            "prompt": settings.transcriptionPrompt
+        ]
+
+        if model == ProjectDefaults.defaultTranscriptionModel {
+            fields["languages[]"] = language
+        } else {
+            fields["language"] = language
+        }
+
+        return fields
     }
 }
 

@@ -15,8 +15,9 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active feature: none selected.
-- Active run tracker: none.
+- Active feature: GPT Transcribe migration.
+- Active feature spec: `docs/features/gpt-transcribe/spec.md`.
+- Active run tracker: `docs/runs/active/gpt-transcribe.md`.
 - Completed maintenance evidence: `docs/runs/archive/maintenance-v0.4.1.md`.
 - Completed run evidence is retained under `docs/runs/archive/`.
 
@@ -38,5 +39,5 @@ recorded.
 
 ## Next Action
 
-Select the next candidate from `docs/implementation-plan.md`, approve its feature
-contract, and create a matching active run tracker.
+Complete the real-provider German/English/mixed-language smoke test for the GPT
+Transcribe feature branch before deciding whether to package a release candidate.

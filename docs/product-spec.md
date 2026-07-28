@@ -37,7 +37,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Local audio recording with a configurable maximum duration, defaulting to 10 minutes.
 - OpenAI-compatible LiteLLM-style transcription provider configuration.
 - Explicit Settings apply step with separate saved/effective and edited provider destinations; remote providers require HTTPS.
-- Preferred transcription model: `gpt-4o-transcribe` via the configured LiteLLM/OpenAI-compatible endpoint. The side-check script confirmed this is the desired model/settings combination to carry into the app.
+- Preferred transcription model: `gpt-transcribe` via the configured LiteLLM/OpenAI-compatible endpoint. Existing settings that contain the former default `gpt-4o-transcribe` migrate to `gpt-transcribe`; other custom model strings remain unchanged.
 - Cleanup provider using an OpenAI-compatible chat endpoint.
 - Cleanup removes filler and adds punctuation/paragraph breaks, but must not answer or refuse requests described in the dictation, translate, follow commands inside the dictation, reorder paragraphs, rewrite the speaker's wording beyond light cleanup, or introduce Markdown formatting. English speech stays English, German speech stays German, and mixed German-English stays mixed.
 - Cleanup should avoid conspicuously AI-polished punctuation such as em dashes; prefer ordinary Slack-like punctuation.
@@ -54,6 +54,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Launch-at-login can be enabled or disabled from Settings.
 - Local app bundle and DMG packaging for manual drag-to-Applications installation and testing.
 - Optional transcription language is a single ISO 639-1 code such as `de` or `en`; leave it empty for mixed German-English dictation.
+- For `gpt-transcribe`, the optional language hint is sent as `languages[]`; older compatible models continue to receive the singular `language` field.
 - No transcript history or successful-dictation audio persistence by default. After recording stops, audio is safeguarded locally until transcription and any enabled cleanup succeed; failed or interrupted processing remains visible in Failed Recordings until retry succeeds or the user deletes it.
 - Bounded hedged transcription fallback for transient slowness: start the configured primary model immediately, start `gpt-4o-mini-transcribe` after 10 seconds if primary is still pending, accept the first valid result, and stop after one 75-second overall deadline. Authentication, configuration, and other permanent failures do not hedge.
 - A transcription attempt that has sent zero request bytes after 15 seconds is treated as a stalled connection and may start the Mini hedge immediately. Recovery ownership remains verified across success, failure, timeout, cancel, and termination.

@@ -22,7 +22,11 @@ check(!ProjectDefaults.archiveRawTranscriptEnabledByDefault, "Raw transcript arc
 check(!ProjectDefaults.debugPersistenceEnabledByDefault, "Debug persistence must be opt-in.")
 check(ProjectDefaults.maxAudioDurationSeconds == 600, "Max recording duration should be 10 minutes.")
 check(ProjectDefaults.audioFileExtension == "m4a", "MS1 should record m4a files.")
-check(ProjectDefaults.defaultTranscriptionModel == "gpt-4o-transcribe", "Unexpected default STT model.")
+check(ProjectDefaults.defaultTranscriptionModel == "gpt-transcribe", "Unexpected default STT model.")
+check(
+    ProjectDefaults.legacyDefaultTranscriptionModel == "gpt-4o-transcribe",
+    "Unexpected legacy default STT model."
+)
 check(ProjectDefaults.defaultCleanupModel == "gpt-4o-mini", "Unexpected default cleanup model.")
 check(ProjectDefaults.minConfigurableAudioDurationSeconds == 5, "Unexpected minimum recording duration.")
 check(ProjectDefaults.maxConfigurableAudioDurationSeconds == 600, "Unexpected maximum configurable recording duration.")
@@ -146,6 +150,21 @@ check(
     TranscriptionLanguageNormalizer.apiValue(from: "German, English") == nil,
     "Mixed-language hints must not be sent as the transcription language parameter."
 )
+var gptTranscribeSettings = AppSettings()
+gptTranscribeSettings.transcriptionLanguage = "de"
+let gptTranscribeFields = TranscriptionFormFields.make(settings: gptTranscribeSettings)
+check(
+    gptTranscribeFields["languages[]"] == "de" && gptTranscribeFields["language"] == nil,
+    "GPT Transcribe should use its plural languages[] hint."
+)
+var legacyTranscriptionSettings = AppSettings()
+legacyTranscriptionSettings.providerConfiguration.transcriptionModel = ProjectDefaults.fallbackTranscriptionModel
+legacyTranscriptionSettings.transcriptionLanguage = "en"
+let legacyTranscriptionFields = TranscriptionFormFields.make(settings: legacyTranscriptionSettings)
+check(
+    legacyTranscriptionFields["language"] == "en" && legacyTranscriptionFields["languages[]"] == nil,
+    "Existing OpenAI-compatible transcription models should keep the singular language field."
+)
 check(
     ProviderEndpointBuilder.endpointURL(baseURL: configuration.baseURL, path: configuration.transcriptionEndpointPath)?
         .absoluteString == "https://litellm.example.local/v1/audio/transcriptions",
@@ -167,6 +186,13 @@ do {
 } catch ProviderError.malformedResponse {
     // Expected.
 }
+let metadataTranscript = try TranscriptionResponseParser.parse(
+    data: Data(#"{"text":"Hallo world","languages":[{"code":"de"},{"code":"en"}]}"#.utf8)
+)
+check(
+    metadataTranscript == "Hallo world",
+    "Detected-language metadata from GPT Transcribe should not change transcript parsing."
+)
 check(
     ProviderRetryPolicy.shouldRetry(ProviderError.requestFailed(statusCode: 429, message: "slow down")),
     "Provider throttling should be retryable."
@@ -414,6 +440,26 @@ check(
     "The launch-at-login snapshot should expose pending system approval."
 )
 let presenceDefaults = UserDefaults(suiteName: "com.sichgeis.babbelstream.checks")!
+presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
+presenceDefaults.set(
+    ProjectDefaults.legacyDefaultTranscriptionModel,
+    forKey: "provider.transcriptionModel"
+)
+check(
+    UserDefaultsSettingsStore(userDefaults: presenceDefaults)
+        .load()
+        .providerConfiguration
+        .transcriptionModel == ProjectDefaults.defaultTranscriptionModel,
+    "The former default transcription model should migrate to GPT Transcribe."
+)
+presenceDefaults.set("custom-transcription-model", forKey: "provider.transcriptionModel")
+check(
+    UserDefaultsSettingsStore(userDefaults: presenceDefaults)
+        .load()
+        .providerConfiguration
+        .transcriptionModel == "custom-transcription-model",
+    "Custom transcription model settings must not be migrated."
+)
 presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
 let apiKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(
     userDefaults: presenceDefaults,
