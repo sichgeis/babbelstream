@@ -11,7 +11,7 @@ Tap `Control + Option + Space` for hands-free recording or hold it for push-to-t
 - Compact non-activating status HUD for recording, processing, cancellation, and paste recovery.
 - Escape cancels only while a recording or provider operation is active; canceling a stopped recording's provider work preserves it under Failed Recordings.
 - AVFoundation microphone recording with configurable max duration, defaulting to 10 minutes.
-- OpenAI-compatible transcription endpoint, default path `/v1/audio/transcriptions`.
+- OpenAI-compatible transcription endpoint, default path `/v1/audio/transcriptions`, using `gpt-transcribe` by default.
 - OpenAI-compatible cleanup endpoint, default path `/v1/chat/completions`.
 - One bounded hedge for transient transcription slowness: primary starts immediately, Mini starts after 10 seconds if needed, the first valid result wins, and both share a 75-second deadline. A zero-byte connection stall is canceled after 15 seconds.
 - Failed or interrupted processing keeps the stopped M4A in a local, user-only Failed Recordings store. Retry uses current provider settings and copies the result instead of auto-pasting into a historical target.

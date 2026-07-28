@@ -91,7 +91,7 @@ Use AVFoundation to record compressed audio to a temporary file. The MVP default
 
 ## Transcription Approach
 
-Use multipart upload for `/v1/audio/transcriptions`-style endpoints. The provider accepts a JSON object with a string `text` field or a genuinely plain-text response; other successful JSON shapes are rejected. The app disables same-model retries and permits only the configured primary plus one bounded Mini hedge. Authentication and other permanent client failures fail immediately.
+Use multipart upload for `/v1/audio/transcriptions`-style endpoints. `gpt-transcribe` uses the same endpoint, JSON response format, and top-level `text` result as the previous default, but receives an optional language hint through `languages[]`; older compatible models retain the singular `language` field. Additional response metadata such as detected `languages` is ignored. The provider accepts a JSON object with a string `text` field or a genuinely plain-text response; other successful JSON shapes are rejected. The app disables same-model retries and permits only the configured primary plus one bounded Mini hedge. Authentication and other permanent client failures fail immediately.
 
 Primary transcription begins immediately and Mini is hedged after 10 seconds only when primary is still pending. An early retryable primary failure starts Mini immediately; permanent failures stop. First valid output wins and the complete transcription phase is bounded to 75 seconds. A separate 15-second zero-byte connection watchdog remains per request. Cleanup keeps its separately configured timeout and raw-transcript fallback. Provider lifecycle events distinguish primary, hedge, winner, loser cancellation, and cleanup without recording content.
 

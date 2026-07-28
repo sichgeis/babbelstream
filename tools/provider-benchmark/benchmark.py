@@ -70,7 +70,8 @@ def endpoint(base_url: str, path: str) -> str:
 
 def multipart(audio_path: Path, model: str, language: str) -> tuple[bytes, str]:
     boundary = f"----babbelstream-{secrets.token_hex(16)}"
-    fields = {"model": model, "response_format": "json", "language": language}
+    language_field = "languages[]" if model.strip() == "gpt-transcribe" else "language"
+    fields = {"model": model, "response_format": "json", language_field: language}
     chunks: list[bytes] = []
     for name, value in fields.items():
         if value:
@@ -219,7 +220,7 @@ def main() -> int:
     if not base_url or not api_key:
         raise SystemExit("Missing PROVIDER_BASE_URL/PROVIDER_API_KEY (OpenAI and LiteLLM aliases are accepted).")
 
-    stt_model = setting(env, "TRANSCRIPTION_MODEL", "gpt-4o-transcribe", ("LITELLM_STT_MODEL",))
+    stt_model = setting(env, "TRANSCRIPTION_MODEL", "gpt-transcribe", ("LITELLM_STT_MODEL",))
     cleanup_model = setting(env, "CLEANUP_MODEL", "gpt-5.4-nano")
     language = setting(env, "TRANSCRIPTION_LANGUAGE", "", ("LITELLM_LANGUAGE",))
     audio_path = Path(args.audio_file).expanduser().resolve() if args.audio_file else None

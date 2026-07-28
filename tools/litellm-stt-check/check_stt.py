@@ -129,7 +129,7 @@ def list_models(base_url: str, api_key: str, timeout: float) -> int:
 def transcribe(args: argparse.Namespace, env_file: dict[str, str]) -> int:
     base_url = require(config_value(env_file, "LITELLM_BASE_URL"), "LITELLM_BASE_URL")
     api_key = require(config_value(env_file, "LITELLM_API_KEY"), "LITELLM_API_KEY")
-    model = config_value(env_file, "LITELLM_STT_MODEL", "gpt-4o-transcribe")
+    model = config_value(env_file, "LITELLM_STT_MODEL", "gpt-transcribe")
     path = config_value(env_file, "LITELLM_TRANSCRIPTION_PATH", "/v1/audio/transcriptions")
     response_format = config_value(env_file, "LITELLM_RESPONSE_FORMAT", "json")
     language = config_value(env_file, "LITELLM_LANGUAGE")
@@ -142,10 +142,11 @@ def transcribe(args: argparse.Namespace, env_file: dict[str, str]) -> int:
     if not audio_path.is_file():
         raise SystemExit(f"Audio path is not a file: {audio_path}")
 
+    language_field = "languages[]" if model == "gpt-transcribe" else "language"
     fields = {
         "model": model,
         "response_format": response_format,
-        "language": language,
+        language_field: language,
         "prompt": prompt,
     }
     body, content_type = multipart_body(fields, "file", audio_path)

@@ -214,14 +214,17 @@ public final class UserDefaultsSettingsStore: SettingsStore {
 
         let timeout = userDefaults.object(forKey: Key.timeoutSeconds) as? Double
             ?? defaultConfiguration.timeoutSeconds
+        let savedTranscriptionModel = userDefaults.string(forKey: Key.transcriptionModel)
+        let transcriptionModel = savedTranscriptionModel == ProjectDefaults.legacyDefaultTranscriptionModel
+            ? ProjectDefaults.defaultTranscriptionModel
+            : savedTranscriptionModel ?? defaultConfiguration.transcriptionModel
         let configuration = ProviderConfiguration(
             baseURL: baseURL,
             transcriptionEndpointPath: userDefaults.string(forKey: Key.transcriptionEndpointPath)
                 ?? defaultConfiguration.transcriptionEndpointPath,
             cleanupEndpointPath: userDefaults.string(forKey: Key.cleanupEndpointPath)
                 ?? defaultConfiguration.cleanupEndpointPath,
-            transcriptionModel: userDefaults.string(forKey: Key.transcriptionModel)
-                ?? defaultConfiguration.transcriptionModel,
+            transcriptionModel: transcriptionModel,
             cleanupModel: userDefaults.string(forKey: Key.cleanupModel)
                 ?? defaultConfiguration.cleanupModel,
             timeoutSeconds: timeout

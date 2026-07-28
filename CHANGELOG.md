@@ -2,6 +2,13 @@
 
 BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain substantial product or workflow changes; patch releases contain compatible fixes and incremental improvements.
 
+## Unreleased
+
+- Move the preferred transcription model from `gpt-4o-transcribe` to
+  `gpt-transcribe`, including migration of the former default and the new
+  model's `languages[]` request field while preserving custom models and the
+  bounded Mini hedge.
+
 ## 0.4.1 - 2026-07-20
 
 - Show the bounded Mini transcription hedge truthfully as `Trying Mini` in the compact HUD.

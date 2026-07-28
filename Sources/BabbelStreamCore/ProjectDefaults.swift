@@ -7,7 +7,8 @@ public enum ProjectDefaults {
     public static let maxAudioDurationSeconds: TimeInterval = 600
     public static let minConfigurableAudioDurationSeconds: TimeInterval = 5
     public static let maxConfigurableAudioDurationSeconds: TimeInterval = 600
-    public static let defaultTranscriptionModel = "gpt-4o-transcribe"
+    public static let defaultTranscriptionModel = "gpt-transcribe"
+    public static let legacyDefaultTranscriptionModel = "gpt-4o-transcribe"
     public static let fallbackTranscriptionModel = "gpt-4o-mini-transcribe"
     public static let transcriptionHedgeDelaySeconds: TimeInterval = 10
     public static let transcriptionOverallTimeoutSeconds: TimeInterval = 75

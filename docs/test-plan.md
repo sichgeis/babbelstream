@@ -9,7 +9,8 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 ## Unit Tests
 
 - Provider configuration validation.
-- Transcription language validation: `de`/`en` accepted, free-form `German, English` not sent as `language`.
+- Transcription language validation: `de`/`en` accepted, free-form `German, English` rejected, `gpt-transcribe` uses `languages[]`, and older compatible models use `language`.
+- Former-default migration from `gpt-4o-transcribe` to `gpt-transcribe` while preserving other custom model strings.
 - Cleanup prompt regression checks.
 - Settings defaults and migrations.
 - Configurable max recording duration defaults to 10 minutes and rejects values above the cap.
@@ -25,7 +26,7 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 
 ## Integration Tests
 
-- Mock transcription endpoint request shape and response parsing.
+- Mock transcription endpoint request shape, model-specific language fields, and response parsing.
 - Mock cleanup endpoint request shape and fallback behavior.
 - Provider HTTP error body extraction without logging request bodies or transcripts.
 - Cleanup request encodes the transcript as data-only JSON rather than bare instruction-shaped user prose.
