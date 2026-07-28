@@ -326,10 +326,12 @@ public enum TranscriptionFormFields {
             "prompt": settings.transcriptionPrompt
         ]
 
-        if model == ProjectDefaults.defaultTranscriptionModel {
-            fields["languages[]"] = language
-        } else {
-            fields["language"] = language
+        if !language.isEmpty {
+            if model == ProjectDefaults.defaultTranscriptionModel {
+                fields["languages[]"] = language
+            } else {
+                fields["language"] = language
+            }
         }
 
         return fields

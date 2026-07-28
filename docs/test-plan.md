@@ -9,7 +9,7 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 ## Unit Tests
 
 - Provider configuration validation.
-- Transcription language validation: `de`/`en` accepted, free-form `German, English` rejected, `gpt-transcribe` uses `languages[]`, and older compatible models use `language`.
+- Transcription language validation: `de`/`en` accepted, free-form `German, English` rejected, `gpt-transcribe` uses `languages[]`, older compatible models use `language`, and a blank setting sends neither field.
 - Exact transcription-model picker options, `gpt-transcribe` default, one-time
   former-default migration, unsupported-value normalization, and persistence of
   later explicit picker selections.
