@@ -10,6 +10,11 @@ public enum ProjectDefaults {
     public static let defaultTranscriptionModel = "gpt-transcribe"
     public static let legacyDefaultTranscriptionModel = "gpt-4o-transcribe"
     public static let fallbackTranscriptionModel = "gpt-4o-mini-transcribe"
+    public static let supportedTranscriptionModels = [
+        defaultTranscriptionModel,
+        legacyDefaultTranscriptionModel,
+        fallbackTranscriptionModel
+    ]
     public static let transcriptionHedgeDelaySeconds: TimeInterval = 10
     public static let transcriptionOverallTimeoutSeconds: TimeInterval = 75
     public static let defaultCleanupModel = "gpt-4o-mini"
@@ -25,6 +30,15 @@ public enum ProjectDefaults {
     public static let archiveRawTranscriptEnabledByDefault = false
     public static let debugPersistenceEnabledByDefault = false
     public static let maxPersonalDictionaryPromptCharacters = 6_000
+
+    public static func normalizedTranscriptionModel(_ model: String?) -> String {
+        let trimmedModel = model?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let trimmedModel, supportedTranscriptionModels.contains(trimmedModel) else {
+            return defaultTranscriptionModel
+        }
+
+        return trimmedModel
+    }
 }
 
 public enum BuildMetadata {

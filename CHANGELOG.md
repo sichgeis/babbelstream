@@ -6,8 +6,10 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 - Move the preferred transcription model from `gpt-4o-transcribe` to
   `gpt-transcribe`, including migration of the former default and the new
-  model's `languages[]` request field while preserving custom models and the
-  bounded Mini hedge.
+  model's `languages[]` request field while preserving the bounded Mini hedge.
+- Replace the primary transcription model free-text setting with a menu containing
+  `gpt-transcribe`, `gpt-4o-transcribe`, and `gpt-4o-mini-transcribe`, normalizing
+  unsupported saved values to the default.
 
 ## 0.4.1 - 2026-07-20
 

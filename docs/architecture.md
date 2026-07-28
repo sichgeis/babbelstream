@@ -73,7 +73,8 @@ Provider settings should include:
 - API key reference in Keychain.
 - Transcription endpoint path.
 - Cleanup endpoint path.
-- Transcription model name.
+- Primary transcription model selected from `gpt-transcribe`,
+  `gpt-4o-transcribe`, or `gpt-4o-mini-transcribe`.
 - Cleanup model name.
 - Optional transcription language code. This must be a single ISO 639-1 code such as `de` or `en`; mixed-language dictation should leave it empty and use prompt/cleanup hints.
 - Timeout.

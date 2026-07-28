@@ -36,6 +36,7 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
     case insecureBaseURL
     case ambiguousBaseURL
     case missingTranscriptionModel
+    case unsupportedTranscriptionModel
     case missingCleanupModel
     case missingTranscriptionPath
     case missingCleanupPath
@@ -54,6 +55,8 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
             "Provider base URL must not contain credentials, a query, or a fragment. Store credentials in Keychain and configure endpoint paths separately."
         case .missingTranscriptionModel:
             "Transcription model is required."
+        case .unsupportedTranscriptionModel:
+            "Choose one of the supported transcription models."
         case .missingCleanupModel:
             "Cleanup model is required."
         case .missingTranscriptionPath:
@@ -92,6 +95,11 @@ public enum AppSettingsValidator {
         }
         guard !configuration.transcriptionModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw SettingsValidationError.missingTranscriptionModel
+        }
+        guard ProjectDefaults.supportedTranscriptionModels.contains(
+            configuration.transcriptionModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        ) else {
+            throw SettingsValidationError.unsupportedTranscriptionModel
         }
         guard !configuration.cleanupModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw SettingsValidationError.missingCleanupModel
@@ -188,6 +196,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         static let transcriptionEndpointPath = "provider.transcriptionEndpointPath"
         static let cleanupEndpointPath = "provider.cleanupEndpointPath"
         static let transcriptionModel = "provider.transcriptionModel"
+        static let transcriptionModelPickerMigrationVersion = "provider.transcriptionModelPickerMigrationVersion"
         static let cleanupModel = "provider.cleanupModel"
         static let timeoutSeconds = "provider.timeoutSeconds"
         static let cleanupEnabled = "cleanup.enabled"
@@ -215,9 +224,17 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         let timeout = userDefaults.object(forKey: Key.timeoutSeconds) as? Double
             ?? defaultConfiguration.timeoutSeconds
         let savedTranscriptionModel = userDefaults.string(forKey: Key.transcriptionModel)
-        let transcriptionModel = savedTranscriptionModel == ProjectDefaults.legacyDefaultTranscriptionModel
-            ? ProjectDefaults.defaultTranscriptionModel
-            : savedTranscriptionModel ?? defaultConfiguration.transcriptionModel
+        let pickerMigrationVersion = userDefaults.integer(forKey: Key.transcriptionModelPickerMigrationVersion)
+        let transcriptionModel: String
+        if pickerMigrationVersion < 1 {
+            transcriptionModel = savedTranscriptionModel == ProjectDefaults.legacyDefaultTranscriptionModel
+                ? ProjectDefaults.defaultTranscriptionModel
+                : ProjectDefaults.normalizedTranscriptionModel(savedTranscriptionModel)
+            userDefaults.set(transcriptionModel, forKey: Key.transcriptionModel)
+            userDefaults.set(1, forKey: Key.transcriptionModelPickerMigrationVersion)
+        } else {
+            transcriptionModel = ProjectDefaults.normalizedTranscriptionModel(savedTranscriptionModel)
+        }
         let configuration = ProviderConfiguration(
             baseURL: baseURL,
             transcriptionEndpointPath: userDefaults.string(forKey: Key.transcriptionEndpointPath)
@@ -261,6 +278,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         userDefaults.set(configuration.transcriptionEndpointPath, forKey: Key.transcriptionEndpointPath)
         userDefaults.set(configuration.cleanupEndpointPath, forKey: Key.cleanupEndpointPath)
         userDefaults.set(configuration.transcriptionModel, forKey: Key.transcriptionModel)
+        userDefaults.set(1, forKey: Key.transcriptionModelPickerMigrationVersion)
         userDefaults.set(configuration.cleanupModel, forKey: Key.cleanupModel)
         userDefaults.set(configuration.timeoutSeconds, forKey: Key.timeoutSeconds)
         userDefaults.set(settings.cleanupEnabled, forKey: Key.cleanupEnabled)

@@ -27,6 +27,14 @@ check(
     ProjectDefaults.legacyDefaultTranscriptionModel == "gpt-4o-transcribe",
     "Unexpected legacy default STT model."
 )
+check(
+    ProjectDefaults.supportedTranscriptionModels == [
+        "gpt-transcribe",
+        "gpt-4o-transcribe",
+        "gpt-4o-mini-transcribe"
+    ],
+    "The transcription model picker should expose only the approved options."
+)
 check(ProjectDefaults.defaultCleanupModel == "gpt-4o-mini", "Unexpected default cleanup model.")
 check(ProjectDefaults.minConfigurableAudioDurationSeconds == 5, "Unexpected minimum recording duration.")
 check(ProjectDefaults.maxConfigurableAudioDurationSeconds == 600, "Unexpected maximum configurable recording duration.")
@@ -452,13 +460,25 @@ check(
         .transcriptionModel == ProjectDefaults.defaultTranscriptionModel,
     "The former default transcription model should migrate to GPT Transcribe."
 )
+var selectedLegacyModelSettings = AppSettings()
+selectedLegacyModelSettings.providerConfiguration.transcriptionModel =
+    ProjectDefaults.legacyDefaultTranscriptionModel
+try UserDefaultsSettingsStore(userDefaults: presenceDefaults).save(selectedLegacyModelSettings)
+check(
+    UserDefaultsSettingsStore(userDefaults: presenceDefaults)
+        .load()
+        .providerConfiguration
+        .transcriptionModel == ProjectDefaults.legacyDefaultTranscriptionModel,
+    "A legacy model explicitly selected from the picker should persist after migration."
+)
+presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
 presenceDefaults.set("custom-transcription-model", forKey: "provider.transcriptionModel")
 check(
     UserDefaultsSettingsStore(userDefaults: presenceDefaults)
         .load()
         .providerConfiguration
-        .transcriptionModel == "custom-transcription-model",
-    "Custom transcription model settings must not be migrated."
+        .transcriptionModel == ProjectDefaults.defaultTranscriptionModel,
+    "Unsupported saved transcription models should migrate to the default picker option."
 )
 presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
 let apiKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(
@@ -502,6 +522,14 @@ do {
     try AppSettingsValidator.validate(queryURLSettings)
     fatalError("Provider query parameters in the base URL should fail settings validation.")
 } catch SettingsValidationError.ambiguousBaseURL {
+    // Expected.
+}
+do {
+    var unsupportedModelSettings = AppSettings()
+    unsupportedModelSettings.providerConfiguration.transcriptionModel = "custom-transcription-model"
+    try AppSettingsValidator.validate(unsupportedModelSettings)
+    fatalError("Unsupported transcription models should fail settings validation.")
+} catch SettingsValidationError.unsupportedTranscriptionModel {
     // Expected.
 }
 do {

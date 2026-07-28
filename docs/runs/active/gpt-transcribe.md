@@ -3,7 +3,8 @@
 ## Outcome
 
 Move BabbelStream's default transcription integration to `gpt-transcribe` with
-the documented request shape while preserving custom models and the Mini hedge.
+the documented request shape and a constrained model picker while preserving the
+Mini hedge.
 
 ## Baseline
 
@@ -17,20 +18,27 @@ the documented request shape while preserving custom models and the Mini hedge.
 ## Authority And Gates
 
 - Approved spec: `docs/features/gpt-transcribe/spec.md` (approved by the 2026-07-28 request)
-- Agent may proceed through: implementation, feature commit, and feature push
-- Required human gates: real-provider microphone/language smoke test; separate approval for release candidate, main, and tag
-- External systems/data explicitly authorized: official OpenAI documentation research and feature-branch push; no real transcription request
+- Agent may proceed through: implementation, feature commit/push, `main`
+  merge/push, local build/install/launch, and installed-app verification
+- Required human gates: real-provider microphone/language smoke test remains
+  manual; annotated tag and public release remain unauthorized
+- External systems/data explicitly authorized: official OpenAI documentation,
+  GitHub branch/main pushes, and local `/Applications` installation; no real
+  transcription request
 
 ## Accepted Scope
 
 - New default and former-default migration to `gpt-transcribe`.
+- Three-option primary-model picker with no free-text entry.
+- Unsupported-value normalization and persistence of explicit supported selections.
 - Model-aware `languages[]` versus `language` multipart fields.
 - Checks and durable documentation.
 - Preserve endpoint, response parser, prompt, Mini hedge, recovery, and privacy behavior.
 
 ## Non-Goals
 
-- Realtime transcription, keyword UI, provider changes, new dependencies, release packaging, installation, main, or tags.
+- Realtime transcription, keyword UI, provider changes, new dependencies,
+  annotated tags, or public release publication.
 
 ## Risks And Dependencies
 
@@ -40,8 +48,13 @@ the documented request shape while preserving custom models and the Mini hedge.
 ## Decisions
 
 - Keep `/v1/audio/transcriptions`, multipart upload, `response_format=json`, prompt, and top-level `text` parsing because the current guide documents them for `gpt-transcribe`.
-- Migrate only the exact former default and preserve every other custom string.
+- The initial transport migration preserved custom strings; the approved picker
+  follow-up supersedes that behavior and normalizes unsupported values.
 - Keep `gpt-4o-mini-transcribe` as the bounded hedge because it remains documented and this migration does not introduce a new Mini replacement.
+- Present only the three approved model IDs in a menu and normalize unsupported
+  saved values to the default so Settings cannot enter an invalid state.
+- Record the migration once so a later explicit `gpt-4o-transcribe` selection
+  survives restart.
 
 ## Stages
 
@@ -67,25 +80,37 @@ the documented request shape while preserving custom models and the Mini hedge.
 - [x] Provide the real-provider smoke test and stop before release actions.
 - Evidence: implementation commit `39ab8ac`; branch `codex/gpt-transcribe` pushed to `origin`.
 
+### 4. Constrained Model Picker And Local Installation
+
+- Status: In progress
+- [x] Replace free text with the three-option model menu and add deterministic policy checks.
+- [x] Update the feature contract and durable docs.
+- [x] Run canonical and visual Provider Settings validation.
+- [ ] Commit/push, merge/push `main`, then build/install/launch and verify from the clean main commit.
+- Evidence: `task check` passed; `git diff --check` passed; deterministic
+  Provider Settings launch rendered the menu-style control cleanly with
+  `gpt-transcribe` selected at the default window size. Temporary screenshot:
+  `/private/tmp/babbelstream-picker-screenshots/provider-settings.png`.
+
 ## Validation Matrix
 
 | Check | Baseline | Current/final | Evidence |
 | --- | --- | --- | --- |
 | Canonical checks | Passed | Passed | `task check`; baseline and final passed with normal developer cache access |
-| Focused checks | Covered by runner | Passed | Defaults, migration, custom preservation, request fields, response metadata |
+| Focused checks | Covered by runner | Passed | Picker options, defaults, migration, selection persistence, validation, request fields, response metadata |
 | Build/package | Build passed | Build passed | `task check`; no package requested |
-| Manual smoke | Not run | Required from user | Real provider/microphone/Slack |
-| Diff/privacy review | Clean baseline | Passed | No new data, destination, permission, retention, or logs |
+| Manual smoke | Not run | Provider Settings visual check passed; real dictation remains manual | Deterministic Provider-tab launch and screenshot |
+| Diff/privacy review | Clean baseline | Passed | No new data, destination, permission, retention, or logs; `git diff --check` passed |
 | Clean tree | Clean | Pending tracker closeout commit | `git status --short --branch` |
 
 ## Release Evidence
 
 - Feature implementation commit: `39ab8ac`
 - Release commit: not requested
-- Main commit: not authorized
+- Main commit: authorized, pending
 - Annotated tag: not authorized
 - Artifact/checksum: not requested
-- Installed/deployed version and commit: not authorized
+- Installed/deployed version and commit: authorized, pending
 - Running/health verification: manual provider smoke pending
 
 ## Current Blocker
@@ -94,7 +119,8 @@ None.
 
 ## Next Action
 
-Run the real-provider German/English/mixed-language smoke test from the feature branch before authorizing release packaging or `main`.
+Run canonical and visual picker validation, then commit/push, merge/push `main`,
+and install/verify the clean main build.
 
 ## Closeout
 

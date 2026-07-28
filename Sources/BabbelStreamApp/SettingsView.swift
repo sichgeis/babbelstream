@@ -213,7 +213,15 @@ private struct SettingsProviderPane: View {
             }
 
             Section("Models And Timeouts") {
-                TextField("Primary transcription model", text: $appState.transcriptionModelText)
+                Picker("Primary transcription model", selection: $appState.transcriptionModelText) {
+                    ForEach(ProjectDefaults.supportedTranscriptionModels, id: \.self) { model in
+                        Text(model).tag(model)
+                    }
+                }
+                .pickerStyle(.menu)
+                Text("GPT Transcribe is the default. Choose a GPT-4o model only when your provider requires it.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 LabeledContent("Fallback model", value: ProjectDefaults.fallbackTranscriptionModel)
                 TextField("Cleanup model", text: $appState.cleanupModelText)
                 LabeledContent("Mini hedge delay", value: "\(Int(ProjectDefaults.transcriptionHedgeDelaySeconds))s")
