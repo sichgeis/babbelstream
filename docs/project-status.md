@@ -25,6 +25,10 @@ by their dedicated specifications.
 
 ## Known Limitations
 
+- The configured Hypatos development LiteLLM proxy does not currently expose a
+  healthy `gpt-transcribe` deployment; selecting it returns HTTP 400. The
+  supported `gpt-4o-transcribe` picker option remains the working temporary
+  choice until the proxy is updated.
 - Coordinator behavior coupled to AppKit, Accessibility, Keychain, microphone
   permission, Carbon event delivery, and application termination remains in the
   manual validation matrix because the current Command Line Tools environment
@@ -41,5 +45,5 @@ recorded.
 
 ## Next Action
 
-Complete the real-provider German/English/mixed-language smoke test for the
-installed GPT Transcribe implementation.
+Choose whether to keep `gpt-4o-transcribe` temporarily or authorize an upstream
+LiteLLM deployment for `gpt-transcribe`.

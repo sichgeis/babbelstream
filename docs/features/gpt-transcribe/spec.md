@@ -158,4 +158,7 @@ models through a picker, while the bounded Mini hedge remains compatible.
 
 ## Open Questions
 
-- Whether the configured LiteLLM deployment already exposes `gpt-transcribe` must be confirmed by the manual provider smoke test.
+- The configured LiteLLM deployment did not expose `gpt-transcribe` on
+  2026-07-28. Its authenticated model list included `gpt-4o-transcribe` and
+  `gpt-4o-mini-transcribe`; enabling the new default requires an upstream proxy
+  deployment.

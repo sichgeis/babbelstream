@@ -108,6 +108,21 @@ Mini hedge.
   `git diff --check` passed; fix commit `655a470` was pushed to the feature
   branch and `main`, packaged, installed, launched, and verified.
 
+### 6. Proxy Deployment Diagnosis
+
+- Status: Completed
+- [x] Query the authenticated proxy model list without exposing the credential.
+- [x] Submit one generated one-second silent-audio request with
+  `gpt-transcribe`.
+- [x] Record the sanitized provider result and remove all temporary diagnostic
+  files.
+- Evidence: `/v1/models` returned HTTP 200 and listed
+  `openai/gpt-4o-transcribe`, `openai-flex/gpt-4o-transcribe`, and their Mini
+  equivalents, but no `gpt-transcribe` model group. The synthetic request
+  returned the same 711-byte HTTP 400 as BabbelStream: LiteLLM reported no
+  healthy deployments and no fallback for `gpt-transcribe`. No user audio,
+  transcript, or provider key was persisted or printed.
+
 ## Validation Matrix
 
 | Check | Baseline | Current/final | Evidence |
@@ -138,13 +153,14 @@ Mini hedge.
 
 ## Current Blocker
 
-Provider routing remains to be confirmed by retrying a retained recording with
-the corrected installed build.
+The shared Hypatos development LiteLLM proxy has no healthy
+`gpt-transcribe` deployment. This cannot be corrected inside BabbelStream
+without choosing a different model.
 
 ## Next Action
 
-Retry one retained recording with `gpt-transcribe`; if it succeeds, complete the
-German/English/mixed-language smoke test and archive this run.
+Choose temporary `gpt-4o-transcribe` use or authorize upstream LiteLLM
+deployment work for `gpt-transcribe`.
 
 ## Closeout
 
