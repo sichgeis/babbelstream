@@ -197,6 +197,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         static let cleanupEndpointPath = "provider.cleanupEndpointPath"
         static let transcriptionModel = "provider.transcriptionModel"
         static let transcriptionModelPickerMigrationVersion = "provider.transcriptionModelPickerMigrationVersion"
+        static let transcriptionModelRouting = "provider.transcriptionModelRouting"
         static let cleanupModel = "provider.cleanupModel"
         static let timeoutSeconds = "provider.timeoutSeconds"
         static let cleanupEnabled = "cleanup.enabled"
@@ -235,6 +236,15 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         } else {
             transcriptionModel = ProjectDefaults.normalizedTranscriptionModel(savedTranscriptionModel)
         }
+        let transcriptionModelRouting: TranscriptionModelRouting
+        if let savedRouting = userDefaults.string(forKey: Key.transcriptionModelRouting),
+           let routing = TranscriptionModelRouting(rawValue: savedRouting)
+        {
+            transcriptionModelRouting = routing
+        } else {
+            transcriptionModelRouting = .initialValue(forExistingBaseURL: baseURL)
+            userDefaults.set(transcriptionModelRouting.rawValue, forKey: Key.transcriptionModelRouting)
+        }
         let configuration = ProviderConfiguration(
             baseURL: baseURL,
             transcriptionEndpointPath: userDefaults.string(forKey: Key.transcriptionEndpointPath)
@@ -242,6 +252,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
             cleanupEndpointPath: userDefaults.string(forKey: Key.cleanupEndpointPath)
                 ?? defaultConfiguration.cleanupEndpointPath,
             transcriptionModel: transcriptionModel,
+            transcriptionModelRouting: transcriptionModelRouting,
             cleanupModel: userDefaults.string(forKey: Key.cleanupModel)
                 ?? defaultConfiguration.cleanupModel,
             timeoutSeconds: timeout
@@ -279,6 +290,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         userDefaults.set(configuration.cleanupEndpointPath, forKey: Key.cleanupEndpointPath)
         userDefaults.set(configuration.transcriptionModel, forKey: Key.transcriptionModel)
         userDefaults.set(1, forKey: Key.transcriptionModelPickerMigrationVersion)
+        userDefaults.set(configuration.transcriptionModelRouting.rawValue, forKey: Key.transcriptionModelRouting)
         userDefaults.set(configuration.cleanupModel, forKey: Key.cleanupModel)
         userDefaults.set(configuration.timeoutSeconds, forKey: Key.timeoutSeconds)
         userDefaults.set(settings.cleanupEnabled, forKey: Key.cleanupEnabled)

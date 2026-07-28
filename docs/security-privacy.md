@@ -52,7 +52,13 @@ Clipboard fallback places work text on the system clipboard. Direct Accessibilit
 
 ## Network Destinations
 
-The app sends audio to the configured transcription endpoint and transcript text to the configured cleanup endpoint when cleanup is enabled. The settings UI distinguishes edited values from the saved/effective destinations used by requests. Each dictation snapshots those saved settings before recording. The app must not silently switch providers.
+The app sends audio to the configured transcription endpoint and transcript text
+to the configured cleanup endpoint when cleanup is enabled. The settings UI
+distinguishes edited values from the saved/effective destinations used by
+requests and shows whether transcription uses bare OpenAI model IDs or
+LiteLLM's `openai/` namespace, including the effective primary and fallback
+IDs. Routing never changes the configured destination. Each dictation snapshots
+those saved settings before recording. The app must not silently switch providers.
 
 Remote providers must use HTTPS. Plain HTTP is limited to loopback development endpoints, and base URLs must not embed credentials, query parameters, or fragments. API keys belong in Keychain.
 
@@ -85,7 +91,12 @@ The hybrid hotkey does not require Input Monitoring or any new permission. A tap
 
 ## Provider Transparency
 
-Before first use, the app shows which saved provider base URL receives audio and which endpoint receives cleanup text. Changing provider settings is explicit through `Apply Settings`; edited but unapplied destinations are labeled as inactive. Direct OpenAI and LiteLLM-compatible destinations remain explicit base URL/path settings in v0.2.x; named provider profiles are future convenience UI, not hidden routing behavior.
+Before first use, the app shows which saved provider base URL receives audio,
+which endpoint receives cleanup text, and the effective transcription model
+IDs. Changing provider or routing settings is explicit through `Apply
+Settings`; edited but unapplied values are not active. Direct OpenAI and
+LiteLLM-compatible destinations remain explicit base URL/path settings; named
+provider profiles are future convenience UI, not hidden routing behavior.
 
 ## Work Slack Considerations
 
