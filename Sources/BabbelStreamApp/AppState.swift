@@ -2319,6 +2319,8 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
             return "SettingsValidationError.ambiguousBaseURL"
         case .missingTranscriptionModel:
             return "SettingsValidationError.missingTranscriptionModel"
+        case .unsupportedTranscriptionModel:
+            return "SettingsValidationError.unsupportedTranscriptionModel"
         case .missingCleanupModel:
             return "SettingsValidationError.missingCleanupModel"
         case .missingTranscriptionPath:

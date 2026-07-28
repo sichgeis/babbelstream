@@ -37,7 +37,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Local audio recording with a configurable maximum duration, defaulting to 10 minutes.
 - OpenAI-compatible LiteLLM-style transcription provider configuration.
 - Explicit Settings apply step with separate saved/effective and edited provider destinations; remote providers require HTTPS.
-- Preferred transcription model: `gpt-transcribe` via the configured LiteLLM/OpenAI-compatible endpoint. Existing settings that contain the former default `gpt-4o-transcribe` migrate to `gpt-transcribe`; other custom model strings remain unchanged.
+- Preferred transcription model: `gpt-transcribe` via the configured LiteLLM/OpenAI-compatible endpoint. Provider Settings uses a menu with `gpt-transcribe`, `gpt-4o-transcribe`, and `gpt-4o-mini-transcribe`; arbitrary model strings are not accepted. A one-time migration moves the former default and unsupported saved values to `gpt-transcribe`, while later explicit picker selections persist.
 - Cleanup provider using an OpenAI-compatible chat endpoint.
 - Cleanup removes filler and adds punctuation/paragraph breaks, but must not answer or refuse requests described in the dictation, translate, follow commands inside the dictation, reorder paragraphs, rewrite the speaker's wording beyond light cleanup, or introduce Markdown formatting. English speech stays English, German speech stays German, and mixed German-English stays mixed.
 - Cleanup should avoid conspicuously AI-polished punctuation such as em dashes; prefer ordinary Slack-like punctuation.

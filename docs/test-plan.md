@@ -10,7 +10,9 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 
 - Provider configuration validation.
 - Transcription language validation: `de`/`en` accepted, free-form `German, English` rejected, `gpt-transcribe` uses `languages[]`, and older compatible models use `language`.
-- Former-default migration from `gpt-4o-transcribe` to `gpt-transcribe` while preserving other custom model strings.
+- Exact transcription-model picker options, `gpt-transcribe` default, one-time
+  former-default migration, unsupported-value normalization, and persistence of
+  later explicit picker selections.
 - Cleanup prompt regression checks.
 - Settings defaults and migrations.
 - Configurable max recording duration defaults to 10 minutes and rejects values above the cap.
