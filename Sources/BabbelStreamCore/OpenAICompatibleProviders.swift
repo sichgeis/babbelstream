@@ -318,16 +318,17 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
 public enum TranscriptionFormFields {
     public static func make(settings: AppSettings) -> [String: String] {
         let configuration = settings.providerConfiguration
-        let model = configuration.transcriptionModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        let selectedModel = configuration.transcriptionModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        let providerModel = configuration.transcriptionModelRouting.providerModelID(for: selectedModel)
         let language = TranscriptionLanguageNormalizer.apiValue(from: settings.transcriptionLanguage) ?? ""
         var fields = [
-            "model": model,
+            "model": providerModel,
             "response_format": settings.transcriptionResponseFormat,
             "prompt": settings.transcriptionPrompt
         ]
 
         if !language.isEmpty {
-            if model == ProjectDefaults.defaultTranscriptionModel {
+            if selectedModel == ProjectDefaults.defaultTranscriptionModel {
                 fields["languages[]"] = language
             } else {
                 fields["language"] = language

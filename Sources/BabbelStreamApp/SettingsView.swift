@@ -222,7 +222,17 @@ private struct SettingsProviderPane: View {
                 Text("GPT Transcribe is the default. Choose a GPT-4o model only when your provider requires it.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                LabeledContent("Fallback model", value: ProjectDefaults.fallbackTranscriptionModel)
+                Picker("Model routing", selection: $appState.transcriptionModelRouting) {
+                    ForEach(TranscriptionModelRouting.allCases, id: \.rawValue) { routing in
+                        Text(routing.displayName).tag(routing)
+                    }
+                }
+                .pickerStyle(.menu)
+                Text(appState.transcriptionModelRouting.helpText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                LabeledContent("Effective primary model", value: appState.effectiveTranscriptionModel)
+                LabeledContent("Effective fallback model", value: appState.effectiveFallbackTranscriptionModel)
                 TextField("Cleanup model", text: $appState.cleanupModelText)
                 LabeledContent("Mini hedge delay", value: "\(Int(ProjectDefaults.transcriptionHedgeDelaySeconds))s")
                 LabeledContent("Overall transcription deadline", value: "\(Int(ProjectDefaults.transcriptionOverallTimeoutSeconds))s")

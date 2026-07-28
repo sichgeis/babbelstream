@@ -78,7 +78,18 @@ This local DMG is suitable for personal testing. Public distribution should use 
 1. Run `scripts/install-dev-app.sh`, then drag `BabbelStream.app` onto the Applications link in Finder.
 2. Grant Microphone permission when prompted.
 3. Open Settings from the menu-bar icon.
-4. Configure the provider base URL, choose `gpt-transcribe`, `gpt-4o-transcribe`, or `gpt-4o-mini-transcribe` from the primary-model menu, configure the cleanup model/timeout and API key, then click `Apply Settings` in the persistent Settings footer. `gpt-transcribe` is the default. The Provider pane shows the fixed Mini hedge, 10-second hedge delay, 75-second overall deadline, and separate 15-second connection watchdog. During rare slow requests the same safeguarded audio may be sent to both models and may incur two transcription charges.
+4. Configure the provider base URL and choose `OpenAI (standard model IDs)` for
+   the official OpenAI API or `LiteLLM (openai/ model prefix)` for a proxy that
+   exposes OpenAI models through `openai/*`. Choose `gpt-transcribe`,
+   `gpt-4o-transcribe`, or `gpt-4o-mini-transcribe` from the primary-model menu,
+   verify the displayed effective primary/fallback IDs, configure the cleanup
+   model/timeout and API key, then click `Apply Settings` in the persistent
+   Settings footer. `gpt-transcribe` and standard OpenAI routing are the
+   defaults. Existing Hypatos proxy installations migrate once to LiteLLM
+   routing. The Provider pane also shows the fixed Mini hedge, 10-second hedge
+   delay, 75-second overall deadline, and separate 15-second connection
+   watchdog. During rare slow requests the same safeguarded audio may be sent
+   to both models and may incur two transcription charges.
 5. If processing fails, open **Failed Recordings…** from the menu to retry and copy the draft, save the M4A elsewhere, or explicitly delete it.
 6. Request Accessibility permission so BabbelStream can insert text automatically.
 7. Optionally enable `Launch at login` in Settings.

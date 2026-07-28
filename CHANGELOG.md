@@ -15,6 +15,10 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
   registration is confirmed.
 - Omit empty transcription language fields so `gpt-transcribe` can use
   mixed-language auto-detection without an HTTP 400 validation failure.
+- Add per-installation transcription model routing: standard IDs for the
+  official OpenAI API or `openai/`-prefixed IDs for LiteLLM. Existing Hypatos
+  proxy settings migrate once, the Mini hedge follows the same routing, and
+  Settings/diagnostics show the effective IDs.
 
 ## 0.4.1 - 2026-07-20
 

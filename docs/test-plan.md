@@ -13,6 +13,9 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Exact transcription-model picker options, `gpt-transcribe` default, one-time
   former-default migration, unsupported-value normalization, and persistence of
   later explicit picker selections.
+- Standard and LiteLLM `openai/` model routing, effective primary/Mini IDs,
+  one-time Hypatos-host migration, and persistence of an explicit routing
+  choice independently of later base-URL edits.
 - Cleanup prompt regression checks.
 - Settings defaults and migrations.
 - Configurable max recording duration defaults to 10 minutes and rejects values above the cap.
@@ -28,7 +31,8 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 
 ## Integration Tests
 
-- Mock transcription endpoint request shape, model-specific language fields, and response parsing.
+- Mock transcription endpoint request shape, standard/prefixed wire model IDs,
+  model-specific language fields after routing, and response parsing.
 - Mock cleanup endpoint request shape and fallback behavior.
 - Provider HTTP error body extraction without logging request bodies or transcripts.
 - Cleanup request encodes the transcript as data-only JSON rather than bare instruction-shaped user prose.

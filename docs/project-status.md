@@ -25,10 +25,10 @@ by their dedicated specifications.
 
 ## Known Limitations
 
-- The configured Hypatos development LiteLLM proxy does not currently expose a
-  healthy `gpt-transcribe` deployment; selecting it returns HTTP 400. The
-  supported `gpt-4o-transcribe` picker option remains the working temporary
-  choice until the proxy is updated.
+- The work LiteLLM proxy requires its existing `openai/*` namespace while the
+  official OpenAI API requires bare model IDs. Provider Settings now persists
+  this per-installation routing choice; other proxy namespace conventions still
+  require a compatible proxy alias.
 - Coordinator behavior coupled to AppKit, Accessibility, Keychain, microphone
   permission, Carbon event delivery, and application termination remains in the
   manual validation matrix because the current Command Line Tools environment
@@ -45,5 +45,6 @@ recorded.
 
 ## Next Action
 
-Choose whether to keep `gpt-4o-transcribe` temporarily or authorize an upstream
-LiteLLM deployment for `gpt-transcribe`.
+Install the clean main build and smoke-test one work-proxy dictation with
+LiteLLM routing; separately confirm personal-computer settings use standard
+OpenAI routing.

@@ -34,6 +34,9 @@ Mini hedge.
 - Model-aware `languages[]` versus `language` multipart fields.
 - Checks and durable documentation.
 - Preserve endpoint, response parser, prompt, Mini hedge, recovery, and privacy behavior.
+- Persist a per-installation standard/OpenAI-namespace routing choice so the
+  official public OpenAI API and the Hypatos LiteLLM proxy can use the same
+  logical model picker.
 
 ## Non-Goals
 
@@ -55,6 +58,12 @@ Mini hedge.
   saved values to the default so Settings cannot enter an invalid state.
 - Record the migration once so a later explicit `gpt-4o-transcribe` selection
   survives restart.
+- Keep official model IDs as the logical settings value and resolve the wire ID
+  only while constructing transcription multipart fields. This preserves
+  `gpt-transcribe` language-field behavior under both routing modes.
+- Migrate the known Hypatos development/production proxy hosts to LiteLLM
+  `openai/` routing only when no routing choice exists; persist the result so
+  later URL changes do not silently alter routing.
 
 ## Stages
 
@@ -123,6 +132,24 @@ Mini hedge.
   healthy deployments and no fallback for `gpt-transcribe`. No user audio,
   transcript, or provider key was persisted or printed.
 
+### 7. Per-Installation Model Routing
+
+- Status: In progress
+- [x] Record the personal official-OpenAI and work LiteLLM installation contract.
+- [x] Add standard and LiteLLM `openai/` routing with a persisted Settings picker.
+- [x] Route both primary and Mini wire IDs while preserving logical model behavior.
+- [x] Add the one-time Hypatos-host migration, effective-ID UI/diagnostics, checks,
+  and durable documentation.
+- [ ] Review, commit/push, merge/push `main`, package, install, launch, and verify.
+- Evidence: authorized synthetic-silence A/B smoke test established
+  `openai/gpt-transcribe` succeeds through the existing `openai/*` deployment
+  while bare `gpt-transcribe` fails. Initial `task check` passed after the
+  routing implementation and regression coverage. Deterministic Provider
+  Settings launch showed the existing work proxy migrated to
+  `LiteLLM (openai/ model prefix)` with its explanatory copy at the default
+  window size; temporary cropped screenshot:
+  `/private/tmp/babbelstream-routing-screenshots/provider-settings-cropped.png`.
+
 ## Validation Matrix
 
 | Check | Baseline | Current/final | Evidence |
@@ -153,14 +180,13 @@ Mini hedge.
 
 ## Current Blocker
 
-The shared Hypatos development LiteLLM proxy has no healthy
-`gpt-transcribe` deployment. This cannot be corrected inside BabbelStream
-without choosing a different model.
+None. The proxy's existing `openai/*` deployment provides a compatible app-side
+routing path without changing the company-owned proxy.
 
 ## Next Action
 
-Choose temporary `gpt-4o-transcribe` use or authorize upstream LiteLLM
-deployment work for `gpt-transcribe`.
+Complete clean-branch validation, integration, local installation, and the
+remaining real dictation smoke tests.
 
 ## Closeout
 

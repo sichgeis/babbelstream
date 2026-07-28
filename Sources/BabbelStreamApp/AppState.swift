@@ -79,6 +79,7 @@ final class AppState: ObservableObject {
     @Published var transcriptionPathText: String
     @Published var cleanupPathText: String
     @Published var transcriptionModelText: String
+    @Published var transcriptionModelRouting: TranscriptionModelRouting
     @Published var cleanupModelText: String
     @Published var timeoutText: String
     @Published var maxAudioDurationMinutesText: String
@@ -175,6 +176,7 @@ final class AppState: ObservableObject {
         self.transcriptionPathText = loadedSettings.providerConfiguration.transcriptionEndpointPath
         self.cleanupPathText = loadedSettings.providerConfiguration.cleanupEndpointPath
         self.transcriptionModelText = loadedSettings.providerConfiguration.transcriptionModel
+        self.transcriptionModelRouting = loadedSettings.providerConfiguration.transcriptionModelRouting
         self.cleanupModelText = loadedSettings.providerConfiguration.cleanupModel
         self.timeoutText = String(Int(loadedSettings.providerConfiguration.timeoutSeconds))
         self.maxAudioDurationMinutesText = Self.durationMinutesText(for: loadedSettings.maxAudioDurationSeconds)
@@ -294,6 +296,14 @@ final class AppState: ObservableObject {
 
     var providerConnectionTimeoutSummary: String {
         Self.secondsLabel(ProjectDefaults.providerConnectionTimeoutSeconds)
+    }
+
+    var effectiveTranscriptionModel: String {
+        transcriptionModelRouting.providerModelID(for: transcriptionModelText)
+    }
+
+    var effectiveFallbackTranscriptionModel: String {
+        transcriptionModelRouting.providerModelID(for: ProjectDefaults.fallbackTranscriptionModel)
     }
 
     var editedProviderDestinationSummary: String {
@@ -961,7 +971,10 @@ final class AppState: ObservableObject {
             "transcription destination: \(providerDestinationSummary)",
             "cleanup destination: \(cleanupDestinationSummary)",
             "transcription model: \(appSettings.providerConfiguration.transcriptionModel)",
+            "transcription model routing: \(appSettings.providerConfiguration.transcriptionModelRouting.displayName)",
+            "effective transcription model: \(appSettings.providerConfiguration.transcriptionModelRouting.providerModelID(for: appSettings.providerConfiguration.transcriptionModel))",
             "fallback transcription model: \(ProjectDefaults.fallbackTranscriptionModel)",
+            "effective fallback transcription model: \(appSettings.providerConfiguration.transcriptionModelRouting.providerModelID(for: ProjectDefaults.fallbackTranscriptionModel))",
             "transcription hedge delay seconds: \(String(format: "%.1f", ProjectDefaults.transcriptionHedgeDelaySeconds))",
             "transcription overall deadline seconds: \(String(format: "%.1f", ProjectDefaults.transcriptionOverallTimeoutSeconds))",
             "cleanup model: \(appSettings.providerConfiguration.cleanupModel)",
@@ -1013,6 +1026,7 @@ final class AppState: ObservableObject {
             transcriptionEndpointPath: transcriptionPathText,
             cleanupEndpointPath: cleanupPathText,
             transcriptionModel: transcriptionModelText,
+            transcriptionModelRouting: transcriptionModelRouting,
             cleanupModel: cleanupModelText,
             timeoutSeconds: timeout
         )
@@ -1918,7 +1932,12 @@ final class AppState: ObservableObject {
             cleanupEnabled: cleanupWasEnabled,
             cleanupFallbackUsed: cleanupFallbackUsed,
             insertionOutcome: insertionOutcome,
-            transcriptionProviderLabel: providerLabel(model: configuration.transcriptionModel, settings: settings),
+            transcriptionProviderLabel: providerLabel(
+                model: configuration.transcriptionModelRouting.providerModelID(
+                    for: configuration.transcriptionModel
+                ),
+                settings: settings
+            ),
             cleanupProviderLabel: cleanupWasEnabled
                 ? providerLabel(model: configuration.cleanupModel, settings: settings)
                 : nil,

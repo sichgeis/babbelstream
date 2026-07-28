@@ -75,6 +75,8 @@ Provider settings should include:
 - Cleanup endpoint path.
 - Primary transcription model selected from `gpt-transcribe`,
   `gpt-4o-transcribe`, or `gpt-4o-mini-transcribe`.
+- Transcription model routing selected between standard OpenAI IDs and
+  LiteLLM's `openai/` namespace.
 - Cleanup model name.
 - Optional transcription language code. This must be a single ISO 639-1 code such as `de` or `en`; mixed-language dictation should leave it empty and use prompt/cleanup hints.
 - Timeout.
@@ -82,7 +84,13 @@ Provider settings should include:
 - Maximum audio duration, editable in Settings and defaulting to 10 minutes.
 - Optional future price inputs for local cost estimates.
 
-The default shape targets OpenAI-compatible LiteLLM endpoints. It is still an integration risk that a specific LiteLLM proxy may not support OpenAI-compatible audio transcription even if the app's request shape is valid.
+The default request shape supports both the official OpenAI API and
+OpenAI-compatible LiteLLM endpoints. The selected model remains a logical
+official model ID. Immediately before multipart construction, the pure routing
+policy either keeps that ID bare or adds one `openai/` prefix; primary and Mini
+requests share the same immutable settings snapshot and routing. Existing
+Hypatos proxy installations migrate once to prefixed routing, while the saved
+choice remains authoritative afterward.
 
 Remote provider URLs must use HTTPS. Plain HTTP is accepted only for loopback development endpoints. Base URLs with embedded credentials, query parameters, or fragments are rejected so the effective destinations remain inspectable and diagnostics-safe.
 
@@ -92,7 +100,17 @@ Use AVFoundation to record compressed audio to a temporary file. The MVP default
 
 ## Transcription Approach
 
-Use multipart upload for `/v1/audio/transcriptions`-style endpoints. `gpt-transcribe` uses the same endpoint, JSON response format, and top-level `text` result as the previous default, but receives an optional language hint through `languages[]`; older compatible models retain the singular `language` field. Additional response metadata such as detected `languages` is ignored. The provider accepts a JSON object with a string `text` field or a genuinely plain-text response; other successful JSON shapes are rejected. The app disables same-model retries and permits only the configured primary plus one bounded Mini hedge. Authentication and other permanent client failures fail immediately.
+Use multipart upload for `/v1/audio/transcriptions`-style endpoints.
+`gpt-transcribe` uses the same endpoint, JSON response format, and top-level
+`text` result as the previous default, but receives an optional language hint
+through `languages[]`; older compatible models retain the singular `language`
+field. Language-field selection uses the logical model before routing, so
+`openai/gpt-transcribe` retains the same request contract. Additional response
+metadata such as detected `languages` is ignored. The provider accepts a JSON
+object with a string `text` field or a genuinely plain-text response; other
+successful JSON shapes are rejected. The app disables same-model retries and
+permits only the configured primary plus one bounded Mini hedge.
+Authentication and other permanent client failures fail immediately.
 
 Primary transcription begins immediately and Mini is hedged after 10 seconds only when primary is still pending. An early retryable primary failure starts Mini immediately; permanent failures stop. First valid output wins and the complete transcription phase is bounded to 75 seconds. A separate 15-second zero-byte connection watchdog remains per request. Cleanup keeps its separately configured timeout and raw-transcript fallback. Provider lifecycle events distinguish primary, hedge, winner, loser cancellation, and cleanup without recording content.
 

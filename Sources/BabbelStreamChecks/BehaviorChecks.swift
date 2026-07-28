@@ -125,6 +125,10 @@ check(!BuildMetadata.codeSigningSummary.isEmpty, "Code signing metadata should h
 check(configuration.transcriptionEndpointPath == "/v1/audio/transcriptions", "Unexpected transcription endpoint default.")
 check(configuration.cleanupEndpointPath == "/v1/chat/completions", "Unexpected cleanup endpoint default.")
 check(configuration.transcriptionModel == ProjectDefaults.defaultTranscriptionModel, "Provider configuration should use the default STT model.")
+check(
+    configuration.transcriptionModelRouting == .standardOpenAI,
+    "Provider configuration should use standard OpenAI model IDs by default."
+)
 check(configuration.cleanupModel == ProjectDefaults.defaultCleanupModel, "Provider configuration should use the default cleanup model.")
 check(CleanupPrompt.slackReady.contains("German-English"), "Cleanup prompt must protect mixed-language dictation.")
 check(CleanupPrompt.slackReady.contains("English stays English"), "Cleanup prompt must prevent English-to-German translation.")
@@ -170,6 +174,22 @@ check(
     gptTranscribeFields["languages[]"] == "de" && gptTranscribeFields["language"] == nil,
     "GPT Transcribe should use its plural languages[] hint."
 )
+check(
+    gptTranscribeFields["model"] == ProjectDefaults.defaultTranscriptionModel,
+    "Standard OpenAI routing should send the selected bare model ID."
+)
+var liteLLMTranscriptionSettings = gptTranscribeSettings
+liteLLMTranscriptionSettings.providerConfiguration.transcriptionModelRouting = .liteLLMOpenAINamespace
+let liteLLMTranscriptionFields = TranscriptionFormFields.make(settings: liteLLMTranscriptionSettings)
+check(
+    liteLLMTranscriptionFields["model"] == "openai/\(ProjectDefaults.defaultTranscriptionModel)",
+    "LiteLLM routing should prefix the selected model with openai/."
+)
+check(
+    liteLLMTranscriptionFields["languages[]"] == "de"
+        && liteLLMTranscriptionFields["language"] == nil,
+    "LiteLLM routing must preserve GPT Transcribe's plural languages[] hint."
+)
 var legacyTranscriptionSettings = AppSettings()
 legacyTranscriptionSettings.providerConfiguration.transcriptionModel = ProjectDefaults.fallbackTranscriptionModel
 legacyTranscriptionSettings.transcriptionLanguage = "en"
@@ -177,6 +197,12 @@ let legacyTranscriptionFields = TranscriptionFormFields.make(settings: legacyTra
 check(
     legacyTranscriptionFields["language"] == "en" && legacyTranscriptionFields["languages[]"] == nil,
     "Existing OpenAI-compatible transcription models should keep the singular language field."
+)
+legacyTranscriptionSettings.providerConfiguration.transcriptionModelRouting = .liteLLMOpenAINamespace
+check(
+    TranscriptionFormFields.make(settings: legacyTranscriptionSettings)["model"]
+        == "openai/\(ProjectDefaults.fallbackTranscriptionModel)",
+    "The bounded Mini hedge should use the same LiteLLM routing as the primary model."
 )
 check(
     ProviderEndpointBuilder.endpointURL(baseURL: configuration.baseURL, path: configuration.transcriptionEndpointPath)?
@@ -524,6 +550,45 @@ check(
         .providerConfiguration
         .transcriptionModel == ProjectDefaults.defaultTranscriptionModel,
     "Unsupported saved transcription models should migrate to the default picker option."
+)
+check(
+    UserDefaultsSettingsStore(userDefaults: presenceDefaults)
+        .load()
+        .providerConfiguration
+        .transcriptionModelRouting == .standardOpenAI,
+    "Existing non-Hypatos settings should migrate to standard OpenAI model IDs."
+)
+presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
+presenceDefaults.set(
+    "https://openai-proxy.dev.hypatos.ai",
+    forKey: "provider.baseURL"
+)
+let migratedHypatosSettings = UserDefaultsSettingsStore(userDefaults: presenceDefaults).load()
+check(
+    migratedHypatosSettings.providerConfiguration.transcriptionModelRouting == .liteLLMOpenAINamespace,
+    "The existing Hypatos proxy should migrate once to LiteLLM openai/ model routing."
+)
+presenceDefaults.set(
+    "https://api.openai.com/v1",
+    forKey: "provider.baseURL"
+)
+check(
+    UserDefaultsSettingsStore(userDefaults: presenceDefaults)
+        .load()
+        .providerConfiguration
+        .transcriptionModelRouting == .liteLLMOpenAINamespace,
+    "A migrated routing choice should remain authoritative when the base URL later changes."
+)
+var explicitStandardRoutingSettings = migratedHypatosSettings
+explicitStandardRoutingSettings.providerConfiguration.baseURL = URL(string: "https://api.openai.com/v1")!
+explicitStandardRoutingSettings.providerConfiguration.transcriptionModelRouting = .standardOpenAI
+try UserDefaultsSettingsStore(userDefaults: presenceDefaults).save(explicitStandardRoutingSettings)
+check(
+    UserDefaultsSettingsStore(userDefaults: presenceDefaults)
+        .load()
+        .providerConfiguration
+        .transcriptionModelRouting == .standardOpenAI,
+    "An explicit standard OpenAI routing selection should persist."
 )
 presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
 let apiKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(

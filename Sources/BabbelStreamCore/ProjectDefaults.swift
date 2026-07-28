@@ -41,6 +41,47 @@ public enum ProjectDefaults {
     }
 }
 
+public enum TranscriptionModelRouting: String, CaseIterable, Sendable {
+    case standardOpenAI = "standard-openai"
+    case liteLLMOpenAINamespace = "litellm-openai-namespace"
+
+    public var displayName: String {
+        switch self {
+        case .standardOpenAI:
+            "OpenAI (standard model IDs)"
+        case .liteLLMOpenAINamespace:
+            "LiteLLM (openai/ model prefix)"
+        }
+    }
+
+    public var helpText: String {
+        switch self {
+        case .standardOpenAI:
+            "Sends model IDs such as gpt-transcribe. Use this with the official OpenAI API."
+        case .liteLLMOpenAINamespace:
+            "Sends model IDs such as openai/gpt-transcribe. Use this when LiteLLM routes OpenAI models through its openai/* namespace."
+        }
+    }
+
+    public func providerModelID(for selectedModel: String) -> String {
+        let model = selectedModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch self {
+        case .standardOpenAI:
+            return model
+        case .liteLLMOpenAINamespace:
+            return model.hasPrefix("openai/") ? model : "openai/\(model)"
+        }
+    }
+
+    public static func initialValue(forExistingBaseURL baseURL: URL) -> Self {
+        let host = baseURL.host?.lowercased()
+        if host == "openai-proxy.dev.hypatos.ai" || host == "openai-proxy.prod.hypatos.ai" {
+            return .liteLLMOpenAINamespace
+        }
+        return .standardOpenAI
+    }
+}
+
 public enum BuildMetadata {
     public static let unknownVersion = "unknown"
     public static let gitCommitInfoKey = "BabbelStreamGitCommit"
@@ -66,6 +107,7 @@ public struct ProviderConfiguration: Equatable, Sendable {
     public var transcriptionEndpointPath: String
     public var cleanupEndpointPath: String
     public var transcriptionModel: String
+    public var transcriptionModelRouting: TranscriptionModelRouting
     public var cleanupModel: String
     public var timeoutSeconds: TimeInterval
 
@@ -74,6 +116,7 @@ public struct ProviderConfiguration: Equatable, Sendable {
         transcriptionEndpointPath: String = "/v1/audio/transcriptions",
         cleanupEndpointPath: String = "/v1/chat/completions",
         transcriptionModel: String = ProjectDefaults.defaultTranscriptionModel,
+        transcriptionModelRouting: TranscriptionModelRouting = .standardOpenAI,
         cleanupModel: String = ProjectDefaults.defaultCleanupModel,
         timeoutSeconds: TimeInterval = 30
     ) {
@@ -81,6 +124,7 @@ public struct ProviderConfiguration: Equatable, Sendable {
         self.transcriptionEndpointPath = transcriptionEndpointPath
         self.cleanupEndpointPath = cleanupEndpointPath
         self.transcriptionModel = transcriptionModel
+        self.transcriptionModelRouting = transcriptionModelRouting
         self.cleanupModel = cleanupModel
         self.timeoutSeconds = timeoutSeconds
     }
