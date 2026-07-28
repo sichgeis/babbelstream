@@ -91,7 +91,7 @@ intent, and install a locally verified candidate.
 ## Release Evidence
 
 - Release commit: `716c60cf004aa6ccea8fbafdd85517ef92c14326`
-- Main commit: not authorized
+- Main feature commit: `f2886b209328fb39901da167a96f168161238925`
 - Annotated tag: not authorized
 - Artifact/checksum: `dist/BabbelStream-0.4.1.dmg` /
   `444d8e73fa478fae3aafa272c9a6e3316d60f892d759c2020bc77a9fbfa96958`
@@ -115,13 +115,14 @@ limitation and did not block launch-at-login registration or app launch.
 
 ## Next Action
 
-Request merge authorization.
+None. The implementation is merged to `main`; the unrelated GPT Transcribe
+real-provider smoke test remains active.
 
 ## Closeout
 
 - [x] Durable specs match shipped behavior.
 - [x] Validation evidence is complete and truthful.
 - [x] Candidate smoke validation passed.
-- [ ] Main/tag/deployment match the approved release level.
+- [x] Main and local deployment match the approved level; no tag was requested.
 - [x] Working tree is clean after the final evidence commit.
-- [ ] Tracker moved from active to archive.
+- [x] Tracker moved from active to archive.

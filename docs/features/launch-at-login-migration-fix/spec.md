@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Approved
+- State: Implemented
 - Owner: the maintainer
 - Last approved: 2026-07-28 conversation
 - Related ADRs/issues: none
