@@ -196,15 +196,14 @@ public final class LaunchAtLoginService: LaunchAtLoginManaging {
     }
 
     private func registerSystemService() throws {
-        guard systemService.status != .notFound else {
-            throw LaunchAtLoginError.serviceUnavailable
-        }
-
         do {
             try systemService.register()
         } catch {
             if systemService.status == .requiresApproval {
                 throw LaunchAtLoginError.approvalRequired
+            }
+            if systemService.status == .notFound {
+                throw LaunchAtLoginError.serviceUnavailable
             }
             throw LaunchAtLoginError.registrationFailed(error.localizedDescription)
         }
