@@ -82,15 +82,17 @@ Mini hedge.
 
 ### 4. Constrained Model Picker And Local Installation
 
-- Status: In progress
+- Status: Completed
 - [x] Replace free text with the three-option model menu and add deterministic policy checks.
 - [x] Update the feature contract and durable docs.
 - [x] Run canonical and visual Provider Settings validation.
-- [ ] Commit/push, merge/push `main`, then build/install/launch and verify from the clean main commit.
+- [x] Commit/push, merge/push `main`, then build/install/launch and verify from the clean main commit.
 - Evidence: `task check` passed; `git diff --check` passed; deterministic
   Provider Settings launch rendered the menu-style control cleanly with
   `gpt-transcribe` selected at the default window size. Temporary screenshot:
   `/private/tmp/babbelstream-picker-screenshots/provider-settings.png`.
+  Feature commit `2f6b507` was pushed, fast-forwarded to `main`, validated there,
+  packaged, installed, launched, and verified from `/Applications`.
 
 ## Validation Matrix
 
@@ -98,35 +100,40 @@ Mini hedge.
 | --- | --- | --- | --- |
 | Canonical checks | Passed | Passed | `task check`; baseline and final passed with normal developer cache access |
 | Focused checks | Covered by runner | Passed | Picker options, defaults, migration, selection persistence, validation, request fields, response metadata |
-| Build/package | Build passed | Build passed | `task check`; no package requested |
+| Build/package | Build passed | Passed | `task check`; signed app and verified `BabbelStream-0.4.1.dmg` |
 | Manual smoke | Not run | Provider Settings visual check passed; real dictation remains manual | Deterministic Provider-tab launch and screenshot |
 | Diff/privacy review | Clean baseline | Passed | No new data, destination, permission, retention, or logs; `git diff --check` passed |
-| Clean tree | Clean | Pending tracker closeout commit | `git status --short --branch` |
+| Clean tree | Clean | Clean after tracker evidence commit | `main` synchronized with `origin/main` |
 
 ## Release Evidence
 
 - Feature implementation commit: `39ab8ac`
 - Release commit: not requested
-- Main commit: authorized, pending
+- Main feature commit: `2f6b507` (fast-forwarded and pushed)
 - Annotated tag: not authorized
-- Artifact/checksum: not requested
-- Installed/deployed version and commit: authorized, pending
-- Running/health verification: manual provider smoke pending
+- Artifact/checksum: `dist/BabbelStream-0.4.1.dmg`; SHA-256 sidecar verified
+- Installed/deployed version and commit: `0.4.1` / `2f6b507`
+- Installed signing: `BabbelStream Local Code Signing`; strict code-sign verification passed
+- Running/health verification: `/Applications/BabbelStream.app/Contents/MacOS/BabbelStream`
+  running as a launchd child; installed and packaged executable hashes match
+- Recovery backup: previous app retained temporarily under
+  `/private/tmp/babbelstream-install-backup.j9mcHf/`
 
 ## Current Blocker
 
-None.
+Real-provider microphone/language smoke testing remains a manual user action; it
+did not block the explicitly authorized merge and local installation.
 
 ## Next Action
 
-Run canonical and visual picker validation, then commit/push, merge/push `main`,
-and install/verify the clean main build.
+Run the real-provider German/English/mixed-language smoke test against the newly
+installed app, then record approval and archive this run.
 
 ## Closeout
 
 - [x] Durable specs match implemented behavior.
 - [x] Automated validation evidence is complete and truthful.
 - [ ] Human smoke gate passed or was explicitly waived.
-- [ ] Main/tag/deployment match the approved release level.
-- [ ] Working tree is clean.
+- [x] Main and local installation match the approved level; no tag was authorized.
+- [x] Working tree is clean after the tracker evidence commit.
 - [ ] Tracker moved from active to archive.
