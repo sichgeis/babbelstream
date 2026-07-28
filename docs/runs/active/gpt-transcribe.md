@@ -62,10 +62,10 @@ the documented request shape while preserving custom models and the Mini hedge.
 
 ### 3. Feature Handoff
 
-- Status: In progress
-- [ ] Commit and push the feature branch.
-- [ ] Provide the real-provider smoke test and stop before release actions.
-- Evidence: Pending.
+- Status: Completed
+- [x] Commit and push the feature branch.
+- [x] Provide the real-provider smoke test and stop before release actions.
+- Evidence: implementation commit `39ab8ac`; branch `codex/gpt-transcribe` pushed to `origin`.
 
 ## Validation Matrix
 
@@ -76,11 +76,12 @@ the documented request shape while preserving custom models and the Mini hedge.
 | Build/package | Build passed | Build passed | `task check`; no package requested |
 | Manual smoke | Not run | Required from user | Real provider/microphone/Slack |
 | Diff/privacy review | Clean baseline | Passed | No new data, destination, permission, retention, or logs |
-| Clean tree | Clean | Pending feature commits | `git status --short --branch` |
+| Clean tree | Clean | Pending tracker closeout commit | `git status --short --branch` |
 
 ## Release Evidence
 
-- Release commit: pending
+- Feature implementation commit: `39ab8ac`
+- Release commit: not requested
 - Main commit: not authorized
 - Annotated tag: not authorized
 - Artifact/checksum: not requested
@@ -93,12 +94,12 @@ None.
 
 ## Next Action
 
-Commit and push the validated feature branch, then provide the real-provider smoke test.
+Run the real-provider German/English/mixed-language smoke test from the feature branch before authorizing release packaging or `main`.
 
 ## Closeout
 
-- [ ] Durable specs match shipped behavior.
-- [ ] Validation evidence is complete and truthful.
+- [x] Durable specs match implemented behavior.
+- [x] Automated validation evidence is complete and truthful.
 - [ ] Human smoke gate passed or was explicitly waived.
 - [ ] Main/tag/deployment match the approved release level.
 - [ ] Working tree is clean.
