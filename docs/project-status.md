@@ -51,5 +51,5 @@ recorded.
 
 ## Next Action
 
-Push the completed feature branch, then run the synthetic real-provider matrix
-from the active feature spec before authorizing merge and local installation.
+Run the synthetic real-provider matrix from the active feature spec before
+authorizing merge and local installation.

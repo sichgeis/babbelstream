@@ -96,9 +96,11 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
 
 ### 5. Feature Handoff
 
-- Status: In progress
-- [ ] Commit coherent milestones and push the feature branch.
-- [ ] Report remaining human smoke and merge/install gates.
+- Status: Completed
+- [x] Commit coherent milestones and push the feature branch.
+- [x] Report remaining human smoke and merge/install gates.
+- Evidence: feature commit `72edb30` pushed to
+  `origin/codex/personal-openai-fallback`.
 
 ## Validation Matrix
 
@@ -108,7 +110,7 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
 | Focused policy/settings checks | N/A | Passed | Defaults/persistence, independent markers, fixed official settings/request, eligible/ineligible failures, HUD phase |
 | Manual provider smoke | Not run | Human gate | No real credentials/content authorized |
 | Diff/privacy review | Clean baseline | Passed | `git diff --check`; separate secrets, content-free diagnostics, sequential request review |
-| Git state | Clean main baseline | Active feature branch | `codex/personal-openai-fallback` |
+| Git state | Clean main baseline | Feature commit pushed | `72edb30` on `origin/codex/personal-openai-fallback` |
 
 ## Current Blocker
 
@@ -116,13 +118,13 @@ None.
 
 ## Next Action
 
-Commit and push the completed feature branch, then hand off the real-provider
-smoke test and merge/install gates.
+Run the real-provider matrix in the feature spec with synthetic/non-confidential
+dictation, then authorize merge and local installation if it passes.
 
 ## Closeout
 
 - [x] Durable specs match implemented behavior.
 - [x] Automated validation evidence is complete and truthful.
 - [ ] Human smoke gate passed or explicitly deferred.
-- [ ] Feature branch pushed with a clean working tree.
+- [x] Feature branch pushed with a clean working tree.
 - [ ] Tracker moved to archive after authorized integration or explicit closeout.
