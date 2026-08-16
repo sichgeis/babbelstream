@@ -174,14 +174,16 @@ private struct DictationStatusHUDView: View {
         }
         .padding(.horizontal, 8)
         .frame(width: 220, height: 44)
-        .background(Color.black.opacity(0.88), in: Capsule())
+        .background(hudBackgroundColor, in: Capsule())
         .overlay {
             Capsule()
                 .strokeBorder(.white.opacity(0.13), lineWidth: 1)
         }
         .contentShape(Capsule())
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("BabbelStream \(compactStatus)")
+        .accessibilityLabel(
+            "BabbelStream \(compactStatus)\(appState.isPersonalOpenAIHUDActive ? ", personal OpenAI active" : "")"
+        )
     }
 
     private var recordingContent: some View {
@@ -204,6 +206,10 @@ private struct DictationStatusHUDView: View {
             .accessibilityLabel("Stop recording and process dictation")
 
             HStack(spacing: 4) {
+                if appState.isPersonalOpenAIHUDActive {
+                    Image(systemName: "person.crop.circle.fill")
+                        .font(.system(size: 9, weight: .semibold))
+                }
                 Image(systemName: appState.isHandsFreeRecording ? "lock.fill" : "hand.raised.fill")
                     .font(.system(size: 9, weight: .semibold))
 
@@ -230,6 +236,13 @@ private struct DictationStatusHUDView: View {
     private var statusContent: some View {
         HStack(spacing: 9) {
             statusIndicator
+
+            if appState.isPersonalOpenAIHUDActive {
+                Image(systemName: "person.crop.circle.fill")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .accessibilityLabel("Personal OpenAI active")
+            }
 
             Text(compactStatus)
                 .font(.system(size: 12, weight: .semibold))
@@ -259,7 +272,11 @@ private struct DictationStatusHUDView: View {
     private var statusIndicator: some View {
         if appState.isProcessing || appState.canCancel {
             Circle()
-                .fill(.blue.opacity(0.92))
+                .fill(
+                    appState.isPersonalOpenAIHUDActive
+                        ? .purple.opacity(0.96)
+                        : .blue.opacity(0.92)
+                )
                 .frame(width: 28, height: 28)
                 .overlay {
                     Image(systemName: "waveform")
@@ -285,6 +302,17 @@ private struct DictationStatusHUDView: View {
             return "Test"
         }
         return appState.pasteTargetSummary ?? "Recording"
+    }
+
+    private var hudBackgroundColor: Color {
+        switch DictationHUDPresentation.providerAccent(
+            personalOpenAIActive: appState.isPersonalOpenAIHUDActive
+        ) {
+        case .standard:
+            .black.opacity(0.88)
+        case .personalOpenAI:
+            .purple.opacity(0.82)
+        }
     }
 
     private var hudPhase: DictationHUDPhase {

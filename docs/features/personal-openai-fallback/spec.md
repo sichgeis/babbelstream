@@ -14,6 +14,11 @@ separate personal API key. If transcription used the personal fallback, cleanup
 for that dictation also uses the personal OpenAI profile so the workflow does
 not return to the unavailable work proxy.
 
+When the user already knows the work cluster is offline, an additional applied
+`Use personal OpenAI now` switch makes the personal profile the active provider
+for the complete dictation. This direct-personal mode skips the work primary and
+Mini hedge entirely and remains visibly distinct in Settings and the HUD.
+
 ## Design Decision
 
 Automatic provider switching is useful here only as a narrow availability
@@ -55,6 +60,15 @@ error as permission to send work audio to a personal account.
   existing raw-transcript cleanup fallback.
 - Surface fallback activation in status, warnings, archive provider labels, and
   privacy-safe diagnostics.
+- Persist an off-by-default `Use personal OpenAI now` switch. It is available
+  only while personal fallback is enabled and a personal key is saved or staged.
+- In direct-personal mode, bypass every LiteLLM transcription and cleanup
+  request; make one personal transcription request and route enabled cleanup to
+  the same personal profile.
+- Give the HUD a purple personal-provider treatment plus a visible personal
+  provider icon/text cue throughout recording and processing. Preserve the red
+  Stop control, target-app label, waveform, completion/error semantics, and
+  accessibility labels.
 - Preserve stopped-audio recovery, cancellation, insertion, archive, and
   no-auto-send behavior.
 
@@ -71,6 +85,7 @@ error as permission to send work audio to a personal account.
 - No local transcription backend, new dependency, telemetry, or transcript
   history.
 - No automatic enablement or migration for existing installations.
+- No schedule, calendar, weekday/weekend detection, or automatic mode change.
 
 ## User Workflow
 
@@ -87,6 +102,11 @@ error as permission to send work audio to a personal account.
    OpenAI was used.
 6. If fallback is unavailable or fails, the stopped recording stays in Failed
    Recordings under the existing recovery policy.
+7. When the user knows LiteLLM is offline, they enable `Use personal OpenAI now`
+   and Apply. New dictations immediately use only personal OpenAI. The HUD is
+   purple and identifies the personal provider before audio is sent.
+8. Turning direct-personal mode off and applying restores the configured primary
+   plus automatic fallback behavior.
 
 ## Interaction And State Contract
 
@@ -94,6 +114,9 @@ error as permission to send work audio to a personal account.
 | --- | --- | --- | --- |
 | Settings, fallback off | User applies normal settings | Primary-only behavior | None |
 | Settings, fallback on without saved/input key | Apply | Validation error; prior applied settings remain active | None |
+| Settings, direct-personal switch on | Apply | Personal OpenAI becomes active for new dictations | None until dictation |
+| Recording, direct-personal mode | Start | Purple HUD identifies personal mode and retains target/gesture state | None until processing |
+| Processing, direct-personal mode | Stop recording | Skip work primary and Mini | One personal transcription request |
 | Transcribing on primary | Primary succeeds | Continue with primary cleanup | Primary only |
 | Transcribing on primary | Reachability failure | Show personal fallback state | One personal transcription request |
 | Transcribing on primary | HTTP 502/503/504 | Show personal fallback state | One personal transcription request |
@@ -115,6 +138,12 @@ error as permission to send work audio to a personal account.
   service returned an application-level decision.
 - A dictation snapshots both primary settings and fallback enablement before
   recording; editing Settings cannot reroute in-flight audio.
+- The same snapshot includes direct-personal mode. Toggling or applying Settings
+  during a dictation cannot reroute that dictation.
+- Direct-personal mode implies personal fallback is enabled. Disabling fallback
+  also disables direct-personal mode.
+- Direct-personal mode reads no primary key and sends no request to the primary
+  or Mini models.
 - The fallback uses the same logical transcription model, response format,
   language, and prompt, but official OpenAI routing and base URL.
 - The personal fallback makes at most one transcription request and one cleanup
@@ -133,6 +162,8 @@ error as permission to send work audio to a personal account.
   transcript text and personal dictionary context to be sent to the user's
   personal OpenAI account after an eligible primary failure.
 - This can create personal OpenAI API charges. Settings states this before Apply.
+- Enabling direct-personal mode authorizes all new dictations to use the personal
+  account immediately until the user turns the switch off and applies Settings.
 - Both provider keys remain device-only Keychain items. Startup reads presence
   markers, not secrets.
 - The existing audio retention and deletion rules do not change.
@@ -143,6 +174,8 @@ error as permission to send work audio to a personal account.
 ## Architecture Impact
 
 - `AppSettings` and `UserDefaultsSettingsStore`: persisted opt-in.
+- `AppSettings` and `UserDefaultsSettingsStore`: persisted direct-personal mode,
+  default off with no automatic migration.
 - `SecretStore`: separate primary and personal-fallback credentials.
 - `PersonalProviderFallbackPolicy`: pure reachability classification and fixed
   fallback settings derivation.
@@ -167,6 +200,10 @@ error as permission to send work audio to a personal account.
 
 - Existing installations remain primary-only until fallback is explicitly
   enabled and applied.
+- Existing installations and upgraded settings default direct-personal mode off.
+- Applied direct-personal mode makes zero LiteLLM requests and exactly one
+  personal transcription request.
+- Turning direct-personal mode off restores primary-first behavior.
 - Enabling fallback without a saved or newly entered personal key is rejected.
 - Primary success never sends audio or text to personal OpenAI.
 - Eligible connection failures make exactly one personal transcription request.
@@ -178,6 +215,8 @@ error as permission to send work audio to a personal account.
   reachability failure may make one personal cleanup attempt.
 - Fallback activation and the active destination are visible without exposing
   content or secrets.
+- The HUD uses a distinct purple background and personal-provider cue while
+  direct-personal mode is active, including during recording.
 - Cancellation starts no later fallback work.
 - Successful audio deletion, failed-recording ownership, archive labeling,
   insertion, and no-auto-send behavior remain correct.
@@ -185,6 +224,8 @@ error as permission to send work audio to a personal account.
 ## Automated Validation
 
 - Settings default/persistence and disabled migration behavior.
+- Direct-personal default, persistence, implication rules, and derived active
+  provider policy.
 - Fixed fallback settings derivation and model routing.
 - Eligible and ineligible error classification.
 - Separate Keychain accounts and presence markers through fakes/pure checks.
@@ -207,6 +248,11 @@ error as permission to send work audio to a personal account.
    and confirm the personal account is not used.
 6. Restart BabbelStream and confirm both key-presence indicators and the applied
    opt-in remain correct without a startup Keychain prompt.
+7. Enable `Use personal OpenAI now`, Apply, and confirm the HUD is purple during
+   recording and processing, diagnostics show direct-personal mode, and no work
+   primary/Mini lifecycle event appears.
+8. Turn direct-personal mode off, Apply, and confirm the next dictation returns
+   to primary-first behavior and the ordinary dark HUD.
 
 ## Approval Gate
 

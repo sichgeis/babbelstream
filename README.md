@@ -18,6 +18,9 @@ Tap `Control + Option + Space` for hands-free recording or hold it for push-to-t
   and one sequential official-API request only when the primary connection is
   unreachable. Gateway/service-unavailable HTTP 502/503/504 qualify; credential,
   rate-limit, other HTTP, model, and response errors never switch accounts.
+- A separate `Use personal OpenAI now (skip primary)` switch handles known
+  weekend downtime without waiting: after Apply, new dictations go straight to
+  personal OpenAI and the HUD turns purple with a personal-provider icon.
 - Failed or interrupted processing keeps the stopped M4A in a local, user-only Failed Recordings store. Retry uses current provider settings and copies the result instead of auto-pasting into a historical target.
 - The HUD stays compact and passive; it distinguishes primary/Mini processing and shows Recording saved after failure. Privacy-safe diagnostics record stage, timing, status/error category, and byte counts.
 - Cleanup preserves German, English, and mixed German-English speech without translating.
@@ -99,6 +102,9 @@ This local DMG is suitable for personal testing. Public distribution should use 
    destinations and cross-account disclosure, add a separate personal key, and
    Apply. This can send work audio, cleanup text, and dictionary context to your
    personal OpenAI account and incur personal charges.
+   When you already know LiteLLM is offline, also enable `Use personal OpenAI
+   now (skip primary)` and Apply. This persisted mode avoids both the work
+   primary and Mini attempts until you turn it off again.
 5. If processing fails, open **Failed Recordings…** from the menu to retry and copy the draft, save the M4A elsewhere, or explicitly delete it.
 6. Request Accessibility permission so BabbelStream can insert text automatically.
 7. Optionally enable `Launch at login` in Settings.

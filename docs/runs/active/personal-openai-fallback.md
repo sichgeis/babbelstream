@@ -62,6 +62,9 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
   personal transcription request if the phase ends in an eligible error.
 - Route cleanup through the transcript-winning profile; allow one personal
   cleanup attempt after an eligible primary cleanup failure.
+- A 2026-08-16 follow-up authorizes a persisted `Use personal OpenAI now` switch
+  that bypasses the work primary/Mini phase and gives the HUD a distinct purple,
+  text-and-icon-identifiable personal-provider treatment.
 
 ## Stages
 
@@ -103,12 +106,25 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
 - Evidence: feature commit `72edb30` pushed to
   `origin/codex/personal-openai-fallback`.
 
+### 6. Direct Personal Mode And HUD
+
+- Status: In progress
+- [x] Persist an applied direct-personal switch with safe implication rules.
+- [x] Bypass primary key loading, work transcription, and Mini hedging while
+  direct-personal mode is active.
+- [x] Show the active personal destination in Settings/diagnostics and a purple,
+  accessible personal-provider HUD treatment during recording and processing.
+- [x] Add focused checks and update durable docs.
+- [ ] Validate, push, rebuild, and
+  install the revised release candidate.
+
 ## Validation Matrix
 
 | Check | Baseline | Current/final | Evidence |
 | --- | --- | --- | --- |
 | Canonical checks | Passed | Passed | `task check` with normal developer cache access |
-| Focused policy/settings checks | N/A | Passed | Defaults/persistence, independent markers, fixed official settings/request, eligible/ineligible failures, HUD phase |
+| Focused policy/settings checks | N/A | Passed | Defaults/persistence, direct-mode implication/routing policy, independent markers, fixed official settings/request, eligible/ineligible failures, HUD phase/accent |
+| Settings visual QA | N/A | Passed | Default-size Provider pane shows both provider-mode switches and applied mode without scrolling; screenshot: `/private/tmp/babbelstream-direct-mode-screenshots/provider-mode-switches.png` |
 | Manual provider smoke | Not run | Human gate | No real credentials/content authorized |
 | Local build/install | N/A | Passed | `0.4.1` / `06862f0`; installed and packaged executable hashes match |
 | Diff/privacy review | Clean baseline | Passed | `git diff --check`; separate secrets, content-free diagnostics, sequential request review |
@@ -134,8 +150,8 @@ None.
 
 ## Next Action
 
-Run the real-provider matrix in the feature spec with synthetic/non-confidential
-dictation, then authorize merge and local installation if it passes.
+Implement and install the approved direct-personal mode, then run the expanded
+real-provider matrix with synthetic/non-confidential dictation.
 
 ## Closeout
 

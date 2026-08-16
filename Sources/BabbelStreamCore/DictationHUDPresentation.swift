@@ -1,5 +1,10 @@
 import Foundation
 
+public enum DictationHUDProviderAccent: Equatable, Sendable {
+    case standard
+    case personalOpenAI
+}
+
 public enum DictationHUDPhase: Equatable, Sendable {
     case recording
     case transcribing
@@ -54,6 +59,10 @@ public enum DictationHUDPhase: Equatable, Sendable {
 }
 
 public enum DictationHUDPresentation {
+    public static func providerAccent(personalOpenAIActive: Bool) -> DictationHUDProviderAccent {
+        personalOpenAIActive ? .personalOpenAI : .standard
+    }
+
     public static func phase(
         isRecording: Bool,
         isProcessing: Bool,

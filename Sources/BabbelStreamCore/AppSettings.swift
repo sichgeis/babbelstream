@@ -3,6 +3,7 @@ import Foundation
 public struct AppSettings: Equatable, Sendable {
     public var providerConfiguration: ProviderConfiguration
     public var personalOpenAIFallbackEnabled: Bool
+    public var personalOpenAIDirectModeEnabled: Bool
     public var cleanupEnabled: Bool
     public var transcriptionResponseFormat: String
     public var transcriptionLanguage: String
@@ -14,6 +15,7 @@ public struct AppSettings: Equatable, Sendable {
     public init(
         providerConfiguration: ProviderConfiguration = ProviderConfiguration(),
         personalOpenAIFallbackEnabled: Bool = false,
+        personalOpenAIDirectModeEnabled: Bool = false,
         cleanupEnabled: Bool = ProjectDefaults.cleanupEnabledByDefault,
         transcriptionResponseFormat: String = ProjectDefaults.defaultTranscriptionResponseFormat,
         transcriptionLanguage: String = "",
@@ -24,6 +26,8 @@ public struct AppSettings: Equatable, Sendable {
     ) {
         self.providerConfiguration = providerConfiguration
         self.personalOpenAIFallbackEnabled = personalOpenAIFallbackEnabled
+        self.personalOpenAIDirectModeEnabled = personalOpenAIFallbackEnabled
+            && personalOpenAIDirectModeEnabled
         self.cleanupEnabled = cleanupEnabled
         self.transcriptionResponseFormat = transcriptionResponseFormat
         self.transcriptionLanguage = transcriptionLanguage
@@ -207,6 +211,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         static let cleanupModel = "provider.cleanupModel"
         static let timeoutSeconds = "provider.timeoutSeconds"
         static let personalOpenAIFallbackEnabled = "provider.personalOpenAIFallback.enabled"
+        static let personalOpenAIDirectModeEnabled = "provider.personalOpenAIFallback.directModeEnabled"
         static let cleanupEnabled = "cleanup.enabled"
         static let transcriptionResponseFormat = "transcription.responseFormat"
         static let transcriptionLanguage = "transcription.language"
@@ -271,11 +276,16 @@ public final class UserDefaultsSettingsStore: SettingsStore {
             && (userDefaults.object(forKey: Key.archiveRawTranscriptEnabled) as? Bool
                 ?? defaults.archiveRawTranscriptEnabled)
 
+        let personalOpenAIFallbackEnabled = userDefaults.object(
+            forKey: Key.personalOpenAIFallbackEnabled
+        ) as? Bool ?? defaults.personalOpenAIFallbackEnabled
+
         return AppSettings(
             providerConfiguration: configuration,
-            personalOpenAIFallbackEnabled: userDefaults.object(
-                forKey: Key.personalOpenAIFallbackEnabled
-            ) as? Bool ?? defaults.personalOpenAIFallbackEnabled,
+            personalOpenAIFallbackEnabled: personalOpenAIFallbackEnabled,
+            personalOpenAIDirectModeEnabled: personalOpenAIFallbackEnabled
+                && (userDefaults.object(forKey: Key.personalOpenAIDirectModeEnabled) as? Bool
+                    ?? defaults.personalOpenAIDirectModeEnabled),
             cleanupEnabled: userDefaults.object(forKey: Key.cleanupEnabled) as? Bool
                 ?? defaults.cleanupEnabled,
             transcriptionResponseFormat: userDefaults.string(forKey: Key.transcriptionResponseFormat)
@@ -306,6 +316,10 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         userDefaults.set(
             settings.personalOpenAIFallbackEnabled,
             forKey: Key.personalOpenAIFallbackEnabled
+        )
+        userDefaults.set(
+            settings.personalOpenAIFallbackEnabled && settings.personalOpenAIDirectModeEnabled,
+            forKey: Key.personalOpenAIDirectModeEnabled
         )
         userDefaults.set(settings.cleanupEnabled, forKey: Key.cleanupEnabled)
         userDefaults.set(settings.transcriptionResponseFormat, forKey: Key.transcriptionResponseFormat)
