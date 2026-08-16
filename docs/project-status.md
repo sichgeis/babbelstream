@@ -32,10 +32,9 @@ by their dedicated specifications.
   official OpenAI API requires bare model IDs. Provider Settings now persists
   this per-installation routing choice; other proxy namespace conventions still
   require a compatible proxy alias.
-- Personal OpenAI automatic fallback is installed from feature commit `06862f0`.
-  The follow-up direct-personal mode and purple HUD are implemented on the
-  feature branch but still require final validation/reinstallation. The expanded
-  real-provider matrix and merge to `main` remain pending.
+- Personal OpenAI automatic fallback plus the follow-up direct-personal mode and
+  purple HUD are installed from feature commit `9ae158c`. The expanded real-
+  provider matrix and merge to `main` remain pending.
 - Coordinator behavior coupled to AppKit, Accessibility, Keychain, microphone
   permission, Carbon event delivery, and application termination remains in the
   manual validation matrix because the current Command Line Tools environment
@@ -52,5 +51,5 @@ recorded.
 
 ## Next Action
 
-Validate and reinstall direct-personal mode, then run the expanded synthetic
-real-provider matrix before authorizing merge to `main`.
+Run the expanded synthetic real-provider matrix for automatic and direct-
+personal modes before authorizing merge to `main`.
