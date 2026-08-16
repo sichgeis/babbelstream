@@ -108,14 +108,14 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
 
 ### 6. Direct Personal Mode And HUD
 
-- Status: In progress
+- Status: Completed
 - [x] Persist an applied direct-personal switch with safe implication rules.
 - [x] Bypass primary key loading, work transcription, and Mini hedging while
   direct-personal mode is active.
 - [x] Show the active personal destination in Settings/diagnostics and a purple,
   accessible personal-provider HUD treatment during recording and processing.
 - [x] Add focused checks and update durable docs.
-- [ ] Validate, push, rebuild, and
+- [x] Validate, push, rebuild, and
   install the revised release candidate.
 
 ## Validation Matrix
@@ -126,9 +126,9 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
 | Focused policy/settings checks | N/A | Passed | Defaults/persistence, direct-mode implication/routing policy, independent markers, fixed official settings/request, eligible/ineligible failures, HUD phase/accent |
 | Settings visual QA | N/A | Passed | Default-size Provider pane shows both provider-mode switches and applied mode without scrolling; screenshot: `/private/tmp/babbelstream-direct-mode-screenshots/provider-mode-switches.png` |
 | Manual provider smoke | Not run | Human gate | No real credentials/content authorized |
-| Local build/install | N/A | Passed | `0.4.1` / `06862f0`; installed and packaged executable hashes match |
+| Local build/install | N/A | Passed | `0.4.1` / `9ae158c`; installed and packaged executable hashes match |
 | Diff/privacy review | Clean baseline | Passed | `git diff --check`; separate secrets, content-free diagnostics, sequential request review |
-| Git state | Clean main baseline | Feature commit pushed | `72edb30` on `origin/codex/personal-openai-fallback` |
+| Git state | Clean main baseline | Feature commit pushed | `9ae158c` on `origin/codex/personal-openai-fallback` before this evidence-only update |
 
 ## Current Blocker
 
@@ -138,20 +138,20 @@ None.
 
 - Canonical checks passed immediately before packaging.
 - Packaged artifact: `dist/BabbelStream-0.4.1.dmg`.
-- DMG SHA-256: `2e16bf71c7edff88b91e99340bb6b8325d30db9f2036a7e0e050f0718b8955d0`.
+- DMG SHA-256: `82e4f2400a3c757b560ed833d7ba688b83c9abdee915634127e18dbfe2adc6c9`.
 - Installed app: `/Applications/BabbelStream.app`.
-- Installed version/commit: `0.4.1` / `06862f0`.
+- Installed version/commit: `0.4.1` / `9ae158c`.
 - Signing label: `BabbelStream Local Code Signing` (local testing only;
   TeamIdentifier is not set).
 - Installed and packaged executable SHA-256:
-  `433b6c4e3c5a5619cbd1a0069ff05cf8daff5d6dad42dabf63245735a9843865`.
+  `3963fe44bf6236eb1574e08e8cf0215147e7bc7db011d01ac2901cec26d26aeb`.
 - The installer launched the executable from `/Applications`; restart
-  verification confirmed it remains active as PID `85941`.
+  verification confirmed it remains active as PID `96312`.
 
 ## Next Action
 
-Implement and install the approved direct-personal mode, then run the expanded
-real-provider matrix with synthetic/non-confidential dictation.
+Run the expanded real-provider matrix with synthetic/non-confidential dictation,
+then authorize merge to `main` if it passes.
 
 ## Closeout
 
