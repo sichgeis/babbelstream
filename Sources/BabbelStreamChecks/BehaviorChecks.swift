@@ -117,6 +117,21 @@ check(
     "Successful insertion should retain the concise Pasted HUD state."
 )
 check(DictationHUDPhase.tryingMini.displayName == "Trying Mini", "Mini HUD copy should stay compact.")
+check(
+    DictationHUDPhase.tryingPersonalOpenAI.displayName == "Personal OpenAI",
+    "Personal fallback activation should be visible in the compact HUD."
+)
+check(
+    DictationHUDPresentation.phase(
+        isRecording: false,
+        isProcessing: true,
+        canCancel: true,
+        status: "Trying personal OpenAI",
+        lastResult: "",
+        hasError: false
+    ) == .tryingPersonalOpenAI,
+    "The personal OpenAI provider phase should remain visible while active."
+)
 check(BuildMetadata.gitCommitInfoKey == "BabbelStreamGitCommit", "Unexpected build commit Info.plist key.")
 check(BuildMetadata.codeSigningInfoKey == "BabbelStreamCodeSigning", "Unexpected code signing Info.plist key.")
 check(!BuildMetadata.gitCommitShortHash.isEmpty, "Build commit metadata should have a visible fallback.")
@@ -130,6 +145,33 @@ check(
     "Provider configuration should use standard OpenAI model IDs by default."
 )
 check(configuration.cleanupModel == ProjectDefaults.defaultCleanupModel, "Provider configuration should use the default cleanup model.")
+check(!AppSettings().personalOpenAIFallbackEnabled, "Personal OpenAI fallback must default to disabled.")
+check(
+    PersonalOpenAIFallbackPolicy.shouldFallback(after: URLError(.cannotConnectToHost)),
+    "Connection refusal should activate the opted-in personal fallback."
+)
+check(
+    PersonalOpenAIFallbackPolicy.shouldFallback(after: ProviderError.connectionTimedOut(seconds: 15)),
+    "A zero-byte connection timeout should activate the opted-in personal fallback."
+)
+check(
+    PersonalOpenAIFallbackPolicy.shouldFallback(
+        after: ProviderError.requestFailed(statusCode: 503, message: nil)
+    ),
+    "HTTP 503 should count as an unavailable primary service."
+)
+check(
+    !PersonalOpenAIFallbackPolicy.shouldFallback(
+        after: ProviderError.requestFailed(statusCode: 401, message: nil)
+    ) && !PersonalOpenAIFallbackPolicy.shouldFallback(
+        after: ProviderError.requestFailed(statusCode: 429, message: nil)
+    ),
+    "Authentication and rate-limit responses must not authorize cross-account fallback."
+)
+check(
+    !PersonalOpenAIFallbackPolicy.shouldFallback(after: ProviderError.malformedResponse),
+    "Malformed provider output must not authorize cross-account fallback."
+)
 check(CleanupPrompt.slackReady.contains("German-English"), "Cleanup prompt must protect mixed-language dictation.")
 check(CleanupPrompt.slackReady.contains("English stays English"), "Cleanup prompt must prevent English-to-German translation.")
 check(CleanupPrompt.slackReady.contains("German stays German"), "Cleanup prompt must prevent German-to-English translation.")
@@ -181,6 +223,36 @@ check(
 var liteLLMTranscriptionSettings = gptTranscribeSettings
 liteLLMTranscriptionSettings.providerConfiguration.transcriptionModelRouting = .liteLLMOpenAINamespace
 let liteLLMTranscriptionFields = TranscriptionFormFields.make(settings: liteLLMTranscriptionSettings)
+let personalFallbackSettings = PersonalOpenAIFallbackPolicy.settings(derivedFrom: liteLLMTranscriptionSettings)
+check(
+    personalFallbackSettings.providerConfiguration.baseURL == ProjectDefaults.personalOpenAIFallbackBaseURL,
+    "Personal fallback must use the fixed official OpenAI destination."
+)
+check(
+    personalFallbackSettings.providerConfiguration.transcriptionModelRouting == .standardOpenAI,
+    "Personal fallback must use standard OpenAI model IDs."
+)
+check(
+    personalFallbackSettings.providerConfiguration.transcriptionModel
+        == liteLLMTranscriptionSettings.providerConfiguration.transcriptionModel,
+    "Personal fallback should preserve the selected logical transcription model."
+)
+check(
+    personalFallbackSettings.providerConfiguration.transcriptionEndpointPath
+        == ProviderConfiguration().transcriptionEndpointPath
+        && personalFallbackSettings.providerConfiguration.cleanupEndpointPath
+        == ProviderConfiguration().cleanupEndpointPath,
+    "Personal fallback must use the standard official endpoint paths."
+)
+check(
+    personalFallbackSettings.providerConfiguration.cleanupModel == ProjectDefaults.defaultCleanupModel,
+    "Personal fallback must use the default official cleanup model."
+)
+check(
+    TranscriptionFormFields.make(settings: personalFallbackSettings)["model"]
+        == ProjectDefaults.defaultTranscriptionModel,
+    "Personal fallback form fields must use the bare standard OpenAI model ID."
+)
 check(
     liteLLMTranscriptionFields["model"] == "openai/\(ProjectDefaults.defaultTranscriptionModel)",
     "LiteLLM routing should prefix the selected model with openai/."
@@ -598,6 +670,26 @@ let apiKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(
 check(!apiKeyPresenceStore.hasSavedAPIKey, "API key presence should default to false without Keychain access.")
 apiKeyPresenceStore.hasSavedAPIKey = true
 check(apiKeyPresenceStore.hasSavedAPIKey, "API key presence should persist as a non-secret UserDefaults hint.")
+let personalKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(
+    userDefaults: presenceDefaults,
+    key: "personal-api-key-presence-check"
+)
+check(
+    !personalKeyPresenceStore.hasSavedAPIKey,
+    "The personal fallback key marker must remain separate from the primary marker."
+)
+personalKeyPresenceStore.hasSavedAPIKey = true
+check(
+    apiKeyPresenceStore.hasSavedAPIKey && personalKeyPresenceStore.hasSavedAPIKey,
+    "Primary and personal key presence markers should persist independently."
+)
+var persistedFallbackSettings = AppSettings()
+persistedFallbackSettings.personalOpenAIFallbackEnabled = true
+try UserDefaultsSettingsStore(userDefaults: presenceDefaults).save(persistedFallbackSettings)
+check(
+    UserDefaultsSettingsStore(userDefaults: presenceDefaults).load().personalOpenAIFallbackEnabled,
+    "The explicit personal fallback opt-in should persist."
+)
 try AppSettingsValidator.validate(AppSettings())
 var loopbackHTTPSettings = AppSettings()
 loopbackHTTPSettings.providerConfiguration.baseURL = URL(string: "http://127.0.0.1:4000")!
@@ -717,6 +809,7 @@ let multipart = try MultipartFormDataBuilder.build(
 check(multipart.contentType.contains("multipart/form-data"), "Multipart content type should be form-data.")
 check(multipart.body.count > 0, "Multipart body should not be empty.")
 try await runTranscriptionRetryCheck(audioURL: deterministicAudioURL)
+try await runPersonalOpenAIFallbackRequestCheck(audioURL: deterministicAudioURL)
 try await runTranscriptionConnectionTimeoutCheck(audioURL: deterministicAudioURL)
 try await runTranscriptionCancellationCheck(audioURL: deterministicAudioURL)
 try await runHedgedTranscriptionChecks()
@@ -730,6 +823,51 @@ let retainedRecording = RecordedAudio(
     deletedAt: nil
 )
 check(!retainedRecording.wasDeleted, "Retained recordings should report that temp audio still needs cleanup.")
+}
+
+func runPersonalOpenAIFallbackRequestCheck(audioURL: URL) async throws {
+    let attempts = LockedAttemptCounter()
+    StubURLProtocol.handler = { request in
+        _ = attempts.increment()
+        check(
+            request.url?.absoluteString == "https://api.openai.com/v1/audio/transcriptions",
+            "Personal fallback requests must use the fixed official OpenAI endpoint."
+        )
+        check(
+            request.value(forHTTPHeaderField: "Authorization") == "Bearer personal-test-key",
+            "Personal fallback requests must use the separately supplied personal key."
+        )
+        let response = HTTPURLResponse(
+            url: request.url!,
+            statusCode: 200,
+            httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json"]
+        )!
+        return (response, Data(#"{"text":"personal fallback succeeded"}"#.utf8))
+    }
+    defer {
+        StubURLProtocol.handler = nil
+    }
+
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.protocolClasses = [StubURLProtocol.self]
+    let provider = OpenAICompatibleTranscriptionProvider(
+        urlSession: URLSession(configuration: configuration)
+    )
+    var primarySettings = AppSettings()
+    primarySettings.providerConfiguration.baseURL = URL(string: "https://work-proxy.example.com")!
+    primarySettings.providerConfiguration.transcriptionModelRouting = .liteLLMOpenAINamespace
+    let personalSettings = PersonalOpenAIFallbackPolicy.settings(derivedFrom: primarySettings)
+
+    let transcript = try await provider.transcribe(
+        TranscriptionRequest(
+            audioURL: audioURL,
+            settings: personalSettings,
+            apiKey: "personal-test-key"
+        )
+    )
+    check(transcript == "personal fallback succeeded", "The personal fallback response should parse normally.")
+    check(attempts.value == 1, "A personal fallback provider call should make one request by default.")
 }
 
 func runTranscriptionRetryCheck(audioURL: URL) async throws {

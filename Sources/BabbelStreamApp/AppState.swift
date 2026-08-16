@@ -43,6 +43,15 @@ final class AppState: ObservableObject {
         let finalDraft: String
         let cleanupWasEnabled: Bool
         let cleanupFallbackUsed: Bool
+        let transcriptionSettings: AppSettings
+        let cleanupSettings: AppSettings?
+    }
+
+    private struct TranscriptionOutcome {
+        let transcript: String
+        let settings: AppSettings
+        let apiKey: String
+        let usedPersonalOpenAI: Bool
     }
 
     @Published var status = "Ready"
@@ -59,6 +68,8 @@ final class AppState: ObservableObject {
     @Published var errorMessage: String?
     @Published var hotkeyStatus = "Hotkey not registered yet."
     @Published var hasAPIKey = false
+    @Published var hasPersonalOpenAIFallbackAPIKey = false
+    @Published var personalOpenAIFallbackEnabled: Bool
     @Published var launchAtLoginEnabled = false
     @Published private(set) var launchAtLoginStatusSummary = "Unknown"
     @Published private(set) var launchAtLoginRequiresApproval = false
@@ -86,6 +97,7 @@ final class AppState: ObservableObject {
     @Published var transcriptionLanguageText: String
     @Published var transcriptionPromptText: String
     @Published var apiKeyInput = ""
+    @Published var personalOpenAIFallbackAPIKeyInput = ""
     @Published var settingsFeedbackMessage = ""
     @Published var settingsErrorMessage: String?
     @Published private(set) var transcriptionProgressDetail: String?
@@ -98,6 +110,8 @@ final class AppState: ObservableObject {
     private let settingsStore: SettingsStore
     private let secretStore: SecretStore
     private let apiKeyPresenceStore: APIKeyPresenceStore
+    private let personalOpenAIFallbackSecretStore: SecretStore
+    private let personalOpenAIFallbackAPIKeyPresenceStore: APIKeyPresenceStore
     private let transcriptionProvider: TranscriptionProvider
     private let fallbackTranscriptionProvider: TranscriptionProvider
     private let cleanupProvider: CleanupProvider
@@ -120,6 +134,7 @@ final class AppState: ObservableObject {
     private var shouldStopDictationAfterStart = false
     private var dictationHotkeyPressedAt: ContinuousClock.Instant?
     private var cachedAPIKey: String?
+    private var cachedPersonalOpenAIFallbackAPIKey: String?
     private var activeDictationSettings: AppSettings?
     private var processingTask: Task<Void, Never>?
     private var retainedTemporaryAudioURL: URL?
@@ -134,6 +149,12 @@ final class AppState: ObservableObject {
         settingsStore: SettingsStore = UserDefaultsSettingsStore(),
         secretStore: SecretStore = KeychainSecretStore(),
         apiKeyPresenceStore: APIKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(),
+        personalOpenAIFallbackSecretStore: SecretStore = KeychainSecretStore(
+            account: "personal-openai-fallback-api-key"
+        ),
+        personalOpenAIFallbackAPIKeyPresenceStore: APIKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(
+            key: "provider.personalOpenAIFallback.apiKey.saved"
+        ),
         transcriptionProvider: TranscriptionProvider = OpenAICompatibleTranscriptionProvider(),
         fallbackTranscriptionProvider: TranscriptionProvider = OpenAICompatibleTranscriptionProvider(
             urlSession: URLSession(configuration: .ephemeral)
@@ -151,6 +172,8 @@ final class AppState: ObservableObject {
         self.settingsStore = settingsStore
         self.secretStore = secretStore
         self.apiKeyPresenceStore = apiKeyPresenceStore
+        self.personalOpenAIFallbackSecretStore = personalOpenAIFallbackSecretStore
+        self.personalOpenAIFallbackAPIKeyPresenceStore = personalOpenAIFallbackAPIKeyPresenceStore
         self.transcriptionProvider = transcriptionProvider
         self.fallbackTranscriptionProvider = fallbackTranscriptionProvider
         self.cleanupProvider = cleanupProvider
@@ -168,6 +191,7 @@ final class AppState: ObservableObject {
         self.appSettings = loadedSettings
         self.usageSnapshot = loadedUsageSnapshot
         self.cleanupEnabled = loadedSettings.cleanupEnabled
+        self.personalOpenAIFallbackEnabled = loadedSettings.personalOpenAIFallbackEnabled
         self.dictationArchiveEnabled = loadedSettings.dictationArchiveEnabled
         self.archiveRawTranscriptEnabled = loadedSettings.archiveRawTranscriptEnabled
         self.archiveMonthText = currentArchiveMonth.directoryName
@@ -186,6 +210,7 @@ final class AppState: ObservableObject {
         self.microphonePermissionStatus = audioRecorder.microphonePermissionStatus()
         self.accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
         self.hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
+        self.hasPersonalOpenAIFallbackAPIKey = personalOpenAIFallbackAPIKeyPresenceStore.hasSavedAPIKey
         self.launchAtLoginEnabled = launchAtLoginService.snapshot.isEnabled
         self.launchAtLoginStatusSummary = launchAtLoginService.snapshot.displayName
         self.launchAtLoginRequiresApproval = launchAtLoginService.snapshot.requiresApproval
@@ -294,6 +319,33 @@ final class AppState: ObservableObject {
         )
     }
 
+    var personalOpenAIFallbackDestinationSummary: String {
+        let settings = PersonalOpenAIFallbackPolicy.settings(derivedFrom: appSettings)
+        return effectiveDestination(
+            baseURL: settings.providerConfiguration.baseURL,
+            path: settings.providerConfiguration.transcriptionEndpointPath
+        )
+    }
+
+    var personalOpenAIFallbackCleanupDestinationSummary: String {
+        let settings = PersonalOpenAIFallbackPolicy.settings(derivedFrom: appSettings)
+        return effectiveDestination(
+            baseURL: settings.providerConfiguration.baseURL,
+            path: settings.providerConfiguration.cleanupEndpointPath
+        )
+    }
+
+    var personalOpenAIFallbackReadinessSummary: String {
+        guard appSettings.personalOpenAIFallbackEnabled else {
+            return "Off"
+        }
+        return hasPersonalOpenAIFallbackAPIKey ? "Ready" : "Missing key"
+    }
+
+    var isPersonalOpenAIFallbackApplied: Bool {
+        appSettings.personalOpenAIFallbackEnabled
+    }
+
     var providerConnectionTimeoutSummary: String {
         Self.secondsLabel(ProjectDefaults.providerConnectionTimeoutSeconds)
     }
@@ -317,6 +369,7 @@ final class AppState: ObservableObject {
     var hasUnsavedSettingsChanges: Bool {
         hasUnsavedConfigurationChanges
             || !apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !personalOpenAIFallbackAPIKeyInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var hasUnsavedConfigurationChanges: Bool {
@@ -404,7 +457,9 @@ final class AppState: ObservableObject {
         if status == "Cleaning up" {
             return "Formatting the transcript. The original target will be verified before paste."
         }
-        if (status == "Transcribing" || status == "Retrying transcription"),
+        if (status == "Transcribing"
+                || status == "Retrying transcription"
+                || status == "Trying personal OpenAI"),
            let transcriptionProgressDetail {
             return transcriptionProgressDetail
         }
@@ -609,6 +664,15 @@ final class AppState: ObservableObject {
         do {
             let settings = try settingsFromDraft()
 
+            let trimmedPersonalKey = personalOpenAIFallbackAPIKeyInput
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !settings.personalOpenAIFallbackEnabled
+                || hasPersonalOpenAIFallbackAPIKey
+                || !trimmedPersonalKey.isEmpty
+            else {
+                throw SettingsValidationError.missingPersonalOpenAIAPIKey
+            }
+
             let trimmedKey = apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmedKey.isEmpty {
                 try secretStore.saveAPIKey(trimmedKey)
@@ -616,15 +680,23 @@ final class AppState: ObservableObject {
                 apiKeyInput = ""
                 apiKeyPresenceStore.hasSavedAPIKey = true
             }
+            if !trimmedPersonalKey.isEmpty {
+                try personalOpenAIFallbackSecretStore.saveAPIKey(trimmedPersonalKey)
+                cachedPersonalOpenAIFallbackAPIKey = trimmedPersonalKey
+                personalOpenAIFallbackAPIKeyInput = ""
+                personalOpenAIFallbackAPIKeyPresenceStore.hasSavedAPIKey = true
+            }
 
             try settingsStore.save(settings)
 
             appSettings = settings
+            personalOpenAIFallbackEnabled = settings.personalOpenAIFallbackEnabled
             dictationArchiveEnabled = settings.dictationArchiveEnabled
             archiveRawTranscriptEnabled = settings.archiveRawTranscriptEnabled
             transcriptionLanguageText = settings.transcriptionLanguage
             maxAudioDurationMinutesText = Self.durationMinutesText(for: settings.maxAudioDurationSeconds)
             hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
+            hasPersonalOpenAIFallbackAPIKey = personalOpenAIFallbackAPIKeyPresenceStore.hasSavedAPIKey
             warningMessage = nil
             errorMessage = nil
             settingsErrorMessage = nil
@@ -655,6 +727,32 @@ final class AppState: ObservableObject {
             settingsErrorMessage = error.localizedDescription
             settingsFeedbackMessage = ""
             recordDiagnostic("api key delete failed: \(diagnosticErrorCategory(error))")
+        }
+    }
+
+    func deletePersonalOpenAIFallbackAPIKey() {
+        do {
+            try personalOpenAIFallbackSecretStore.deleteAPIKey()
+            cachedPersonalOpenAIFallbackAPIKey = nil
+            personalOpenAIFallbackAPIKeyInput = ""
+            personalOpenAIFallbackAPIKeyPresenceStore.hasSavedAPIKey = false
+            hasPersonalOpenAIFallbackAPIKey = false
+
+            var updatedSettings = appSettings
+            updatedSettings.personalOpenAIFallbackEnabled = false
+            try settingsStore.save(updatedSettings)
+            appSettings = updatedSettings
+            personalOpenAIFallbackEnabled = false
+
+            settingsErrorMessage = nil
+            settingsFeedbackMessage = "Personal OpenAI key deleted and fallback disabled."
+            lastResult = settingsFeedbackMessage
+            recordDiagnostic("personal openai fallback key deleted; fallback disabled")
+        } catch {
+            errorMessage = error.localizedDescription
+            settingsErrorMessage = error.localizedDescription
+            settingsFeedbackMessage = ""
+            recordDiagnostic("personal openai fallback key delete failed: \(diagnosticErrorCategory(error))")
         }
     }
 
@@ -970,6 +1068,9 @@ final class AppState: ObservableObject {
             "last failure category: \(lastFailureCategory)",
             "transcription destination: \(providerDestinationSummary)",
             "cleanup destination: \(cleanupDestinationSummary)",
+            "personal openai fallback enabled: \(appSettings.personalOpenAIFallbackEnabled)",
+            "personal openai fallback key saved: \(hasPersonalOpenAIFallbackAPIKey)",
+            "personal openai fallback transcription destination: \(personalOpenAIFallbackDestinationSummary)",
             "transcription model: \(appSettings.providerConfiguration.transcriptionModel)",
             "transcription model routing: \(appSettings.providerConfiguration.transcriptionModelRouting.displayName)",
             "effective transcription model: \(appSettings.providerConfiguration.transcriptionModelRouting.providerModelID(for: appSettings.providerConfiguration.transcriptionModel))",
@@ -1032,6 +1133,7 @@ final class AppState: ObservableObject {
         )
         let settings = AppSettings(
             providerConfiguration: configuration,
+            personalOpenAIFallbackEnabled: personalOpenAIFallbackEnabled,
             cleanupEnabled: cleanupEnabled,
             transcriptionResponseFormat: ProjectDefaults.defaultTranscriptionResponseFormat,
             transcriptionLanguage: normalizedLanguage,
@@ -1100,7 +1202,13 @@ final class AppState: ObservableObject {
             recordDiagnostic("\(stage) request prepared in \(preparationMilliseconds) ms: \(requestBytes) bytes\(audioDetail)")
         case let .attemptStarted(attempt, totalAttempts):
             if stage.hasPrefix("transcription") {
-                status = stage.contains("fallback") ? "Trying Mini transcription" : "Transcribing"
+                if stage.contains("personal openai") {
+                    status = "Trying personal OpenAI"
+                } else if stage.contains("mini") || stage.contains("fallback") {
+                    status = "Trying Mini transcription"
+                } else {
+                    status = "Transcribing"
+                }
                 transcriptionProgressDetail = "Attempt \(attempt) of \(totalAttempts) • connection timeout \(Self.secondsLabel(connectionTimeout)) • overall timeout \(Self.secondsLabel(overallTimeout)) • Escape cancels"
             }
             recordDiagnostic("\(stage) attempt \(attempt)/\(totalAttempts) started")
@@ -1512,6 +1620,8 @@ final class AppState: ObservableObject {
         appendDictationArchiveEntry(
             recording: recording,
             settings: settings,
+            transcriptionSettings: preparedDraft.transcriptionSettings,
+            cleanupSettings: preparedDraft.cleanupSettings,
             rawTranscript: preparedDraft.rawTranscript,
             finalDraft: preparedDraft.finalDraft,
             cleanupWasEnabled: preparedDraft.cleanupWasEnabled,
@@ -1533,15 +1643,14 @@ final class AppState: ObservableObject {
             throw ProviderError.missingAPIKey
         }
 
-        let rawTranscript = try await transcribeRecording(
+        let transcription = try await transcribeRecording(
             at: audioURL,
             settings: settings,
             apiKey: apiKey
         )
         return try await prepareDraft(
-            from: rawTranscript,
-            settings: settings,
-            apiKey: apiKey
+            from: transcription,
+            primarySettings: settings
         )
     }
 
@@ -1549,62 +1658,120 @@ final class AppState: ObservableObject {
         at audioURL: URL,
         settings: AppSettings,
         apiKey: String
-    ) async throws -> String {
+    ) async throws -> TranscriptionOutcome {
         var configuredPrimarySettings = settings
         configuredPrimarySettings.providerConfiguration.timeoutSeconds = ProjectDefaults.transcriptionOverallTimeoutSeconds
         let primarySettings = configuredPrimarySettings
 
         do {
-            var configuredFallbackSettings = primarySettings
-            configuredFallbackSettings.providerConfiguration.transcriptionModel = ProjectDefaults.fallbackTranscriptionModel
-            let fallbackSettings = configuredFallbackSettings
-            let result = try await HedgedTranscriptionRunner.run(
-                shouldHedgeAfterError: ProviderRetryPolicy.shouldRetry,
-                onHedgeStarted: { [weak self] in
-                    await MainActor.run {
-                        guard let self else { return }
-                        self.status = "Trying Mini transcription"
-                        self.recordDiagnostic("transcription hedge started: \(ProjectDefaults.fallbackTranscriptionModel)")
+            do {
+                var configuredFallbackSettings = primarySettings
+                configuredFallbackSettings.providerConfiguration.transcriptionModel = ProjectDefaults.fallbackTranscriptionModel
+                let fallbackSettings = configuredFallbackSettings
+                let result = try await HedgedTranscriptionRunner.run(
+                    shouldHedgeAfterError: ProviderRetryPolicy.shouldRetry,
+                    onHedgeStarted: { [weak self] in
+                        await MainActor.run {
+                            guard let self else { return }
+                            self.status = "Trying Mini transcription"
+                            self.recordDiagnostic("transcription hedge started: \(ProjectDefaults.fallbackTranscriptionModel)")
+                        }
+                    },
+                    primary: { [transcriptionProvider] in
+                        try await transcriptionProvider.transcribe(
+                            TranscriptionRequest(
+                                audioURL: audioURL,
+                                settings: primarySettings,
+                                apiKey: apiKey,
+                                onEvent: { [weak self] event in
+                                    await self?.handleProviderEvent(
+                                        event,
+                                        stage: "transcription primary",
+                                        settings: primarySettings
+                                    )
+                                }
+                            )
+                        )
+                    },
+                    fallback: { [fallbackTranscriptionProvider] in
+                        try await fallbackTranscriptionProvider.transcribe(
+                            TranscriptionRequest(
+                                audioURL: audioURL,
+                                settings: fallbackSettings,
+                                apiKey: apiKey,
+                                onEvent: { [weak self] event in
+                                    await self?.handleProviderEvent(
+                                        event,
+                                        stage: "transcription mini",
+                                        settings: fallbackSettings
+                                    )
+                                }
+                            )
+                        )
                     }
-                },
-                primary: { [transcriptionProvider] in
-                    try await transcriptionProvider.transcribe(
-                    TranscriptionRequest(
-                        audioURL: audioURL,
-                        settings: primarySettings,
-                        apiKey: apiKey,
-                        onEvent: { [weak self] event in
-                            await self?.handleProviderEvent(
-                                event,
-                                stage: "transcription primary",
-                                settings: primarySettings
-                            )
-                        }
-                    )
-                    )
-                },
-                fallback: { [fallbackTranscriptionProvider] in
-                    try await fallbackTranscriptionProvider.transcribe(
-                    TranscriptionRequest(
-                        audioURL: audioURL,
-                        settings: fallbackSettings,
-                        apiKey: apiKey,
-                        onEvent: { [weak self] event in
-                            await self?.handleProviderEvent(
-                                event,
-                                stage: "transcription fallback",
-                                settings: fallbackSettings
-                            )
-                        }
-                    )
-                    )
-                }
-            )
+                )
 
-            transcriptionProgressDetail = nil
-            recordDiagnostic("transcription succeeded via \(result.winningRole.rawValue): \(result.transcript.count) characters")
-            try Task.checkCancellation()
-            return result.transcript
+                transcriptionProgressDetail = nil
+                recordDiagnostic("transcription succeeded via \(result.winningRole.rawValue): \(result.transcript.count) characters")
+                try Task.checkCancellation()
+                return TranscriptionOutcome(
+                    transcript: result.transcript,
+                    settings: result.winningRole == .primary ? primarySettings : fallbackSettings,
+                    apiKey: apiKey,
+                    usedPersonalOpenAI: false
+                )
+            } catch {
+                if ProviderRetryPolicy.isCancellation(error) {
+                    throw CancellationError()
+                }
+                guard settings.personalOpenAIFallbackEnabled,
+                      PersonalOpenAIFallbackPolicy.shouldFallback(after: error)
+                else {
+                    throw error
+                }
+                try Task.checkCancellation()
+
+                let personalAPIKey = try loadPersonalOpenAIFallbackAPIKeyForDictation()
+                guard !personalAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw ProviderError.missingPersonalOpenAIAPIKey
+                }
+
+                var configuredPersonalSettings = PersonalOpenAIFallbackPolicy.settings(derivedFrom: settings)
+                configuredPersonalSettings.providerConfiguration.timeoutSeconds = ProjectDefaults.transcriptionOverallTimeoutSeconds
+                let personalSettings = configuredPersonalSettings
+                status = "Trying personal OpenAI"
+                lastResult = "Primary provider was unreachable. Sending audio to api.openai.com."
+                recordDiagnostic(
+                    "personal openai transcription fallback started after \(diagnosticErrorCategory(error))"
+                )
+                let transcript = try await fallbackTranscriptionProvider.transcribe(
+                    TranscriptionRequest(
+                        audioURL: audioURL,
+                        settings: personalSettings,
+                        apiKey: personalAPIKey,
+                        onEvent: { [weak self] event in
+                            await self?.handleProviderEvent(
+                                event,
+                                stage: "transcription personal openai",
+                                settings: personalSettings
+                            )
+                        }
+                    )
+                )
+                warningMessage = combinedWarning(
+                    warningMessage,
+                    "Personal OpenAI fallback was used for this dictation."
+                )
+                lastFailureCategory = "None"
+                recordDiagnostic("personal openai transcription fallback succeeded: \(transcript.count) characters")
+                try Task.checkCancellation()
+                return TranscriptionOutcome(
+                    transcript: transcript,
+                    settings: personalSettings,
+                    apiKey: personalAPIKey,
+                    usedPersonalOpenAI: true
+                )
+            }
         } catch {
             transcriptionProgressDetail = nil
             if ProviderRetryPolicy.isCancellation(error) {
@@ -1617,18 +1784,19 @@ final class AppState: ObservableObject {
     }
 
     private func prepareDraft(
-        from rawTranscript: String,
-        settings: AppSettings,
-        apiKey: String
+        from transcription: TranscriptionOutcome,
+        primarySettings: AppSettings
     ) async throws -> PreparedDraft {
-        guard settings.cleanupEnabled else {
-            warningMessage = nil
+        let rawTranscript = transcription.transcript
+        guard primarySettings.cleanupEnabled else {
             recordDiagnostic("cleanup skipped")
             return PreparedDraft(
                 rawTranscript: rawTranscript,
                 finalDraft: rawTranscript,
                 cleanupWasEnabled: false,
-                cleanupFallbackUsed: false
+                cleanupFallbackUsed: false,
+                transcriptionSettings: transcription.settings,
+                cleanupSettings: nil
             )
         }
 
@@ -1641,42 +1809,124 @@ final class AppState: ObservableObject {
         let dictionaryWarning = warningMessage
 
         do {
-            let finalDraft = try await cleanupProvider.cleanup(
-                CleanupRequest(
-                    transcript: rawTranscript,
-                    settings: settings,
-                    apiKey: apiKey,
-                    personalDictionary: personalDictionary,
-                    onEvent: { [weak self] event in
-                        await self?.handleProviderEvent(event, stage: "cleanup", settings: settings)
-                    }
-                )
+            let finalDraft = try await requestCleanup(
+                transcript: rawTranscript,
+                settings: transcription.settings,
+                apiKey: transcription.apiKey,
+                personalDictionary: personalDictionary,
+                stage: transcription.usedPersonalOpenAI ? "cleanup personal openai" : "cleanup primary"
             )
             warningMessage = dictionaryWarning
+            if transcription.usedPersonalOpenAI {
+                warningMessage = combinedWarning(
+                    warningMessage,
+                    "Personal OpenAI fallback was used for this dictation."
+                )
+            }
             recordDiagnostic("cleanup succeeded: \(finalDraft.count) characters")
             return PreparedDraft(
                 rawTranscript: rawTranscript,
                 finalDraft: finalDraft,
                 cleanupWasEnabled: true,
-                cleanupFallbackUsed: false
+                cleanupFallbackUsed: false,
+                transcriptionSettings: transcription.settings,
+                cleanupSettings: transcription.settings
             )
         } catch {
             if ProviderRetryPolicy.isCancellation(error) {
                 throw CancellationError()
             }
+            var finalCleanupError = error
+            var personalCleanupFallbackAttempted = false
 
-            warningMessage = "Cleanup failed; using raw transcript. \(error.localizedDescription)"
+            if !transcription.usedPersonalOpenAI,
+               primarySettings.personalOpenAIFallbackEnabled,
+               PersonalOpenAIFallbackPolicy.shouldFallback(after: error)
+            {
+                do {
+                    try Task.checkCancellation()
+                    personalCleanupFallbackAttempted = true
+                    let personalAPIKey = try loadPersonalOpenAIFallbackAPIKeyForDictation()
+                    guard !personalAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                        throw ProviderError.missingPersonalOpenAIAPIKey
+                    }
+                    let personalSettings = PersonalOpenAIFallbackPolicy.settings(derivedFrom: primarySettings)
+                    status = "Trying personal OpenAI"
+                    recordDiagnostic(
+                        "personal openai cleanup fallback started after \(diagnosticErrorCategory(error))"
+                    )
+                    let finalDraft = try await requestCleanup(
+                        transcript: rawTranscript,
+                        settings: personalSettings,
+                        apiKey: personalAPIKey,
+                        personalDictionary: personalDictionary,
+                        stage: "cleanup personal openai"
+                    )
+                    warningMessage = combinedWarning(
+                        dictionaryWarning,
+                        "Personal OpenAI fallback was used for cleanup."
+                    )
+                    lastFailureCategory = "None"
+                    recordDiagnostic("personal openai cleanup fallback succeeded: \(finalDraft.count) characters")
+                    return PreparedDraft(
+                        rawTranscript: rawTranscript,
+                        finalDraft: finalDraft,
+                        cleanupWasEnabled: true,
+                        cleanupFallbackUsed: false,
+                        transcriptionSettings: transcription.settings,
+                        cleanupSettings: personalSettings
+                    )
+                } catch {
+                    if ProviderRetryPolicy.isCancellation(error) {
+                        throw CancellationError()
+                    }
+                    finalCleanupError = error
+                    recordDiagnostic(
+                        "personal openai cleanup fallback failed: \(diagnosticErrorCategory(error))"
+                    )
+                }
+            }
+
+            warningMessage = "Cleanup failed; using raw transcript. \(finalCleanupError.localizedDescription)"
+            if transcription.usedPersonalOpenAI || personalCleanupFallbackAttempted {
+                warningMessage = combinedWarning(
+                    warningMessage,
+                    "Personal OpenAI fallback was used during this dictation."
+                )
+            }
             usageSnapshot.recordCleanupFallback()
             saveUsageSnapshot()
-            lastFailureCategory = diagnosticErrorCategory(error)
+            lastFailureCategory = diagnosticErrorCategory(finalCleanupError)
             recordDiagnostic("cleanup failed; using raw transcript: \(lastFailureCategory)")
             return PreparedDraft(
                 rawTranscript: rawTranscript,
                 finalDraft: rawTranscript,
                 cleanupWasEnabled: true,
-                cleanupFallbackUsed: true
+                cleanupFallbackUsed: true,
+                transcriptionSettings: transcription.settings,
+                cleanupSettings: nil
             )
         }
+    }
+
+    private func requestCleanup(
+        transcript: String,
+        settings: AppSettings,
+        apiKey: String,
+        personalDictionary: PersonalDictionary,
+        stage: String
+    ) async throws -> String {
+        try await cleanupProvider.cleanup(
+            CleanupRequest(
+                transcript: transcript,
+                settings: settings,
+                apiKey: apiKey,
+                personalDictionary: personalDictionary,
+                onEvent: { [weak self] event in
+                    await self?.handleProviderEvent(event, stage: stage, settings: settings)
+                }
+            )
+        )
     }
 
     @discardableResult
@@ -1911,6 +2161,8 @@ final class AppState: ObservableObject {
     private func appendDictationArchiveEntry(
         recording: RecordedAudio,
         settings: AppSettings,
+        transcriptionSettings: AppSettings,
+        cleanupSettings: AppSettings?,
         rawTranscript: String,
         finalDraft: String,
         cleanupWasEnabled: Bool,
@@ -1922,7 +2174,7 @@ final class AppState: ObservableObject {
         }
 
         let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
-        let configuration = settings.providerConfiguration
+        let transcriptionConfiguration = transcriptionSettings.providerConfiguration
         let entry = DictationArchiveEntry(
             startedAt: recording.createdAt,
             completedAt: Date(),
@@ -1933,14 +2185,14 @@ final class AppState: ObservableObject {
             cleanupFallbackUsed: cleanupFallbackUsed,
             insertionOutcome: insertionOutcome,
             transcriptionProviderLabel: providerLabel(
-                model: configuration.transcriptionModelRouting.providerModelID(
-                    for: configuration.transcriptionModel
+                model: transcriptionConfiguration.transcriptionModelRouting.providerModelID(
+                    for: transcriptionConfiguration.transcriptionModel
                 ),
-                settings: settings
+                settings: transcriptionSettings
             ),
-            cleanupProviderLabel: cleanupWasEnabled
-                ? providerLabel(model: configuration.cleanupModel, settings: settings)
-                : nil,
+            cleanupProviderLabel: cleanupSettings.map {
+                providerLabel(model: $0.providerConfiguration.cleanupModel, settings: $0)
+            },
             transcriptionLanguage: TranscriptionLanguageNormalizer.apiValue(from: settings.transcriptionLanguage),
             rawWordCount: DictationWordCounter.count(in: rawTranscript),
             finalWordCount: DictationWordCounter.count(in: finalDraft),
@@ -2012,6 +2264,23 @@ final class AppState: ObservableObject {
         apiKeyPresenceStore.hasSavedAPIKey = true
         hasAPIKey = true
 
+        return apiKey
+    }
+
+    private func loadPersonalOpenAIFallbackAPIKeyForDictation() throws -> String {
+        if let cachedPersonalOpenAIFallbackAPIKey {
+            return cachedPersonalOpenAIFallbackAPIKey
+        }
+
+        guard let apiKey = try personalOpenAIFallbackSecretStore.readAPIKey() else {
+            personalOpenAIFallbackAPIKeyPresenceStore.hasSavedAPIKey = false
+            hasPersonalOpenAIFallbackAPIKey = false
+            return ""
+        }
+
+        cachedPersonalOpenAIFallbackAPIKey = apiKey
+        personalOpenAIFallbackAPIKeyPresenceStore.hasSavedAPIKey = true
+        hasPersonalOpenAIFallbackAPIKey = true
         return apiKey
     }
 
@@ -2270,6 +2539,8 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
         switch providerError {
         case .missingAPIKey:
             return "ProviderError.missingAPIKey"
+        case .missingPersonalOpenAIAPIKey:
+            return "ProviderError.missingPersonalOpenAIAPIKey"
         case .invalidEndpointURL:
             return "ProviderError.invalidEndpointURL"
         case .emptyAudioFile:
@@ -2332,6 +2603,8 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
         switch validationError {
         case .invalidBaseURL:
             return "SettingsValidationError.invalidBaseURL"
+        case .missingPersonalOpenAIAPIKey:
+            return "SettingsValidationError.missingPersonalOpenAIAPIKey"
         case .insecureBaseURL:
             return "SettingsValidationError.insecureBaseURL"
         case .ambiguousBaseURL:

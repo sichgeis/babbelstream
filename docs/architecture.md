@@ -71,6 +71,7 @@ Provider settings should include:
 
 - Base URL.
 - API key reference in Keychain.
+- Optional personal OpenAI fallback opt-in and separate Keychain key presence.
 - Transcription endpoint path.
 - Cleanup endpoint path.
 - Primary transcription model selected from `gpt-transcribe`,
@@ -91,6 +92,17 @@ policy either keeps that ID bare or adds one `openai/` prefix; primary and Mini
 requests share the same immutable settings snapshot and routing. Existing
 Hypatos proxy installations migrate once to prefixed routing, while the saved
 choice remains authoritative afterward.
+
+`PersonalOpenAIFallbackPolicy` derives a fixed official profile from the
+immutable primary settings snapshot. It preserves the supported logical
+transcription model and request hints while using `https://api.openai.com`, the
+standard endpoint paths/default cleanup model, and standard OpenAI IDs. The existing
+primary/Mini hedge completes first. Only a transport/reachability error may
+start one sequential personal transcription request. Gateway/service-
+unavailable HTTP 502, 503, and 504 also qualify; other HTTP and content errors do
+not. Cleanup uses the transcript-winning profile, or makes one personal cleanup
+attempt after an eligible primary cleanup failure. Provider labels in the local
+archive reflect the profiles actually used.
 
 Remote provider URLs must use HTTPS. Plain HTTP is accepted only for loopback development endpoints. Base URLs with embedded credentials, query parameters, or fragments are rejected so the effective destinations remain inspectable and diagnostics-safe.
 
@@ -150,7 +162,16 @@ Capture the intended application's process identifier at hotkey press. At insert
 
 ## Settings And Secrets
 
-Use `UserDefaults` for non-secret settings and Keychain for API keys. Avoid plaintext config files for secrets. Text settings are staged until the persistent `Apply Settings` action succeeds; the UI separately shows saved/effective and edited destinations. Each dictation uses one immutable saved-settings snapshot. Startup must not read or rewrite the Keychain secret; it may use a non-secret `UserDefaults` presence marker so relaunching the app does not trigger a Keychain access prompt. The real API key is read only when a provider request is about to run, and updates use `SecItemUpdate` rather than delete-then-add replacement.
+Use `UserDefaults` for non-secret settings and Keychain for API keys. Primary and
+personal-fallback keys use separate Keychain accounts and presence markers.
+Avoid plaintext config files for secrets. Text settings are staged until the
+persistent `Apply Settings` action succeeds; the UI separately shows
+saved/effective and edited destinations. Each dictation uses one immutable
+saved-settings snapshot. Startup must not read or rewrite either Keychain
+secret; non-secret `UserDefaults` presence markers avoid a relaunch prompt. The
+primary key is read when primary provider work is about to run. The personal key
+is read only after an eligible failure is about to activate the applied
+fallback. Updates use `SecItemUpdate` rather than delete-then-add replacement.
 
 ## Launch At Login
 

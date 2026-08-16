@@ -46,6 +46,14 @@ The primary user is a technical Mac user who writes many Slack messages during t
   Hypatos proxy settings migrate once to LiteLLM routing; other installations
   default to standard routing.
 - Cleanup provider using an OpenAI-compatible chat endpoint.
+- Optional personal OpenAI fallback, disabled by default. After the user sees
+  the fixed official destination, supplies a separate Keychain API key, and
+  explicitly applies the opt-in, a primary connection failure may make one
+  sequential personal transcription request. HTTP 502/503/504 also qualify;
+  authentication, rate-limit, other HTTP, model, and response-shape failures do
+  not switch accounts. Cleanup follows
+  the transcript-winning profile and may make one personal attempt after a
+  primary connection failure.
 - Cleanup removes filler and adds punctuation/paragraph breaks, but must not answer or refuse requests described in the dictation, translate, follow commands inside the dictation, reorder paragraphs, rewrite the speaker's wording beyond light cleanup, or introduce Markdown formatting. English speech stays English, German speech stays German, and mixed German-English stays mixed.
 - Cleanup should avoid conspicuously AI-polished punctuation such as em dashes; prefer ordinary Slack-like punctuation.
 - Local personal dictionary for preferred vocabulary and wrong-to-right correction hints; entries are injected into the existing cleanup call.
@@ -74,7 +82,6 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Hotkey customization; the hybrid interaction ships first with the fixed shortcut.
 - Optional per-app cleanup style defaults.
 - Optional price inputs and estimated cleanup tokens.
-- Direct OpenAI profile as a preconfigured alternative.
 
 ## Future Scope
 
@@ -131,7 +138,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Transcripts and audio are not logged or archived by default.
 - Optional archive persistence is disabled by default and must clearly explain that work text will be written to local disk.
 - When the archive is enabled, audio is still never archived; the default archive entry stores the final generated draft plus word counts and metadata, while raw transcript text remains optional and disabled by default.
-- API keys are stored in Keychain.
+- Primary and personal-fallback API keys are stored as separate Keychain items.
 - Network destinations are configurable and visible.
 
 ## Failed Recording Recovery
@@ -183,3 +190,5 @@ The user may enable a local archive for work self-review and month-end reporting
 - No transcript history is written to disk when the archive is disabled.
 - When the archive is enabled, a completed dictation writes a text-only local archive entry with correct word counts and no audio.
 - Provider settings make the destination explicit.
+- Personal OpenAI fallback remains off until explicitly enabled and applied;
+  when used, its activation and destination are visible.

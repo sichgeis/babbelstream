@@ -116,7 +116,11 @@ private struct SettingsGeneralPane: View {
             Section("Readiness") {
                 LabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
                 LabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
-                LabeledContent("API key", value: appState.hasAPIKey ? "Saved in Keychain" : "Missing")
+                LabeledContent("Primary API key", value: appState.hasAPIKey ? "Saved in Keychain" : "Missing")
+                LabeledContent(
+                    "Personal fallback",
+                    value: appState.personalOpenAIFallbackReadinessSummary
+                )
                 LabeledContent("Launch at login", value: appState.launchAtLoginStatusSummary)
                 AppLongValue(label: "Provider", value: appState.providerDestinationSummary)
 
@@ -191,6 +195,12 @@ private struct SettingsProviderPane: View {
             Section("Active Destinations") {
                 AppLongValue(label: "Transcription", value: appState.providerDestinationSummary)
                 AppLongValue(label: "Cleanup", value: appState.cleanupDestinationSummary)
+                if appState.isPersonalOpenAIFallbackApplied {
+                    AppLongValue(
+                        label: "Personal fallback",
+                        value: appState.personalOpenAIFallbackDestinationSummary
+                    )
+                }
 
                 if appState.hasUnsavedConfigurationChanges {
                     AppLongValue(
@@ -239,6 +249,7 @@ private struct SettingsProviderPane: View {
                 TextField("Cleanup timeout (seconds)", text: $appState.timeoutText)
                 LabeledContent("Connection watchdog", value: appState.providerConnectionTimeoutSummary)
                 LabeledContent("Transcription requests", value: "Primary + one bounded Mini hedge")
+                LabeledContent("Personal fallback limit", value: "One sequential request")
                 Text("If primary transcription is still pending after 10 seconds, BabbelStream may send the same safeguarded audio once to Mini. The first valid result wins and both requests share one 75-second deadline. This rare recovery path may incur two transcription charges. Authentication and configuration failures do not hedge.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -257,6 +268,41 @@ private struct SettingsProviderPane: View {
                     Label("Delete API Key", systemImage: "trash")
                 }
                 .disabled(!appState.hasAPIKey)
+            }
+
+            Section("Personal OpenAI Fallback") {
+                Toggle(
+                    "Use personal OpenAI when primary is unreachable",
+                    isOn: $appState.personalOpenAIFallbackEnabled
+                )
+                AppLongValue(
+                    label: "Transcription",
+                    value: appState.personalOpenAIFallbackDestinationSummary
+                )
+                AppLongValue(
+                    label: "Cleanup",
+                    value: appState.personalOpenAIFallbackCleanupDestinationSummary
+                )
+                SecureField(
+                    appState.hasPersonalOpenAIFallbackAPIKey
+                        ? "Personal OpenAI key saved in Keychain"
+                        : "Paste personal OpenAI API key",
+                    text: $appState.personalOpenAIFallbackAPIKeyInput
+                )
+                LabeledContent(
+                    "Personal Keychain item",
+                    value: appState.hasPersonalOpenAIFallbackAPIKey ? "Saved" : "Missing"
+                )
+                Text("When the primary connection cannot be reached or returns gateway/service-unavailable HTTP 502, 503, or 504, BabbelStream may send the safeguarded audio, transcript cleanup, and personal dictionary context to your personal OpenAI account. This can expose work content outside the company provider and incur personal API charges. Invalid credentials, rate limits, model errors, and other HTTP failures never trigger this fallback.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Button(role: .destructive) {
+                    appState.deletePersonalOpenAIFallbackAPIKey()
+                } label: {
+                    Label("Delete Personal OpenAI Key", systemImage: "trash")
+                }
+                .disabled(!appState.hasPersonalOpenAIFallbackAPIKey)
             }
         }
     }

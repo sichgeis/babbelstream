@@ -53,7 +53,6 @@ These remain unsequenced until the user selects them:
 
 - Per-app cleanup style defaults.
 - Optional local price inputs and estimated cleanup tokens.
-- A preconfigured direct OpenAI provider profile.
 - Deterministic local dictionary replacements.
 - Preview/editor and email-specific cleanup modes.
 

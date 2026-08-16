@@ -14,6 +14,10 @@ Tap `Control + Option + Space` for hands-free recording or hold it for push-to-t
 - OpenAI-compatible transcription endpoint, default path `/v1/audio/transcriptions`, using `gpt-transcribe` by default.
 - OpenAI-compatible cleanup endpoint, default path `/v1/chat/completions`.
 - One bounded hedge for transient transcription slowness: primary starts immediately, Mini starts after 10 seconds if needed, the first valid result wins, and both share a 75-second deadline. A zero-byte connection stall is canceled after 15 seconds.
+- Optional personal OpenAI fallback, off by default, uses a separate Keychain key
+  and one sequential official-API request only when the primary connection is
+  unreachable. Gateway/service-unavailable HTTP 502/503/504 qualify; credential,
+  rate-limit, other HTTP, model, and response errors never switch accounts.
 - Failed or interrupted processing keeps the stopped M4A in a local, user-only Failed Recordings store. Retry uses current provider settings and copies the result instead of auto-pasting into a historical target.
 - The HUD stays compact and passive; it distinguishes primary/Mini processing and shows Recording saved after failure. Privacy-safe diagnostics record stage, timing, status/error category, and byte counts.
 - Cleanup preserves German, English, and mixed German-English speech without translating.
@@ -89,7 +93,12 @@ This local DMG is suitable for personal testing. Public distribution should use 
    routing. The Provider pane also shows the fixed Mini hedge, 10-second hedge
    delay, 75-second overall deadline, and separate 15-second connection
    watchdog. During rare slow requests the same safeguarded audio may be sent
-   to both models and may incur two transcription charges.
+   to both models and may incur two transcription charges. If you explicitly
+   want weekend/offline-cluster availability, enable the Personal OpenAI
+   fallback, review its fixed `api.openai.com` transcription/cleanup
+   destinations and cross-account disclosure, add a separate personal key, and
+   Apply. This can send work audio, cleanup text, and dictionary context to your
+   personal OpenAI account and incur personal charges.
 5. If processing fails, open **Failed Recordings…** from the menu to retry and copy the draft, save the M4A elsewhere, or explicitly delete it.
 6. Request Accessibility permission so BabbelStream can insert text automatically.
 7. Optionally enable `Launch at login` in Settings.
@@ -109,8 +118,10 @@ An optional local Codex skill can edit the same file from `~/.codex/skills/babbe
 - Audio is safeguarded after recording stops and deleted after transcription and any enabled cleanup succeed. Failed, canceled-after-stop, or interrupted work remains local under Failed Recordings until retry succeeds or you delete it.
 - Transcripts and cleaned drafts are kept only in memory for the running app session unless the local dictation archive is explicitly enabled.
 - Dictation archive is off by default. When enabled, it stores final draft text and word counts locally; raw transcript storage is a separate opt-in.
-- API keys are stored in Keychain, not in files or `UserDefaults`.
-- A non-secret `UserDefaults` marker may remember that an API key was saved so startup does not read Keychain.
+- Primary and personal-fallback API keys are stored as separate Keychain items,
+  not in files or `UserDefaults`.
+- Non-secret `UserDefaults` markers may remember that each key was saved so
+  startup does not read Keychain.
 - The personal dictionary stores only explicit vocabulary/correction hints, not transcript history.
 - Usage counters are local `UserDefaults` numbers only; they do not contain transcript text or audio metadata.
 - Diagnostics copied from the app are redacted and omit transcripts, cleaned drafts, archive contents, audio paths, and clipboard contents.
@@ -118,7 +129,7 @@ An optional local Codex skill can edit the same file from `~/.codex/skills/babbe
 
 ## Uninstall And Local Data Cleanup
 
-1. Disable `Launch at login` and delete the API key from Settings before removing the app when possible.
+1. Disable `Launch at login` and delete both API keys from Settings before removing the app when possible.
 2. Quit BabbelStream and remove `BabbelStream.app` from `/Applications`.
 3. If you no longer want the dictionary or optional archive, remove `~/Library/Application Support/BabbelStream` manually after reviewing its contents.
 4. Remove the BabbelStream entry from System Settings > Privacy & Security > Microphone and Accessibility if desired.
