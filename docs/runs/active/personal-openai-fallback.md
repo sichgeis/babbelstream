@@ -23,7 +23,8 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
 - Agent may proceed through: implementation, checks, coherent commits, and
   feature-branch push
 - Required human gates: real LiteLLM/personal OpenAI smoke test; merge/push
-  `main`; local installation; release/tag/publication
+  `main`; release/tag/publication. Local release-candidate installation was
+  authorized on 2026-08-16.
 - External systems/data authorized: GitHub feature-branch push only; no real
   provider requests or private credentials
 
@@ -109,12 +110,27 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
 | Canonical checks | Passed | Passed | `task check` with normal developer cache access |
 | Focused policy/settings checks | N/A | Passed | Defaults/persistence, independent markers, fixed official settings/request, eligible/ineligible failures, HUD phase |
 | Manual provider smoke | Not run | Human gate | No real credentials/content authorized |
+| Local build/install | N/A | Passed | `0.4.1` / `06862f0`; installed and packaged executable hashes match |
 | Diff/privacy review | Clean baseline | Passed | `git diff --check`; separate secrets, content-free diagnostics, sequential request review |
 | Git state | Clean main baseline | Feature commit pushed | `72edb30` on `origin/codex/personal-openai-fallback` |
 
 ## Current Blocker
 
 None.
+
+## Release-Candidate Evidence
+
+- Canonical checks passed immediately before packaging.
+- Packaged artifact: `dist/BabbelStream-0.4.1.dmg`.
+- DMG SHA-256: `2e16bf71c7edff88b91e99340bb6b8325d30db9f2036a7e0e050f0718b8955d0`.
+- Installed app: `/Applications/BabbelStream.app`.
+- Installed version/commit: `0.4.1` / `06862f0`.
+- Signing label: `BabbelStream Local Code Signing` (local testing only;
+  TeamIdentifier is not set).
+- Installed and packaged executable SHA-256:
+  `433b6c4e3c5a5619cbd1a0069ff05cf8daff5d6dad42dabf63245735a9843865`.
+- The installer launched the executable from `/Applications`; restart
+  verification confirmed it remains active as PID `85941`.
 
 ## Next Action
 

@@ -32,9 +32,9 @@ by their dedicated specifications.
   official OpenAI API requires bare model IDs. Provider Settings now persists
   this per-installation routing choice; other proxy namespace conventions still
   require a compatible proxy alias.
-- Personal OpenAI fallback is implemented on the active feature branch but has
-  not yet passed the real LiteLLM-offline/personal-account smoke test or been
-  merged and installed.
+- Personal OpenAI fallback is implemented, pushed, and installed locally from
+  feature commit `06862f0`, but has not yet passed the real LiteLLM-offline/
+  personal-account smoke test or been merged to `main`.
 - Coordinator behavior coupled to AppKit, Accessibility, Keychain, microphone
   permission, Carbon event delivery, and application termination remains in the
   manual validation matrix because the current Command Line Tools environment
