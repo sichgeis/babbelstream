@@ -4,6 +4,12 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+- Add an explicit, disabled-by-default personal OpenAI fallback for work-proxy
+  reachability failures, with a separate Keychain key, fixed official endpoint,
+  sequential bounded requests, visible activation, and a narrow policy covering
+  transport failures plus HTTP 502/503/504 while excluding credential, rate-
+  limit, other HTTP, model, and response errors.
+
 - Move the preferred transcription model from `gpt-4o-transcribe` to
   `gpt-transcribe`, including migration of the former default and the new
   model's `languages[]` request field while preserving the bounded Mini hedge.

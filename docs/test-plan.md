@@ -18,6 +18,12 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
   choice independently of later base-URL edits.
 - Cleanup prompt regression checks.
 - Settings defaults and migrations.
+- Personal OpenAI fallback defaults off, persists only after explicit Apply,
+  keeps independent key-presence markers, derives the fixed official endpoint
+  with standard model routing, and uses the separately supplied key.
+- Personal fallback error policy accepts HTTP 502/503/504 plus connection
+  watchdog/transport failures and rejects other HTTP, authentication/
+  configuration, malformed-response, and empty-output failures.
 - Configurable max recording duration defaults to 10 minutes and rejects values above the cap.
 - Usage counter arithmetic and reset behavior.
 - Dictation archive default-off behavior, JSONL round trip, damaged-line recovery, word-count aggregation, monthly export rendering, and clear behavior.
@@ -26,7 +32,8 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Text insertion result handling behind an adapter.
 - Hybrid hotkey release classification below, at, and above the 0.5-second threshold.
 - Keychain wrapper behavior with an in-memory fake.
-- Startup does not read the Keychain secret; API key presence is represented by a non-secret marker.
+- Startup does not read either Keychain secret; primary and personal-key
+  presence are represented by separate non-secret markers.
 - Personal dictionary JSON round trip, text parsing, disabled-entry preservation, correction teaching/update de-duplication, cleanup prompt rendering, and prompt-size capping.
 
 ## Integration Tests
@@ -60,6 +67,9 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Escape cancels while recording and processing but behaves normally after the operation ends.
 - Cleanup can be toggled.
 - Provider destination is visible in settings.
+- Personal fallback is visibly disabled/enabled, shows its fixed transcription
+  and cleanup destinations and separate Keychain state, and discloses the work-
+  content/cost boundary before Apply.
 - Edited provider values are visibly inactive until `Apply Settings` succeeds; the saved destination remains truthful.
 - All five Settings tabs fit at the minimum window size; long destinations and paths wrap or compress inside their rows, and scrolling does not move the Apply footer.
 - General Settings readiness truthfully reflects microphone, Accessibility, API-key, active-provider, and launch-at-login state; approval-required login items offer a direct route to System Settings.
@@ -119,6 +129,8 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - 5-second, 15-second, 60-second, and long-form dictations up to the 10-minute cap.
 - Transcription-only versus transcription plus cleanup.
 - Primary/Mini hedge timing, first-success selection, and overall deadline behavior.
+- Personal fallback starts sequentially only after an eligible primary phase
+  failure, makes no Mini hedge of its own, and preserves cancellation.
 
 ## Usage And API-Cost Tests
 
@@ -170,6 +182,9 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 ## Failure Mode Tests
 
 - Missing API key.
+- Enabled personal fallback with a missing personal key.
+- Primary transport failure with fallback disabled, enabled/successful, and
+  enabled/failing; primary HTTP/auth/model errors must make no personal request.
 - Invalid base URL.
 - Endpoint does not support audio transcription.
 - Network offline.

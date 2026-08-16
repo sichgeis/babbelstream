@@ -15,9 +15,12 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active feature: GPT Transcribe migration.
-- Active feature spec: `docs/features/gpt-transcribe/spec.md`.
-- Active run tracker: `docs/runs/active/gpt-transcribe.md`.
+- Active feature: Personal OpenAI fallback.
+- Active feature spec: `docs/features/personal-openai-fallback/spec.md`.
+- Active run tracker: `docs/runs/active/personal-openai-fallback.md`.
+- GPT Transcribe implementation evidence, with its remaining real-provider
+  matrix transferred to the active fallback feature, is archived at
+  `docs/runs/archive/gpt-transcribe.md`.
 - Completed launch-at-login migration recovery evidence:
   `docs/runs/archive/launch-at-login-migration-fix.md`.
 - Completed maintenance evidence: `docs/runs/archive/maintenance-v0.4.1.md`.
@@ -29,6 +32,9 @@ by their dedicated specifications.
   official OpenAI API requires bare model IDs. Provider Settings now persists
   this per-installation routing choice; other proxy namespace conventions still
   require a compatible proxy alias.
+- Personal OpenAI fallback is implemented on the active feature branch but has
+  not yet passed the real LiteLLM-offline/personal-account smoke test or been
+  merged and installed.
 - Coordinator behavior coupled to AppKit, Accessibility, Keychain, microphone
   permission, Carbon event delivery, and application termination remains in the
   manual validation matrix because the current Command Line Tools environment
@@ -45,6 +51,5 @@ recorded.
 
 ## Next Action
 
-Install the clean main build and smoke-test one work-proxy dictation with
-LiteLLM routing; separately confirm personal-computer settings use standard
-OpenAI routing.
+Push the completed feature branch, then run the synthetic real-provider matrix
+from the active feature spec before authorizing merge and local installation.

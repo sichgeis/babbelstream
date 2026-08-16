@@ -17,7 +17,9 @@
 - Audio: temporary while recording, then safeguarded under Application Support before provider processing. Delete immediately after transcription and any enabled cleanup succeed. Preserve failed, canceled-after-stop, or interrupted processing until retry succeeds or the user explicitly deletes it.
 - Transcript text: memory only by default, plus last transcript in memory for retry/paste-last during the running app session.
 - Cleaned text: memory and, when the clipboard fallback path is used, the clipboard.
-- API keys: macOS Keychain only. A non-secret `UserDefaults` marker may remember that a key was saved so the app can avoid reading Keychain on startup.
+- API keys: macOS Keychain only. Primary and personal-fallback credentials use
+  separate Keychain items. Separate non-secret `UserDefaults` markers may
+  remember that keys were saved so the app can avoid reading Keychain on startup.
 - Personal dictionary: explicit local JSON only; no transcript history, audio, or automatic learning.
 - Launch at login: optional macOS ServiceManagement registration for the main
   app, removable from Settings. An existing legacy user LaunchAgent is retained
@@ -31,7 +33,10 @@
 
 - The app visibly states when a recording has been saved because processing did not complete normally.
 - Metadata must not contain transcripts, cleanup input/output, API keys, clipboard content, request/response bodies, or audio paths in copied diagnostics.
-- Retry may submit the same audio to primary and Mini during a rare hedge; the configured destination remains explicit and no third provider attempt is allowed.
+- Retry may submit the same audio to primary and Mini during a rare hedge. If
+  the explicitly applied personal fallback is enabled and that phase ends in a
+  reachability failure, one sequential official-OpenAI attempt is also allowed;
+  no other transcription attempt is allowed.
 - Recovery retry uses current saved settings and never auto-pastes into the historical target.
 - Save Audio As does not imply deletion. Individual and bulk deletion are explicit; bulk deletion requires confirmation.
 - POSIX permissions are `0700` for directories and `0600` for files. Custom encryption and cloud backup are out of scope for this release.
@@ -52,13 +57,21 @@ Clipboard fallback places work text on the system clipboard. Direct Accessibilit
 
 ## Network Destinations
 
-The app sends audio to the configured transcription endpoint and transcript text
-to the configured cleanup endpoint when cleanup is enabled. The settings UI
+The app normally sends audio to the configured primary transcription endpoint
+and transcript text to the configured primary cleanup endpoint when cleanup is
+enabled. The settings UI
 distinguishes edited values from the saved/effective destinations used by
 requests and shows whether transcription uses bare OpenAI model IDs or
 LiteLLM's `openai/` namespace, including the effective primary and fallback
 IDs. Routing never changes the configured destination. Each dictation snapshots
-those saved settings before recording. The app must not silently switch providers.
+those saved settings before recording. The app must not silently switch
+providers. The only automatic destination change is the separately applied,
+disabled-by-default personal OpenAI fallback: after a transport/reachability
+failure, including gateway/service-unavailable HTTP 502, 503, or 504, it may
+send the safeguarded audio once to `https://api.openai.com` and route cleanup
+there. Other HTTP responses, authentication/configuration failures, rate limits,
+model errors, malformed responses, and empty output fail closed without cross-
+account fallback.
 
 Remote providers must use HTTPS. Plain HTTP is limited to loopback development endpoints, and base URLs must not embed credentials, query parameters, or fragments. API keys belong in Keychain.
 
@@ -82,6 +95,12 @@ Default logs may include timestamps, state names, durations, provider labels, co
 - Clipboard exposure to other apps.
 - Accessibility permission abuse if compromised.
 - A slow or transiently failing primary transcription may send the same safeguarded audio once to `gpt-4o-mini-transcribe`. The 10-second hedge and 75-second overall deadline are fixed and visible; diagnostics record stage, model role, duration, status/error category, and byte counts, never audio content or request bodies.
+- When explicitly enabled, a primary reachability failure may send the same
+  safeguarded audio once more to the user's personal OpenAI account and may send
+  transcript text plus personal dictionary context there for cleanup. Settings
+  shows the fixed destination, cross-account disclosure, and possible personal
+  API charges before Apply. The personal request is sequential and never joins
+  the primary/Mini hedge.
 
 ## Accessibility Risks
 
@@ -95,8 +114,10 @@ Before first use, the app shows which saved provider base URL receives audio,
 which endpoint receives cleanup text, and the effective transcription model
 IDs. Changing provider or routing settings is explicit through `Apply
 Settings`; edited but unapplied values are not active. Direct OpenAI and
-LiteLLM-compatible destinations remain explicit base URL/path settings; named
-provider profiles are future convenience UI, not hidden routing behavior.
+LiteLLM-compatible primary destinations remain explicit base URL/path settings.
+The optional personal OpenAI fallback is a fixed, named official profile with a
+separate key and a visible applied on/off state; no other hidden routing
+behavior is allowed.
 
 ## Work Slack Considerations
 

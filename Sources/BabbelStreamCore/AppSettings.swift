@@ -2,6 +2,7 @@ import Foundation
 
 public struct AppSettings: Equatable, Sendable {
     public var providerConfiguration: ProviderConfiguration
+    public var personalOpenAIFallbackEnabled: Bool
     public var cleanupEnabled: Bool
     public var transcriptionResponseFormat: String
     public var transcriptionLanguage: String
@@ -12,6 +13,7 @@ public struct AppSettings: Equatable, Sendable {
 
     public init(
         providerConfiguration: ProviderConfiguration = ProviderConfiguration(),
+        personalOpenAIFallbackEnabled: Bool = false,
         cleanupEnabled: Bool = ProjectDefaults.cleanupEnabledByDefault,
         transcriptionResponseFormat: String = ProjectDefaults.defaultTranscriptionResponseFormat,
         transcriptionLanguage: String = "",
@@ -21,6 +23,7 @@ public struct AppSettings: Equatable, Sendable {
         archiveRawTranscriptEnabled: Bool = ProjectDefaults.archiveRawTranscriptEnabledByDefault
     ) {
         self.providerConfiguration = providerConfiguration
+        self.personalOpenAIFallbackEnabled = personalOpenAIFallbackEnabled
         self.cleanupEnabled = cleanupEnabled
         self.transcriptionResponseFormat = transcriptionResponseFormat
         self.transcriptionLanguage = transcriptionLanguage
@@ -33,6 +36,7 @@ public struct AppSettings: Equatable, Sendable {
 
 public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable {
     case invalidBaseURL
+    case missingPersonalOpenAIAPIKey
     case insecureBaseURL
     case ambiguousBaseURL
     case missingTranscriptionModel
@@ -49,6 +53,8 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
         switch self {
         case .invalidBaseURL:
             "Provider base URL must include a valid http or https host."
+        case .missingPersonalOpenAIAPIKey:
+            "Enable personal OpenAI fallback only after adding its API key."
         case .insecureBaseURL:
             "Provider base URL must use https. Plain http is allowed only for local development endpoints."
         case .ambiguousBaseURL:
@@ -200,6 +206,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         static let transcriptionModelRouting = "provider.transcriptionModelRouting"
         static let cleanupModel = "provider.cleanupModel"
         static let timeoutSeconds = "provider.timeoutSeconds"
+        static let personalOpenAIFallbackEnabled = "provider.personalOpenAIFallback.enabled"
         static let cleanupEnabled = "cleanup.enabled"
         static let transcriptionResponseFormat = "transcription.responseFormat"
         static let transcriptionLanguage = "transcription.language"
@@ -266,6 +273,9 @@ public final class UserDefaultsSettingsStore: SettingsStore {
 
         return AppSettings(
             providerConfiguration: configuration,
+            personalOpenAIFallbackEnabled: userDefaults.object(
+                forKey: Key.personalOpenAIFallbackEnabled
+            ) as? Bool ?? defaults.personalOpenAIFallbackEnabled,
             cleanupEnabled: userDefaults.object(forKey: Key.cleanupEnabled) as? Bool
                 ?? defaults.cleanupEnabled,
             transcriptionResponseFormat: userDefaults.string(forKey: Key.transcriptionResponseFormat)
@@ -293,6 +303,10 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         userDefaults.set(configuration.transcriptionModelRouting.rawValue, forKey: Key.transcriptionModelRouting)
         userDefaults.set(configuration.cleanupModel, forKey: Key.cleanupModel)
         userDefaults.set(configuration.timeoutSeconds, forKey: Key.timeoutSeconds)
+        userDefaults.set(
+            settings.personalOpenAIFallbackEnabled,
+            forKey: Key.personalOpenAIFallbackEnabled
+        )
         userDefaults.set(settings.cleanupEnabled, forKey: Key.cleanupEnabled)
         userDefaults.set(settings.transcriptionResponseFormat, forKey: Key.transcriptionResponseFormat)
         userDefaults.set(settings.transcriptionLanguage, forKey: Key.transcriptionLanguage)

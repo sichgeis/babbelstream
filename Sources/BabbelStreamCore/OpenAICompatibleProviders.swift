@@ -11,6 +11,7 @@ private func providerElapsedMilliseconds(since start: ContinuousClock.Instant) -
 
 public enum ProviderError: Error, Equatable, LocalizedError, Sendable {
     case missingAPIKey
+    case missingPersonalOpenAIAPIKey
     case invalidEndpointURL
     case emptyAudioFile
     case connectionTimedOut(seconds: Int)
@@ -23,6 +24,8 @@ public enum ProviderError: Error, Equatable, LocalizedError, Sendable {
         switch self {
         case .missingAPIKey:
             "Missing provider API key. Add it in Settings."
+        case .missingPersonalOpenAIAPIKey:
+            "Personal OpenAI fallback is enabled, but its API key is missing. Add it in Settings."
         case .invalidEndpointURL:
             "Provider endpoint URL is invalid."
         case .emptyAudioFile:
@@ -159,7 +162,8 @@ public enum ProviderFailureCategory: Equatable, Sendable {
         case let .requestFailed(statusCode, _): return .httpStatus(statusCode)
         case .malformedResponse: return .malformedResponse
         case .emptyTranscript, .emptyCleanupOutput: return .emptyOutput
-        case .missingAPIKey, .invalidEndpointURL, .emptyAudioFile: return .configuration
+        case .missingAPIKey, .missingPersonalOpenAIAPIKey, .invalidEndpointURL, .emptyAudioFile:
+            return .configuration
         }
     }
 }

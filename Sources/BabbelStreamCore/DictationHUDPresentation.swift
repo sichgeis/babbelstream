@@ -4,6 +4,7 @@ public enum DictationHUDPhase: Equatable, Sendable {
     case recording
     case transcribing
     case tryingMini
+    case tryingPersonalOpenAI
     case retrying
     case cleaningUp
     case pasting
@@ -24,6 +25,8 @@ public enum DictationHUDPhase: Equatable, Sendable {
             "Transcribing"
         case .tryingMini:
             "Trying Mini"
+        case .tryingPersonalOpenAI:
+            "Personal OpenAI"
         case .retrying:
             "Retrying"
         case .cleaningUp:
@@ -69,6 +72,8 @@ public enum DictationHUDPresentation {
                 return .transcribing
             case "Trying Mini transcription":
                 return .tryingMini
+            case "Trying personal OpenAI":
+                return .tryingPersonalOpenAI
             case "Retrying transcription":
                 return .retrying
             case "Cleaning up":

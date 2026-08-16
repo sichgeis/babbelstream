@@ -191,18 +191,22 @@ Mini hedge.
 ## Current Blocker
 
 None. The proxy's existing `openai/*` deployment provides a compatible app-side
-routing path without changing the company-owned proxy.
+routing path without changing the company-owned proxy. The remaining dual-
+destination smoke coverage is transferred to the personal OpenAI fallback
+feature run.
 
 ## Next Action
 
-Run one real work-proxy dictation and one personal official-OpenAI dictation,
-then confirm both use `gpt-transcribe` successfully.
+Complete the real-provider primary/fallback matrix in
+`docs/features/personal-openai-fallback/spec.md` after that feature is built.
 
 ## Closeout
 
 - [x] Durable specs match implemented behavior.
 - [x] Automated validation evidence is complete and truthful.
-- [ ] Human smoke gate passed or was explicitly waived.
+- [ ] Human smoke gate passed or was explicitly waived; transferred to the
+  personal OpenAI fallback run.
 - [x] Main and local installation match the approved level; no tag was authorized.
 - [x] Working tree is clean after the tracker evidence commit.
-- [ ] Tracker moved from active to archive.
+- [x] Tracker moved from active to archive; the remaining human evidence is
+  tracked by the follow-up feature.

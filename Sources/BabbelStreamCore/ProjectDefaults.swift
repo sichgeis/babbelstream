@@ -20,6 +20,7 @@ public enum ProjectDefaults {
     public static let defaultCleanupModel = "gpt-4o-mini"
     public static let defaultTranscriptionResponseFormat = "json"
     public static let providerConnectionTimeoutSeconds: TimeInterval = 15
+    public static let personalOpenAIFallbackBaseURL = URL(string: "https://api.openai.com")!
     public static let fixedHotkeyDescription = "Control + Option + Space"
     public static let hybridHotkeyHoldThresholdSeconds: TimeInterval = 0.5
     public static let hybridHotkeyUsageDescription = "Tap for hands-free; hold for push-to-talk"
