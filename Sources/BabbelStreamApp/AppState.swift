@@ -52,6 +52,7 @@ final class AppState: ObservableObject {
         let settings: AppSettings
         let apiKey: String
         let usedPersonalOpenAI: Bool
+        let personalOpenAIWasAutomaticFallback: Bool
     }
 
     @Published var status = "Ready"
@@ -70,6 +71,8 @@ final class AppState: ObservableObject {
     @Published var hasAPIKey = false
     @Published var hasPersonalOpenAIFallbackAPIKey = false
     @Published var personalOpenAIFallbackEnabled: Bool
+    @Published var personalOpenAIDirectModeEnabled: Bool
+    @Published private(set) var usesPersonalOpenAIForCurrentOperation = false
     @Published var launchAtLoginEnabled = false
     @Published private(set) var launchAtLoginStatusSummary = "Unknown"
     @Published private(set) var launchAtLoginRequiresApproval = false
@@ -192,6 +195,7 @@ final class AppState: ObservableObject {
         self.usageSnapshot = loadedUsageSnapshot
         self.cleanupEnabled = loadedSettings.cleanupEnabled
         self.personalOpenAIFallbackEnabled = loadedSettings.personalOpenAIFallbackEnabled
+        self.personalOpenAIDirectModeEnabled = loadedSettings.personalOpenAIDirectModeEnabled
         self.dictationArchiveEnabled = loadedSettings.dictationArchiveEnabled
         self.archiveRawTranscriptEnabled = loadedSettings.archiveRawTranscriptEnabled
         self.archiveMonthText = currentArchiveMonth.directoryName
@@ -339,11 +343,31 @@ final class AppState: ObservableObject {
         guard appSettings.personalOpenAIFallbackEnabled else {
             return "Off"
         }
+        if appSettings.personalOpenAIDirectModeEnabled {
+            return "Active now"
+        }
         return hasPersonalOpenAIFallbackAPIKey ? "Ready" : "Missing key"
     }
 
     var isPersonalOpenAIFallbackApplied: Bool {
         appSettings.personalOpenAIFallbackEnabled
+    }
+
+    var isPersonalOpenAIDirectModeApplied: Bool {
+        PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(appSettings)
+    }
+
+    var isPersonalOpenAIHUDActive: Bool {
+        if isRecording || isProcessing || canCancel {
+            return usesPersonalOpenAIForCurrentOperation
+        }
+        return appSettings.personalOpenAIDirectModeEnabled
+    }
+
+    var activeProviderDestinationSummary: String {
+        PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(appSettings)
+            ? personalOpenAIFallbackDestinationSummary
+            : providerDestinationSummary
     }
 
     var providerConnectionTimeoutSummary: String {
@@ -444,8 +468,11 @@ final class AppState: ObservableObject {
         if isRecording {
             let target = pasteTargetSummary ?? "unverified target"
             let settings = activeDictationSettings ?? appSettings
-            let provider = settings.providerConfiguration.baseURL.host
-                ?? settings.providerConfiguration.baseURL.absoluteString
+            let activeProviderSettings = PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settings)
+                ? PersonalOpenAIFallbackPolicy.settings(derivedFrom: settings)
+                : settings
+            let provider = activeProviderSettings.providerConfiguration.baseURL.host
+                ?? activeProviderSettings.providerConfiguration.baseURL.absoluteString
             let stopGuidance = isHandsFreeRecording
                 ? "press \(ProjectDefaults.fixedHotkeyDescription) or click Stop to transcribe"
                 : "release to transcribe"
@@ -656,6 +683,7 @@ final class AppState: ObservableObject {
         }
 
         isProcessing = false
+        usesPersonalOpenAIForCurrentOperation = false
         setCancelHotkeyEnabled(false)
         notifyStateChanged()
     }
@@ -691,6 +719,7 @@ final class AppState: ObservableObject {
 
             appSettings = settings
             personalOpenAIFallbackEnabled = settings.personalOpenAIFallbackEnabled
+            personalOpenAIDirectModeEnabled = settings.personalOpenAIDirectModeEnabled
             dictationArchiveEnabled = settings.dictationArchiveEnabled
             archiveRawTranscriptEnabled = settings.archiveRawTranscriptEnabled
             transcriptionLanguageText = settings.transcriptionLanguage
@@ -740,9 +769,11 @@ final class AppState: ObservableObject {
 
             var updatedSettings = appSettings
             updatedSettings.personalOpenAIFallbackEnabled = false
+            updatedSettings.personalOpenAIDirectModeEnabled = false
             try settingsStore.save(updatedSettings)
             appSettings = updatedSettings
             personalOpenAIFallbackEnabled = false
+            personalOpenAIDirectModeEnabled = false
 
             settingsErrorMessage = nil
             settingsFeedbackMessage = "Personal OpenAI key deleted and fallback disabled."
@@ -754,6 +785,17 @@ final class AppState: ObservableObject {
             settingsFeedbackMessage = ""
             recordDiagnostic("personal openai fallback key delete failed: \(diagnosticErrorCategory(error))")
         }
+    }
+
+    func setPersonalOpenAIFallbackEnabledDraft(_ isEnabled: Bool) {
+        personalOpenAIFallbackEnabled = isEnabled
+        if !isEnabled {
+            personalOpenAIDirectModeEnabled = false
+        }
+    }
+
+    func setPersonalOpenAIDirectModeEnabledDraft(_ isEnabled: Bool) {
+        personalOpenAIDirectModeEnabled = personalOpenAIFallbackEnabled && isEnabled
     }
 
     func setCleanupEnabled(_ isEnabled: Bool) {
@@ -1067,8 +1109,10 @@ final class AppState: ObservableObject {
             "status: \(status)",
             "last failure category: \(lastFailureCategory)",
             "transcription destination: \(providerDestinationSummary)",
+            "active transcription destination: \(activeProviderDestinationSummary)",
             "cleanup destination: \(cleanupDestinationSummary)",
             "personal openai fallback enabled: \(appSettings.personalOpenAIFallbackEnabled)",
+            "personal openai direct mode enabled: \(appSettings.personalOpenAIDirectModeEnabled)",
             "personal openai fallback key saved: \(hasPersonalOpenAIFallbackAPIKey)",
             "personal openai fallback transcription destination: \(personalOpenAIFallbackDestinationSummary)",
             "transcription model: \(appSettings.providerConfiguration.transcriptionModel)",
@@ -1134,6 +1178,8 @@ final class AppState: ObservableObject {
         let settings = AppSettings(
             providerConfiguration: configuration,
             personalOpenAIFallbackEnabled: personalOpenAIFallbackEnabled,
+            personalOpenAIDirectModeEnabled: personalOpenAIFallbackEnabled
+                && personalOpenAIDirectModeEnabled,
             cleanupEnabled: cleanupEnabled,
             transcriptionResponseFormat: ProjectDefaults.defaultTranscriptionResponseFormat,
             transcriptionLanguage: normalizedLanguage,
@@ -1388,6 +1434,8 @@ final class AppState: ObservableObject {
         }
 
         let settingsSnapshot = appSettings
+        usesPersonalOpenAIForCurrentOperation = mode == .dictation
+            && PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settingsSnapshot)
 
         if mode == .dictation {
             captureCurrentPasteTarget()
@@ -1406,6 +1454,7 @@ final class AppState: ObservableObject {
             lastResult = "Recording not started."
             errorMessage = microphoneGuidance(for: newStatus)
             isProcessing = false
+            usesPersonalOpenAIForCurrentOperation = false
             recordDiagnostic("recording not started: microphone \(newStatus.displayName)")
             completeDiagnosticOperation()
             return
@@ -1434,6 +1483,7 @@ final class AppState: ObservableObject {
             lastResult = "Recording not started."
             errorMessage = error.localizedDescription
             recordDiagnostic("recording start failed: \(diagnosticErrorCategory(error))")
+            usesPersonalOpenAIForCurrentOperation = false
             completeDiagnosticOperation()
         }
 
@@ -1521,6 +1571,7 @@ final class AppState: ObservableObject {
         }
 
         isProcessing = false
+        usesPersonalOpenAIForCurrentOperation = false
         setCancelHotkeyEnabled(false)
         activeRecoveryRecording = nil
         completeDiagnosticOperation()
@@ -1600,7 +1651,10 @@ final class AppState: ObservableObject {
         saveUsageSnapshot()
 
         status = autoStopped ? "Max reached; transcribing" : "Transcribing"
-        lastResult = "Sending audio to \(settings.providerConfiguration.baseURL.host ?? settings.providerConfiguration.baseURL.absoluteString)."
+        let activeTranscriptionSettings = PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settings)
+            ? PersonalOpenAIFallbackPolicy.settings(derivedFrom: settings)
+            : settings
+        lastResult = "Sending audio to \(activeTranscriptionSettings.providerConfiguration.baseURL.host ?? activeTranscriptionSettings.providerConfiguration.baseURL.absoluteString)."
         transcriptionProgressDetail = nil
         recordDiagnostic("transcription started")
 
@@ -1635,6 +1689,27 @@ final class AppState: ObservableObject {
         at audioURL: URL,
         settings: AppSettings
     ) async throws -> PreparedDraft {
+        if PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settings) {
+            do {
+                let transcription = try await transcribeWithPersonalOpenAI(
+                    at: audioURL,
+                    settings: settings,
+                    activation: .direct
+                )
+                return try await prepareDraft(
+                    from: transcription,
+                    primarySettings: settings
+                )
+            } catch {
+                if ProviderRetryPolicy.isCancellation(error) {
+                    throw CancellationError()
+                }
+                usageSnapshot.recordTranscriptionFailure()
+                saveUsageSnapshot()
+                throw error
+            }
+        }
+
         let keyLoadStartedAt = ContinuousClock.now
         let apiKey = try loadAPIKeyForDictation()
         recordDiagnostic("api key loaded in \(elapsedMilliseconds(since: keyLoadStartedAt)) ms")
@@ -1718,7 +1793,8 @@ final class AppState: ObservableObject {
                     transcript: result.transcript,
                     settings: result.winningRole == .primary ? primarySettings : fallbackSettings,
                     apiKey: apiKey,
-                    usedPersonalOpenAI: false
+                    usedPersonalOpenAI: false,
+                    personalOpenAIWasAutomaticFallback: false
                 )
             } catch {
                 if ProviderRetryPolicy.isCancellation(error) {
@@ -1731,45 +1807,10 @@ final class AppState: ObservableObject {
                 }
                 try Task.checkCancellation()
 
-                let personalAPIKey = try loadPersonalOpenAIFallbackAPIKeyForDictation()
-                guard !personalAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    throw ProviderError.missingPersonalOpenAIAPIKey
-                }
-
-                var configuredPersonalSettings = PersonalOpenAIFallbackPolicy.settings(derivedFrom: settings)
-                configuredPersonalSettings.providerConfiguration.timeoutSeconds = ProjectDefaults.transcriptionOverallTimeoutSeconds
-                let personalSettings = configuredPersonalSettings
-                status = "Trying personal OpenAI"
-                lastResult = "Primary provider was unreachable. Sending audio to api.openai.com."
-                recordDiagnostic(
-                    "personal openai transcription fallback started after \(diagnosticErrorCategory(error))"
-                )
-                let transcript = try await fallbackTranscriptionProvider.transcribe(
-                    TranscriptionRequest(
-                        audioURL: audioURL,
-                        settings: personalSettings,
-                        apiKey: personalAPIKey,
-                        onEvent: { [weak self] event in
-                            await self?.handleProviderEvent(
-                                event,
-                                stage: "transcription personal openai",
-                                settings: personalSettings
-                            )
-                        }
-                    )
-                )
-                warningMessage = combinedWarning(
-                    warningMessage,
-                    "Personal OpenAI fallback was used for this dictation."
-                )
-                lastFailureCategory = "None"
-                recordDiagnostic("personal openai transcription fallback succeeded: \(transcript.count) characters")
-                try Task.checkCancellation()
-                return TranscriptionOutcome(
-                    transcript: transcript,
-                    settings: personalSettings,
-                    apiKey: personalAPIKey,
-                    usedPersonalOpenAI: true
+                return try await transcribeWithPersonalOpenAI(
+                    at: audioURL,
+                    settings: settings,
+                    activation: .automaticFallback(after: diagnosticErrorCategory(error))
                 )
             }
         } catch {
@@ -1781,6 +1822,73 @@ final class AppState: ObservableObject {
             saveUsageSnapshot()
             throw error
         }
+    }
+
+    private enum PersonalOpenAIActivation {
+        case direct
+        case automaticFallback(after: String)
+    }
+
+    private func transcribeWithPersonalOpenAI(
+        at audioURL: URL,
+        settings: AppSettings,
+        activation: PersonalOpenAIActivation
+    ) async throws -> TranscriptionOutcome {
+        try Task.checkCancellation()
+        let personalAPIKey = try loadPersonalOpenAIFallbackAPIKeyForDictation()
+        guard !personalAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw ProviderError.missingPersonalOpenAIAPIKey
+        }
+
+        var configuredPersonalSettings = PersonalOpenAIFallbackPolicy.settings(derivedFrom: settings)
+        configuredPersonalSettings.providerConfiguration.timeoutSeconds = ProjectDefaults.transcriptionOverallTimeoutSeconds
+        let personalSettings = configuredPersonalSettings
+        usesPersonalOpenAIForCurrentOperation = true
+        status = "Trying personal OpenAI"
+
+        let wasAutomaticFallback: Bool
+        switch activation {
+        case .direct:
+            wasAutomaticFallback = false
+            lastResult = "Personal OpenAI mode is active. Sending audio directly to api.openai.com."
+            recordDiagnostic("personal openai direct transcription started")
+        case let .automaticFallback(category):
+            wasAutomaticFallback = true
+            lastResult = "Primary provider was unreachable. Sending audio to api.openai.com."
+            recordDiagnostic("personal openai transcription fallback started after \(category)")
+        }
+
+        let transcript = try await fallbackTranscriptionProvider.transcribe(
+            TranscriptionRequest(
+                audioURL: audioURL,
+                settings: personalSettings,
+                apiKey: personalAPIKey,
+                onEvent: { [weak self] event in
+                    await self?.handleProviderEvent(
+                        event,
+                        stage: "transcription personal openai",
+                        settings: personalSettings
+                    )
+                }
+            )
+        )
+
+        if wasAutomaticFallback {
+            warningMessage = combinedWarning(
+                warningMessage,
+                "Personal OpenAI fallback was used for this dictation."
+            )
+        }
+        lastFailureCategory = "None"
+        recordDiagnostic("personal openai transcription succeeded: \(transcript.count) characters")
+        try Task.checkCancellation()
+        return TranscriptionOutcome(
+            transcript: transcript,
+            settings: personalSettings,
+            apiKey: personalAPIKey,
+            usedPersonalOpenAI: true,
+            personalOpenAIWasAutomaticFallback: wasAutomaticFallback
+        )
     }
 
     private func prepareDraft(
@@ -1817,7 +1925,7 @@ final class AppState: ObservableObject {
                 stage: transcription.usedPersonalOpenAI ? "cleanup personal openai" : "cleanup primary"
             )
             warningMessage = dictionaryWarning
-            if transcription.usedPersonalOpenAI {
+            if transcription.personalOpenAIWasAutomaticFallback {
                 warningMessage = combinedWarning(
                     warningMessage,
                     "Personal OpenAI fallback was used for this dictation."
@@ -1851,6 +1959,7 @@ final class AppState: ObservableObject {
                         throw ProviderError.missingPersonalOpenAIAPIKey
                     }
                     let personalSettings = PersonalOpenAIFallbackPolicy.settings(derivedFrom: primarySettings)
+                    usesPersonalOpenAIForCurrentOperation = true
                     status = "Trying personal OpenAI"
                     recordDiagnostic(
                         "personal openai cleanup fallback started after \(diagnosticErrorCategory(error))"
@@ -1888,7 +1997,7 @@ final class AppState: ObservableObject {
             }
 
             warningMessage = "Cleanup failed; using raw transcript. \(finalCleanupError.localizedDescription)"
-            if transcription.usedPersonalOpenAI || personalCleanupFallbackAttempted {
+            if transcription.personalOpenAIWasAutomaticFallback || personalCleanupFallbackAttempted {
                 warningMessage = combinedWarning(
                     warningMessage,
                     "Personal OpenAI fallback was used during this dictation."
@@ -2088,6 +2197,8 @@ final class AppState: ObservableObject {
 
     private func performRecoveryRetry(_ recording: DictationRecoveryRecording) async {
         isProcessing = true
+        usesPersonalOpenAIForCurrentOperation = PersonalOpenAIFallbackPolicy
+            .shouldUsePersonalOpenAIDirectly(appSettings)
         activeRecoveryRecording = recording
         status = "Retrying saved recording"
         errorMessage = nil
@@ -2154,6 +2265,7 @@ final class AppState: ObservableObject {
 
         activeRecoveryRecording = nil
         isProcessing = false
+        usesPersonalOpenAIForCurrentOperation = false
         completeDiagnosticOperation()
         notifyStateChanged()
     }

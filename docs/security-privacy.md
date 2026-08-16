@@ -73,6 +73,12 @@ there. Other HTTP responses, authentication/configuration failures, rate limits,
 model errors, malformed responses, and empty output fail closed without cross-
 account fallback.
 
+The separately applied `Use personal OpenAI now` mode intentionally routes all
+new dictations directly to the fixed personal profile without contacting the
+work provider. Its purple HUD treatment and Settings mode/destination remain
+visible before audio is sent. The setting persists until explicitly disabled;
+the app must not infer weekends, schedules, or provider mode automatically.
+
 Remote providers must use HTTPS. Plain HTTP is limited to loopback development endpoints, and base URLs must not embed credentials, query parameters, or fragments. API keys belong in Keychain.
 
 When cleanup is enabled, personal dictionary entries are included in the cleanup request as context. They are explicit user-maintained hints, not inferred transcript history.
@@ -101,6 +107,9 @@ Default logs may include timestamps, state names, durations, provider labels, co
   shows the fixed destination, cross-account disclosure, and possible personal
   API charges before Apply. The personal request is sequential and never joins
   the primary/Mini hedge.
+- While direct-personal mode is applied, every new dictation sends audio and
+  enabled cleanup/dictionary context to the personal account and may incur
+  personal charges. No work-provider request is made for that dictation.
 
 ## Accessibility Risks
 

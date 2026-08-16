@@ -21,6 +21,9 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Personal OpenAI fallback defaults off, persists only after explicit Apply,
   keeps independent key-presence markers, derives the fixed official endpoint
   with standard model routing, and uses the separately supplied key.
+- Direct-personal mode defaults off, cannot remain enabled when fallback is off,
+  persists across restart, selects the fixed personal profile without a primary
+  request, and returns to primary-first behavior after Apply turns it off.
 - Personal fallback error policy accepts HTTP 502/503/504 plus connection
   watchdog/transport failures and rejects other HTTP, authentication/
   configuration, malformed-response, and empty-output failures.
@@ -70,6 +73,10 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Personal fallback is visibly disabled/enabled, shows its fixed transcription
   and cleanup destinations and separate Keychain state, and discloses the work-
   content/cost boundary before Apply.
+- Provider mode switches are visible without scrolling at the default Settings
+  size. Applied direct-personal mode shows the personal destination in General
+  readiness and a purple, icon-and-accessibility-labeled HUD throughout
+  recording and processing.
 - Edited provider values are visibly inactive until `Apply Settings` succeeds; the saved destination remains truthful.
 - All five Settings tabs fit at the minimum window size; long destinations and paths wrap or compress inside their rows, and scrolling does not move the Apply footer.
 - General Settings readiness truthfully reflects microphone, Accessibility, API-key, active-provider, and launch-at-login state; approval-required login items offer a direct route to System Settings.

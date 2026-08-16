@@ -122,7 +122,7 @@ private struct SettingsGeneralPane: View {
                     value: appState.personalOpenAIFallbackReadinessSummary
                 )
                 LabeledContent("Launch at login", value: appState.launchAtLoginStatusSummary)
-                AppLongValue(label: "Provider", value: appState.providerDestinationSummary)
+                AppLongValue(label: "Active provider", value: appState.activeProviderDestinationSummary)
 
                 if appState.microphonePermissionStatus != .authorized
                     || appState.accessibilityPermissionStatus != .trusted
@@ -201,6 +201,12 @@ private struct SettingsProviderPane: View {
                         value: appState.personalOpenAIFallbackDestinationSummary
                     )
                 }
+                LabeledContent(
+                    "Applied provider mode",
+                    value: appState.isPersonalOpenAIDirectModeApplied
+                        ? "Personal OpenAI now"
+                        : "Primary first"
+                )
 
                 if appState.hasUnsavedConfigurationChanges {
                     AppLongValue(
@@ -214,6 +220,29 @@ private struct SettingsProviderPane: View {
                         isPending: true
                     )
                 }
+            }
+
+            Section("Provider Mode") {
+                Toggle(
+                    "Enable personal OpenAI fallback",
+                    isOn: Binding(
+                        get: { appState.personalOpenAIFallbackEnabled },
+                        set: { appState.setPersonalOpenAIFallbackEnabledDraft($0) }
+                    )
+                )
+                Toggle(
+                    "Use personal OpenAI now (skip primary)",
+                    isOn: Binding(
+                        get: { appState.personalOpenAIDirectModeEnabled },
+                        set: { appState.setPersonalOpenAIDirectModeEnabledDraft($0) }
+                    )
+                )
+                .disabled(!appState.personalOpenAIFallbackEnabled)
+                Text(appState.personalOpenAIDirectModeEnabled
+                    ? "After Apply, every new dictation goes directly to personal OpenAI. LiteLLM and its Mini hedge are skipped. The HUD turns purple while this mode is active."
+                    : "Leave this off for primary-first behavior with automatic personal fallback only after an eligible outage.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Connection") {
@@ -271,10 +300,6 @@ private struct SettingsProviderPane: View {
             }
 
             Section("Personal OpenAI Fallback") {
-                Toggle(
-                    "Use personal OpenAI when primary is unreachable",
-                    isOn: $appState.personalOpenAIFallbackEnabled
-                )
                 AppLongValue(
                     label: "Transcription",
                     value: appState.personalOpenAIFallbackDestinationSummary

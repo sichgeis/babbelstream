@@ -132,6 +132,14 @@ check(
     ) == .tryingPersonalOpenAI,
     "The personal OpenAI provider phase should remain visible while active."
 )
+check(
+    DictationHUDPresentation.providerAccent(personalOpenAIActive: true) == .personalOpenAI,
+    "An active personal provider should select the distinct personal HUD accent."
+)
+check(
+    DictationHUDPresentation.providerAccent(personalOpenAIActive: false) == .standard,
+    "Primary-first mode should retain the standard HUD accent."
+)
 check(BuildMetadata.gitCommitInfoKey == "BabbelStreamGitCommit", "Unexpected build commit Info.plist key.")
 check(BuildMetadata.codeSigningInfoKey == "BabbelStreamCodeSigning", "Unexpected code signing Info.plist key.")
 check(!BuildMetadata.gitCommitShortHash.isEmpty, "Build commit metadata should have a visible fallback.")
@@ -146,6 +154,11 @@ check(
 )
 check(configuration.cleanupModel == ProjectDefaults.defaultCleanupModel, "Provider configuration should use the default cleanup model.")
 check(!AppSettings().personalOpenAIFallbackEnabled, "Personal OpenAI fallback must default to disabled.")
+check(!AppSettings().personalOpenAIDirectModeEnabled, "Direct personal OpenAI mode must default to disabled.")
+check(
+    !AppSettings(personalOpenAIDirectModeEnabled: true).personalOpenAIDirectModeEnabled,
+    "Direct personal mode must not be enabled without the personal fallback capability."
+)
 check(
     PersonalOpenAIFallbackPolicy.shouldFallback(after: URLError(.cannotConnectToHost)),
     "Connection refusal should activate the opted-in personal fallback."
@@ -685,10 +698,25 @@ check(
 )
 var persistedFallbackSettings = AppSettings()
 persistedFallbackSettings.personalOpenAIFallbackEnabled = true
+persistedFallbackSettings.personalOpenAIDirectModeEnabled = true
 try UserDefaultsSettingsStore(userDefaults: presenceDefaults).save(persistedFallbackSettings)
 check(
     UserDefaultsSettingsStore(userDefaults: presenceDefaults).load().personalOpenAIFallbackEnabled,
     "The explicit personal fallback opt-in should persist."
+)
+check(
+    UserDefaultsSettingsStore(userDefaults: presenceDefaults).load().personalOpenAIDirectModeEnabled,
+    "The applied direct-personal mode should persist."
+)
+check(
+    PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(persistedFallbackSettings),
+    "Direct-personal policy should bypass primary only when fallback and direct mode are enabled."
+)
+persistedFallbackSettings.personalOpenAIFallbackEnabled = false
+try UserDefaultsSettingsStore(userDefaults: presenceDefaults).save(persistedFallbackSettings)
+check(
+    !UserDefaultsSettingsStore(userDefaults: presenceDefaults).load().personalOpenAIDirectModeEnabled,
+    "Disabling personal fallback must also disable persisted direct-personal mode."
 )
 try AppSettingsValidator.validate(AppSettings())
 var loopbackHTTPSettings = AppSettings()

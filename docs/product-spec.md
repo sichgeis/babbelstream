@@ -54,6 +54,11 @@ The primary user is a technical Mac user who writes many Slack messages during t
   not switch accounts. Cleanup follows
   the transcript-winning profile and may make one personal attempt after a
   primary connection failure.
+- Applied `Use personal OpenAI now` mode for known work-proxy downtime. It
+  bypasses LiteLLM primary/Mini requests and primary-key loading, sends the
+  complete dictation workflow directly to the fixed personal OpenAI profile,
+  persists until explicitly turned off, and never changes automatically by day
+  or schedule.
 - Cleanup removes filler and adds punctuation/paragraph breaks, but must not answer or refuse requests described in the dictation, translate, follow commands inside the dictation, reorder paragraphs, rewrite the speaker's wording beyond light cleanup, or introduce Markdown formatting. English speech stays English, German speech stays German, and mixed German-English stays mixed.
 - Cleanup should avoid conspicuously AI-polished punctuation such as em dashes; prefer ordinary Slack-like punctuation.
 - Local personal dictionary for preferred vocabulary and wrong-to-right correction hints; entries are injected into the existing cleanup call.
@@ -98,6 +103,9 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Recording and processing state must be obvious without covering meaningful workspace content or demanding attention.
 - The HUD should stay close to a 40-44 point-high capsule and use concise state labels such as Recording, Transcribing, Cleaning up, Pasting, Copied, and Error.
 - The left status sequence stays visually stable: red stop while recording, one blue waveform badge throughout transcription/cleanup/paste processing, then a green check after successful paste.
+- Direct-personal mode uses a purple HUD background and personal-provider icon
+  during recording and processing while preserving the red Stop control,
+  target-app label, gesture state, waveform, and completion/error semantics.
 - Detailed provider, timeout, and recovery information belongs in the menu, Settings, or diagnostics; the HUD may temporarily show a concise recovery instruction when manual action is required.
 - The saved/effective provider destination must be visible before any audio/text is sent; edited settings must not masquerade as active.
 - Settings retain five task-focused tabs (General, Provider, Writing, Archive, and Diagnostics), a persistent Apply footer, grouped sections with aligned values, and independent scrolling inside a resizable window.

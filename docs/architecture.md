@@ -72,6 +72,7 @@ Provider settings should include:
 - Base URL.
 - API key reference in Keychain.
 - Optional personal OpenAI fallback opt-in and separate Keychain key presence.
+- Persisted direct-personal mode, valid only when personal fallback is enabled.
 - Transcription endpoint path.
 - Cleanup endpoint path.
 - Primary transcription model selected from `gpt-transcribe`,
@@ -103,6 +104,13 @@ unavailable HTTP 502, 503, and 504 also qualify; other HTTP and content errors d
 not. Cleanup uses the transcript-winning profile, or makes one personal cleanup
 attempt after an eligible primary cleanup failure. Provider labels in the local
 archive reflect the profiles actually used.
+
+Direct-personal mode is evaluated from the same immutable settings snapshot
+captured before recording. When active, coordination skips primary-key loading
+and the entire primary/Mini hedge, performs one personal transcription request,
+and keeps enabled cleanup on the derived personal settings/key. The HUD receives
+an explicit current-operation personal-provider signal so applying Settings
+during an in-flight dictation cannot change that dictation's color or routing.
 
 Remote provider URLs must use HTTPS. Plain HTTP is accepted only for loopback development endpoints. Base URLs with embedded credentials, query parameters, or fragments are rejected so the effective destinations remain inspectable and diagnostics-safe.
 

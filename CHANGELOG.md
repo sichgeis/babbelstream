@@ -9,6 +9,9 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
   sequential bounded requests, visible activation, and a narrow policy covering
   transport failures plus HTTP 502/503/504 while excluding credential, rate-
   limit, other HTTP, model, and response errors.
+- Add an applied direct-personal switch for known proxy downtime. It skips the
+  work primary/Mini phase and uses a purple, personal-provider-labeled HUD during
+  recording and processing.
 
 - Move the preferred transcription model from `gpt-4o-transcribe` to
   `gpt-transcribe`, including migration of the former default and the new
