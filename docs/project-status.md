@@ -6,7 +6,7 @@ by their dedicated specifications.
 
 ## Current Release
 
-- Latest release: `0.4.1` (`v0.4.1`)
+- Latest release: `0.4.2` (`v0.4.2`)
 - Supported workflow: hybrid tap-for-hands-free and hold-for-push-to-talk
   dictation into Slack and other focused macOS text fields.
 - Canonical validation: `task check`.
@@ -25,6 +25,7 @@ by their dedicated specifications.
 - Completed launch-at-login migration recovery evidence:
   `docs/runs/archive/launch-at-login-migration-fix.md`.
 - Completed maintenance evidence: `docs/runs/archive/maintenance-v0.4.1.md`.
+- Source-release evidence: `docs/runs/archive/release-v0.4.2.md`.
 - Completed run evidence is retained under `docs/runs/archive/`.
 
 ## Known Limitations

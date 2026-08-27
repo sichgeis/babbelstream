@@ -4,6 +4,8 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+## 0.4.2 - 2026-08-27
+
 - Add an explicit, disabled-by-default personal OpenAI fallback for work-proxy
   reachability failures, with a separate Keychain key, fixed official endpoint,
   sequential bounded requests, visible activation, and a narrow policy covering
@@ -12,7 +14,6 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 - Add an applied direct-personal switch for known proxy downtime. It skips the
   work primary/Mini phase and uses a purple, personal-provider-labeled HUD during
   recording and processing.
-
 - Move the preferred transcription model from `gpt-4o-transcribe` to
   `gpt-transcribe`, including migration of the former default and the new
   model's `languages[]` request field while preserving the bounded Mini hedge.
