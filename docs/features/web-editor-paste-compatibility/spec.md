@@ -4,7 +4,8 @@
 
 - State: Implemented
 - Owner: Christian
-- Last approved: 2026-08-27 conversation authorization ("Do it")
+- Last approved: 2026-08-27 implementation authorization and successful ChatGPT
+  macOS composer smoke test
 - Related ADRs/issues: none
 
 ## Problem
@@ -139,10 +140,9 @@ while native fields retain direct Accessibility insertion when supported.
 
 - Product decision approved by: Christian, 2026-08-27.
 - Agent autonomy envelope: implement, test, commit/push feature branch, package,
-  and install a local release candidate.
-- Must stop before: merging/pushing `main` or creating a final release tag.
+  install, finalize release `0.4.3`, push `main`, and create/push the release tag.
+- Must stop before: public binary publication or notarized distribution.
 
 ## Open Questions
 
-- None for implementation. The real ChatGPT composer remains a human smoke-test
-  target because Computer Use cannot operate that protected app surface.
+- None. The protected ChatGPT composer was validated successfully by the user.

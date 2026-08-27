@@ -13,13 +13,14 @@ path.
 - Base pushed: yes (`origin/main` matched)
 - Working tree: clean
 - Implementation branch: `codex/web-editor-paste-compatibility`
-- Version/release target: local `0.4.2` feature-branch candidate; no final tag
+- Version/release target: `0.4.3` (`v0.4.3`)
 
 ## Authority And Gates
 
 - Approved spec: `docs/features/web-editor-paste-compatibility/spec.md` (Approved)
-- Agent may proceed through: implementation, feature push, candidate install
-- Required human gates: ChatGPT macOS composer smoke test before main/tag
+- Agent may proceed through: implementation, feature push, candidate install,
+  `main`/tag push, and final local installation
+- Required human gates: satisfied; ChatGPT macOS composer smoke test passed
 - External systems/data explicitly authorized: harmless local/browser UI probes;
   no real message submission
 
@@ -71,17 +72,19 @@ path.
 
 ### 3. Validate And Install Candidate
 
-- Status: In progress
+- Status: Completed
 - [x] Run `task check`
 - [x] Review diff and privacy boundaries
 - [x] Commit and push feature branch
 - [x] Package, install, launch, and verify candidate
 - [x] Exercise a harmless live Chrome web-field paste path
+- [x] Complete the real ChatGPT macOS composer dictation smoke test
 - Evidence: implementation commit `60b10a2` pushed; DMG verification passed;
   `/Applications/BabbelStream.app` runs version `0.4.2`, commit `60b10a2`;
   Computer Use pasted `BabbelStream candidate paste check` into the focused
   YouTube search field without submission, then removed it and closed the
-  temporary tab.
+  temporary tab. Christian confirmed the real ChatGPT dictation appeared as an
+  unsent draft on 2026-08-27.
 
 ## Validation Matrix
 
@@ -90,7 +93,7 @@ path.
 | Canonical checks | Passed | Passed | `task check`: behavior checks passed |
 | Focused checks | Existing target guard passed | Passed | `TextInsertionStrategyPolicy` coverage in `BabbelStreamChecks` |
 | Build/package | Existing v0.4.2 installed | Passed | verified DMG; candidate `0.4.2` / `60b10a2` running from `/Applications` |
-| Manual smoke | Failure reproduced by user | Partial | Chrome clipboard path passed; ChatGPT real dictation pending |
+| Manual smoke | Failure reproduced by user | Passed | Chrome clipboard path and real ChatGPT unsent-draft dictation passed |
 | Diff/privacy review | Clean baseline | Passed | `git diff --check`; no data, permission, provider, or retention change |
 | Clean tree | Clean | Passed at candidate build | clean `60b10a2` before packaging |
 
@@ -107,19 +110,17 @@ path.
 
 ## Current Blocker
 
-The ChatGPT/Codex composer is protected from Computer Use, so its real dictation
-smoke test requires the user.
+None.
 
 ## Next Action
 
-Dictate one harmless phrase into the ChatGPT macOS composer and confirm that it
-appears as an unsent draft.
+Build, install, and verify the versioned `0.4.3` release candidate.
 
 ## Closeout
 
-- [ ] Durable specs match shipped behavior.
-- [ ] Validation evidence is complete and truthful.
-- [ ] Human smoke gate passed or was explicitly waived.
+- [x] Durable specs match shipped behavior.
+- [x] Validation evidence is complete and truthful through the smoke gate.
+- [x] Human smoke gate passed.
 - [ ] Main/tag/deployment match the approved release level.
 - [ ] Working tree is clean.
 - [ ] Tracker moved from active to archive.

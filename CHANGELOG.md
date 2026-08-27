@@ -4,6 +4,8 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+## 0.4.3 - 2026-08-27
+
 - Prefer clipboard plus Command+V over direct Accessibility selected-text writes
   in ChatGPT/Codex, Chrome-family browsers, and Arc so web-backed editors receive
   the draft through their normal editing path.
