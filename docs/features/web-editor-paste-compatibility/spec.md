@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Implemented
+- State: Released in `0.4.3`
 - Owner: Christian
 - Last approved: 2026-08-27 implementation authorization and successful ChatGPT
   macOS composer smoke test

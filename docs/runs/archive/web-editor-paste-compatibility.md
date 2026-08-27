@@ -2,9 +2,8 @@
 
 ## Outcome
 
-Deliver and locally install a validated candidate that pastes reliably into
-known web-backed editors by preferring the existing clipboard plus Command+V
-path.
+Release and locally install a validated build that pastes reliably into known
+web-backed editors by preferring the existing clipboard plus Command+V path.
 
 ## Baseline
 
@@ -17,7 +16,7 @@ path.
 
 ## Authority And Gates
 
-- Approved spec: `docs/features/web-editor-paste-compatibility/spec.md` (Approved)
+- Approved spec: `docs/features/web-editor-paste-compatibility/spec.md` (Released)
 - Agent may proceed through: implementation, feature push, candidate install,
   `main`/tag push, and final local installation
 - Required human gates: satisfied; ChatGPT macOS composer smoke test passed
@@ -32,10 +31,11 @@ path.
   identities.
 - Update focused checks and durable insertion/test documentation.
 
-## Non-Goals
+## Feature Non-Goals
 
-- No DOM/browser extension integration, new permissions, new dependencies,
-  auto-send behavior, `main` merge, or release tag.
+- No DOM/browser extension integration, new permissions, new dependencies, or
+  auto-send behavior. Release publication followed only after the separate
+  human smoke-test approval.
 
 ## Risks And Dependencies
 
@@ -79,8 +79,9 @@ path.
 - [x] Package, install, launch, and verify candidate
 - [x] Exercise a harmless live Chrome web-field paste path
 - [x] Complete the real ChatGPT macOS composer dictation smoke test
-- Evidence: implementation commit `60b10a2` pushed; DMG verification passed;
-  `/Applications/BabbelStream.app` runs version `0.4.2`, commit `60b10a2`;
+- Evidence: implementation commit `60b10a2` and release-preparation commit
+  `46f2075` pushed; versioned candidate DMG verification passed;
+  `/Applications/BabbelStream.app` ran version `0.4.3`, commit `46f2075`;
   Computer Use pasted `BabbelStream candidate paste check` into the focused
   YouTube search field without submission, then removed it and closed the
   temporary tab. Christian confirmed the real ChatGPT dictation appeared as an
@@ -90,37 +91,43 @@ path.
 
 | Check | Baseline | Current/final | Evidence |
 | --- | --- | --- | --- |
-| Canonical checks | Passed | Passed | `task check`: behavior checks passed |
+| Canonical checks | Passed | Passed at candidate; final rebuild blocked by local toolchain mismatch | `task check`: behavior checks passed before candidate packaging; final rerun found Swift 6.3.3 paired with a Swift 6.3.2 SDK, while the already-built behavior suite still passed with the normal system temp path |
 | Focused checks | Existing target guard passed | Passed | `TextInsertionStrategyPolicy` coverage in `BabbelStreamChecks` |
-| Build/package | Existing v0.4.2 installed | Passed | verified DMG; candidate `0.4.2` / `60b10a2` running from `/Applications` |
+| Build/package | Existing v0.4.2 installed | Passed | verified DMG; versioned candidate `0.4.3` / `46f2075` running from `/Applications` |
 | Manual smoke | Failure reproduced by user | Passed | Chrome clipboard path and real ChatGPT unsent-draft dictation passed |
 | Diff/privacy review | Clean baseline | Passed | `git diff --check`; no data, permission, provider, or retention change |
-| Clean tree | Clean | Passed at candidate build | clean `60b10a2` before packaging |
+| Clean tree | Clean | Passed at candidate build | clean `46f2075` before packaging |
 
 ## Release Evidence
 
-- Release commit: `60b10a2` (feature candidate)
-- Main commit: not authorized
-- Annotated tag: not authorized
-- Artifact/checksum: `dist/BabbelStream-0.4.2.dmg`,
-  `b9bdb8f230234df825c288f0fe76e76fc7e3db15ff7152b2848243f8eb92343b`
-- Installed/deployed version and commit: `0.4.2`, `60b10a2`
+- Release commit: commit referenced by `v0.4.3`
+- Main commit: same commit as `v0.4.3`
+- Annotated tag: `v0.4.3`
+- Versioned candidate artifact/checksum: `dist/BabbelStream-0.4.3.dmg`,
+  `2be187f86dcc5bcb5d4b30b07a9a83da24d35ab9dbac2e9c66a71d03e4d1326e`
+- Installed/deployed version and commit: validated candidate `0.4.3`, `46f2075`;
+  source behavior matches the final release commit, which changes only release
+  documentation after candidate packaging
 - Running/health verification: PID resolved to
   `/Applications/BabbelStream.app/Contents/MacOS/BabbelStream`
 
 ## Current Blocker
 
-None.
+Fresh builds are temporarily blocked by the locally mismatched Apple Swift
+compiler and SDK. This does not block publication of the already built, checked,
+and smoke-tested `0.4.3` candidate.
 
 ## Next Action
 
-Build, install, and verify the versioned `0.4.3` release candidate.
+None. The feature is released; remaining project candidates live in
+`docs/implementation-plan.md`.
 
 ## Closeout
 
 - [x] Durable specs match shipped behavior.
-- [x] Validation evidence is complete and truthful through the smoke gate.
+- [x] Validation evidence is complete and truthful.
 - [x] Human smoke gate passed.
-- [ ] Main/tag/deployment match the approved release level.
-- [ ] Working tree is clean.
-- [ ] Tracker moved from active to archive.
+- [x] Main/tag and the installed app version match the approved release level;
+  the installed build metadata remains the validated candidate commit.
+- [x] Working tree is clean at publication.
+- [x] Tracker moved from active to archive.
