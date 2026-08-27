@@ -59,5 +59,5 @@ recorded.
 
 ## Next Action
 
-Smoke-test one harmless dictation in the ChatGPT macOS composer using installed
-candidate `0.4.2` / `60b10a2` and report whether the unsent draft appears.
+Build and install the versioned `0.4.3` candidate, then finalize `main` and the
+annotated release tag from the validated feature branch.
