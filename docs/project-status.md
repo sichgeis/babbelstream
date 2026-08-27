@@ -59,5 +59,5 @@ recorded.
 
 ## Next Action
 
-Commit, package, and install the validated web-editor paste compatibility
-candidate for real-field smoke testing.
+Smoke-test one harmless dictation in the ChatGPT macOS composer using installed
+candidate `0.4.2` / `60b10a2` and report whether the unsent draft appears.

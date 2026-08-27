@@ -74,10 +74,14 @@ path.
 - Status: In progress
 - [x] Run `task check`
 - [x] Review diff and privacy boundaries
-- [ ] Commit and push feature branch
-- [ ] Package, install, launch, and verify candidate
-- [ ] Exercise a harmless live Chrome web-field paste path
-- Evidence: Pending
+- [x] Commit and push feature branch
+- [x] Package, install, launch, and verify candidate
+- [x] Exercise a harmless live Chrome web-field paste path
+- Evidence: implementation commit `60b10a2` pushed; DMG verification passed;
+  `/Applications/BabbelStream.app` runs version `0.4.2`, commit `60b10a2`;
+  Computer Use pasted `BabbelStream candidate paste check` into the focused
+  YouTube search field without submission, then removed it and closed the
+  temporary tab.
 
 ## Validation Matrix
 
@@ -85,27 +89,31 @@ path.
 | --- | --- | --- | --- |
 | Canonical checks | Passed | Passed | `task check`: behavior checks passed |
 | Focused checks | Existing target guard passed | Passed | `TextInsertionStrategyPolicy` coverage in `BabbelStreamChecks` |
-| Build/package | Existing v0.4.2 installed | Pending | package output/checksum |
-| Manual smoke | Failure reproduced by user | Pending | Chrome automation + ChatGPT human test |
+| Build/package | Existing v0.4.2 installed | Passed | verified DMG; candidate `0.4.2` / `60b10a2` running from `/Applications` |
+| Manual smoke | Failure reproduced by user | Partial | Chrome clipboard path passed; ChatGPT real dictation pending |
 | Diff/privacy review | Clean baseline | Passed | `git diff --check`; no data, permission, provider, or retention change |
-| Clean tree | Clean | Pending | `git status --short --branch` |
+| Clean tree | Clean | Passed at candidate build | clean `60b10a2` before packaging |
 
 ## Release Evidence
 
-- Release commit: pending feature commit
+- Release commit: `60b10a2` (feature candidate)
 - Main commit: not authorized
 - Annotated tag: not authorized
-- Artifact/checksum: pending
-- Installed/deployed version and commit: pending
-- Running/health verification: pending
+- Artifact/checksum: `dist/BabbelStream-0.4.2.dmg`,
+  `b9bdb8f230234df825c288f0fe76e76fc7e3db15ff7152b2848243f8eb92343b`
+- Installed/deployed version and commit: `0.4.2`, `60b10a2`
+- Running/health verification: PID resolved to
+  `/Applications/BabbelStream.app/Contents/MacOS/BabbelStream`
 
 ## Current Blocker
 
-None.
+The ChatGPT/Codex composer is protected from Computer Use, so its real dictation
+smoke test requires the user.
 
 ## Next Action
 
-Commit and push the validated feature milestone.
+Dictate one harmless phrase into the ChatGPT macOS composer and confirm that it
+appears as an unsent draft.
 
 ## Closeout
 
