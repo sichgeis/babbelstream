@@ -24,9 +24,10 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
   feature-branch push
 - Required human gates: real LiteLLM/personal OpenAI smoke test; merge/push
   `main`; release/tag/publication. Local release-candidate installation was
-  authorized on 2026-08-16.
-- External systems/data authorized: GitHub feature-branch push only; no real
-  provider requests or private credentials
+  authorized on 2026-08-16. Christian explicitly authorized integration and
+  push to `main` on 2026-08-27; the real-provider smoke test remains pending.
+- External systems/data authorized: GitHub feature-branch and `main` push; no
+  real provider requests or private credentials
 
 ## Accepted Scope
 
@@ -118,11 +119,24 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
 - [x] Validate, push, rebuild, and
   install the revised release candidate.
 
+### 7. Main Integration
+
+- Status: Completed
+- [x] Confirm GitHub has no open pull requests.
+- [x] Confirm every older remote feature branch is an ancestor of the personal
+  fallback branch.
+- [x] Re-run the existing behavior-check executable successfully; record that a
+  fresh build is temporarily unavailable because the installed Swift compiler
+  and SDK versions do not match.
+- [x] Fast-forward and push `main` after explicit authorization.
+- [x] Archive this implementation tracker.
+
 ## Validation Matrix
 
 | Check | Baseline | Current/final | Evidence |
 | --- | --- | --- | --- |
-| Canonical checks | Passed | Passed | `task check` with normal developer cache access |
+| Canonical checks | Passed | Previously passed; fresh rebuild unavailable | `task check` passed for the feature build; the 2026-08-27 rerun was blocked before compilation by Swift 6.3.3 / SDK 6.3.2 mismatch |
+| Existing behavior-check executable | N/A | Passed | `BabbelStream behavior checks passed.` on 2026-08-27 |
 | Focused policy/settings checks | N/A | Passed | Defaults/persistence, direct-mode implication/routing policy, independent markers, fixed official settings/request, eligible/ineligible failures, HUD phase/accent |
 | Settings visual QA | N/A | Passed | Default-size Provider pane shows both provider-mode switches and applied mode without scrolling; screenshot: `/private/tmp/babbelstream-direct-mode-screenshots/provider-mode-switches.png` |
 | Manual provider smoke | Not run | Human gate | No real credentials/content authorized |
@@ -132,7 +146,9 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
 
 ## Current Blocker
 
-None.
+- A fresh Swift build requires a repaired/matching Apple Command Line Tools
+  compiler and SDK. This does not invalidate the previously built and checked
+  feature code, but it must be resolved before the next release build.
 
 ## Release-Candidate Evidence
 
@@ -150,13 +166,14 @@ None.
 
 ## Next Action
 
-Run the expanded real-provider matrix with synthetic/non-confidential dictation,
-then authorize merge to `main` if it passes.
+Repair or update the Apple Command Line Tools, then run the expanded
+real-provider matrix with synthetic/non-confidential dictation on `main`.
 
 ## Closeout
 
 - [x] Durable specs match implemented behavior.
 - [x] Automated validation evidence is complete and truthful.
-- [ ] Human smoke gate passed or explicitly deferred.
+- [ ] Human real-provider smoke test completed; integration proceeded under the
+  user's explicit 2026-08-27 authorization while this test remains pending.
 - [x] Feature branch pushed with a clean working tree.
-- [ ] Tracker moved to archive after authorized integration or explicit closeout.
+- [x] Tracker moved to archive after authorized integration.

@@ -15,11 +15,12 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active feature: Personal OpenAI fallback.
-- Active feature spec: `docs/features/personal-openai-fallback/spec.md`.
-- Active run tracker: `docs/runs/active/personal-openai-fallback.md`.
+- No feature implementation is currently active.
+- Latest integrated feature: Personal OpenAI fallback and direct-personal mode.
+- Completed run evidence:
+  `docs/runs/archive/personal-openai-fallback.md`.
 - GPT Transcribe implementation evidence, with its remaining real-provider
-  matrix transferred to the active fallback feature, is archived at
+  matrix retained in the completed fallback evidence, is archived at
   `docs/runs/archive/gpt-transcribe.md`.
 - Completed launch-at-login migration recovery evidence:
   `docs/runs/archive/launch-at-login-migration-fix.md`.
@@ -32,9 +33,13 @@ by their dedicated specifications.
   official OpenAI API requires bare model IDs. Provider Settings now persists
   this per-installation routing choice; other proxy namespace conventions still
   require a compatible proxy alias.
-- Personal OpenAI automatic fallback plus the follow-up direct-personal mode and
-  purple HUD are installed from feature commit `9ae158c`. The expanded real-
-  provider matrix and merge to `main` remain pending.
+- Personal OpenAI automatic fallback plus direct-personal mode and the purple
+  HUD are integrated on `main`. The expanded real-provider matrix remains
+  pending.
+- A fresh local Swift build is temporarily blocked by a Command Line Tools
+  compiler/SDK version mismatch. The last feature build passed `task check`,
+  and its existing behavior-check executable was rerun successfully before
+  integration.
 - Coordinator behavior coupled to AppKit, Accessibility, Keychain, microphone
   permission, Carbon event delivery, and application termination remains in the
   manual validation matrix because the current Command Line Tools environment
@@ -52,4 +57,4 @@ recorded.
 ## Next Action
 
 Run the expanded synthetic real-provider matrix for automatic and direct-
-personal modes before authorizing merge to `main`.
+personal modes on the integrated `main` build.
