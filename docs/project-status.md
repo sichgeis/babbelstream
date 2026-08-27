@@ -15,7 +15,9 @@ by their dedicated specifications.
 
 ## Active Work
 
-- No feature implementation is currently active.
+- Active feature: Web editor paste compatibility.
+- Active feature spec: `docs/features/web-editor-paste-compatibility/spec.md`.
+- Active run tracker: `docs/runs/active/web-editor-paste-compatibility.md`.
 - Latest integrated feature: Personal OpenAI fallback and direct-personal mode.
 - Completed run evidence:
   `docs/runs/archive/personal-openai-fallback.md`.
@@ -57,5 +59,5 @@ recorded.
 
 ## Next Action
 
-Run the expanded synthetic real-provider matrix for automatic and direct-
-personal modes on the integrated `main` build.
+Commit, package, and install the validated web-editor paste compatibility
+candidate for real-field smoke testing.

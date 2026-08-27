@@ -73,6 +73,41 @@ public enum TextInsertionTargetPolicy {
     }
 }
 
+public enum TextInsertionStrategyPolicy {
+    public static func prefersPasteShortcut(forBundleIdentifier bundleIdentifier: String?) -> Bool {
+        guard let bundleIdentifier = normalized(bundleIdentifier) else {
+            return false
+        }
+
+        return clipboardPreferredBundleIdentifiers.contains(bundleIdentifier)
+            || bundleIdentifier == chromeBundleIdentifierPrefix
+            || bundleIdentifier.hasPrefix("\(chromeBundleIdentifierPrefix).")
+    }
+
+    private static func normalized(_ bundleIdentifier: String?) -> String? {
+        guard let normalized = bundleIdentifier?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased(),
+            !normalized.isEmpty
+        else {
+            return nil
+        }
+
+        return normalized
+    }
+
+    private static let chromeBundleIdentifierPrefix = "com.google.chrome"
+
+    private static let clipboardPreferredBundleIdentifiers: Set<String> = [
+        "com.apple.mail",
+        "com.microsoft.outlook",
+        "com.openai.chat",
+        "com.openai.chatgpt",
+        "com.openai.codex",
+        "company.thebrowser.browser"
+    ]
+}
+
 public enum AccessibilityPermissionStatus: String, Equatable, Sendable {
     case trusted
     case notTrusted
@@ -229,11 +264,9 @@ public final class ClipboardTextInsertionService: TextInsertionService {
     }
 
     private func shouldSkipDirectAccessibilityInsertion(for target: TextInsertionTarget?) -> Bool {
-        guard let bundleIdentifier = target?.bundleIdentifier?.lowercased() else {
-            return false
-        }
-
-        return Self.richEmailEditorBundleIdentifiers.contains(bundleIdentifier)
+        TextInsertionStrategyPolicy.prefersPasteShortcut(
+            forBundleIdentifier: target?.bundleIdentifier
+        )
     }
 
     private func postPasteShortcut() async -> Bool {
@@ -258,9 +291,4 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         let nanoseconds = UInt64(max(seconds, 0) * 1_000_000_000)
         try? await Task.sleep(nanoseconds: nanoseconds)
     }
-
-    private static let richEmailEditorBundleIdentifiers: Set<String> = [
-        "com.apple.mail",
-        "com.microsoft.outlook"
-    ]
 }

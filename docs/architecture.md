@@ -2,7 +2,7 @@
 
 ## Recommended Architecture
 
-BabbelStream is a native macOS menu-bar app with an AppKit status item, SwiftUI settings, and a small core layer for testable logic. The MVP uses native macOS APIs before adding dependencies: AVFoundation for audio recording, Carbon for the global hotkey, URLSession for provider calls, Security/Keychain for secrets, Accessibility for direct insertion where possible, and NSPasteboard plus synthetic Cmd+V as a fallback.
+BabbelStream is a native macOS menu-bar app with an AppKit status item, SwiftUI settings, and a small core layer for testable logic. The MVP uses native macOS APIs before adding dependencies: AVFoundation for audio recording, Carbon for the global hotkey, URLSession for provider calls, Security/Keychain for secrets, Accessibility for direct insertion where reliable, and NSPasteboard plus synthetic Cmd+V for known web-backed editors and as a fallback.
 
 ## Alternatives Considered
 
@@ -54,7 +54,7 @@ This boundary keeps lifecycle and UI wiring out of the dictation flow without in
 7. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
 8. `CleanupProvider` lightly formats the transcript when cleanup is enabled, using dictionary context in the same model call.
 9. Usage counters are updated locally for dictation attempts, recorded duration, cleanup requests, transcription failures, and cleanup fallbacks.
-10. `TextInsertionService` inserts only if the captured application remains frontmost, using that application's currently focused Accessibility element or a clipboard plus Cmd+V fallback. It never steals focus back from a different app. If the active application changed, the final draft is copied and the HUD instructs the user to paste manually.
+10. `TextInsertionService` inserts only if the captured application remains frontmost. A pure strategy policy routes known web-backed editors and rich email editors through clipboard plus Cmd+V because a successful Accessibility write can still be ignored by their internal editor state; other targets use the currently focused Accessibility element first and retain the same clipboard fallback. It never steals focus back from a different app. If the active application changed, the final draft is copied and the HUD instructs the user to paste manually.
 11. If the optional local archive is enabled, `DictationArchiveStore` appends a text-only entry for completed dictations with the final draft, word counts, provider labels, cleanup state, and insertion outcome. Raw transcript text is stored only when a separate raw-transcript archive setting is enabled. Archive write failures are surfaced but must not undo paste or block access to the final draft.
 12. The app keeps the latest successful raw/final draft in memory for copy/retry and does not discard it merely because a later attempt starts or fails.
 13. Recovery retry always uses current saved settings and copies the result to the clipboard rather than auto-pasting into the historical target.
@@ -166,7 +166,7 @@ The archive should use local daily JSONL text files instead of a database for th
 
 ## Paste Insertion Approach
 
-Capture the intended application's process identifier at hotkey press. At insertion time, require that same process to remain frontmost and use its currently focused Accessibility element. This application-level guard is intentional: VS Code, Codex, and other reactive editors do not expose a stable AX field identity across processing. If the user moves between fields inside the same application, the field focused at paste time receives the draft. Fall back to NSPasteboard and simulated Cmd+V only while the captured application remains frontmost. If another application becomes active, do not reactivate the old app: leave the final text on the clipboard and explain the manual paste recovery in the HUD.
+Capture the intended application's process identifier at hotkey press. At insertion time, require that same process to remain frontmost and use its currently focused element. This application-level guard is intentional: VS Code, ChatGPT/Codex, and other reactive editors do not expose a stable AX field identity across processing. If the user moves between fields inside the same application, the field focused at paste time receives the draft. Prefer NSPasteboard and simulated Cmd+V for known web-backed and rich-editor application bundles; use direct Accessibility selected-text insertion first for other targets and fall back to the same paste path when unsupported. Recheck the frontmost application after clipboard preparation. If another application becomes active, do not reactivate the old app: leave the final text on the clipboard and explain the manual paste recovery in the HUD.
 
 ## Settings And Secrets
 

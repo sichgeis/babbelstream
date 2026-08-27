@@ -514,6 +514,46 @@ check(
     !TextInsertionTargetPolicy.applicationMatches(nil, frontmostProcessIdentifier: 1234),
     "Insertion should be blocked when no target was captured."
 )
+for bundleIdentifier in [
+    "com.apple.mail",
+    "com.microsoft.Outlook",
+    "com.openai.chat",
+    "com.openai.chatgpt",
+    "com.openai.codex",
+    "com.google.Chrome",
+    "com.google.Chrome.canary",
+    "company.thebrowser.Browser"
+] {
+    check(
+        TextInsertionStrategyPolicy.prefersPasteShortcut(
+            forBundleIdentifier: bundleIdentifier
+        ),
+        "Known web-backed and rich-editor targets should prefer clipboard paste: \(bundleIdentifier)."
+    )
+}
+check(
+    TextInsertionStrategyPolicy.prefersPasteShortcut(
+        forBundleIdentifier: "  COM.GOOGLE.CHROME.BETA  "
+    ),
+    "Clipboard-preferred bundle matching should normalize case and whitespace."
+)
+for bundleIdentifier in [
+    "com.tinyspeck.slackmacgap",
+    "com.apple.TextEdit",
+    "com.microsoft.VSCode",
+    "com.google.Chromecast"
+] {
+    check(
+        !TextInsertionStrategyPolicy.prefersPasteShortcut(
+            forBundleIdentifier: bundleIdentifier
+        ),
+        "Native and unrelated targets should retain direct-first insertion: \(bundleIdentifier)."
+    )
+}
+check(
+    !TextInsertionStrategyPolicy.prefersPasteShortcut(forBundleIdentifier: nil),
+    "A missing bundle identifier should retain direct-first insertion."
+)
 let launchAtLoginCheckRoot = FileManager.default.temporaryDirectory
     .appendingPathComponent("BabbelStreamLaunchAtLoginChecks-\(UUID().uuidString)", isDirectory: true)
 let legacyLaunchAgentURL = launchAtLoginCheckRoot.appendingPathComponent("legacy.plist")

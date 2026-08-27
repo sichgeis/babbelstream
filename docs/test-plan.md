@@ -33,6 +33,9 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Privacy-safe diagnostics redaction.
 - Temp-file deletion policy.
 - Text insertion result handling behind an adapter.
+- Clipboard-preferred insertion routing for Mail, Outlook, ChatGPT/Codex,
+  Chrome-family, and Arc bundle identities, including case/channel normalization;
+  Slack, native, unknown, and missing bundle identities remain direct-first.
 - Hybrid hotkey release classification below, at, and above the 0.5-second threshold.
 - Keychain wrapper behavior with an in-memory fake.
 - Startup does not read either Keychain secret; primary and personal-key
@@ -66,6 +69,8 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Successful paste feedback disappears quickly; Copied and Error feedback remain visible longer, while full provider, timeout, fallback, and recovery details remain available from the menu and copyable diagnostics.
 - The capsule remains correctly positioned on normal and full-screen Spaces and does not steal focus when shown or clicked.
 - Dictation pastes into the currently focused field in native Mail and in reactive editors such as VS Code and Codex.
+- ChatGPT/Codex, Chrome page fields, and Arc page fields receive drafts through
+  clipboard plus Cmd+V rather than a direct Accessibility selected-text write.
 - Moving focus to another field inside the same app directs the draft to that current field; switching to another application blocks auto-paste and leaves the draft on the clipboard.
 - Escape cancels while recording and processing but behaves normally after the operation ends.
 - Cleanup can be toggled.
@@ -109,6 +114,14 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Chrome, Safari, or the user's default browser.
 - Main composer and thread composer.
 - Clipboard fallback leaves the final draft available for manual Cmd+V when automatic paste cannot be confirmed.
+
+## ChatGPT And Web Editor Cases
+
+- ChatGPT macOS composer receives an unsent draft through the paste-shortcut path.
+- Chrome and Arc page editors receive an unsent/unsubmitted test draft.
+- Chrome-family channel bundle suffixes retain the same routing.
+- Native browser chrome such as the address bar still accepts the paste-shortcut
+  path when its application bundle is clipboard-preferred.
 
 ## Email Compose Cases
 
