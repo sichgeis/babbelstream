@@ -4,6 +4,10 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+- Prefer clipboard plus Command+V over direct Accessibility selected-text writes
+  in ChatGPT/Codex, Chrome-family browsers, and Arc so web-backed editors receive
+  the draft through their normal editing path.
+
 ## 0.4.2 - 2026-08-27
 
 - Add an explicit, disabled-by-default personal OpenAI fallback for work-proxy

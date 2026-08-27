@@ -53,7 +53,7 @@
 
 ## Clipboard Implications
 
-Clipboard fallback places work text on the system clipboard. Direct Accessibility insertion should avoid clipboard writes when the focused element supports it. Automatic insertion is allowed only while the captured application remains frontmost, but the field focused at completion may differ from the field focused at recording start. This explicit tradeoff supports VS Code, Codex, and other reactive editors that do not expose stable field identity. Switching to another application fails closed: the draft is copied without reactivating the original app. When the app uses synthetic Cmd+V, paste success cannot be confirmed reliably across all targets, so the final text remains on the clipboard with a visible HUD message.
+Clipboard insertion places work text on the system clipboard. Direct Accessibility insertion avoids clipboard writes for native and unknown targets when the focused element supports it, while known web-backed and rich-editor applications prefer clipboard plus synthetic Cmd+V because their Accessibility bridge may report success without updating internal editor state. Automatic insertion is allowed only while the captured application remains frontmost, but the field focused at completion may differ from the field focused at recording start. This explicit tradeoff supports VS Code, ChatGPT/Codex, and other reactive editors that do not expose stable field identity. Switching to another application fails closed: the draft is copied without reactivating the original app. Paste success cannot be confirmed reliably across all targets, so the final text remains on the clipboard with a visible HUD message.
 
 ## Network Destinations
 
