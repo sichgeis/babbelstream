@@ -6,7 +6,7 @@ by their dedicated specifications.
 
 ## Current Release
 
-- Latest release: `0.4.2` (`v0.4.2`)
+- Latest release: `0.4.3` (`v0.4.3`)
 - Supported workflow: hybrid tap-for-hands-free and hold-for-push-to-talk
   dictation into Slack and other focused macOS text fields.
 - Canonical validation: `task check`.
@@ -15,10 +15,12 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active feature: Web editor paste compatibility.
-- Active feature spec: `docs/features/web-editor-paste-compatibility/spec.md`.
-- Active run tracker: `docs/runs/active/web-editor-paste-compatibility.md`.
-- Latest integrated feature: Personal OpenAI fallback and direct-personal mode.
+- No feature implementation is currently active.
+- Latest integrated feature: Web editor paste compatibility.
+- Completed web-editor compatibility evidence:
+  `docs/runs/archive/web-editor-paste-compatibility.md`.
+- Previously integrated feature: Personal OpenAI fallback and direct-personal
+  mode.
 - Completed run evidence:
   `docs/runs/archive/personal-openai-fallback.md`.
 - GPT Transcribe implementation evidence, with its remaining real-provider
@@ -39,10 +41,10 @@ by their dedicated specifications.
 - Personal OpenAI automatic fallback plus direct-personal mode and the purple
   HUD are integrated on `main`. The expanded real-provider matrix remains
   pending.
-- A fresh local Swift build is temporarily blocked by a Command Line Tools
-  compiler/SDK version mismatch. The last feature build passed `task check`,
-  and its existing behavior-check executable was rerun successfully before
-  integration.
+- The installed Command Line Tools currently pair Swift `6.3.3` with an SDK
+  built by Swift `6.3.2`, so fresh SwiftPM builds are blocked until Apple ships
+  or installs a matching toolchain. The `0.4.3` candidate was built and passed
+  `task check` immediately before this mismatch appeared.
 - Coordinator behavior coupled to AppKit, Accessibility, Keychain, microphone
   permission, Carbon event delivery, and application termination remains in the
   manual validation matrix because the current Command Line Tools environment
@@ -59,5 +61,5 @@ recorded.
 
 ## Next Action
 
-Build and install the versioned `0.4.3` candidate, then finalize `main` and the
-annotated release tag from the validated feature branch.
+Run the expanded synthetic real-provider matrix for automatic and direct-
+personal modes on the integrated `main` build.
