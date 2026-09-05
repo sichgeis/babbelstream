@@ -8,6 +8,7 @@ public enum DictationArchiveInsertionOutcome: String, Codable, Equatable, Sendab
     case copiedAfterPasteShortcutFailure
     case copiedAfterPasteFailure
     case memoryOnlyAfterPasteFailure
+    case clipboardChanged
 
     public var displayName: String {
         switch self {
@@ -23,6 +24,8 @@ public enum DictationArchiveInsertionOutcome: String, Codable, Equatable, Sendab
             "Copied after paste shortcut failure"
         case .copiedAfterPasteFailure:
             "Copied after paste failure"
+        case .clipboardChanged:
+            "Clipboard changed; draft available in memory"
         case .memoryOnlyAfterPasteFailure:
             "Memory only after paste failure"
         }

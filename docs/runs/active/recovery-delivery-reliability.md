@@ -43,8 +43,8 @@ New providers, permissions, dependencies, telemetry, product features, public di
 
 1. Approved contract and baseline: Completed.
 2. Recovery ownership and deletion reporting: Completed.
-3. Clipboard delivery guard: In progress.
-4. Workflow checks and durable documentation: Pending.
+3. Clipboard delivery guard: Completed.
+4. Workflow checks and durable documentation: In progress.
 5. 0.4.4 candidate and handoff: Pending.
 
 ## Validation Matrix
@@ -68,7 +68,7 @@ None.
 
 ## Next Action
 
-Implement clipboard ownership validation and fake event checks.
+Make AppState executable-check accessible and add fake-driven workflow regressions.
 
 ## Closeout
 
@@ -80,3 +80,9 @@ Pending implementation, verification, candidate, and human smoke.
 - Restart discovery, unavailable destination warning, partial adoption identity, export, source protection, marker permissions, and delete-all checks pass.
 - Recovery retry deletion reporting now uses an explicit outcome; full coordinator regressions follow in stage 4.
 - Normal recording stop persists a user-only sidecar before relinquishing audio; stop-marker failure keeps Stop/Cancel available.
+
+## Clipboard Milestone Evidence
+
+- `task check` passed with fake clipboard/event scenarios: normal paste, replacement, focus change, cancellation, and direct insertion.
+- Newer clipboard contents remain untouched; HUD and archive have an explicit clipboard-changed outcome.
+- No real clipboard access or key events were used by these checks.

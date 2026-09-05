@@ -846,6 +846,7 @@ check(usageTracker.load() == UsageSnapshot(), "Usage counters should reset local
 try runArchiveChecks()
 try runRecoveryStoreChecks()
 try runRecoveryOwnershipChecks()
+try await runInsertionWorkflowChecks()
 let diagnosticsText = PrivacyDiagnosticsBuilder.redactSecrets(
     in: "api key: sk-testSecret123456789 Authorization: Bearer secret-token"
 )

@@ -2457,6 +2457,13 @@ final class AppState: ObservableObject {
             )
             recordDiagnostic("paste prevented: target application changed")
             return .copiedBecauseTargetChanged
+        case .clipboardChanged:
+            status = "Copy Last Draft"
+            lastResult = "Clipboard changed before paste. Use Copy Last Draft, then paste manually."
+            errorMessage = nil
+            warningMessage = combinedWarning(priorWarning, "BabbelStream preserved the newer clipboard contents and did not auto-paste.")
+            recordDiagnostic("paste prevented: clipboard changed")
+            return .clipboardChanged
         case .copiedAfterPasteShortcutFailure:
             status = "Copied"
             lastResult = "Draft copied to clipboard after paste shortcut failed."
