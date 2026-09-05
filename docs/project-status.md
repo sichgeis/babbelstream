@@ -15,11 +15,12 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Signal paste compatibility: smoke approved on 2026-09-05; final packaging/install in progress.
+- No active implementation. Signal paste compatibility released after successful human smoke on 2026-09-05.
+- Installed/running final release: `0.4.5` / `069acc3`; version, signature, and executable verified.
 - Spec: `docs/features/signal-paste-compatibility/spec.md`.
-- Tracker: `docs/runs/active/signal-paste-compatibility.md`.
+- Tracker: `docs/runs/archive/signal-paste-compatibility.md`.
 - Completed reliability evidence: `docs/runs/archive/recovery-delivery-reliability.md`.
-- Latest integrated feature: Web editor paste compatibility.
+- Latest integrated feature: Signal paste compatibility.
 - Completed web-editor compatibility evidence:
   `docs/runs/archive/web-editor-paste-compatibility.md`.
 - Previously integrated feature: Personal OpenAI fallback and direct-personal
@@ -61,4 +62,4 @@ recorded.
 
 ## Next Action
 
-Complete the smoke-approved 0.4.5 final packaging and installation.
+Select the next compatibility feature contract from the unapproved candidates in `docs/implementation-plan.md`.
