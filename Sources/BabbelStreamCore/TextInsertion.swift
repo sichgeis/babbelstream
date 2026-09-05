@@ -8,6 +8,7 @@ public enum TextInsertionResult: Equatable, Sendable {
     case copiedForManualPaste
     case copiedBecauseTargetChanged
     case copiedAfterPasteShortcutFailure
+    case clipboardChanged
 }
 
 public enum TextInsertionError: Error, Equatable, LocalizedError, Sendable {
@@ -123,8 +124,79 @@ public enum AccessibilityPermissionStatus: String, Equatable, Sendable {
 }
 
 @MainActor
+public protocol TextInsertionEnvironment: AnyObject {
+    var clipboardChangeCount: Int { get }
+    func accessibilityPermissionStatus() -> AccessibilityPermissionStatus
+    func requestAccessibilityPermission()
+    func captureTarget() -> TextInsertionTarget?
+    func insertDirectlyIntoFocusedElement(_ text: String, target: TextInsertionTarget?) -> Bool
+    func writeToClipboard(_ text: String) throws -> Int
+    func waitForPastePreparation() async throws
+    func postPasteShortcut() async -> Bool
+}
+
+@MainActor
 public final class ClipboardTextInsertionService: TextInsertionService {
+    private let environment: any TextInsertionEnvironment
+
+    public init(pasteboard: NSPasteboard = .general) {
+        environment = MacOSTextInsertionEnvironment(pasteboard: pasteboard)
+    }
+
+    public init(environment: any TextInsertionEnvironment) {
+        self.environment = environment
+    }
+
+    public func accessibilityPermissionStatus() -> AccessibilityPermissionStatus {
+        environment.accessibilityPermissionStatus()
+    }
+
+    public func requestAccessibilityPermission() { environment.requestAccessibilityPermission() }
+    public func captureTarget() -> TextInsertionTarget? { environment.captureTarget() }
+
+    public func insertText(_ text: String, target: TextInsertionTarget?) async throws -> TextInsertionResult {
+        try Task.checkCancellation()
+        let insertionText = try TextInsertionPayload.validated(text)
+        guard accessibilityPermissionStatus() == .trusted else {
+            _ = try environment.writeToClipboard(insertionText)
+            return .copiedForManualPaste
+        }
+        guard targetIsStillFocused(target) else {
+            _ = try environment.writeToClipboard(insertionText)
+            return .copiedBecauseTargetChanged
+        }
+        if !TextInsertionStrategyPolicy.prefersPasteShortcut(forBundleIdentifier: target?.bundleIdentifier),
+           environment.insertDirectlyIntoFocusedElement(insertionText, target: target) {
+            return .insertedDirectly
+        }
+        let writtenChangeCount = try environment.writeToClipboard(insertionText)
+        try await environment.waitForPastePreparation()
+        try Task.checkCancellation()
+        // Prefer this outcome if both clipboard and application changed: the draft
+        // is no longer on the clipboard, so a "Copied" instruction would be false.
+        guard environment.clipboardChangeCount == writtenChangeCount else { return .clipboardChanged }
+        guard targetIsStillFocused(target) else { return .copiedBecauseTargetChanged }
+        guard await environment.postPasteShortcut() else { return .copiedAfterPasteShortcutFailure }
+        return .pasteShortcutPosted
+    }
+
+    public func copyText(_ text: String) throws {
+        _ = try environment.writeToClipboard(TextInsertionPayload.validated(text))
+    }
+
+    private func targetIsStillFocused(_ target: TextInsertionTarget?) -> Bool {
+        TextInsertionTargetPolicy.applicationMatches(target, frontmostProcessIdentifier: environment.captureTarget()?.processIdentifier)
+    }
+}
+
+@MainActor
+private final class MacOSTextInsertionEnvironment: TextInsertionEnvironment {
     private let pasteboard: NSPasteboard
+    var clipboardChangeCount: Int { pasteboard.changeCount }
+
+    func waitForPastePreparation() async throws {
+        try await Task.sleep(nanoseconds: 150_000_000)
+    }
 
     public init(
         pasteboard: NSPasteboard = .general
@@ -155,52 +227,7 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         )
     }
 
-    public func insertText(_ text: String, target: TextInsertionTarget?) async throws -> TextInsertionResult {
-        try Task.checkCancellation()
-        let insertionText = try TextInsertionPayload.validated(text)
-
-        guard accessibilityPermissionStatus() == .trusted else {
-            _ = try writeToClipboard(insertionText)
-            return .copiedForManualPaste
-        }
-
-        guard targetIsStillFocused(target) else {
-            try Task.checkCancellation()
-            _ = try writeToClipboard(insertionText)
-            return .copiedBecauseTargetChanged
-        }
-
-        try Task.checkCancellation()
-        if !shouldSkipDirectAccessibilityInsertion(for: target),
-           insertDirectlyIntoFocusedElement(insertionText, target: target) {
-            return .insertedDirectly
-        }
-
-        _ = try writeToClipboard(insertionText)
-        guard targetIsStillFocused(target) else {
-            try Task.checkCancellation()
-            return .copiedBecauseTargetChanged
-        }
-        await sleep(seconds: 0.15)
-        try Task.checkCancellation()
-        guard targetIsStillFocused(target) else {
-            return .copiedBecauseTargetChanged
-        }
-
-        guard await postPasteShortcut() else {
-            return .copiedAfterPasteShortcutFailure
-        }
-
-        return .pasteShortcutPosted
-    }
-
-    public func copyText(_ text: String) throws {
-        let insertionText = try TextInsertionPayload.validated(text)
-
-        _ = try writeToClipboard(insertionText)
-    }
-
-    private func writeToClipboard(_ text: String) throws -> Int {
+    func writeToClipboard(_ text: String) throws -> Int {
         pasteboard.clearContents()
         guard pasteboard.setString(text, forType: .string) else {
             throw TextInsertionError.pasteboardUnavailable
@@ -237,7 +264,7 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         return (focusedElement as! AXUIElement)
     }
 
-    private func insertDirectlyIntoFocusedElement(_ text: String, target: TextInsertionTarget?) -> Bool {
+    func insertDirectlyIntoFocusedElement(_ text: String, target: TextInsertionTarget?) -> Bool {
         guard targetIsStillFocused(target),
               let focusedElement = currentFocusedElement()
         else {
@@ -263,13 +290,7 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         return setResult == .success
     }
 
-    private func shouldSkipDirectAccessibilityInsertion(for target: TextInsertionTarget?) -> Bool {
-        TextInsertionStrategyPolicy.prefersPasteShortcut(
-            forBundleIdentifier: target?.bundleIdentifier
-        )
-    }
-
-    private func postPasteShortcut() async -> Bool {
+    func postPasteShortcut() async -> Bool {
         let keyCodeForV: CGKeyCode = 9
         let source = CGEventSource(stateID: .hidSystemState)
         let keyDown = CGEvent(keyboardEventSource: source, virtualKey: keyCodeForV, keyDown: true)

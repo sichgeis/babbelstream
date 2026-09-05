@@ -46,6 +46,10 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 
 The executable suite injects copy, metadata-permission, and source-deletion failures. It verifies restart discovery, stale-cleanup exclusion, export retention, stable identity across partial adoption, reuse of the completed copy, damaged marker recovery, user-only marker permissions, and explicit deletion of pending sources. Tests use isolated temporary fixtures.
 
+### Clipboard Workflow Regression Checks
+
+Fake clipboard/event checks cover unchanged clipboard (one paste), clipboard replacement (no paste or second write), application switching, cancellation during preparation, direct native insertion without clipboard writes, and Copy Last Draft HUD mapping. Native AX and event delivery remain manual checks.
+
 ## Integration Tests
 
 - Mock transcription endpoint request shape, standard/prefixed wire model IDs,

@@ -16,6 +16,7 @@ public enum DictationHUDPhase: Equatable, Sendable {
     case canceling
     case processing
     case copied
+    case draftAvailable
     case recordingSaved
     case error
     case canceled
@@ -42,6 +43,8 @@ public enum DictationHUDPhase: Equatable, Sendable {
             "Canceling"
         case .processing:
             "Processing"
+        case .draftAvailable:
+            "Copy Last Draft"
         case .copied:
             "Copied"
         case .recordingSaved:
@@ -95,6 +98,8 @@ public enum DictationHUDPresentation {
                 return .processing
             }
         }
+
+        if status == "Copy Last Draft" { return .draftAvailable }
 
         if status == "Copied" {
             return .copied

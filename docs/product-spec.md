@@ -89,6 +89,8 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 Stopped audio whose safe-storage adoption failed appears in Failed Recordings as Waiting for safe storage. It survives app stale cleanup and can be retried, exported, or explicitly deleted. Retry first completes adoption; it never submits an unsafeguarded source. A failed stop-ownership write keeps Stop and Cancel available instead of discarding recorder ownership. Recovery retry reports copied-but-retained when audio deletion fails and preserves the warning.
 
+If the clipboard changes during automatic paste preparation, the HUD says Copy Last Draft. BabbelStream preserves the newer clipboard and keeps the prepared draft in memory for explicit copying; it does not claim that the draft was copied or pasted.
+
 ## V1 Scope
 
 - Optional local dictation archive for work usage review: when explicitly enabled, store text-only dictation entries locally so the user can inspect daily/monthly content, count spoken words, and later generate monthly topic summaries.

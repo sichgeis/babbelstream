@@ -332,7 +332,7 @@ private struct DictationStatusHUDView: View {
 
     private var completionIcon: String {
         switch hudPhase {
-        case .copied:
+        case .copied, .draftAvailable:
             return "doc.on.doc.fill"
         case .error, .recordingSaved:
             return "exclamationmark.triangle.fill"
@@ -345,7 +345,7 @@ private struct DictationStatusHUDView: View {
 
     private var completionColor: Color {
         switch hudPhase {
-        case .copied:
+        case .copied, .draftAvailable:
             return .orange
         case .error, .recordingSaved:
             return .red

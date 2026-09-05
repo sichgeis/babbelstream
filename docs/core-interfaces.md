@@ -38,7 +38,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 - Responsibility: capture the intended application, insert into its currently focused Accessibility element when possible, and use clipboard plus synthetic Cmd+V only while that captured application remains frontmost.
 - Input: final text and captured target application.
-- Output: insertion result, including an explicit copy-only recovery outcome when the active application changed.
+- Output: insertion result, including an explicit copy-only recovery outcome when the active application changed and `clipboardChanged` when the newer clipboard must be preserved. The latter retains the draft in memory and posts no paste event.
 - Errors: missing Accessibility permission, clipboard unavailable, paste event failed, no captured application, or changed active application.
 - Test strategy: unit-test the application-level target policy and insertion result handling behind an adapter; manually verify behavior in Slack, VS Code, Codex, browsers, and native text fields, including switching applications during processing.
 

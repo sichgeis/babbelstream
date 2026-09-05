@@ -170,6 +170,8 @@ The archive should use local daily JSONL text files instead of a database for th
 
 Capture the intended application's process identifier at hotkey press. At insertion time, require that same process to remain frontmost and use its currently focused element. This application-level guard is intentional: VS Code, ChatGPT/Codex, and other reactive editors do not expose a stable AX field identity across processing. If the user moves between fields inside the same application, the field focused at paste time receives the draft. Prefer NSPasteboard and simulated Cmd+V for known web-backed and rich-editor application bundles; use direct Accessibility selected-text insertion first for other targets and fall back to the same paste path when unsupported. Recheck the frontmost application after clipboard preparation. If another application becomes active, do not reactivate the old app: leave the final text on the clipboard and explain the manual paste recovery in the HUD.
 
+`ClipboardTextInsertionService` owns insertion sequencing through a native `TextInsertionEnvironment` adapter. The adapter exposes clipboard version, focused target, AX insertion, preparation wait, and paste event posting, allowing deterministic checks without system clipboard access. Clipboard ownership is checked after the wait and immediately before event posting. A distinct `clipboardChanged` outcome preserves the newer clipboard and maps to the Copy Last Draft HUD and archive outcome.
+
 ## Settings And Secrets
 
 Use `UserDefaults` for non-secret settings and Keychain for API keys. Primary and
