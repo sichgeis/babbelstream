@@ -18,6 +18,7 @@ by their dedicated specifications.
 - Active release candidate: Recovery and delivery reliability (0.4.4).
 - Implementation, executable checks, fresh build, and signed local candidate are complete.
 - Candidate artifact: `dist/BabbelStream-0.4.4.dmg`, built from clean commit `de98e0a`.
+- Installed and running locally: `0.4.4` / `de98e0a` at `/Applications/BabbelStream.app` (verified 2026-09-05).
 - Final `v0.4.4` tag awaits real microphone/provider/Slack smoke approval.
 - Spec: `docs/features/recovery-delivery-reliability/spec.md`.
 - Tracker: `docs/runs/active/recovery-delivery-reliability.md`.
@@ -64,5 +65,5 @@ recorded.
 
 ## Next Action
 
-Christian installs the 0.4.4 candidate and runs the smoke checklist in
-`docs/release.md`, then reports pass/fail.
+Christian runs the smoke checklist in `docs/release.md` from step 2 using
+the installed 0.4.4 candidate, then reports pass/fail.

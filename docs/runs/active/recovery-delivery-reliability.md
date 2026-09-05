@@ -15,7 +15,7 @@ Implement the approved reliability contract and package a clean 0.4.4 candidate.
 ## Authority And Gates
 
 - Approved spec: `docs/features/recovery-delivery-reliability/spec.md`.
-- Authorized: direct main edits, ordinary commits/pushes, checks, docs, candidate packaging.
+- Authorized: direct main edits, ordinary commits/pushes, checks, docs, candidate packaging; local installation and launch explicitly requested on 2026-09-05.
 - Required gate: real microphone/provider/Slack smoke before final tag.
 - No real credentials, work content, microphone input, or user archives used in automated checks.
 
@@ -71,7 +71,8 @@ New providers, permissions, dependencies, telemetry, product features, public di
 - `hdiutil verify`: valid checksum.
 - Local signature: `BabbelStream Local Code Signing`; `codesign --verify --deep --strict` passed with normal macOS trust access. Sandboxed trust validation was unavailable, so it was rerun outside that restriction.
 - Mounted the final DMG read-only, verified the contained app reports `0.4.4` / `de98e0a` and has a valid local signature, then detached it.
-- Installed/running version: not changed or tested by this run. No real microphone, provider, Slack, or visual smoke test performed.
+- Installed via Finder replacement at `/Applications/BabbelStream.app` on 2026-09-05. Verified installed version `0.4.4`, commit `de98e0a`, valid local signature, and running executable `/Applications/BabbelStream.app/Contents/MacOS/BabbelStream` (launch PID 63169). DMG detached after installation.
+- No real microphone, provider, Slack, or visual smoke test performed; the app is ready for Christian to test.
 - Public signing/notarization/publication: outside scope; this is a local candidate.
 
 ## Current Blocker
@@ -80,7 +81,7 @@ Implementation and packaging are complete. Final tagging and release closeout aw
 
 ## Next Action
 
-Christian installs the candidate and runs the 0.4.4 smoke checklist in `docs/release.md`, then reports pass/fail.
+Christian runs the 0.4.4 smoke checklist in `docs/release.md` from step 2 using the installed and running candidate, then reports pass/fail.
 
 ## Closeout
 
