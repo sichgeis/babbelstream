@@ -66,7 +66,7 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Teach Correction flow for explicitly adding wrong-to-right hints after a bad dictation, without automatic learning or transcript history.
 - Direct Accessibility insertion into the focused text field when reliable, with
   clipboard plus Cmd+V for known web-backed editors and as the general fallback.
-  ChatGPT/Codex, Chrome-family browsers, Arc, Mail, and Outlook prefer the paste
+  Signal, ChatGPT/Codex, Chrome-family browsers, Arc, Mail, and Outlook prefer the paste
   path because a successful Accessibility selected-text write does not prove
   that a rich editor accepted the draft into its internal editing state.
 - Automatic insertion only if the captured application remains frontmost. Insert into whichever field is focused in that application when processing completes; this deliberately supports reactive editors whose Accessibility element cannot be verified reliably. If another application becomes active, copy without stealing focus.

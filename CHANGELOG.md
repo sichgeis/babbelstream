@@ -4,6 +4,11 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+## 0.4.5 - Release candidate
+
+- Prefer clipboard plus Command+V in Signal on macOS so dictation reaches its
+  rich-text composer instead of trusting an Accessibility selected-text write.
+
 ## 0.4.4 - 2026-09-05
 
 - Preserve stopped recordings when safe-storage adoption fails, rediscover them
