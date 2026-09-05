@@ -19,7 +19,7 @@ Investigate Signal draft insertion and prepare a targeted repair using the exist
 
 1. Targeted policy, fake checks, and durable docs: Completed and pushed at `dfa0a5a`.
 2. Commit/version/package/install: Completed.
-3. Human Signal smoke: Passed per Christian on 2026-09-05. Final release packaging/install: In progress.
+3. Human Signal smoke: Passed per Christian on 2026-09-05. Final release packaging/install: Completed.
 
 ## Validation
 
@@ -31,7 +31,7 @@ None. Christian confirmed successful Signal smoke; no additional live-app checks
 
 ## Next Action
 
-Tag the smoke-approved release, rebuild/install the exact final artifact, and archive this tracker.
+None; release complete. Broader input compatibility remains unapproved candidate work.
 
 ## Candidate And Installation Evidence
 
@@ -44,3 +44,14 @@ Tag the smoke-approved release, rebuild/install the exact final artifact, and ar
 - Installed via Finder at `/Applications/BabbelStream.app`; verified version, commit, signature, and running executable (PID 77537) on 2026-09-05. DMG detached afterward.
 - Christian confirmed successful Signal smoke on 2026-09-05. Manual Cmd+V was already confirmed working.
 - Release-finalization `task check`: passed on 2026-09-05.
+
+## Final Release Evidence
+
+- Annotated `v0.4.5` points to clean release commit `069acc3` on main; main/tag pushed.
+- Final production package rebuilt from that commit; hdiutil checksum verification passed.
+- Artifact: `dist/BabbelStream-0.4.5.dmg`, 929565 bytes.
+- SHA-256: `d81fa47b8e9c76833edc702ca0c2fafc14f28c5c110658ab6bc38cc8b38d9d8b`; independent hash matched sidecar.
+- Mounted read-only and verified contained app version/commit and strict/deep signature.
+- Installed via Finder, launched, and verified `/Applications/BabbelStream.app` reports 0.4.5 / 069acc3 and runs from Applications (PID 85601) on 2026-09-05. DMG detached.
+- Reviewed the complete production diff against v0.4.4: only the exact Signal routing entry changed; fixture checks and specifications accompany it. No new permissions, providers, dependencies, retention, or auto-send behavior.
+- The user confirmed Signal smoke success. No broader keyboard-layout, terminal, or remote-desktop compatibility is claimed.

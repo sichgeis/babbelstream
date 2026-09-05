@@ -73,3 +73,22 @@ These remain unsequenced until the user selects them:
   recent draft recovery, and richer live state. This offers more visual polish
   but adds interaction and focus complexity to a utility whose strongest trait
   is immediacy.
+
+## Input Compatibility Candidates (2026-09-05)
+
+Following successful Signal smoke, consider these without changing current routing:
+
+- Explicit per-application insertion overrides: Automatic, Prefer Clipboard,
+  Accessibility First, and Copy Only. Define clipboard exposure and precedence
+  over the shipped application policy in a feature contract.
+- Content-free delivery diagnostics: selected route, AX error code, application
+  match, and event-posted outcome; never record draft, clipboard, or field text.
+- Broaden native/manual coverage across native editors, browser forms and rich
+  editors, Electron apps, alternate keyboard layouts/IME, selection replacement,
+  multiline input, held modifiers, and focus changes within the same application.
+  The current paste uses physical ANSI-V keycode 9; alternate-layout behavior
+  needs measurement before choosing a different event strategy.
+- Define protected-field, terminal, and remote-desktop policies. Current target
+  validation identifies an application, not an original field. Stricter focus
+  handling needs an explicit contract compatible with unstable rich-editor AX
+  elements. Avoid blind retries after ambiguous insertion to prevent duplicates.
