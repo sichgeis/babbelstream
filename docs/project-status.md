@@ -15,7 +15,10 @@ by their dedicated specifications.
 
 ## Active Work
 
-- No feature implementation is currently active.
+- Active feature: Recovery and delivery reliability (approved 2026-09-05).
+- Spec: `docs/features/recovery-delivery-reliability/spec.md`.
+- Tracker: `docs/runs/active/recovery-delivery-reliability.md`.
+- Working directly on `main` with user authorization; target candidate: 0.4.4.
 - Latest integrated feature: Web editor paste compatibility.
 - Completed web-editor compatibility evidence:
   `docs/runs/archive/web-editor-paste-compatibility.md`.
@@ -41,10 +44,8 @@ by their dedicated specifications.
 - Personal OpenAI automatic fallback plus direct-personal mode and the purple
   HUD are integrated on `main`. The expanded real-provider matrix remains
   pending.
-- The installed Command Line Tools currently pair Swift `6.3.3` with an SDK
-  built by Swift `6.3.2`, so fresh SwiftPM builds are blocked until Apple ships
-  or installs a matching toolchain. The `0.4.3` candidate was built and passed
-  `task check` immediately before this mismatch appeared.
+- Normal-cache `task check` and a fresh app build passed on 2026-09-05;
+  the previously recorded Swift/SDK fresh-build blocker is no longer observed.
 - Coordinator behavior coupled to AppKit, Accessibility, Keychain, microphone
   permission, Carbon event delivery, and application termination remains in the
   manual validation matrix because the current Command Line Tools environment
@@ -61,5 +62,4 @@ recorded.
 
 ## Next Action
 
-Run the expanded synthetic real-provider matrix for automatic and direct-
-personal modes on the integrated `main` build.
+Implement the approved recovery ownership and delivery reliability contract.
