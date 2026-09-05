@@ -44,8 +44,8 @@ New providers, permissions, dependencies, telemetry, product features, public di
 1. Approved contract and baseline: Completed.
 2. Recovery ownership and deletion reporting: Completed.
 3. Clipboard delivery guard: Completed.
-4. Workflow checks and durable documentation: In progress.
-5. 0.4.4 candidate and handoff: Pending.
+4. Workflow checks and durable documentation: Completed.
+5. 0.4.4 candidate and handoff: In progress.
 
 ## Validation Matrix
 
@@ -68,7 +68,7 @@ None.
 
 ## Next Action
 
-Make AppState executable-check accessible and add fake-driven workflow regressions.
+Prepare version/changelog, run a fresh build, and package the clean 0.4.4 candidate.
 
 ## Closeout
 
@@ -86,3 +86,11 @@ Pending implementation, verification, candidate, and human smoke.
 - `task check` passed with fake clipboard/event scenarios: normal paste, replacement, focus change, cancellation, and direct insertion.
 - Newer clipboard contents remain untouched; HUD and archive have an explicit clipboard-changed outcome.
 - No real clipboard access or key events were used by these checks.
+
+## Coordinator Milestone Evidence
+
+- `task check` passed with actual AppState workflows imported from the application module.
+- Checked no startup secret reads; normal insertion/deletion; settings snapshots across Apply during recording/retry; cleanup fallback; recovery copy-only delivery; failed deletion warnings; adoption failures blocking providers; Stop/Cancel after stop-ownership failure; processing cancellation; clipboard copy failure; and clipboard contention with/without cleanup failure.
+- A combined cleanup/clipboard failure regression now preserves Copy Last Draft instead of claiming delivery.
+- AppRuntime isolates OS observation/logging/temp discovery; checks use isolated fixture adapters and files. No real app launch, provider request, microphone, clipboard, or Keychain access.
+- Removed obsolete in-memory temporary-audio ownership; durable ownership is authoritative across restart.

@@ -117,3 +117,10 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 - Output: redacted plain-text diagnostics suitable for sharing during debugging.
 - Errors: none; redaction must be conservative.
 - Test strategy: redaction tests for API-key-like and bearer-token-like strings.
+
+## `AppRuntime`
+
+- Responsibility: main-actor workspace target discovery/observation, privacy-safe diagnostic sink, and temporary-audio directory discovery.
+- Production: native macOS adapter, with observer cleanup on release.
+- Checks: isolated adapter with synthetic target, no OS logs/observers, and fixture-only directories. AppState's existing recorder/provider/storage/insertion protocols supply the remaining fakes.
+- The application module is importable by debug executable checks; the launcher alone starts NSApplication.

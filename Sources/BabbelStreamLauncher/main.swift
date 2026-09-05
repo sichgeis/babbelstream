@@ -1,0 +1,3 @@
+import BabbelStreamApplication
+
+BabbelStreamApplicationMain.main()

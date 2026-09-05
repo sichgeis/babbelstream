@@ -12,14 +12,14 @@ start a tracker under `docs/runs/active/`.
 
 ## Candidate Delivery Order
 
-### 1. Expand Coordinator Test Coverage
+### 1. Extend Native Integration Validation
 
-- Goal: automate more dictation coordination, cancellation, recovery ownership,
-  and application lifecycle behavior when the local toolchain exposes a suitable
-  runnable test framework.
-- Dependency: an XCTest or Swift Testing environment that works honestly with the
-  project build setup.
-- Manual coverage remains authoritative until then.
+- Actual coordinator recovery, delivery, cancellation, and settings-snapshot
+  regressions now run in the executable debug suite; they do not require XCTest.
+- Remaining opportunities: broaden hybrid startup/event-ordering coverage and
+  safely automate native event delivery when suitable platform tooling exists.
+- Real microphone, Accessibility, Carbon, Keychain, and process termination
+  retain manual coverage.
 
 ### 2. Configurable Global Hotkey
 

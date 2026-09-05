@@ -87,7 +87,7 @@ Do not allow these artifacts to contradict each other. A feature spec may refine
 - Canonical check: `task check`.
 - This Command Line Tools environment does not expose runnable XCTest or Swift Testing through SwiftPM. `BabbelStreamChecks` is the honest executable behavior suite until that changes.
 - Run checks with normal developer cache access when the Codex sandbox cannot write Swift module caches.
-- Keep pure policy and provider behavior in automated checks.
+- Keep pure policy, provider behavior, and fake-driven AppState recovery/delivery/cancellation workflows in automated checks.
 - Keep Carbon event delivery, microphone permission, Accessibility insertion, real Slack fields, signing identity, Finder installation, and visual layout in the manual/release matrix.
 - Never claim an unavailable or unrun check passed. Record the limitation and the closest valid evidence.
 

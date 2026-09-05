@@ -847,6 +847,7 @@ try runArchiveChecks()
 try runRecoveryStoreChecks()
 try runRecoveryOwnershipChecks()
 try await runInsertionWorkflowChecks()
+try await runCoordinatorWorkflowChecks()
 let diagnosticsText = PrivacyDiagnosticsBuilder.redactSecrets(
     in: "api key: sk-testSecret123456789 Authorization: Bearer secret-token"
 )

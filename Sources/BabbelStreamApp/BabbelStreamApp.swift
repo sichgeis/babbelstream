@@ -1,9 +1,8 @@
 import AppKit
 
-@main
-enum BabbelStreamMain {
+package enum BabbelStreamApplicationMain {
     @MainActor
-    static func main() {
+    package static func main() {
         let application = NSApplication.shared
         let appDelegate = AppDelegate()
         application.delegate = appDelegate
