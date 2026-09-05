@@ -4,7 +4,7 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
-## 0.4.4 - Release candidate
+## 0.4.4 - 2026-09-05
 
 - Preserve stopped recordings when safe-storage adoption fails, rediscover them
   after app restart, and allow retry/export/deletion from Failed Recordings.

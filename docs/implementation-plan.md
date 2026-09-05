@@ -47,6 +47,13 @@ start a tracker under `docs/runs/active/`.
 - Goal: provide a predictable way to discover and install later releases.
 - Dependency: the public distribution path and an approved update/security model.
 
+## Signal Paste Compatibility Investigation
+
+- Reported on 2026-09-05: dictation does not appear in the Signal macOS composer.
+- Local evidence: Signal 8.26.0 uses bundle id `org.whispersystems.signal-desktop`; its shipped `app.asar` includes a Quill composer. BabbelStream does not recognize this bundle as clipboard-preferred, so an AX selected-text success ends insertion without Cmd+V.
+- Likely fix: add the exact verified Signal bundle to the existing clipboard-preferred policy and cover it with the fake insertion workflow checks. Confirm explicit Copy Last Draft plus Cmd+V works before claiming live compatibility.
+- Broader per-app insertion overrides remain a separate product choice; do not globally switch all applications to clipboard or automatically retry after an ambiguous successful write.
+
 ## Additional Product Candidates
 
 These remain unsequenced until the user selects them:
