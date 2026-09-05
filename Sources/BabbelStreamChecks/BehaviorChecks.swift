@@ -845,6 +845,7 @@ usageTracker.reset()
 check(usageTracker.load() == UsageSnapshot(), "Usage counters should reset locally.")
 try runArchiveChecks()
 try runRecoveryStoreChecks()
+try runRecoveryOwnershipChecks()
 let diagnosticsText = PrivacyDiagnosticsBuilder.redactSecrets(
     in: "api key: sk-testSecret123456789 Authorization: Bearer secret-token"
 )
@@ -1179,7 +1180,7 @@ func runRecoveryStoreChecks() throws {
     try Data("recovery-audio-fixture".utf8).write(to: sourceURL)
     defer { try? fileManager.removeItem(at: root) }
 
-    let store = FileDictationRecoveryStore(recoveryDirectoryURL: recoveryURL)
+    let store = FileDictationRecoveryStore(recoveryDirectoryURL: recoveryURL, temporaryDirectories: [root])
     let recordedAt = Date(timeIntervalSince1970: 1_752_000_000)
     let recording = RecordedAudio(
         temporaryFileURL: sourceURL,

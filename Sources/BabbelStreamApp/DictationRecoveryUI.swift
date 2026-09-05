@@ -104,7 +104,7 @@ struct DictationRecoveryView: View {
             } label: {
                 Label("Delete All", systemImage: "trash")
             }
-            .disabled(appState.recoverySnapshot.recordings.isEmpty || appState.isProcessing)
+            .disabled(appState.recoverySnapshot.recordings.isEmpty || !appState.canStart)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -134,14 +134,14 @@ struct DictationRecoveryView: View {
                 } label: {
                     Label("Save Audio As…", systemImage: "square.and.arrow.down")
                 }
-                .disabled(appState.isProcessing)
+                .disabled(!appState.canStart)
 
                 Button(role: .destructive) {
                     confirmDelete(recording)
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
-                .disabled(appState.isProcessing)
+                .disabled(!appState.canStart)
             }
         }
     }

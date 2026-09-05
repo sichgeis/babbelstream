@@ -91,6 +91,7 @@ public enum AudioRecordingError: Error, Equatable, LocalizedError, Sendable {
     case notRecording
     case couldNotCreateTempDirectory(String)
     case couldNotStartRecording
+    case couldNotSafeguardStop
     case missingRecordingFile(URL)
     case couldNotReadRecordingMetadata(String)
     case couldNotDeleteTemporaryFile(URL, String)
@@ -105,6 +106,8 @@ public enum AudioRecordingError: Error, Equatable, LocalizedError, Sendable {
             "No recording is in progress."
         case let .couldNotCreateTempDirectory(message):
             "Could not create the temporary recording directory: \(message)"
+        case .couldNotSafeguardStop:
+            "Could not preserve stopped-audio ownership. Retry Stop or Cancel the recording."
         case .couldNotStartRecording:
             "Could not start recording."
         case let .missingRecordingFile(url):
@@ -123,6 +126,16 @@ public enum AudioTempFileStore {
             .appendingPathComponent(ProjectDefaults.audioTempDirectoryName, isDirectory: true)
     }
 
+    public static func recoverySearchDirectories() -> [URL] {
+        var directories = [temporaryDirectory()]
+        if let tempPath = ProcessInfo.processInfo.environment["TMPDIR"], !tempPath.isEmpty {
+            let directory = URL(fileURLWithPath: tempPath, isDirectory: true)
+                .appendingPathComponent(ProjectDefaults.audioTempDirectoryName, isDirectory: true)
+            if !directories.contains(directory) { directories.append(directory) }
+        }
+        return directories
+    }
+
     public static func makeTemporaryAudioURL(
         id: UUID = UUID(),
         fileManager: FileManager = .default
@@ -130,7 +143,8 @@ public enum AudioTempFileStore {
         let directory = temporaryDirectory(fileManager: fileManager)
 
         do {
-            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            try fileManager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
         } catch {
             throw AudioRecordingError.couldNotCreateTempDirectory(error.localizedDescription)
         }
@@ -150,6 +164,10 @@ public enum AudioTempFileStore {
 
         do {
             try fileManager.removeItem(at: url)
+            let marker = StoppedAudioOwnership.markerURL(for: url)
+            if fileManager.fileExists(atPath: marker.path) {
+                try fileManager.removeItem(at: marker)
+            }
             return Date()
         } catch {
             throw AudioRecordingError.couldNotDeleteTemporaryFile(url, error.localizedDescription)
@@ -177,7 +195,10 @@ public enum AudioTempFileStore {
             at: directory,
             includingPropertiesForKeys: nil
         )
-        .filter { $0.pathExtension == ProjectDefaults.audioFileExtension }
+        .filter {
+            $0.pathExtension == ProjectDefaults.audioFileExtension
+                && !fileManager.fileExists(atPath: StoppedAudioOwnership.markerURL(for: $0).path)
+        }
 
         for audioURL in audioURLs {
             _ = try deleteTemporaryAudio(at: audioURL, fileManager: fileManager)
@@ -291,9 +312,20 @@ public final class AVFoundationAudioRecorder: NSObject, AudioRecorder {
             throw AudioRecordingError.notRecording
         }
 
-        activeRecording = nil
-
         let duration = min(recording.recorder.currentTime, recording.maxDuration)
+        if !deleteTemporaryFile {
+            // Persist stop intent before releasing the recorder. A marker failure
+            // leaves the active recording available for another Stop or Cancel.
+            do {
+                _ = try StoppedAudioOwnership.mark(RecordedAudio(
+                    temporaryFileURL: recording.fileURL, duration: duration, byteCount: 0,
+                    createdAt: recording.createdAt, deletedAt: nil
+                ))
+            } catch {
+                throw AudioRecordingError.couldNotSafeguardStop
+            }
+        }
+        activeRecording = nil
 
         if recording.recorder.isRecording {
             recording.recorder.stop()
@@ -303,7 +335,9 @@ public final class AVFoundationAudioRecorder: NSObject, AudioRecorder {
         do {
             byteCount = try recordingFileSize(at: recording.fileURL)
         } catch {
-            _ = try AudioTempFileStore.deleteTemporaryAudio(at: recording.fileURL)
+            if deleteTemporaryFile {
+                _ = try AudioTempFileStore.deleteTemporaryAudio(at: recording.fileURL)
+            }
             throw error
         }
 
