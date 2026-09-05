@@ -42,8 +42,8 @@ New providers, permissions, dependencies, telemetry, product features, public di
 ## Stages
 
 1. Approved contract and baseline: Completed.
-2. Recovery ownership and deletion reporting: In progress.
-3. Clipboard delivery guard: Pending.
+2. Recovery ownership and deletion reporting: Completed.
+3. Clipboard delivery guard: In progress.
 4. Workflow checks and durable documentation: Pending.
 5. 0.4.4 candidate and handoff: Pending.
 
@@ -68,8 +68,15 @@ None.
 
 ## Next Action
 
-Implement recovery ownership and storage fault checks.
+Implement clipboard ownership validation and fake event checks.
 
 ## Closeout
 
 Pending implementation, verification, candidate, and human smoke.
+
+## Recovery Milestone Evidence
+
+- `task check` passed after recovery changes and injected copy/metadata/source-deletion faults.
+- Restart discovery, unavailable destination warning, partial adoption identity, export, source protection, marker permissions, and delete-all checks pass.
+- Recovery retry deletion reporting now uses an explicit outcome; full coordinator regressions follow in stage 4.
+- Normal recording stop persists a user-only sidecar before relinquishing audio; stop-marker failure keeps Stop/Cancel available.

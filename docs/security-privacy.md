@@ -29,6 +29,8 @@
 - Optional local archive: disabled by default. When enabled, store text-only daily JSONL files in Application Support with final draft text, word counts, timestamps, provider labels, cleanup state, insertion outcome, and optional raw transcript text only if separately enabled. Never store audio in the archive.
 - Failed recording recovery: user-only M4A and privacy-safe metadata under `Application Support/BabbelStream/Recovery`; excluded from backup where supported, never included in archive exports or diagnostics, and never silently expired.
 
+Stopped dictation awaiting adoption carries a user-only `.m4a.stopped.json` ownership marker beside its source. The marker stores only a stable id, timestamp, and duration. App stale cleanup excludes marked audio; Failed Recordings discovers it after app restart, and Retry must complete safeguarding before provider work. A stop-marker write failure retains recorder ownership and offers Stop retry or explicit Cancel. Source audio and its marker are removed after adoption, or by explicit deletion/cancellation. Operating-system removal of temporary storage is outside the app's retention guarantee.
+
 ## Failed Recording Recovery Privacy Rules
 
 - The app visibly states when a recording has been saved because processing did not complete normally.

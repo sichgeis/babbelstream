@@ -85,6 +85,10 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - The HUD uses progressive disclosure: the Mini fallback state is visible while active, but provider destinations, timeout details, and diagnostic reasons stay in the menu, Settings, and copyable diagnostics instead of crowding the everyday overlay.
 - Failed-recording recovery actions live in the menu and Failed Recordings window. The HUD remains a passive, fixed-size status indicator and shows only a concise recording-saved error state.
 
+### Recovery Ownership And Delivery Reliability
+
+Stopped audio whose safe-storage adoption failed appears in Failed Recordings as Waiting for safe storage. It survives app stale cleanup and can be retried, exported, or explicitly deleted. Retry first completes adoption; it never submits an unsafeguarded source. A failed stop-ownership write keeps Stop and Cancel available instead of discarding recorder ownership. Recovery retry reports copied-but-retained when audio deletion fails and preserves the warning.
+
 ## V1 Scope
 
 - Optional local dictation archive for work usage review: when explicitly enabled, store text-only dictation entries locally so the user can inspect daily/monthly content, count spoken words, and later generate monthly topic summaries.

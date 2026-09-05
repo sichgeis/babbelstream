@@ -42,6 +42,10 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
   presence are represented by separate non-secret markers.
 - Personal dictionary JSON round trip, text parsing, disabled-entry preservation, correction teaching/update de-duplication, cleanup prompt rendering, and prompt-size capping.
 
+### Recovery Ownership Regression Checks
+
+The executable suite injects copy, metadata-permission, and source-deletion failures. It verifies restart discovery, stale-cleanup exclusion, export retention, stable identity across partial adoption, reuse of the completed copy, damaged marker recovery, user-only marker permissions, and explicit deletion of pending sources. Tests use isolated temporary fixtures.
+
 ## Integration Tests
 
 - Mock transcription endpoint request shape, standard/prefixed wire model IDs,

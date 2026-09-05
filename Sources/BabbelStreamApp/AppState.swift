@@ -1549,7 +1549,18 @@ final class AppState: ObservableObject {
             refreshRecoveryRecordings()
             try await processRecording(safeguardedRecording, settings: settingsSnapshot, autoStopped: autoStopped)
         } catch {
+            if error as? AudioRecordingError == .couldNotSafeguardStop {
+                // The recorder still owns this file. Keep Stop/Cancel available.
+                isProcessing = false
+                status = "Stop failed"
+                errorMessage = error.localizedDescription
+                lastResult = "Recording could not be stopped safely. Retry Stop or Cancel."
+                recordDiagnostic("recording stop ownership failed")
+                notifyStateChanged()
+                return
+            }
             resetRecordingState()
+            refreshRecoveryRecordings()
             transcriptionProgressDetail = nil
             if ProviderRetryPolicy.isCancellation(error) {
                 status = "Ready"
@@ -1562,9 +1573,9 @@ final class AppState: ObservableObject {
             } else {
                 status = "Dictation failed"
                 errorMessage = error.localizedDescription
-                lastResult = activeRecoveryRecording == nil
+                lastResult = activeRecoveryRecording == nil && recoverySnapshot.recordings.isEmpty
                     ? "Could not finish dictation safely."
-                    : "Recording saved in Failed Recordings."
+                    : "Recording retained in Failed Recordings; retry or export it."
                 lastFailureCategory = diagnosticErrorCategory(error)
                 recordDiagnostic("dictation failed: \(lastFailureCategory)")
             }
@@ -1623,8 +1634,9 @@ final class AppState: ObservableObject {
                 preserveActiveRecoveryRecording(state: .cleanupFailed, failureCategory: lastFailureCategory)
                 status = "Cleanup failed"
                 lastResult = "Raw draft delivered; recording saved in Failed Recordings."
-            } else {
-                deleteActiveRecoveryRecording()
+            } else if !deleteActiveRecoveryRecording() {
+                status = "Recording saved"
+                lastResult = "Draft prepared; recording retained in Failed Recordings because deletion failed."
             }
         } catch {
             let state: DictationRecoveryState = ProviderRetryPolicy.isCancellation(error)
@@ -2038,27 +2050,6 @@ final class AppState: ObservableObject {
         )
     }
 
-    @discardableResult
-    private func deleteRetainedTemporaryAudio(at url: URL) -> Bool {
-        let startedAt = ContinuousClock.now
-        do {
-            _ = try AudioTempFileStore.deleteTemporaryAudio(at: url)
-            if retainedTemporaryAudioURL == url {
-                retainedTemporaryAudioURL = nil
-            }
-            recordDiagnostic("temporary audio deleted in \(elapsedMilliseconds(since: startedAt)) ms")
-            return true
-        } catch {
-            warningMessage = combinedWarning(
-                warningMessage,
-                "Temporary audio could not be deleted. Quit and relaunch BabbelStream before continuing with sensitive dictation."
-            )
-            lastFailureCategory = diagnosticErrorCategory(error)
-            recordDiagnostic("temporary audio deletion failed: \(lastFailureCategory)")
-            return false
-        }
-    }
-
     private func preserveActiveRecoveryRecording(
         state: DictationRecoveryState,
         failureCategory: String?
@@ -2084,21 +2075,25 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func deleteActiveRecoveryRecording() {
+    @discardableResult
+    private func deleteActiveRecoveryRecording() -> Bool {
         guard let activeRecoveryRecording else {
-            return
+            return true
         }
         do {
             try dictationRecoveryStore.delete(activeRecoveryRecording)
             self.activeRecoveryRecording = nil
             recordDiagnostic("safeguarded recording deleted after successful processing")
             refreshRecoveryRecordings()
+            return true
         } catch {
             warningMessage = combinedWarning(
                 warningMessage,
                 "Successful dictation audio could not be deleted. Remove it from Failed Recordings."
             )
             recordDiagnostic("safeguarded recording deletion failed: \(diagnosticErrorCategory(error))")
+            refreshRecoveryRecordings()
+            return false
         }
     }
 
@@ -2110,7 +2105,7 @@ final class AppState: ObservableObject {
             recoveryStatusMessage = recoverySnapshot.recordings.isEmpty
                 ? "No failed recordings."
                 : recoverySummary
-            recoveryErrorMessage = nil
+            recoveryErrorMessage = recoverySnapshot.storageWarning
             if recoverySnapshot.recoveredMetadataCount > 0 {
                 recordDiagnostic("failed recording metadata recovered: \(recoverySnapshot.recoveredMetadataCount)")
             }
@@ -2209,8 +2204,9 @@ final class AppState: ObservableObject {
         recordDiagnostic("failed recording retry started")
 
         do {
+            let safeguarded = try dictationRecoveryStore.prepareForRetry(recording)
             let updated = try dictationRecoveryStore.update(
-                recording,
+                safeguarded,
                 state: .processing,
                 failureCategory: nil,
                 incrementRetryCount: true
@@ -2234,12 +2230,13 @@ final class AppState: ObservableObject {
                 status = "Recording saved"
                 lastResult = "Cleanup failed; raw draft copied and recording retained."
             } else {
-                deleteActiveRecoveryRecording()
-                status = "Copied"
+                let deleted = deleteActiveRecoveryRecording()
+                status = deleted ? "Copied" : "Recording saved"
                 errorMessage = nil
-                warningMessage = nil
-                lastResult = "Recovered draft copied; saved recording deleted."
-                recordDiagnostic("failed recording recovered and copied")
+                lastResult = deleted
+                    ? "Recovered draft copied; saved recording deleted."
+                    : "Recovered draft copied; recording retained in Failed Recordings because deletion failed."
+                recordDiagnostic("failed recording recovered and copied; audio deleted: \(deleted)")
             }
         } catch {
             let state: DictationRecoveryState
@@ -2559,18 +2556,7 @@ final class AppState: ObservableObject {
     }
 
     private func staleTemporaryAudioDirectories() -> [URL] {
-        var directories = [AudioTempFileStore.temporaryDirectory()]
-
-        if let tempPath = ProcessInfo.processInfo.environment["TMPDIR"], !tempPath.isEmpty {
-            let tempDirectory = URL(fileURLWithPath: tempPath, isDirectory: true)
-                .appendingPathComponent(ProjectDefaults.audioTempDirectoryName, isDirectory: true)
-
-            if !directories.contains(tempDirectory) {
-                directories.append(tempDirectory)
-            }
-        }
-
-        return directories
+        AudioTempFileStore.recoverySearchDirectories()
     }
 
     private func elapsedMilliseconds(since start: ContinuousClock.Instant) -> Int {
@@ -2682,6 +2668,8 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
             return "AudioRecordingError.couldNotCreateTempDirectory"
         case .couldNotStartRecording:
             return "AudioRecordingError.couldNotStartRecording"
+        case .couldNotSafeguardStop:
+            return "AudioRecordingError.couldNotSafeguardStop"
         case .missingRecordingFile:
             return "AudioRecordingError.missingRecordingFile"
         case .couldNotReadRecordingMetadata:

@@ -2,6 +2,7 @@ import Foundation
 
 public enum DictationRecoveryState: String, Codable, CaseIterable, Sendable {
     case processing
+    case safeguardPending
     case transcriptionFailed
     case cleanupFailed
     case processingCanceled
@@ -11,6 +12,7 @@ public enum DictationRecoveryState: String, Codable, CaseIterable, Sendable {
     public var displayName: String {
         switch self {
         case .processing: "Processing"
+        case .safeguardPending: "Waiting for safe storage"
         case .transcriptionFailed: "Transcription failed"
         case .cleanupFailed: "Cleanup failed"
         case .processingCanceled: "Processing canceled"
@@ -78,8 +80,10 @@ public struct DictationRecoverySnapshot: Equatable, Sendable {
     public let recordings: [DictationRecoveryRecording]
     public let totalByteCount: Int64
     public let recoveredMetadataCount: Int
+    public let storageWarning: String?
 
-    public init(recordings: [DictationRecoveryRecording], recoveredMetadataCount: Int = 0) {
+    public init(recordings: [DictationRecoveryRecording], recoveredMetadataCount: Int = 0, storageWarning: String? = nil) {
+        self.storageWarning = storageWarning
         self.recordings = recordings.sorted { $0.recordedAt > $1.recordedAt }
         self.totalByteCount = recordings.reduce(0) { $0 + $1.byteCount }
         self.recoveredMetadataCount = max(0, recoveredMetadataCount)
@@ -117,6 +121,7 @@ public protocol DictationRecoveryStore: AnyObject {
         target: TextInsertionTarget?,
         settings: AppSettings
     ) throws -> DictationRecoveryRecording
+    func prepareForRetry(_ recording: DictationRecoveryRecording) throws -> DictationRecoveryRecording
     func loadSnapshot(markProcessingAsInterrupted: Bool) throws -> DictationRecoverySnapshot
     func update(
         _ recording: DictationRecoveryRecording,
@@ -134,6 +139,7 @@ public final class FileDictationRecoveryStore: DictationRecoveryStore {
     public let recoveryDirectoryURL: URL
 
     private let fileManager: FileManager
+    private let temporaryDirectories: [URL]
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
     private let audioFileName = "recording.m4a"
@@ -141,8 +147,10 @@ public final class FileDictationRecoveryStore: DictationRecoveryStore {
 
     public init(
         recoveryDirectoryURL: URL = DictationRecoveryPaths.defaultRecoveryDirectoryURL(),
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        temporaryDirectories: [URL] = AudioTempFileStore.recoverySearchDirectories()
     ) {
+        self.temporaryDirectories = temporaryDirectories
         self.recoveryDirectoryURL = recoveryDirectoryURL
         self.fileManager = fileManager
 
@@ -165,8 +173,10 @@ public final class FileDictationRecoveryStore: DictationRecoveryStore {
             throw DictationRecoveryError.recordingMissing
         }
 
+        let source = try StoppedAudioOwnership.mark(recording, fileManager: fileManager)
         let configuration = settings.providerConfiguration
         let item = DictationRecoveryRecording(
+            id: source.id,
             recordedAt: recording.createdAt,
             durationSeconds: recording.duration,
             byteCount: recording.byteCount,
@@ -177,47 +187,70 @@ public final class FileDictationRecoveryStore: DictationRecoveryStore {
             cleanupModel: settings.cleanupEnabled ? configuration.cleanupModel : nil,
             cleanupEnabled: settings.cleanupEnabled
         )
-        let directory = itemDirectoryURL(for: item.id)
-        guard !fileManager.fileExists(atPath: directory.path) else {
-            throw DictationRecoveryError.recordingAlreadyExists
-        }
+        return try finishAdoption(source, item: item)
+    }
 
+    public func prepareForRetry(_ recording: DictationRecoveryRecording) throws -> DictationRecoveryRecording {
+        guard let source = try stoppedSources().first(where: { $0.id == recording.id }) else {
+            _ = try audioURL(for: recording)
+            return recording
+        }
+        return try finishAdoption(source, item: recording)
+    }
+
+    private func finishAdoption(
+        _ source: StoppedAudioOwnership,
+        item: DictationRecoveryRecording
+    ) throws -> DictationRecoveryRecording {
+        let directory = itemDirectoryURL(for: item.id)
         do {
             try prepareRecoveryRoot()
-            try fileManager.createDirectory(
-                at: directory,
-                withIntermediateDirectories: false,
-                attributes: [.posixPermissions: 0o700]
-            )
+            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            try fileManager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
             try excludeFromBackup(directory)
-
             let stagedAudioURL = directory.appendingPathComponent("recording.pending")
             let finalAudioURL = directory.appendingPathComponent(audioFileName)
-            try fileManager.copyItem(at: recording.temporaryFileURL, to: stagedAudioURL)
-            try setUserOnlyPermissions(on: stagedAudioURL)
-            try writeMetadata(item, in: directory)
-            try fileManager.moveItem(at: stagedAudioURL, to: finalAudioURL)
-            try fileManager.removeItem(at: recording.temporaryFileURL)
+            // A completed copy is authoritative. Reuse it after a failed source deletion.
+            if !fileManager.fileExists(atPath: finalAudioURL.path) {
+                if fileManager.fileExists(atPath: stagedAudioURL.path) {
+                    try fileManager.removeItem(at: stagedAudioURL)
+                }
+                try fileManager.copyItem(at: source.audioURL, to: stagedAudioURL)
+                try setUserOnlyPermissions(on: stagedAudioURL)
+                try writeMetadata(item, in: directory)
+                try fileManager.moveItem(at: stagedAudioURL, to: finalAudioURL)
+            }
+            // Do not start provider work until duplicate source ownership is settled.
+            try fileManager.removeItem(at: source.audioURL)
+            try fileManager.removeItem(at: StoppedAudioOwnership.markerURL(for: source.audioURL))
             return item
         } catch {
-            if !fileManager.fileExists(atPath: directory.appendingPathComponent(audioFileName).path) {
-                try? fileManager.removeItem(at: directory)
-            }
+            // Keep the durable marker/source and any completed destination for retry.
             throw DictationRecoveryError.fileOperationFailed(error.localizedDescription)
         }
     }
 
-    public func loadSnapshot(markProcessingAsInterrupted: Bool = false) throws -> DictationRecoverySnapshot {
-        guard fileManager.fileExists(atPath: recoveryDirectoryURL.path) else {
-            return DictationRecoverySnapshot(recordings: [])
-        }
+    private func stoppedSources() throws -> [StoppedAudioOwnership] {
+        try StoppedAudioOwnership.discover(in: temporaryDirectories, fileManager: fileManager)
+    }
 
+    public func loadSnapshot(markProcessingAsInterrupted: Bool = false) throws -> DictationRecoverySnapshot {
+        let sources = try stoppedSources()
         var recordings: [DictationRecoveryRecording] = []
         var recoveredMetadataCount = 0
-        let directories = try fileManager.contentsOfDirectory(
-            at: recoveryDirectoryURL,
-            includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey]
-        )
+        var directories: [URL] = []
+        var storageWarning: String?
+        if fileManager.fileExists(atPath: recoveryDirectoryURL.path) {
+            do {
+                directories = try fileManager.contentsOfDirectory(
+                    at: recoveryDirectoryURL,
+                    includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey]
+                )
+            } catch {
+                // Pending sources must remain actionable even if the destination is unavailable.
+                storageWarning = "Recovery storage could not be read. Showing stopped sources still awaiting safe storage."
+            }
+        }
 
         for directory in directories {
             guard (try? directory.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true,
@@ -235,24 +268,36 @@ public final class FileDictationRecoveryStore: DictationRecoveryStore {
                 )
             } catch {
                 item = try recoveredItem(id: id, directory: directory)
-                try writeMetadata(item, in: directory)
+                try? writeMetadata(item, in: directory)
                 recoveredMetadataCount += 1
             }
 
             if markProcessingAsInterrupted, item.state == .processing {
-                item = try update(
-                    item,
-                    state: .interrupted,
-                    failureCategory: "interrupted",
-                    incrementRetryCount: false
-                )
+                item.state = .interrupted
+                item.failureCategory = "interrupted"
+                try? writeMetadata(item, in: directory)
             }
             recordings.append(item)
         }
 
+        for source in sources {
+            if let index = recordings.firstIndex(where: { $0.id == source.id }) {
+                recordings[index].state = .safeguardPending
+            } else {
+                let audio = try source.recordedAudio(fileManager: fileManager)
+                recordings.append(DictationRecoveryRecording(
+                    id: source.id, recordedAt: source.createdAt, durationSeconds: source.duration,
+                    byteCount: audio.byteCount, targetApplicationName: nil, targetBundleIdentifier: nil,
+                    providerHost: "unknown", primaryModel: "unknown", cleanupModel: nil,
+                    cleanupEnabled: false, state: .safeguardPending
+                ))
+            }
+        }
+
         return DictationRecoverySnapshot(
             recordings: recordings,
-            recoveredMetadataCount: recoveredMetadataCount
+            recoveredMetadataCount: recoveredMetadataCount,
+            storageWarning: storageWarning
         )
     }
 
@@ -280,10 +325,11 @@ public final class FileDictationRecoveryStore: DictationRecoveryStore {
 
     public func audioURL(for recording: DictationRecoveryRecording) throws -> URL {
         let url = itemDirectoryURL(for: recording.id).appendingPathComponent(audioFileName)
-        guard fileManager.fileExists(atPath: url.path) else {
-            throw DictationRecoveryError.itemNotFound
+        if fileManager.fileExists(atPath: url.path) { return url }
+        if let source = try stoppedSources().first(where: { $0.id == recording.id }) {
+            return source.audioURL
         }
-        return url
+        throw DictationRecoveryError.itemNotFound
     }
 
     public func exportAudio(for recording: DictationRecoveryRecording, to destinationURL: URL) throws {
@@ -302,25 +348,27 @@ public final class FileDictationRecoveryStore: DictationRecoveryStore {
     }
 
     public func delete(_ recording: DictationRecoveryRecording) throws {
-        let directory = itemDirectoryURL(for: recording.id)
-        guard fileManager.fileExists(atPath: directory.path) else {
-            return
-        }
         do {
-            try fileManager.removeItem(at: directory)
+            // Remove owned source first: a failure must leave the completed copy visible.
+            for source in try stoppedSources() where source.id == recording.id {
+                try fileManager.removeItem(at: source.audioURL)
+                try fileManager.removeItem(at: StoppedAudioOwnership.markerURL(for: source.audioURL))
+            }
+            let directory = itemDirectoryURL(for: recording.id)
+            if fileManager.fileExists(atPath: directory.path) {
+                try fileManager.removeItem(at: directory)
+            }
         } catch {
             throw DictationRecoveryError.fileOperationFailed(error.localizedDescription)
         }
     }
 
     public func deleteAll() throws {
-        guard fileManager.fileExists(atPath: recoveryDirectoryURL.path) else {
-            return
+        for recording in try loadSnapshot().recordings {
+            try delete(recording)
         }
-        do {
+        if fileManager.fileExists(atPath: recoveryDirectoryURL.path) {
             try fileManager.removeItem(at: recoveryDirectoryURL)
-        } catch {
-            throw DictationRecoveryError.fileOperationFailed(error.localizedDescription)
         }
     }
 

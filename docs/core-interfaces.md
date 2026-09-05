@@ -51,7 +51,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `DictationRecoveryStore`
 
-- Responsibility: safeguard stopped M4A audio before provider processing, persist privacy-safe failure metadata, reconstruct interrupted items, and own retry/export/deletion file operations.
+- Responsibility: discover durably marked stopped sources, finish idempotent adoption through `prepareForRetry`, safeguard stopped M4A audio before provider processing, persist privacy-safe failure metadata, reconstruct interrupted items, and own retry/export/deletion file operations.
 - Input: recorded audio, target/provider labels, state transitions, export destination, and explicit deletion requests.
 - Output: sorted recovery snapshots with count/size metadata and stable recording identifiers.
 - Errors: missing source audio, failed copy or metadata write, missing recovery item, invalid export destination, or failed deletion.
