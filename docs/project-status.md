@@ -6,7 +6,7 @@ by their dedicated specifications.
 
 ## Current Release
 
-- Latest release: `0.4.3` (`v0.4.3`)
+- Latest release: `0.4.4` (`v0.4.4`)
 - Supported workflow: hybrid tap-for-hands-free and hold-for-push-to-talk
   dictation into Slack and other focused macOS text fields.
 - Canonical validation: `task check`.
@@ -15,14 +15,11 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active release candidate: Recovery and delivery reliability (0.4.4).
-- Implementation, executable checks, fresh build, and signed local candidate are complete.
-- Candidate artifact: `dist/BabbelStream-0.4.4.dmg`, built from clean commit `de98e0a`.
-- Installed and running locally: `0.4.4` / `de98e0a` at `/Applications/BabbelStream.app` (verified 2026-09-05).
-- Final `v0.4.4` tag awaits real microphone/provider/Slack smoke approval.
+- Recovery and delivery reliability passed Christian's real-workflow smoke test on 2026-09-05.
+- Final 0.4.4 packaging/installation is in progress from the final release commit.
 - Spec: `docs/features/recovery-delivery-reliability/spec.md`.
 - Tracker: `docs/runs/active/recovery-delivery-reliability.md`.
-- Working directly on `main` with user authorization; target candidate: 0.4.4.
+- New investigation: Signal composer insertion; installed Signal 8.26.0 has bundle id `org.whispersystems.signal-desktop` and a bundled Quill editor. Its current direct-first route may report an AX write without updating editor state.
 - Latest integrated feature: Web editor paste compatibility.
 - Completed web-editor compatibility evidence:
   `docs/runs/archive/web-editor-paste-compatibility.md`.
@@ -65,5 +62,4 @@ recorded.
 
 ## Next Action
 
-Christian runs the smoke checklist in `docs/release.md` from step 2 using
-the installed 0.4.4 candidate, then reports pass/fail.
+Complete final 0.4.4 release verification and confirm whether explicit clipboard paste works in Signal.

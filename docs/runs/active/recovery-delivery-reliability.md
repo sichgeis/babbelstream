@@ -46,7 +46,7 @@ New providers, permissions, dependencies, telemetry, product features, public di
 3. Clipboard delivery guard: Completed.
 4. Workflow checks and durable documentation: Completed.
 5. 0.4.4 candidate and handoff: Completed.
-6. Final tag and release closeout: Pending human smoke approval.
+6. Final tag and release closeout: In progress; human smoke approved on 2026-09-05.
 
 ## Validation Matrix
 
@@ -56,7 +56,7 @@ New providers, permissions, dependencies, telemetry, product features, public di
 | Fresh app build | Passed during assessment (35.28 seconds) | Passed for candidate source, separate scratch directory (33.66 seconds) |
 | Focused fault/workflow checks | Missing affected regressions | Passed storage, clipboard, and actual coordinator regressions |
 | Package and signature | Not run | Release configuration package passed; DMG checksum and mounted app signature verified |
-| Real smoke | Not run | Pending human |
+| Real smoke | Not run | Christian reported successful smoke test on 2026-09-05 |
 | Git | Clean main equals remote baseline | All implementation/candidate milestones pushed to main; final handoff is docs-only |
 
 ## Release Evidence
@@ -77,18 +77,18 @@ New providers, permissions, dependencies, telemetry, product features, public di
 
 ## Current Blocker
 
-Implementation and packaging are complete. Final tagging and release closeout await the required human microphone/provider/Slack smoke result.
+None. Christian approved the smoke test; final release packaging and installation remain.
 
 ## Next Action
 
-Christian runs the 0.4.4 smoke checklist in `docs/release.md` from step 2 using the installed and running candidate, then reports pass/fail.
+Tag the final release commit, rebuild/package, install, and verify version/commit.
 
 ## Closeout
 
 - [x] Approved implementation, durable specs, automated checks, and candidate complete.
 - [x] Coherent commits pushed directly to main, as authorized.
 - [x] Clean candidate version/commit, DMG, checksum, and local signature verified.
-- [ ] Human smoke approval received.
+- [x] Human smoke approval received on 2026-09-05.
 - [ ] Final tag, final artifact/install verification, and tracker archival complete.
 
 Keep this tracker active until the smoke gate and final release steps are complete.
@@ -121,3 +121,7 @@ Keep this tracker active until the smoke gate and final release steps are comple
 - Fresh build: `swift build --scratch-path /private/tmp/babbelstream-044-fresh --product BabbelStream` passed.
 - Milestones pushed to main: `443e1e0` approved contract; `85a83ef` recovery; `ef6252a` clipboard guard; `4796674` coordinator coverage.
 - Release smoke checklist: `docs/release.md`, section 0.4.4 Reliability Candidate Smoke Test.
+
+## Human Smoke Approval And Follow-up
+
+Christian reported the 0.4.4 smoke test successful on 2026-09-05 and asked for an investigation of application-specific paste failures, specifically Signal. This authorizes the final 0.4.4 release steps already agreed in the plan. Signal is currently absent from clipboard-preferred routing; its installed bundle is `org.whispersystems.signal-desktop` (8.26.0) and its bundled composer includes Quill. The false-success mechanism is a likely explanation, not a live Signal reproduction. No Signal conversations or message content were accessed.
