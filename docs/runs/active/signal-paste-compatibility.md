@@ -2,7 +2,7 @@
 
 ## Outcome And Baseline
 
-Repair Signal draft insertion using the existing clipboard path. Baseline: clean `main` at `d662a72` (released 0.4.4); target 0.4.5 candidate. Christian's prior direct-main/commit/push/install authorization continues; final tag requires Signal smoke approval.
+Investigate Signal draft insertion and prepare a targeted repair using the existing clipboard path. Baseline: clean `main` at `d662a72` (released 0.4.4); latest pushed documentation commit: `42711bf`. Christian explicitly approved committing the Signal-only fix and installing a 0.4.5 candidate on 2026-09-05. Continue direct-main commits/pushes; final tagging awaits Signal smoke approval.
 
 ## Approved Contract
 
@@ -17,18 +17,18 @@ Repair Signal draft insertion using the existing clipboard path. Baseline: clean
 
 ## Stages
 
-1. Targeted policy, fake checks, and durable docs: In progress.
-2. Clean 0.4.5 candidate/package/install verification: Pending.
+1. Targeted policy, fake checks, and durable docs: Completed; approved for commit.
+2. Commit/version/package/install: In progress.
 3. Human Signal smoke and final release: Pending.
 
 ## Validation
 
-Baseline `task check`: passed. Targeted checks, artifact/signature, installed version: pending. No real provider request or Signal message sent by the agent.
+Baseline and targeted `task check`: passed. Checks cover Signal normalization, rejection of a similarly named helper id, and bypass of a reportedly successful AX insertion in favor of exactly one clipboard write/paste. Existing insertion/coordinator checks pass. VERSION is prepared as 0.4.5; packaging/install verification pending. Installed release remains 0.4.4 / d662a72 until candidate installation. No real provider request or Signal message sent by the agent.
 
 ## Current Blocker
 
-None.
+None. The initial automatic approval rejection was resolved by Christian's explicit approval of committing and installing this Signal fix.
 
 ## Next Action
 
-Add the exact Signal route and regression checks, then run task check.
+Run task check, commit/push the approved repair, and package/install the clean 0.4.5 candidate.

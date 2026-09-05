@@ -15,7 +15,7 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active feature: Signal paste compatibility, a targeted clipboard routing fix.
+- Active candidate: Signal paste compatibility (0.4.5); Christian approved committing and installing the targeted repair on 2026-09-05.
 - Spec: `docs/features/signal-paste-compatibility/spec.md`.
 - Tracker: `docs/runs/active/signal-paste-compatibility.md`.
 - Installed/running release: `0.4.4` / `d662a72`; annotated `v0.4.4` is pushed.
@@ -62,4 +62,4 @@ recorded.
 
 ## Next Action
 
-Implement and verify the targeted Signal clipboard route, then install a 0.4.5 candidate for Signal smoke testing.
+Package and install the approved clean 0.4.5 candidate for Signal smoke testing.

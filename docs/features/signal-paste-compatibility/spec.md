@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Approved for targeted repair under Christian's ongoing autonomous improvement authorization.
+- State: Approved and implemented; 0.4.5 candidate awaits Signal smoke approval.
 - Owner: Christian.
 - Evidence: 2026-09-05 Signal failure report and explicit confirmation that Copy Last Draft plus manual Cmd+V works.
 
@@ -50,7 +50,7 @@ With installed 0.4.5 candidate, focus an unsent Signal composer, dictate a harml
 
 ## Authority And Release Gate
 
-Proceed with the minimal repair, checks, direct-main commits/pushes, and local candidate installation under the current autonomous workflow. Final 0.4.5 tag awaits Signal smoke approval. Do not access private conversation content or send messages to validate the repair.
+Christian explicitly approved committing the Signal-only fix and installing a 0.4.5 candidate on 2026-09-05 after the initial automatic approval rejection. Ordinary direct-main commits/pushes, checks, versioning, packaging, and local installation are authorized. A final 0.4.5 tag awaits Signal smoke approval. Do not access private conversation content or send messages to validate the repair.
 
 ## Open Questions
 

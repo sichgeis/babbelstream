@@ -36,6 +36,13 @@ func runInsertionWorkflowChecks() async throws {
     let normalResult = try await ClipboardTextInsertionService(environment: normal).insertText("fixture", target: normal.target)
     check(normalResult == .pasteShortcutPosted && normal.posts == 1 && normal.directWrites == 0, "Unchanged clipboard must post exactly one paste for web editors.")
 
+    let signal = FakeInsertionEnvironment()
+    signal.target = TextInsertionTarget(processIdentifier: 124, localizedName: "Signal fixture", bundleIdentifier: "org.whispersystems.signal-desktop")
+    signal.directSucceeds = true
+    let signalResult = try await ClipboardTextInsertionService(environment: signal).insertText("signal draft fixture", target: signal.target)
+    check(signalResult == .pasteShortcutPosted && signal.directWrites == 0, "Signal must bypass even a reportedly successful AX insertion.")
+    check(signal.clipboardWrites == 1 && signal.posts == 1 && signal.clipboard == "signal draft fixture", "Signal must use the normal clipboard path exactly once.")
+
     let changed = FakeInsertionEnvironment()
     changed.beforePaste = { [weak changed] in
         changed?.clipboard = "newer clipboard fixture"

@@ -48,6 +48,8 @@ The executable suite injects copy, metadata-permission, and source-deletion fail
 
 ### Clipboard Workflow Regression Checks
 
+Signal checks verify the exact installed bundle id, normalization, rejection of a similarly named helper, and bypass of a fake successful AX write in favor of exactly one clipboard write/paste.
+
 Fake clipboard/event checks cover unchanged clipboard (one paste), clipboard replacement (no paste or second write), application switching, cancellation during preparation, direct native insertion without clipboard writes, and Copy Last Draft HUD mapping. Native AX and event delivery remain manual checks.
 
 ### Coordinator Workflow Regression Checks
@@ -223,3 +225,7 @@ The actual main-actor AppState runs with fixture-only recording, provider, inser
 - Cleanup provider failure after successful transcription.
 - Clipboard unavailable.
 - Paste target missing or focus lost.
+
+## Signal Composer Case
+
+With the installed 0.4.5 candidate, dictate a harmless phrase into an unsent Signal composer. Confirm it appears once, with no message sent. Check Copy Last Draft and a previously working application. The user confirmed manual Cmd+V works in Signal before this targeted routing fix; automatic Signal insertion awaits its own smoke confirmation.

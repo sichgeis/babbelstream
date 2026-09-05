@@ -132,3 +132,7 @@ Christian approved this smoke test on 2026-09-05. Final release `v0.4.4` is tagg
 6. Confirm menu, Settings, and the recording/processing HUD still behave normally. Clipboard contention and filesystem fault timing are covered deterministically with fakes; do not manipulate real user files to force those cases.
 
 Report pass/fail and any unexpected behavior. The pre-existing expanded personal-provider matrix remains a separately documented manual limitation; no real-provider validation is claimed by the executable checks.
+
+## 0.4.5 Signal Candidate Smoke Test
+
+After installing the candidate, verify version 0.4.5 and its source commit under Diagnostics. Focus a Signal composer and dictate a harmless short phrase; confirm the draft appears exactly once and remains unsent. Repeat in one previously working application, and confirm Copy Last Draft/manual paste still works. Report pass/fail before the final v0.4.5 tag. Do not send a message just to validate insertion.

@@ -105,6 +105,7 @@ public enum TextInsertionStrategyPolicy {
         "com.openai.chat",
         "com.openai.chatgpt",
         "com.openai.codex",
+        "org.whispersystems.signal-desktop",
         "company.thebrowser.browser"
     ]
 }

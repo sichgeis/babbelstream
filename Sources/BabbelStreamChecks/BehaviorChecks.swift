@@ -520,6 +520,8 @@ for bundleIdentifier in [
     "com.openai.chat",
     "com.openai.chatgpt",
     "com.openai.codex",
+    "org.whispersystems.signal-desktop",
+    "  ORG.WHISPERSYSTEMS.SIGNAL-DESKTOP  ",
     "com.google.Chrome",
     "com.google.Chrome.canary",
     "company.thebrowser.Browser"
@@ -541,6 +543,7 @@ for bundleIdentifier in [
     "com.tinyspeck.slackmacgap",
     "com.apple.TextEdit",
     "com.microsoft.VSCode",
+    "org.whispersystems.signal-desktop-helper",
     "com.google.Chromecast"
 ] {
     check(
