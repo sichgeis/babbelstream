@@ -46,10 +46,9 @@ by their dedicated specifications.
   pending.
 - Normal-cache `task check` and a fresh app build passed on 2026-09-05;
   the previously recorded Swift/SDK fresh-build blocker is no longer observed.
-- Coordinator behavior coupled to AppKit, Accessibility, Keychain, microphone
-  permission, Carbon event delivery, and application termination remains in the
-  manual validation matrix because the current Command Line Tools environment
-  does not expose runnable XCTest or Swift Testing through SwiftPM.
+- The executable suite now covers AppState recovery, cancellation, delivery,
+  and settings-snapshot workflows through fakes. Native AppKit/Accessibility,
+  microphone, Keychain, Carbon, and process termination remain manual checks.
 - The global shortcut remains fixed at `Control + Option + Space`.
 - Local Whisper, Developer ID signing, notarization, and an update mechanism are
   not implemented.

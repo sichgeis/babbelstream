@@ -4,7 +4,7 @@
 
 Run `task check`. It builds the app and executes `BabbelStreamChecks`, including settings validation, provider lifecycle/transient-failure checks through a local `URLProtocol`, zero-byte connection-stall recovery, provider cancellation without a second attempt, prompt/dictionary behavior, archive round trips and damaged-line recovery, diagnostics redaction, temp-file helpers, insertion policy, settings persistence, version metadata, and usage counters.
 
-This CLT-only environment can compile but cannot execute XCTest or Swift Testing through SwiftPM. The empty test target was removed so `swift test` now fails honestly with `no tests found` instead of returning a false green. Coordinator behavior tied to AppKit, Accessibility, Keychain, microphone permissions, and application termination remains in the manual matrix below.
+This CLT-only environment can compile but cannot execute XCTest or Swift Testing through SwiftPM. The empty test target was removed so `swift test` now fails honestly with `no tests found` instead of returning a false green. The debug executable suite imports `BabbelStreamApplication` with `@testable` and exercises actual AppState workflows through isolated adapters. Real AppKit, Accessibility, Keychain, microphone, Carbon, and process-termination integration remains in the manual matrix below.
 
 ## Unit Tests
 
@@ -49,6 +49,10 @@ The executable suite injects copy, metadata-permission, and source-deletion fail
 ### Clipboard Workflow Regression Checks
 
 Fake clipboard/event checks cover unchanged clipboard (one paste), clipboard replacement (no paste or second write), application switching, cancellation during preparation, direct native insertion without clipboard writes, and Copy Last Draft HUD mapping. Native AX and event delivery remain manual checks.
+
+### Coordinator Workflow Regression Checks
+
+The actual main-actor AppState runs with fixture-only recording, provider, insertion, settings, credentials, usage, login, and runtime adapters. Local dictionary/archive/recovery files are restricted to disposable test directories. Checks cover normal insertion and deletion; no startup credential reads; settings Apply during recording and retry; cleanup fallback; copy-only recovery; deletion failure warnings; failed adoption blocking requests; stop-ownership failure retaining controls; active task cancellation retaining stopped audio without delivery; copy failure; and clipboard contention, including simultaneous cleanup failure. No application is launched by the suite.
 
 ## Integration Tests
 

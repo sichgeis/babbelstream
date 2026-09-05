@@ -34,7 +34,9 @@ AppKit status-item app
 
 The executable target keeps the application shell separate from the behavior-heavy coordinator:
 
-- `BabbelStreamApp.swift` owns only the native application entry point.
+- `BabbelStreamLauncher/main.swift` is the executable entry point and invokes the native application bootstrap in `BabbelStreamApp.swift`.
+- The existing app sources compile as `BabbelStreamApplication`, so executable debug checks can import the actual coordinator with `@testable` without running the app.
+- `AppRuntime` isolates workspace observations, diagnostic logging, and temporary-directory discovery; production uses the native adapter and checks use fixture-only runtime state.
 - `AppDelegate.swift` is the composition root that creates stores, `AppState`, window controllers, the status item, and the HUD.
 - `StatusBarController.swift` owns menu-bar presentation and actions.
 - `AppWindowControllers.swift`, `SettingsView.swift`, `DictationArchiveUI.swift`, and `DictationStatusHUD.swift` own their respective AppKit/SwiftUI presentation concerns.

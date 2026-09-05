@@ -1,6 +1,5 @@
 import AppKit
 import BabbelStreamCore
-import OSLog
 import SwiftUI
 
 struct DiagnosticEvent: Identifiable {
@@ -22,10 +21,6 @@ struct DiagnosticEvent: Identifiable {
 
 @MainActor
 final class AppState: ObservableObject {
-    private static let diagnosticsLogger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "com.sichgeis.babbelstream",
-        category: "Diagnostics"
-    )
     enum RecordingMode {
         case none
         case dictation
@@ -133,14 +128,13 @@ final class AppState: ObservableObject {
     private var latestFinalDraft: String?
     private var latestPasteTarget: TextInsertionTarget?
     private var latestExternalPasteTarget: TextInsertionTarget?
-    private var workspaceActivationObserver: NSObjectProtocol?
+    private let runtime: any AppRuntime
     private var shouldStopDictationAfterStart = false
     private var dictationHotkeyPressedAt: ContinuousClock.Instant?
     private var cachedAPIKey: String?
     private var cachedPersonalOpenAIFallbackAPIKey: String?
     private var activeDictationSettings: AppSettings?
     private var processingTask: Task<Void, Never>?
-    private var retainedTemporaryAudioURL: URL?
     private var activeRecoveryRecording: DictationRecoveryRecording?
     private var stateChangeObservers: [UUID: () -> Void] = [:]
     private var activeDiagnosticOperationID: UUID?
@@ -169,8 +163,10 @@ final class AppState: ObservableObject {
         personalDictionaryStore: PersonalDictionaryStore = JSONPersonalDictionaryStore(),
         usageTracker: UsageTracker = UserDefaultsUsageTracker(),
         dictationArchiveStore: DictationArchiveStore = JSONLDictationArchiveStore(),
-        dictationRecoveryStore: DictationRecoveryStore = FileDictationRecoveryStore()
+        dictationRecoveryStore: DictationRecoveryStore = FileDictationRecoveryStore(),
+        runtime: any AppRuntime = MacOSAppRuntime()
     ) {
+        self.runtime = runtime
         self.audioRecorder = audioRecorder
         self.settingsStore = settingsStore
         self.secretStore = secretStore
@@ -228,7 +224,7 @@ final class AppState: ObservableObject {
             recordDiagnostic("launch at login migration failed: \(diagnosticErrorCategory(error))")
         }
 
-        updateLatestExternalPasteTarget(from: NSWorkspace.shared.frontmostApplication)
+        updateLatestExternalPasteTarget(from: runtime.frontmostTarget())
         observeWorkspaceActivations()
         cleanupStaleTemporaryAudio()
         loadRecoveryRecordings(markProcessingAsInterrupted: true)
@@ -509,31 +505,13 @@ final class AppState: ObservableObject {
     }
 
     private func observeWorkspaceActivations() {
-        workspaceActivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
-            forName: NSWorkspace.didActivateApplicationNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            guard let application = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else {
-                return
-            }
-
-            let processIdentifier = application.processIdentifier
-            let localizedName = application.localizedName
-            let bundleIdentifier = application.bundleIdentifier
-
-            Task { @MainActor [weak self] in
-                self?.updateLatestExternalPasteTarget(
-                    processIdentifier: processIdentifier,
-                    localizedName: localizedName,
-                    bundleIdentifier: bundleIdentifier
-                )
-            }
+        runtime.observeActivations { [weak self] target in
+            self?.updateLatestExternalPasteTarget(from: target)
         }
     }
 
     private func captureCurrentPasteTarget() {
-        updateLatestExternalPasteTarget(from: NSWorkspace.shared.frontmostApplication)
+        updateLatestExternalPasteTarget(from: runtime.frontmostTarget())
         if let capturedTarget = textInsertionService.captureTarget(),
            capturedTarget.processIdentifier != ProcessInfo.processInfo.processIdentifier,
            capturedTarget.bundleIdentifier != Bundle.main.bundleIdentifier {
@@ -544,7 +522,7 @@ final class AppState: ObservableObject {
         notifyStateChanged()
     }
 
-    private func updateLatestExternalPasteTarget(from application: NSRunningApplication?) {
+    private func updateLatestExternalPasteTarget(from application: TextInsertionTarget?) {
         guard let application else {
             return
         }
@@ -1076,15 +1054,11 @@ final class AppState: ObservableObject {
             recordDiagnostic("termination recording cleanup failed: \(diagnosticErrorCategory(error))")
         }
 
-        if let retainedTemporaryAudioURL {
-            recordDiagnostic("termination left unsafeguarded temporary audio for startup recovery attention")
-            self.retainedTemporaryAudioURL = retainedTemporaryAudioURL
-        }
         resetRecordingState()
     }
 
     private func recordDiagnostic(_ message: String) {
-        Self.diagnosticsLogger.info("\(message, privacy: .public)")
+        runtime.recordDiagnostic(message)
         let elapsedMilliseconds = activeDiagnosticOperationStartedAt.map { self.elapsedMilliseconds(since: $0) }
         diagnostics.append(DiagnosticEvent(
             timestamp: Date(),
@@ -1527,7 +1501,6 @@ final class AppState: ObservableObject {
             let stopStartedAt = ContinuousClock.now
             let recording = try await audioRecorder.stop(deleteTemporaryFile: false)
             recordDiagnostic("recording stop completed in \(elapsedMilliseconds(since: stopStartedAt)) ms")
-            retainedTemporaryAudioURL = recording.temporaryFileURL
             resetRecordingState()
             elapsedSeconds = recording.duration
             recordDiagnostic("recording stopped: dictation, \(formatDuration(recording.duration))")
@@ -1537,7 +1510,6 @@ final class AppState: ObservableObject {
                 settings: settingsSnapshot
             )
             activeRecoveryRecording = recoveryRecording
-            retainedTemporaryAudioURL = nil
             let safeguardedRecording = RecordedAudio(
                 temporaryFileURL: try dictationRecoveryStore.audioURL(for: recoveryRecording),
                 duration: recording.duration,
@@ -1565,9 +1537,7 @@ final class AppState: ObservableObject {
             if ProviderRetryPolicy.isCancellation(error) {
                 status = "Ready"
                 errorMessage = nil
-                lastResult = retainedTemporaryAudioURL == nil
-                    ? "Processing canceled; recording saved in Failed Recordings."
-                    : "Dictation canceled. Temporary audio cleanup needs attention."
+                lastResult = "Processing canceled; recording retained in Failed Recordings."
                 lastFailureCategory = "None"
                 recordDiagnostic("dictation processing canceled")
             } else {
@@ -1632,8 +1602,13 @@ final class AppState: ObservableObject {
             )
             if cleanupFallbackUsed {
                 preserveActiveRecoveryRecording(state: .cleanupFailed, failureCategory: lastFailureCategory)
-                status = "Cleanup failed"
-                lastResult = "Raw draft delivered; recording saved in Failed Recordings."
+                if status == "Copy Last Draft" || status == "Paste failed" {
+                    status = "Copy Last Draft"
+                    lastResult = "Cleanup failed; use Copy Last Draft. Recording retained in Failed Recordings."
+                } else {
+                    status = "Cleanup failed"
+                    lastResult = "Raw draft delivered; recording saved in Failed Recordings."
+                }
             } else if !deleteActiveRecoveryRecording() {
                 status = "Recording saved"
                 lastResult = "Draft prepared; recording retained in Failed Recordings because deletion failed."
@@ -2563,7 +2538,7 @@ final class AppState: ObservableObject {
     }
 
     private func staleTemporaryAudioDirectories() -> [URL] {
-        AudioTempFileStore.recoverySearchDirectories()
+        runtime.temporaryAudioDirectories
     }
 
     private func elapsedMilliseconds(since start: ContinuousClock.Instant) -> Int {

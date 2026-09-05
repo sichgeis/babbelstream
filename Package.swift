@@ -15,11 +15,17 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "BabbelStreamApp",
-            dependencies: ["BabbelStreamCore"]
+            dependencies: ["BabbelStreamApplication"],
+            path: "Sources/BabbelStreamLauncher"
         ),
         .executableTarget(
             name: "BabbelStreamChecks",
-            dependencies: ["BabbelStreamCore"]
+            dependencies: ["BabbelStreamCore", "BabbelStreamApplication"]
+        ),
+        .target(
+            name: "BabbelStreamApplication",
+            dependencies: ["BabbelStreamCore"],
+            path: "Sources/BabbelStreamApp"
         ),
         .target(name: "BabbelStreamCore")
     ]
