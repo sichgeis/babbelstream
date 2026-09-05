@@ -2,7 +2,7 @@
 
 ## Outcome And Baseline
 
-Investigate Signal draft insertion and prepare a targeted repair using the existing clipboard path. Baseline: clean `main` at `d662a72` (released 0.4.4); latest pushed documentation commit: `42711bf`. Christian explicitly approved committing the Signal-only fix and installing a 0.4.5 candidate on 2026-09-05. Continue direct-main commits/pushes; final tagging awaits Signal smoke approval.
+Investigate Signal draft insertion and prepare a targeted repair using the existing clipboard path. Baseline: clean `main` at `d662a72` (released 0.4.4); latest pushed documentation commit: `42711bf`. Christian explicitly approved committing the Signal-only fix and installing a 0.4.5 candidate on 2026-09-05. Continue direct-main commits/pushes; Signal smoke approval was received on 2026-09-05.
 
 ## Approved Contract
 
@@ -19,7 +19,7 @@ Investigate Signal draft insertion and prepare a targeted repair using the exist
 
 1. Targeted policy, fake checks, and durable docs: Completed and pushed at `dfa0a5a`.
 2. Commit/version/package/install: Completed.
-3. Human Signal smoke and final release: Pending.
+3. Human Signal smoke: Passed per Christian on 2026-09-05. Final release packaging/install: In progress.
 
 ## Validation
 
@@ -27,11 +27,11 @@ Baseline and targeted `task check`: passed. Checks cover Signal normalization, r
 
 ## Current Blocker
 
-Implementation and installation are complete. Final tagging awaits Christian's Signal smoke result. The initial approval rejection was resolved by explicit user approval; no authorization remains missing for the completed work.
+None. Christian confirmed successful Signal smoke; no additional live-app checks are claimed.
 
 ## Next Action
 
-Christian dictates a harmless unsent draft in Signal using the installed candidate, checks one previously working application, and reports pass/fail.
+Tag the smoke-approved release, rebuild/install the exact final artifact, and archive this tracker.
 
 ## Candidate And Installation Evidence
 
@@ -42,4 +42,5 @@ Christian dictates a harmless unsent draft in Signal using the installed candida
 - SHA-256: `c18f266e5c63fa61e097b18c0cd47cba8902a2b19a5bac815255af35e6d4cca1`; independent hash matches `.sha256` file.
 - Mounted candidate read-only; contained app reports 0.4.5 / dfa0a5a and passes strict/deep local-signature verification.
 - Installed via Finder at `/Applications/BabbelStream.app`; verified version, commit, signature, and running executable (PID 77537) on 2026-09-05. DMG detached afterward.
-- Final v0.4.5 tag not created. Automatic insertion in live Signal awaits user smoke confirmation; manual Cmd+V was already confirmed working.
+- Christian confirmed successful Signal smoke on 2026-09-05. Manual Cmd+V was already confirmed working.
+- Release-finalization `task check`: passed on 2026-09-05.

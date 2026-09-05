@@ -133,6 +133,8 @@ Christian approved this smoke test on 2026-09-05. Final release `v0.4.4` is tagg
 
 Report pass/fail and any unexpected behavior. The pre-existing expanded personal-provider matrix remains a separately documented manual limitation; no real-provider validation is claimed by the executable checks.
 
-## 0.4.5 Signal Candidate Smoke Test
+## 0.4.5 Signal Smoke Test
+
+Christian confirmed successful Signal smoke on 2026-09-05. Final release evidence is retained in `docs/runs/archive/signal-paste-compatibility.md`.
 
 After installing the candidate, verify version 0.4.5 and its source commit under Diagnostics. Focus a Signal composer and dictate a harmless short phrase; confirm the draft appears exactly once and remains unsent. Repeat in one previously working application, and confirm Copy Last Draft/manual paste still works. Report pass/fail before the final v0.4.5 tag. Do not send a message just to validate insertion.

@@ -6,7 +6,7 @@ by their dedicated specifications.
 
 ## Current Release
 
-- Latest release: `0.4.4` (`v0.4.4`)
+- Latest release: `0.4.5` (`v0.4.5`)
 - Supported workflow: hybrid tap-for-hands-free and hold-for-push-to-talk
   dictation into Slack and other focused macOS text fields.
 - Canonical validation: `task check`.
@@ -15,11 +15,9 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active candidate: Signal paste compatibility (0.4.5); committed, checked, packaged, and installed after explicit approval on 2026-09-05.
+- Signal paste compatibility: smoke approved on 2026-09-05; final packaging/install in progress.
 - Spec: `docs/features/signal-paste-compatibility/spec.md`.
 - Tracker: `docs/runs/active/signal-paste-compatibility.md`.
-- Installed/running candidate: `0.4.5` / `dfa0a5a` at `/Applications/BabbelStream.app`; signature/version/process verified.
-- Latest finalized release remains annotated `v0.4.4`; final `v0.4.5` awaits Signal smoke approval.
 - Completed reliability evidence: `docs/runs/archive/recovery-delivery-reliability.md`.
 - Latest integrated feature: Web editor paste compatibility.
 - Completed web-editor compatibility evidence:
@@ -63,4 +61,4 @@ recorded.
 
 ## Next Action
 
-Christian tests an unsent Signal dictation and one previously working application using the installed 0.4.5 candidate, then reports pass/fail.
+Complete the smoke-approved 0.4.5 final packaging and installation.
