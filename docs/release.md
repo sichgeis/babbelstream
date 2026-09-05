@@ -119,3 +119,16 @@ Publish:
 - Release notes copied from `CHANGELOG.md`
 
 Do not publish local `.env` files or provider secrets.
+
+## 0.4.4 Reliability Candidate Smoke Test
+
+This candidate is built from a clean commit. The final `v0.4.4` tag remains pending until this smoke test passes or is explicitly waived.
+
+1. Open `dist/BabbelStream-0.4.4.dmg`, quit the previous app, and drag the candidate to Applications. Launch it and verify version 0.4.4 plus the candidate commit shown in the run tracker under Diagnostics.
+2. In an unsent Slack composer, dictate short synthetic English, German, and mixed-language phrases. Exercise both tap-to-latch and hold-to-talk. Confirm the text appears once, retains a trailing separator, and nothing is sent.
+3. Dictate once while switching to a different application before delivery. Confirm no automatic paste into that application; recover using Copy Last Draft/manual paste.
+4. Cancel while recording; confirm recording stops and the partial file is not a Failed Recordings entry. Cancel during processing on another synthetic attempt; confirm its stopped audio is retained and Retry and Copy recovers without auto-pasting.
+5. Confirm Failed Recordings no longer contains the successfully recovered item. If a storage/deletion warning occurs, confirm it remains visible and the recording can be exported or explicitly deleted.
+6. Confirm menu, Settings, and the recording/processing HUD still behave normally. Clipboard contention and filesystem fault timing are covered deterministically with fakes; do not manipulate real user files to force those cases.
+
+Report pass/fail and any unexpected behavior. The pre-existing expanded personal-provider matrix remains a separately documented manual limitation; no real-provider validation is claimed by the executable checks.

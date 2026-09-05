@@ -51,9 +51,9 @@ New providers, permissions, dependencies, telemetry, product features, public di
 
 | Check | Baseline | Current/final |
 | --- | --- | --- |
-| task check | Passed during assessment and implementation baseline | Pending |
-| Fresh app build | Passed during assessment (35.28 seconds) | Pending |
-| Focused fault/workflow checks | Missing affected regressions | Pending |
+| task check | Passed during assessment and implementation baseline | Passed after each implementation milestone |
+| Fresh app build | Passed during assessment (35.28 seconds) | Passed for candidate source, separate scratch directory (33.66 seconds) |
+| Focused fault/workflow checks | Missing affected regressions | Passed storage, clipboard, and actual coordinator regressions |
 | Package and signature | Not run | Pending |
 | Real smoke | Not run | Pending human |
 | Git | Clean main equals remote baseline | Pending |
@@ -94,3 +94,11 @@ Pending implementation, verification, candidate, and human smoke.
 - A combined cleanup/clipboard failure regression now preserves Copy Last Draft instead of claiming delivery.
 - AppRuntime isolates OS observation/logging/temp discovery; checks use isolated fixture adapters and files. No real app launch, provider request, microphone, clipboard, or Keychain access.
 - Removed obsolete in-memory temporary-audio ownership; durable ownership is authoritative across restart.
+
+## Candidate Preparation
+
+- Patch version 0.4.4 selected for compatible reliability fixes; changelog remains labeled Release candidate until smoke approval.
+- Final diff/privacy review: no added dependency, provider, permission, transcript retention, credential logging, real-user fixtures, or automatic send path.
+- Fresh build: `swift build --scratch-path /private/tmp/babbelstream-044-fresh --product BabbelStream` passed.
+- Milestones pushed to main: `443e1e0` approved contract; `85a83ef` recovery; `ef6252a` clipboard guard; `4796674` coordinator coverage.
+- Release smoke checklist: `docs/release.md`, section 0.4.4 Reliability Candidate Smoke Test.

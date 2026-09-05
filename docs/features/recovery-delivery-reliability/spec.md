@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Approved
+- State: Implemented (0.4.4 candidate; final release awaits human smoke)
 - Owner: Christian
 - Last approved: 2026-09-05, explicit implementation request in this conversation.
 - Related ADRs/issues: none.

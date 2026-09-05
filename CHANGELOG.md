@@ -4,6 +4,16 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+## 0.4.4 - Release candidate
+
+- Preserve stopped recordings when safe-storage adoption fails, rediscover them
+  after app restart, and allow retry/export/deletion from Failed Recordings.
+- Keep audio-retention warnings visible when deletion fails after recovery.
+- Skip automatic paste if another app replaces the clipboard during preparation;
+  preserve that clipboard and offer Copy Last Draft.
+- Add executable regression coverage for actual dictation coordination,
+  cancellation, recovery ownership, delivery, and applied-settings snapshots.
+
 ## 0.4.3 - 2026-08-27
 
 - Prefer clipboard plus Command+V over direct Accessibility selected-text writes
