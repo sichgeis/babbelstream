@@ -15,10 +15,11 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active candidate: Signal paste compatibility (0.4.5); Christian approved committing and installing the targeted repair on 2026-09-05.
+- Active candidate: Signal paste compatibility (0.4.5); committed, checked, packaged, and installed after explicit approval on 2026-09-05.
 - Spec: `docs/features/signal-paste-compatibility/spec.md`.
 - Tracker: `docs/runs/active/signal-paste-compatibility.md`.
-- Installed/running release: `0.4.4` / `d662a72`; annotated `v0.4.4` is pushed.
+- Installed/running candidate: `0.4.5` / `dfa0a5a` at `/Applications/BabbelStream.app`; signature/version/process verified.
+- Latest finalized release remains annotated `v0.4.4`; final `v0.4.5` awaits Signal smoke approval.
 - Completed reliability evidence: `docs/runs/archive/recovery-delivery-reliability.md`.
 - Latest integrated feature: Web editor paste compatibility.
 - Completed web-editor compatibility evidence:
@@ -62,4 +63,4 @@ recorded.
 
 ## Next Action
 
-Package and install the approved clean 0.4.5 candidate for Signal smoke testing.
+Christian tests an unsent Signal dictation and one previously working application using the installed 0.4.5 candidate, then reports pass/fail.

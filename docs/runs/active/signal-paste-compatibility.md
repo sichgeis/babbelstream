@@ -17,18 +17,29 @@ Investigate Signal draft insertion and prepare a targeted repair using the exist
 
 ## Stages
 
-1. Targeted policy, fake checks, and durable docs: Completed; approved for commit.
-2. Commit/version/package/install: In progress.
+1. Targeted policy, fake checks, and durable docs: Completed and pushed at `dfa0a5a`.
+2. Commit/version/package/install: Completed.
 3. Human Signal smoke and final release: Pending.
 
 ## Validation
 
-Baseline and targeted `task check`: passed. Checks cover Signal normalization, rejection of a similarly named helper id, and bypass of a reportedly successful AX insertion in favor of exactly one clipboard write/paste. Existing insertion/coordinator checks pass. VERSION is prepared as 0.4.5; packaging/install verification pending. Installed release remains 0.4.4 / d662a72 until candidate installation. No real provider request or Signal message sent by the agent.
+Baseline and targeted `task check`: passed. Checks cover Signal normalization, rejection of a similarly named helper id, and bypass of a reportedly successful AX insertion in favor of exactly one clipboard write/paste. Existing insertion/coordinator checks pass. Clean candidate 0.4.5 / dfa0a5a is packaged, signed, installed, and running. No real provider request or Signal message sent by the agent.
 
 ## Current Blocker
 
-None. The initial automatic approval rejection was resolved by Christian's explicit approval of committing and installing this Signal fix.
+Implementation and installation are complete. Final tagging awaits Christian's Signal smoke result. The initial approval rejection was resolved by explicit user approval; no authorization remains missing for the completed work.
 
 ## Next Action
 
-Run task check, commit/push the approved repair, and package/install the clean 0.4.5 candidate.
+Christian dictates a harmless unsent draft in Signal using the installed candidate, checks one previously working application, and reports pass/fail.
+
+## Candidate And Installation Evidence
+
+- Candidate source: clean `main` commit `dfa0a5a`, pushed to origin.
+- Final `task check`: passed; no private conversation, real clipboard, microphone, provider, or credential access in checks.
+- Production package: `CONFIGURATION=release scripts/package-dmg.sh` passed; build completed in 6.95 seconds.
+- Artifact: `dist/BabbelStream-0.4.5.dmg`, 929561 bytes; hdiutil verification passed.
+- SHA-256: `c18f266e5c63fa61e097b18c0cd47cba8902a2b19a5bac815255af35e6d4cca1`; independent hash matches `.sha256` file.
+- Mounted candidate read-only; contained app reports 0.4.5 / dfa0a5a and passes strict/deep local-signature verification.
+- Installed via Finder at `/Applications/BabbelStream.app`; verified version, commit, signature, and running executable (PID 77537) on 2026-09-05. DMG detached afterward.
+- Final v0.4.5 tag not created. Automatic insertion in live Signal awaits user smoke confirmation; manual Cmd+V was already confirmed working.
