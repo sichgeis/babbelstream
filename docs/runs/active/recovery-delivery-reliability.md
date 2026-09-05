@@ -45,34 +45,52 @@ New providers, permissions, dependencies, telemetry, product features, public di
 2. Recovery ownership and deletion reporting: Completed.
 3. Clipboard delivery guard: Completed.
 4. Workflow checks and durable documentation: Completed.
-5. 0.4.4 candidate and handoff: In progress.
+5. 0.4.4 candidate and handoff: Completed.
+6. Final tag and release closeout: Pending human smoke approval.
 
 ## Validation Matrix
 
 | Check | Baseline | Current/final |
 | --- | --- | --- |
-| task check | Passed during assessment and implementation baseline | Passed after each implementation milestone |
+| task check | Passed during assessment and implementation baseline | Passed after each milestone and from clean candidate commit `de98e0a` |
 | Fresh app build | Passed during assessment (35.28 seconds) | Passed for candidate source, separate scratch directory (33.66 seconds) |
 | Focused fault/workflow checks | Missing affected regressions | Passed storage, clipboard, and actual coordinator regressions |
-| Package and signature | Not run | Pending |
+| Package and signature | Not run | Release configuration package passed; DMG checksum and mounted app signature verified |
 | Real smoke | Not run | Pending human |
-| Git | Clean main equals remote baseline | Pending |
+| Git | Clean main equals remote baseline | All implementation/candidate milestones pushed to main; final handoff is docs-only |
 
 ## Release Evidence
 
-Release commit/tag, artifact/checksum, and installed version: pending. No final tag before smoke approval.
+- Candidate source commit: `de98e0a` (clean, pushed `main` commit; later handoff commits only document evidence).
+- Candidate version: `0.4.4`; changelog explicitly labels it Release candidate.
+- Final annotated `v0.4.4` tag: not created; awaits human smoke.
+- Build/package: `CONFIGURATION=release scripts/package-dmg.sh` passed; production compilation completed in 10.06 seconds.
+- Artifact: `dist/BabbelStream-0.4.4.dmg` (929539 bytes).
+- SHA-256: `39e3dcc26fc63fc0388f5cc03790b12121c623f7db4c142ded74bd9f0a489606`.
+- Checksum file: `dist/BabbelStream-0.4.4.dmg.sha256`; independently recomputed hash matches.
+- `hdiutil verify`: valid checksum.
+- Local signature: `BabbelStream Local Code Signing`; `codesign --verify --deep --strict` passed with normal macOS trust access. Sandboxed trust validation was unavailable, so it was rerun outside that restriction.
+- Mounted the final DMG read-only, verified the contained app reports `0.4.4` / `de98e0a` and has a valid local signature, then detached it.
+- Installed/running version: not changed or tested by this run. No real microphone, provider, Slack, or visual smoke test performed.
+- Public signing/notarization/publication: outside scope; this is a local candidate.
 
 ## Current Blocker
 
-None.
+Implementation and packaging are complete. Final tagging and release closeout await the required human microphone/provider/Slack smoke result.
 
 ## Next Action
 
-Prepare version/changelog, run a fresh build, and package the clean 0.4.4 candidate.
+Christian installs the candidate and runs the 0.4.4 smoke checklist in `docs/release.md`, then reports pass/fail.
 
 ## Closeout
 
-Pending implementation, verification, candidate, and human smoke.
+- [x] Approved implementation, durable specs, automated checks, and candidate complete.
+- [x] Coherent commits pushed directly to main, as authorized.
+- [x] Clean candidate version/commit, DMG, checksum, and local signature verified.
+- [ ] Human smoke approval received.
+- [ ] Final tag, final artifact/install verification, and tracker archival complete.
+
+Keep this tracker active until the smoke gate and final release steps are complete.
 
 ## Recovery Milestone Evidence
 
