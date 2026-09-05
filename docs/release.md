@@ -120,9 +120,9 @@ Publish:
 
 Do not publish local `.env` files or provider secrets.
 
-## 0.4.4 Reliability Candidate Smoke Test
+## 0.4.4 Reliability Smoke Test
 
-This candidate is built from a clean commit. The final `v0.4.4` tag remains pending until this smoke test passes or is explicitly waived.
+Christian approved this smoke test on 2026-09-05. Final release `v0.4.4` is tagged at `d662a72`; release/install evidence is archived in `docs/runs/archive/recovery-delivery-reliability.md`.
 
 1. Open `dist/BabbelStream-0.4.4.dmg`, quit the previous app, and drag the candidate to Applications. Launch it and verify version 0.4.4 plus the candidate commit shown in the run tracker under Diagnostics.
 2. In an unsent Slack composer, dictate short synthetic English, German, and mixed-language phrases. Exercise both tap-to-latch and hold-to-talk. Confirm the text appears once, retains a trailing separator, and nothing is sent.

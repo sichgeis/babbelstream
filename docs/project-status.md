@@ -15,11 +15,11 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Recovery and delivery reliability passed Christian's real-workflow smoke test on 2026-09-05.
-- Final 0.4.4 packaging/installation is in progress from the final release commit.
-- Spec: `docs/features/recovery-delivery-reliability/spec.md`.
-- Tracker: `docs/runs/active/recovery-delivery-reliability.md`.
-- New investigation: Signal composer insertion; installed Signal 8.26.0 has bundle id `org.whispersystems.signal-desktop` and a bundled Quill editor. Its current direct-first route may report an AX write without updating editor state.
+- Active feature: Signal paste compatibility, a targeted clipboard routing fix.
+- Spec: `docs/features/signal-paste-compatibility/spec.md`.
+- Tracker: `docs/runs/active/signal-paste-compatibility.md`.
+- Installed/running release: `0.4.4` / `d662a72`; annotated `v0.4.4` is pushed.
+- Completed reliability evidence: `docs/runs/archive/recovery-delivery-reliability.md`.
 - Latest integrated feature: Web editor paste compatibility.
 - Completed web-editor compatibility evidence:
   `docs/runs/archive/web-editor-paste-compatibility.md`.
@@ -62,4 +62,4 @@ recorded.
 
 ## Next Action
 
-Complete final 0.4.4 release verification and confirm whether explicit clipboard paste works in Signal.
+Implement and verify the targeted Signal clipboard route, then install a 0.4.5 candidate for Signal smoke testing.

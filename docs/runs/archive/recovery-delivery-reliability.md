@@ -46,7 +46,7 @@ New providers, permissions, dependencies, telemetry, product features, public di
 3. Clipboard delivery guard: Completed.
 4. Workflow checks and durable documentation: Completed.
 5. 0.4.4 candidate and handoff: Completed.
-6. Final tag and release closeout: In progress; human smoke approved on 2026-09-05.
+6. Final tag and release closeout: Completed; human smoke approved on 2026-09-05.
 
 ## Validation Matrix
 
@@ -63,7 +63,7 @@ New providers, permissions, dependencies, telemetry, product features, public di
 
 - Candidate source commit: `de98e0a` (clean, pushed `main` commit; later handoff commits only document evidence).
 - Candidate version: `0.4.4`; changelog explicitly labels it Release candidate.
-- Final annotated `v0.4.4` tag: not created; awaits human smoke.
+- Final annotated `v0.4.4` tag: created and pushed at `d662a72` after smoke approval.
 - Build/package: `CONFIGURATION=release scripts/package-dmg.sh` passed; production compilation completed in 10.06 seconds.
 - Artifact: `dist/BabbelStream-0.4.4.dmg` (929539 bytes).
 - SHA-256: `39e3dcc26fc63fc0388f5cc03790b12121c623f7db4c142ded74bd9f0a489606`.
@@ -77,11 +77,11 @@ New providers, permissions, dependencies, telemetry, product features, public di
 
 ## Current Blocker
 
-None. Christian approved the smoke test; final release packaging and installation remain.
+None; release complete.
 
 ## Next Action
 
-Tag the final release commit, rebuild/package, install, and verify version/commit.
+None for this completed release; Signal compatibility is tracked separately.
 
 ## Closeout
 
@@ -89,9 +89,9 @@ Tag the final release commit, rebuild/package, install, and verify version/commi
 - [x] Coherent commits pushed directly to main, as authorized.
 - [x] Clean candidate version/commit, DMG, checksum, and local signature verified.
 - [x] Human smoke approval received on 2026-09-05.
-- [ ] Final tag, final artifact/install verification, and tracker archival complete.
+- [x] Final tag, final artifact/install verification, and tracker archival complete.
 
-Keep this tracker active until the smoke gate and final release steps are complete.
+Archived after final release verification on 2026-09-05.
 
 ## Recovery Milestone Evidence
 
@@ -125,3 +125,12 @@ Keep this tracker active until the smoke gate and final release steps are comple
 ## Human Smoke Approval And Follow-up
 
 Christian reported the 0.4.4 smoke test successful on 2026-09-05 and asked for an investigation of application-specific paste failures, specifically Signal. This authorizes the final 0.4.4 release steps already agreed in the plan. Signal is currently absent from clipboard-preferred routing; its installed bundle is `org.whispersystems.signal-desktop` (8.26.0) and its bundled composer includes Quill. The false-success mechanism is a likely explanation, not a live Signal reproduction. No Signal conversations or message content were accessed.
+
+## Final Release Evidence
+
+- Final source/tag: `d662a72` / annotated `v0.4.4`, pushed to main and origin.
+- Rebuilt release-configuration DMG from the clean tagged commit; hdiutil checksum valid.
+- Final SHA-256 (supersedes candidate checksum): `3b03052eea1cc27ae7de4812882a4397ff795382c8b4f552fb3c5c918f9fabab`.
+- Mounted DMG app and installed app both verify with the local signature and report `0.4.4` / `d662a72`.
+- Installed through Finder and launched from `/Applications/BabbelStream.app`; running PID 64976 verified. No code changed between the successful smoke candidate and final release; intervening commits were release/docs evidence.
+- Signal follow-up: Christian confirmed Copy Last Draft followed by manual Cmd+V works; a targeted routing correction is proceeding separately.
