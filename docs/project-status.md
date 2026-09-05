@@ -15,7 +15,8 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active feature: Recovery and delivery reliability (approved 2026-09-05).
+- Active release candidate: Recovery and delivery reliability (0.4.4).
+- Implementation and executable checks are complete; candidate packaging is in progress.
 - Spec: `docs/features/recovery-delivery-reliability/spec.md`.
 - Tracker: `docs/runs/active/recovery-delivery-reliability.md`.
 - Working directly on `main` with user authorization; target candidate: 0.4.4.
@@ -61,4 +62,4 @@ recorded.
 
 ## Next Action
 
-Implement the approved recovery ownership and delivery reliability contract.
+Package the clean 0.4.4 candidate for the human microphone/provider/Slack smoke test.
