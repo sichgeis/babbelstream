@@ -2,7 +2,7 @@
 
 ## Outcome And Authority
 
-Implement the onboarding portion of `docs/features/onboarding-and-updates/spec.md`, explicitly approved 2026-10-23. Sparkle, colleague signing, updater traffic and distribution remain deferred. Authorized implementation, checks, feature commits/pushes and local candidate packaging. Stop before new production installation, real microphone/provider testing, main/tags/publication or signing-material use.
+Implement the onboarding portion of `docs/features/onboarding-and-updates/spec.md`, explicitly approved 2026-10-23. Sparkle, colleague signing, updater traffic and distribution remain deferred. Authorized implementation, checks, feature commits/pushes and local candidate packaging. the maintainer explicitly authorized final quality review, documentation, commits/pushes and latest local installation/launch in the follow-up request on 2026-10-23. Real microphone/provider testing, main/tags/publication and signing-material use remain separately gated.
 
 ## Baseline
 
@@ -60,3 +60,10 @@ Candidate installation requires separate authorization. Then verify real first-r
 - Native secondary minimum-size checks completed for Teach Correction, Dictionary and Archive after final metrics; all use the accepted canvas and fixed footer. Selected evidence preserved under ignored `dist/onboarding-evidence/`; full temporary screenshots remain under `/tmp/babbelstream-onboarding-screenshots/`. Fixture preview processes closed. No production app/store was used for visual checks.
 - Full `task check` and final diff whitespace checks PASS. Source behavior unchanged after those checks; final documentation records candidate evidence only. Existing build 3 remains installed/running; its repaired permissions were not reset.
 - Required next human action: authorize build 4 installation, then test real consent/activation refresh and the local sample field before the expanded unsent dictation matrix. Current fixture focus-guard evidence is not native paste-success evidence.
+
+## Final Review And Installation Pass (2026-10-23)
+
+- Baseline: clean/pushed 0abea3d on codex/onboarding. Existing implementation/docs and candidate 4 already committed and pushed.
+- Review scope: all onboarding code, integration, shared Settings styling, core paste delta, fixtures, privacy and release documentation. Use gm-refactor guidance for visible control flow and focused improvements.
+- Follow-up findings to resolve: cancel on app/window focus-loss notifications so a rapid leave/return cannot resume an old test; refresh actual permissions after test completion so revoked access is visible immediately. Preserve the stricter editor guard and clipboard/cancellation preflight.
+- Proceed through normal-cache canonical checks, coherent pushed fixes, clean latest candidate and local installation/launch with rollback bundle. No permission reset, actual recording/provider test or private signing key use.
