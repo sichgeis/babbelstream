@@ -73,9 +73,9 @@ and expect `BabbelStream-0.5.2.dmg: OK`:
 shasum -a 256 -c BabbelStream-0.5.2.dmg.sha256
 ```
 
-Since 0.5.2 this one DMG is both the illustrated installer and the file Homebrew
-installs. Manually installed copies receive updates by replacing the app with a
-later DMG; this installer does not add an automatic updater.
+Each release provides one illustrated DMG and its checksum; there are no separate
+Pretty or revision downloads. Homebrew installs this same DMG. Manually installed
+copies receive updates by replacing the app with a later DMG; this installer does not add an automatic updater.
 
 The app is **not Apple-notarized**. If macOS blocks first launch, follow
 [Apple's per-app approval instructions](https://support.apple.com/en-gb/102445)

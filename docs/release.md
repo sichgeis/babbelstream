@@ -137,13 +137,21 @@ Reviewed Apple references (2026-10-23): [distribution signing](https://developer
 
 ## GitHub Release Assets
 
-Publish:
+Upload exactly these two assets, using the polished Finder layout:
 
 - `BabbelStream-<VERSION>.dmg`
-- `BabbelStream-<VERSION>.dmg.sha256`
-- Release notes copied from `CHANGELOG.md`
+- `BabbelStream-<VERSION>.dmg.sha256` (portable filename, no local absolute path)
 
-Do not publish local `.env` files or provider secrets.
+Use the same DMG for direct download and Homebrew. Put release notes from
+`CHANGELOG.md` in the release body. GitHub also generates source ZIP/tar archives;
+these are not installers and do not count as uploaded assets.
+
+Keep preview, revision and candidate variants local; do not upload `-pretty`,
+`-r2`, plain alternatives or intermediate builds. Before updating the tap, list
+the release assets and require exactly the canonical pair, independently download
+both, verify the checksum, and match the cask version/URL/hash to that DMG.
+Retain published canonical bytes and tags; a packaging correction after publication
+requires a new version. Do not publish local `.env` files or provider secrets.
 
 ## 0.4.4 Reliability Smoke Test
 
@@ -213,8 +221,9 @@ as Apple-verified or official Homebrew catalogue builds.
   or in-app update request is introduced. Signing/notarization remains an optional
   separately authorized later transition.
 
-## Additional 0.5.1 Decorative Installer
+## Historical 0.5.1 Decorative Previews
 
+The following records the original authorization, superseded by the cleanup below.
 the maintainer authorized `BabbelStream-0.5.1-pretty.dmg` plus its portable SHA-256 as
 additional v0.5.1 release assets. This is a container/layout variant of the exact
 released 0.5.1/build 7/8f229fe app, not a new app build or notarized installer.
@@ -230,6 +239,12 @@ The outer height includes the 28-point title bar; do not reuse background height
 as outer-window height. Its card border/corners remain visible with extra lower
 padding and a softer shadow. Keep the original and first pretty assets intact.
 Evidence: `docs/runs/archive/dmg-bottom-spacing.md`.
+
+On 2026-10-23 the maintainer explicitly authorized removing both preview DMGs and their
+checksums after the canonical polished 0.5.2 release became available. Those four
+preview assets have been removed; the original 0.5.1 pair and tag remain intact.
+The earlier instructions to preserve the previews no longer apply. Cleanup
+verification: `docs/runs/archive/clean-release-assets.md`.
 
 ## 0.5.2 App Icon Release
 

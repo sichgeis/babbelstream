@@ -41,3 +41,14 @@ icon positions/arrow and exact app payload. Preview/publish as a separately name
 `BabbelStream-0.5.1-pretty-r2.dmg`; preserve both existing DMGs/checksums and cask.
 The first pretty artifact's outer window was only 420 points, cropping its
 420-point background; correct this mismatch explicitly in the metadata.
+
+## Canonical release cleanup (2026-10-23)
+
+the maintainer subsequently approved one polished canonical DMG and checksum per release,
+shared with Homebrew, and removal of the additional preview variants. This supersedes
+the earlier requirements to publish and retain `-pretty` and `-pretty-r2` assets.
+Version 0.5.2 already supplies the polished layout and new icon under the canonical
+filename; preserve its bytes, tag and tap pin. Remove only the four 0.5.1 preview
+assets, retaining its original canonical pair/tag and local preview evidence.
+Future previews stay local. Follow [release asset policy](../../release.md#github-release-assets).
+Evidence: [cleanup record](../../runs/archive/clean-release-assets.md).

@@ -59,6 +59,14 @@ pilot Mac before recommending the update broadly. Record release URL, app commit
 checksum, tap commit and test outcomes. No new automatic publishing workflow or
 cross-repository secret is needed for the initial channel.
 
+Each release uploads exactly `BabbelStream-<VERSION>.dmg` and its portable
+`.dmg.sha256`; the canonical DMG must contain the polished drag-to-Applications
+layout. For the approved ad-hoc pipeline, explicitly set `DMG_LAYOUT=finder`
+because candidate mode otherwise defaults to plain. Keep all preview/revision
+variants local. List the public assets and confirm this exact pair before updating
+the tap; direct downloads and the cask must resolve to the same verified bytes.
+GitHub's automatic source archives are not app installers.
+
 Cask source of truth is the tap, not a second copy in the app repository. Check
 its current DSL with Homebrew rather than assuming all installed Brew versions
 have the same audit/trust behavior. Keep exact HTTPS URLs and checksums; don't use

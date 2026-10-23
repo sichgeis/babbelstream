@@ -103,6 +103,7 @@ Do not allow these artifacts to contradict each other. A feature spec may refine
 - The final tag must point at the final release commit on `main`, with `VERSION` and `CHANGELOG.md` aligned.
 - Final packaging must come from a clean commit so the installed app reports an exact non-dirty build hash.
 - The explicitly approved Homebrew colleague pilot may publish optimized ad-hoc artifacts without Developer ID/notarization, clearly labeled as non-notarized, following `docs/features/homebrew-distribution/spec.md`. Keep quarantine and OS approval intact; no security bypass hooks or TCC resets. Other-Mac pilot validation gates general rollout. All other public distribution channels require their separately approved signing/security contract; the existing Developer ID distribution mode remains fail-closed.
+- Publish exactly two uploaded assets per user-facing release: the polished `BabbelStream-<VERSION>.dmg` and its portable `.dmg.sha256`. Homebrew and manual downloads must use the same DMG and checksum. Keep preview/revision/candidate variants local; never upload `-pretty`, `-r2` or other parallel installer variants. GitHub-generated source archives are separate and are not app installers. Fix published packaging with a new version, never by replacing same-version bytes.
 
 ## Autonomy And Approval Gates
 
