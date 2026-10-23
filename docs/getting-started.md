@@ -13,14 +13,23 @@ Check [current status](project-status.md) before sharing installation instructio
 The current build requires Apple Silicon. It declares macOS 13.0 as its minimum;
 native evidence is on 26.7.1, with pilot smoke also reported on 27.0.1.
 
-Use `brew install --cask sichgeis/tap/babbelstream`. For a DMG,
-download both release assets, verify the checksum from their download directory,
-then copy the app to Applications and eject the image:
+Use `brew install --cask sichgeis/tap/babbelstream` for Homebrew, or follow the
+[illustrated DMG instructions](../README.md#install-with-the-illustrated-dmg).
+The public [0.5.1 release page](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1)
+lists `BabbelStream-0.5.1-pretty-r2.dmg` and its `.sha256` under Assets. This is the
+refined drag-to-Applications window; the original DMG remains plain. Neither
+changes the actual app or provides automatic in-app updates.
+
+From the download folder, verify both downloaded files before opening the image:
 
 ```sh
-shasum -a 256 -c BabbelStream-0.5.1.dmg.sha256
-open /Applications/BabbelStream.app
+shasum -a 256 -c BabbelStream-0.5.1-pretty-r2.dmg.sha256
 ```
+
+Quit an existing copy, open the DMG, drag BabbelStream onto Applications, wait for
+the copy to finish, eject the image, and launch the Applications copy. Keep local
+settings/Keychain intact. If verifying an older/plain image instead, use the
+checksum file that matches its exact filename.
 
 For an existing manual installation, finish or cancel active work, quit normally,
 and preserve its app bundle before moving it aside. Keep Application Support and

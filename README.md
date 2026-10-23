@@ -41,14 +41,46 @@ Homebrew's official catalogue. Homebrew must already be installed. If you have a
 manual BabbelStream installation, quit it and preserve a backup before migrating;
 see [installation guidance](docs/getting-started.md).
 
-For the illustrated drag-to-Applications window, download
+### Install with the illustrated DMG
+
+The installer is already public on the
+[GitHub 0.5.1 release page](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1).
+Under **Assets**, choose
 [BabbelStream-0.5.1-pretty-r2.dmg](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty-r2.dmg)
-and its [checksum](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty-r2.dmg.sha256).
-It contains the same released app with the restored background and arrow. The
-original DMG and Homebrew download remain unchanged.
-The app is **not Apple-notarized**. If macOS blocks first launch, use
+for the illustrated window with the arrow. Download its
+[checksum file](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty-r2.dmg.sha256)
+too. No GitHub sign-in is needed. The Source code ZIP/tar downloads are not installers.
+
+1. Finish any dictation and quit an existing BabbelStream normally. Preserve a
+   backup of its app bundle if replacing it; keep settings and Keychain entries.
+2. Double-click **BabbelStream-0.5.1-pretty-r2.dmg** in your download folder.
+   It opens a Finder window with BabbelStream on the left and Applications on the right.
+3. **Drag BabbelStream onto Applications.** If Finder asks to replace an existing
+   app, confirm only when you intend to replace that quit copy. Wait for copying
+   to finish.
+4. Eject **BabbelStream 0.5.1 Installer R2** in Finder.
+5. Open **Finder → Applications → BabbelStream**. Launch this installed copy,
+   rather than the app inside the disk image.
+6. Follow setup, confirm **0.5.1 / build 7 / commit 8f229fe** in Diagnostics,
+   and verify microphone, Accessibility and the local paste test before dictating.
+
+To verify the download, run this from the folder containing both downloaded files
+and expect `BabbelStream-0.5.1-pretty-r2.dmg: OK`:
+
+```sh
+shasum -a 256 -c BabbelStream-0.5.1-pretty-r2.dmg.sha256
+```
+
+R2 changes the installation window's layout only; it contains the same released
+app. The original `BabbelStream-0.5.1.dmg` and Homebrew still use the plain image.
+Manually installed copies receive updates by replacing the app with a later DMG;
+this installer does not add an automatic updater.
+
+The app is **not Apple-notarized**. If macOS blocks first launch, follow
 [Apple's per-app approval instructions](https://support.apple.com/en-gb/102445)
-where device policy permits. On a managed Mac, ask IT if approval is unavailable.
+where device policy permits. If it remains blocked after **Open Anyway**, ask IT;
+a DMG does not bypass company policy. **Move to Trash** removes the app, rather
+than approving it.
 
 ## Set up once
 
