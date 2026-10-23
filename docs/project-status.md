@@ -15,7 +15,7 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active pilot readiness: `docs/features/pilot-readiness/spec.md`, tracker `docs/runs/active/pilot-readiness.md`, branch `codex/pilot-readiness`. Approved autonomous implementation, unreleased.
+- Pilot readiness implementation/local preparation delivered; full acceptance pending: `docs/features/pilot-readiness/spec.md`, tracker `docs/runs/active/pilot-readiness.md`, branch `codex/pilot-readiness`. Approved autonomous implementation, unreleased; clean local candidate 0.4.5 build 2 / 5dd0e34 prepared without production installation.
 - Preserved dependency: clipboard-only insertion implemented 2026-10-23; unreleased on `codex/clipboard-only-insertion`.
 - Contract: `docs/features/clipboard-only-insertion/spec.md`.
 - Tracker: `docs/runs/active/clipboard-only-insertion.md`.
@@ -49,7 +49,7 @@ by their dedicated specifications.
 - Personal OpenAI automatic fallback plus direct-personal mode and the purple
   HUD are integrated on `main`. The expanded real-provider matrix remains
   pending.
-- Full `task check` restored on 2026-10-23 using the installed macOS 26.5 SDK selected by `scripts/swift-project.sh`; the CLT default macOS 27 SDK lacks required SwiftUI macros. Settings layout has local 26.7.1 fixture-preview evidence; 27.0.1 acceptance remains pending.
+- Full `task check` restored on 2026-10-23 using the installed macOS 26.5 SDK selected by `scripts/swift-project.sh`; the CLT default macOS 27 SDK lacks required SwiftUI macros. Shared Settings layout/colors have 26.7.1 fixture-preview evidence at the layout milestone; latest setup/metadata screens require renewed native review after this Mac unlocks. Full 27.0.1 acceptance remains pending.
 - The executable suite now covers AppState recovery, cancellation, delivery,
   and settings-snapshot workflows through fakes. Native AppKit/Accessibility,
   microphone, Keychain, Carbon, and process termination remain manual checks.
@@ -64,4 +64,4 @@ recorded.
 
 ## Next Action
 
-Finish clean candidate packaging and record the remaining UI, company-profile and distribution gates.
+After this Mac is unlocked, visually verify the current fixture-only setup/Advanced/confirmation/permission/metadata screens at both documented sizes.
