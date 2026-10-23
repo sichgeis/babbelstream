@@ -1,14 +1,15 @@
 # Get Started With BabbelStream
 
 BabbelStream 0.5.1 is available locally; its non-notarized GitHub/Homebrew colleague
-channel is staged pending the [download/launch quality test](homebrew-pilot-smoke-test.md).
+channel is staged; the [download/launch quality test](homebrew-pilot-smoke-test.md)
+has other-Mac results recorded, including the Keychain repair linked below.
 The normal Homebrew commands become usable only after publication and activation.
 Check [current status](project-status.md) before sharing installation instructions.
 
 ## Install the Applications copy
 
 The current build requires Apple Silicon. It declares macOS 13.0 as its minimum;
-native evidence is on 26.7.1, and the other-Mac check remains pending.
+native evidence is on 26.7.1, with pilot smoke also reported on 27.0.1.
 
 After tap activation, use `brew install --cask sichgeis/tap/babbelstream`. For a DMG,
 download both release assets, verify the checksum from their download directory,
@@ -89,6 +90,7 @@ See [pilot support](pilot-support.md) for connection-state and credential detail
 | Processing failed | Open Failed Recordings… to retry and copy, export audio, or explicitly delete it |
 | OS toggle says allowed but paste still fails | Recheck setup's actual trust; follow its repair guidance for the exact Applications copy |
 | Permission or key access changes after an update | Reapprove through macOS/Keychain when appropriate; preserve app data and keys |
+| Keychain password requested after every restart despite Always Allow | Follow the [targeted Keychain access repair](../README.md#keychain-asks-for-your-password-after-every-restart); add the current Applications copy without deleting the key or allowing all apps |
 | Need to report a problem | Share version/commit, macOS version and harmless reproduction steps; omit keys, work text, clipboard, audio and archives |
 
 Retrying a failed recording copies the recovered draft; it does not paste into a

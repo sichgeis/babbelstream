@@ -19,10 +19,13 @@ validation and release procedure remain in their dedicated specifications.
 Approved non-notarized Homebrew colleague pilot on `codex/homebrew-distribution`.
 Contract: `docs/features/homebrew-distribution/spec.md`; current staging/evidence:
 `docs/runs/active/homebrew-distribution.md`. The existing v0.5.1 app is reused;
-no source/version/tag or daily installation change. The release is a GitHub draft
+no source/version/tag change. The other Mac now has the downloaded candidate
+installed with its prior app backed up. The release is a GitHub draft
 and the cask is only on the tap's `codex/babbelstream-pilot` branch. The default
 branch has instructions only; normal Brew installation is intentionally inactive
-until the maintainer's other-Mac download/launch test passes. Public URL/install tests
+pending publication direction. the maintainer reported successful other-Mac launch,
+onboarding, tap/hold dictation and restart after a targeted Keychain repair;
+evidence and the initial failure are in the tracker. Public URL/install tests
 follow activation; first real upgrade evidence needs a later release.
 
 ## Known Limitations And Deferred Follow-Ups
@@ -31,6 +34,7 @@ follow activation; first real upgrade evidence needs a later release.
 - the maintainer approved the successful build 5 smoke test and explicitly authorized finalization on 2026-10-23, deferring macOS 27.0.1 comparison to the other Mac. Local 26.7.1 fixture evidence exists at both documented sizes in light/dark appearance. The 0.5.1 patch has focused grant/deny and native button/refresh evidence. Full OS Increase Contrast and expanded native/accessibility/provider matrices are not claimed complete.
 - Company-approved connection profile, model aliases, per-user key issuance and support/revocation ownership remain required before colleague deployment. No company destination is guessed or bundled master key supplied.
 - Ad-hoc rebuilds may require permission reapproval; onboarding reports actual running-process trust. Stable Developer ID signing/notarization and signed updates remain future work.
+- On macOS 27.0.1, upgrading manual 0.4.5 to ad-hoc 0.5.1 caused a Keychain password prompt after every restart despite Always Allow. Adding the installed Applications copy to the saved item's restricted Access Control list resolved the user retest. See README Troubleshooting; root cause and future upgrade trust remain unproven. This does not complete the separate visual layout matrix.
 - Project commands select installed SDK 26.5 because the CLT default SDK 27 lacks required SwiftUI macros. Full app/executable checks work; preexisting capture/framework-search warnings remain. This CLT environment does not expose runnable XCTest/Swift Testing.
 - The global shortcut is fixed. Local transcription and automatic updates remain deferred. Provider lifecycle milestones remain in `docs/provider-lifecycle.md`.
 
@@ -42,4 +46,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-the maintainer performs `docs/homebrew-pilot-smoke-test.md` on the other Apple Silicon Mac and reports the downloaded-launch quality result before public rollout.
+Review the recorded other-Mac smoke result and obtain publication direction before activating the staged release/tap for the public Homebrew installation test.

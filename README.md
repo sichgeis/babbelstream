@@ -12,13 +12,13 @@ or sends your message.**
 **Version 0.5.1 · Apple Silicon · Homebrew distribution is staged**
 
 The DMG is in a draft GitHub release. The tap is prepared, but public installation
-is waiting for the other-Mac download/launch quality test. The commands below
-become available after that gate and publication finish.
+is waiting for publication direction following the other-Mac smoke test and
+Keychain repair. The commands below become available after publication finishes.
 
 | Requirement | What to expect |
 | --- | --- |
 | Mac | Apple Silicon; Intel is not supported by this build |
-| macOS | Declared minimum 13.0; native evidence currently on 26.7.1, other versions pending |
+| macOS | Declared minimum 13.0; native evidence on 26.7.1 and pilot smoke on 27.0.1; other versions pending |
 | Installation | Ad-hoc signed, not notarized by Apple; macOS may require explicit approval |
 | Dictation provider | Your own approved OpenAI-compatible endpoint and API key; provider charges may apply |
 | Permissions | Microphone for recording; Accessibility for automatic paste |
@@ -90,6 +90,41 @@ the first real Homebrew upgrade is still awaiting pilot validation. There is no
 in-app updater or automatic background update check.
 
 [Upgrade and rollback guidance →](docs/homebrew-release.md#bad-release-and-rollback)
+
+## Troubleshooting
+
+### Keychain asks for your password after every restart
+
+**Symptom:** dictation works, but the first transcription after quitting and
+reopening BabbelStream asks for your login Keychain password again, even after
+choosing **Always Allow**.
+
+This occurred on macOS 27.0.1 when upgrading a manual 0.4.5 installation to the
+ad-hoc-signed 0.5.1 pilot. The saved key remained, but repeated approval did not
+resolve access. A signing/trust mismatch is suspected; the root cause is not
+confirmed. The following per-item repair resolved the reported restart test:
+
+1. Open **Keychain Access** (choose it rather than Passwords if macOS offers both).
+2. Select the **login** keychain and search for `com.sichgeis.babbelstream`.
+3. Open the application-password item with account **provider-api-key**, then
+   select **Access Control**. Leave **Show password** unchecked.
+4. Keep **Confirm before allowing access** selected. Under **Always allow access
+   by these applications**, click **+** and add `/Applications/BabbelStream.app`.
+   Existing BabbelStream entries may refer to older builds; in the reported case,
+   adding the current Applications copy worked without removing those entries.
+5. Choose **Save Changes** and authenticate in the macOS dialog if requested.
+6. Quit and reopen BabbelStream, then dictate harmless text into an unsent draft.
+   Confirm the text appears once without a Keychain prompt; repeat the restart
+   test to check that access persists.
+
+Do not enable **Allow all applications to access this item**, reveal/share the
+key, or delete the Keychain item as a repair. If saving is blocked or the prompt
+returns, report the macOS version, BabbelStream version/commit and reproduction
+steps without including passwords or private dictation.
+
+This repair was confirmed for the installed 0.5.1 build; it does not establish
+that trust survives a future Homebrew upgrade. Ad-hoc builds can change identity
+between versions. See [Apple's Keychain access guidance](https://support.apple.com/en-gb/guide/mac-help/kychn002/mac).
 
 ## Privacy by default
 

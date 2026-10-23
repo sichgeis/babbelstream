@@ -111,14 +111,15 @@ isolated pilot Mac. Do not claim them complete from static checks/first launch.
 
 ## Current Blocker
 
-Other-Mac downloaded/quarantined launch/onboarding quality test not yet reported.
-It is the approved publication gate, reaffirmed by the maintainer, not an auth failure.
-All independent preparation is complete; current daily app remains unchanged.
+Other-Mac launch/onboarding and dictation results are now reported below. A
+repeated Keychain prompt blocked restart acceptance until targeted per-item
+repair; the maintainer confirmed the retest now works. Public activation has not been
+authorized in this chat; the exact public Homebrew installation remains untested.
 
 ## Next Action
 
-the maintainer performs docs/homebrew-pilot-smoke-test.md using the staged draft download
-and reports the result before the agent publishes/activates the channel.
+Review the recorded other-Mac result and obtain publication direction before
+activating the staged release/tap and testing the exact public Homebrew command.
 
 ## Documentation Polish (2026-10-23)
 
@@ -137,3 +138,64 @@ documentation links to main after integration and before branch cleanup.
 Validation: 7 documentation entry points checked; 46 local links/section anchors
 resolve, and git diff --check passes. This pass changes only Markdown; the
 previous full task check evidence remains applicable to unchanged app/tooling.
+
+## Other-Mac Pilot — 2026-10-23
+
+- Host: Apple Silicon, macOS 27.0.1 (26A434), Homebrew 7.0.9.
+- Browser download/checksum and retained quarantine PASS. Installed exact
+  0.5.1/build 7/8f229fe payload; candidate signature verified. Prior 0.4.5 bundle
+  preserved locally. Canonical task check PASS on this host.
+- Human launch required Privacy & Security > Open Anyway. User completed
+  onboarding and reported successful dictation and both tap/hold gestures.
+- Settings remained after quit/reopen and dictation worked, but first provider
+  access after relaunch required a Keychain password. User considers this a
+  blocking usability issue; initial restart acceptance failed, then passed the
+  user retest after the targeted repair documented below.
+- Screenshot shows the item-access consent dialog with Always Allow, Deny and
+  Allow, not sufficient evidence that the entire login keychain is locked.
+- Read-only source review: SecItemCopyMatching reads the key on demand;
+  SecItemUpdate preserves the existing item, with no delete/add replacement.
+  Installed ad-hoc designated requirement is tied to cdhash
+  ee62ba00ce3cc2ffa6fc71cef09558b83d30925a. No secret or item ACL was read.
+- User explicitly confirmed Always Allow was selected on every attempt and does
+  not persist across same-build restarts. Do not repeat that suggestion or mark
+  the problem as user error.
+- Leading hypothesis: legacy item access/trust did not migrate cleanly from the
+  prior locally certificate-signed 0.4.5 app to ad-hoc 0.5.1. Source preserves
+  the old item with SecItemUpdate; this does not establish a new creator identity.
+  Actual item ACL/partition state has not been inspected, so root cause remains
+  unproven. Ad-hoc identity alone does not establish why the unchanged binary
+  prompts on every restart.
+- Next bounded diagnostic: user reviews only this item's Access Control and
+  explicitly adds the verified Applications copy, retaining per-app restrictions;
+  no Show Password, all-app access, deletion or broad partition-list changes.
+  Separately evaluate stable signing for future distribution. Apple's code-signing
+  guide documents certificate-based identity tracking, including self-signed
+  identities for Keychain; this is not evidence of Gatekeeper/notarization acceptance.
+- Release remains draft; public activation and Homebrew install remain blocked.
+  No signing/security/storage changes are authorized by this diagnosis.
+
+### Authorized Targeted Keychain Repair
+
+User explicitly requested the targeted Access Control repair. In Keychain Access,
+selected only login/com.sichgeis.babbelstream (account provider-api-key). The item
+already listed three BabbelStream.app trusted-application entries. Added the exact
+/Applications/BabbelStream.app through the application chooser and saved. Reopened
+the item and verified four entries persist; Confirm before allowing access remains
+selected, Allow all applications remains off, and Ask for Keychain password remains
+off. No key value was displayed, copied or changed; no existing access entry was
+removed. No authentication prompt was exposed by the returned UI. This records a
+persisted UI policy edit. the maintainer subsequently confirmed the requested restart/
+dictation retest works after this repair (2026-10-23). No claim is made that a
+future binary upgrade preserves this trust or that the root cause is proven.
+
+### Troubleshooting Documentation
+
+At the maintainer's request, README Troubleshooting now records the exact symptom,
+observed 0.4.5-to-0.5.1/macOS 27.0.1 context, targeted per-item Access Control
+repair, privacy boundaries and restart verification. Getting Started links to
+that single procedure. No runtime code, secret, signing identity or released
+artifact changed. Public Homebrew installation remains a separate pending test.
+Validation: all 16 local Markdown links/section targets in the four changed
+documents resolve; git diff --check passes. Canonical task check passed earlier
+on this host with unchanged runtime/tooling; not rerun for these documentation edits.
