@@ -298,3 +298,8 @@ Closeout validation: task check PASS (behavior and release-tooling fixtures;
 preexisting CLT linker search-path warnings remain), 47 local Markdown links/
 section targets resolve, and git diff --check PASS. Diff against origin/main
 contains only Markdown; no runtime/resource/tooling/VERSION/BUILD_NUMBER changes.
+
+Integration verified: app main and origin/main both reached 8369189 by fast-forward.
+Tap README main-link/follow-up update committed at b1cca7bc097612aad1445183ce80e85b07c63b37;
+published release notes now link main as well. v0.5.1 still resolves to original
+app-source 8f229fefe2ef344bf2e1c1869779f6d6b077b42e. Working tree clean after integration.
