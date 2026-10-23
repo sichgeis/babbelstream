@@ -22,13 +22,13 @@ the maintainer explicitly approved release finalization on 2026-10-23, accepted 
 ## Stages
 
 1. Completed: VERSION 0.5.0/build 6, dated changelog/README/specs/support/status reconciled; three implementation trackers archived with explicit release decision and deferred follow-ups in the candidate plan.
-2. In progress: full canonical checks PASS (`/tmp/babbelstream-release-0.5.0-check.log`), shell syntax/entitlement plist/diff checks PASS. Runtime Sources/Resources/Package/scripts unchanged from human-tested b3f7ff0. Release commit, main fast-forward, annotated v0.5.0 tag and atomic push next.
-3. Pending: rebuild exact tagged source using explicit ad-hoc candidate pipeline with final BabbelStream-0.5.0.dmg filename; verify/install/launch.
-4. Pending: final evidence-only docs, archive this release run, clean merged task branches while preserving tags/artifacts/rollback.
+2. Completed: full canonical checks PASS (`/tmp/babbelstream-release-0.5.0-check.log`), shell syntax/entitlement plist/diff checks PASS. Runtime Sources/Resources/Package/scripts unchanged from human-tested b3f7ff0. Release commit, main fast-forward, annotated v0.5.0 tag and atomic push completed; exact evidence below.
+3. Completed: exact-tag artifact built, verified and installed; final native verification identified the first-use defect corrected in 0.5.1.
+4. Completed with the 0.5.1 closeout: this run archived and merged task branches cleaned; all release tags/artifacts/rollback retained.
 
 ## Next Action
 
-Run final canonical and release metadata checks before committing the release preparation.
+No action for superseded 0.5.0; latest installed release/evidence is in docs/runs/archive/release-v0.5.1.md.
 
 ## 0.5.0 Final Verification And Superseding Patch
 
@@ -37,4 +37,4 @@ Run final canonical and release metadata checks before committing the release pr
 - Installed version 0.5.0 build 6 / a1a0227 and running Applications process verified. Executable hash 6f22660bfa06d43d417979ec140e229deef29fd8f406f8d3ab5cfcb02288624e matched payload. Build 5 backup retained under dist/rollback/BabbelStream-0.4.5-build5-b3f7ff0.app.
 - Final native setup check exposed an onboarding defect: fresh microphone access is notDetermined, while the Allow Microphone button checked unknown. General Settings could still request access, but the intended onboarding button was missing. User informed; correct as 0.5.1 without rewriting the published 0.5.0 tag.
 - At final 0.5.0 startup: Microphone Not requested, Accessibility Not allowed under the ad-hoc identity. No grant/reset/recording/provider action was automated. Permission reapproval remains a user action.
-- This run is closed with the local artifact released and the discovered defect explicitly superseded by the focused 0.5.1 patch. Latest release/install evidence belongs to docs/runs/active/release-v0.5.1.md until archived.
+- This run is closed with the local artifact released and the discovered defect explicitly superseded by the focused 0.5.1 patch. Latest release/install evidence is archived in docs/runs/archive/release-v0.5.1.md.

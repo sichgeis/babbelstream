@@ -1,6 +1,6 @@
 # Internal Pilot Setup And Support
 
-Version 0.5.1 is the corrected approved local release (0.5.0 introduced the feature set), following the maintainer’s successful smoke test and explicit finalization request on 2026-10-23. Its ad-hoc artifact is for the development Mac. Colleague distribution still requires the approved Developer ID/notarization path and company configuration/issuance inputs. The other-Mac visual check is deferred. Previous installed bundles are preserved under `dist/rollback/`; exact final installation evidence lives in the release tracker.
+Version 0.5.1 is the corrected approved local release (0.5.0 introduced the feature set), following the maintainer’s successful smoke test and explicit finalization request on 2026-10-23. Its ad-hoc artifact is for the development Mac. Colleague distribution still requires the approved Developer ID/notarization path and company configuration/issuance inputs. The other-Mac visual check is deferred. Previous installed bundles are preserved under `dist/rollback/`; exact final installation evidence lives in `docs/runs/archive/release-v0.5.1.md`. The final ad-hoc build may require microphone/Accessibility reapproval; its onboarding page shows actual trust and the explicit request actions.
 
 ## Install And Set Up
 
