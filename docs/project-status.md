@@ -16,16 +16,17 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-No active pilot implementation. the maintainer approved documentation integration and
-pilot closeout on 2026-10-23. The public 0.5.1 release and own tap are active;
-Homebrew installation/reinstall and user-confirmed dictation without a Keychain
-prompt passed on macOS 27.0.1. The prior manual app is backed up.
+Investigating recurring clipboard-only dictation into Codex on the development
+Mac. Branch: `codex/accessibility-paste-repair`; evidence:
+`docs/runs/active/accessibility-paste-repair.md`. The running 0.5.1 app reported
+Automatic paste Not allowed despite an enabled system Accessibility row. the maintainer
+approved the targeted removal/re-add of the exact Applications copy and personally
+authenticated. Re-added row is on; live post-restart trust/paste verification is
+pending. No runtime or release artifact change.
 
-Contract: `docs/features/homebrew-distribution/spec.md`. Completed evidence:
-`docs/runs/archive/homebrew-distribution.md`. Manual-app conflict, the unknown-cause
-missing bundle, reinstall recovery and targeted Keychain repair remain documented.
-No app source, version, build, release tag or installed binary changed during
-channel setup. Deferred lifecycle tests are in `docs/implementation-plan.md`.
+The Homebrew pilot is closed; public 0.5.1 release/tap and its completed installation
+evidence remain in `docs/runs/archive/homebrew-distribution.md`. Genuine upgrade,
+uninstall retention and rollback tests remain in `docs/implementation-plan.md`.
 
 ## Known Limitations And Deferred Follow-Ups
 
@@ -45,4 +46,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-At the next genuine app release, validate the Homebrew old-to-new upgrade and its permission/Keychain behavior using the follow-up matrix in docs/implementation-plan.md.
+Verify Automatic paste Allowed and local sample receipt after the targeted Accessibility repair, then obtain the maintainer’s Codex input smoke result.

@@ -95,6 +95,41 @@ in-app updater or automatic background update check.
 
 ## Troubleshooting
 
+### Dictation copies the draft but does not paste into Codex or another app
+
+First open **Set Up BabbelStream…** and check **Automatic paste**, or check
+**Accessibility** in General Settings. Microphone permission lets recording work;
+Accessibility is separately required to post the paste shortcut.
+
+If BabbelStream says **Not allowed** while System Settings shows its switch on,
+the enabled row may refer to an older app identity. We observed this exact
+mismatch with the installed 0.5.1 build. The proposed repair is to reapprove the
+current Applications copy:
+
+1. Finish active work and quit BabbelStream normally.
+2. Open **System Settings → Privacy & Security → Accessibility**. Select only
+   **BabbelStream** and remove its entry with the minus button. Authenticate in
+   the macOS dialog yourself if requested.
+3. Add `/Applications/BabbelStream.app` with the plus button and enable its switch.
+   Leave other applications' permissions unchanged.
+4. Reopen the Applications copy. In setup, choose **Check Again** and confirm
+   **Automatic paste — Allowed**. The running app's result matters more than an
+   enabled System Settings row.
+5. Run the optional local paste test (it replaces the clipboard with a harmless
+   sample), then focus the Codex input and try harmless dictation while keeping
+   Codex frontmost. Confirm the draft appears once and remains unsent.
+
+This repairs an OS permission entry; it does not require a new app build, a paid
+Apple membership, Keychain changes or a permission reset for every application.
+Ad-hoc rebuilds may require reapproval again. The exact reason an old grant stops
+matching is not established by the toggle alone.
+
+If Accessibility is **Allowed** but insertion still fails, check the app's result:
+**active application changed** means it deliberately avoided pasting into another
+app; **paste shortcut sent** means it posted Command-V but cannot prove the editor
+accepted it. Use manual paste for recovery and report that distinction. Do not
+repeat automatic paste blindly, which could duplicate text.
+
 ### Homebrew says installed, but the app is missing
 
 Homebrew's installed record can remain when the Applications bundle is missing.

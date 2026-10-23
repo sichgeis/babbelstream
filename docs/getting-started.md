@@ -89,7 +89,7 @@ See [pilot support](pilot-support.md) for connection-state and credential detail
 
 | Symptom | What to do |
 | --- | --- |
-| Draft copied but not pasted | Use Command-V, check Accessibility in setup, and ensure the original app is frontmost |
+| Draft copied but not pasted | Check Accessibility in setup and keep the original app frontmost; see the [clipboard-only repair](../README.md#dictation-copies-the-draft-but-does-not-paste-into-codex-or-another-app) if the system switch is on but the app says Not allowed |
 | Clipboard changed during delivery | Use Copy Last Draft; BabbelStream preserves the newer clipboard |
 | Processing failed | Open Failed Recordings… to retry and copy, export audio, or explicitly delete it |
 | OS toggle says allowed but paste still fails | Recheck setup's actual trust; follow its repair guidance for the exact Applications copy |
