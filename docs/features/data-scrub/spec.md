@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Approved for implementation by the maintainer on 2026-10-23.
+- State: Released in 0.5.3 on 2026-10-24; source/history/local-Git scrub and old remote installer withdrawal complete.
 - Owner: the maintainer.
 - Authority: scrub personal/company data without breaking functionality; follow-up explicitly authorizes backed-up, verified force-pushes of both public repositories and tags. On 2026-10-24 the maintainer explicitly approved migrating clean local checkouts/worktrees and purging obsolete local Git objects.
 

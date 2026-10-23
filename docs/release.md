@@ -269,9 +269,9 @@ release; record its outcome when performed. Evidence:
 The authorized history scrub rewrites existing source/tag IDs without replacing
 old installer bytes. Preserve original source IDs/checksums in release evidence,
 label the mismatch in existing release notes, and never rebuild/replace the same
-version's uploaded bytes. Prepare 0.5.3/build 9 from a clean rewritten commit, run
-all-ref and optimized-binary hygiene checks, and stop for installation/smoke
-authorization before publishing, updating the tap or deleting older assets.
+version's uploaded bytes. The initial local 0.5.3 candidate used build 9. The explicitly requested final
+release uses build 11, stripped debug maps and neutral Finder metadata; see the
+release authority and archived final-artifact evidence below.
 
 ## Authorized Remote Installer Withdrawal (2026-10-24)
 
@@ -280,8 +280,8 @@ local copies. Both 0.5.1/0.5.2 DMGs and portable checksums were hash-verified ag
 GitHub asset digests before removal. Release notes and rewritten tags are retained
 as historical records; source archives are sanitized and are not app installers.
 The tap is temporarily disabled without changing its version/URL/checksum or any
-installed app. This owner-approved privacy withdrawal is separate from publishing
-0.5.3, which still requires candidate installation and real-Mac smoke approval.
+installed app. This owner-approved privacy withdrawal preceded the separate direct 0.5.3
+release instruction recorded below; no old installer bytes were restored.
 
 ## 0.5.3 Release Authority
 

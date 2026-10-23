@@ -62,7 +62,7 @@ release assets. Existing release-note text may be sanitized as part of the scrub
 
 ### 3. Candidate And Handoff
 
-- Status: Candidate prepared; local migration completed on 2026-10-24. Human installation/smoke approval remains pending.
+- Status: Completed. Local migration, old remote asset withdrawal and the explicitly requested clean 0.5.3 publication are complete. Earlier candidate evidence below is historical.
 - Candidate source: `92efa2bcd354e15cf1be6a79c7bfbe74599399b3`; version 0.5.3, build 9.
 - Artifact: `dist/BabbelStream-0.5.3-candidate.9-92efa2b.dmg` and portable checksum.
 - SHA-256: `be0aa44db4aca13020f698005fd58bb9fde1e2c16a8be6d2d09f3a76f04f1059`.
@@ -84,7 +84,8 @@ release assets. Existing release-note text may be sanitized as part of the scrub
 
 ## Release Evidence
 
-No new release/tag/installation authorized. Original older artifacts keep their
+The subsequent direct release instruction authorized v0.5.3 publication and tap
+advancement. No production installation occurred. Original older artifacts keep their
 original source IDs; rewritten tags cannot claim byte-for-byte provenance.
 
 ## Backup Evidence
@@ -125,14 +126,13 @@ outside the repositories and must not be published.
 
 ## Current Blocker
 
-None for the authorized source/history/local-Git scrub. Production installation,
-real microphone/provider/Slack validation, replacement release publication, tap
-version changes remain separately gated. Older remote binaries were withdrawn
-under the subsequent explicit authorization recorded below.
+None. The authorized source/history/local-Git scrub, remote installer withdrawal
+and clean 0.5.3 publication/tap advancement are complete. Real workflow validation
+remains unperformed; no production installation was requested or done.
 
 ## Next Action
 
-Complete the explicitly requested 0.5.3 publication through `release-v0.5.3.md`.
+No scrub work remains. Optional real upgrade/workflow validation is recorded in the implementation plan.
 
 ## Residual Exposure And Owner Actions
 
@@ -199,3 +199,12 @@ main/tag and tap advancement are authorized under the exception recorded in
 `docs/release.md` and `release-v0.5.3.md`; this does not assert new real-provider/
 microphone validation. Internal validation status is excluded from release notes
 by the maintainer’s follow-up instruction. Production installation stays excluded.
+
+## Final Closeout
+
+Release 0.5.3/build 11 is published from `b9c0641f14598abe7388c496a78074b60cb168bf`. Its full mounted
+payload (including raw debug-map bytes, Finder metadata and attributes) has zero
+known private matches. Public DMG hash `41b8aed841824c66862b65a11c576364300e3cbd07760370e81f76b77a6a99a2` matches an
+independent anonymous download. The tap is re-enabled at 0.5.3. Earlier public
+DMGs/checksums remain removed; local copies and all backups remain intact. See
+`release-v0.5.3.md` for the complete final-artifact evidence. Tracker archived.

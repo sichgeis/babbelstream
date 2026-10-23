@@ -5,30 +5,26 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Current Release
 
-**Public installer downloads withdrawn on 2026-10-24.** Both older DMGs and
-checksums are removed; release records and scrubbed tags remain. New Homebrew
-installs are temporarily disabled pending a clean smoke-tested replacement.
-Existing installed apps and local installer copies are unchanged.
-
-- Latest release: **0.5.2**, bundle build **8**, annotated tag **v0.5.2**, published on GitHub and pinned by the tap cask. It changes only the app icon (blue design) and its `.icns` encoding; app behavior equals 0.5.1.
-- App-source commit: **3fb7a736110a540e7f1c1de1e36247e9c0433509** on main. Artifact `dist/BabbelStream-0.5.2.dmg`, SHA-256 `728b702d394a21a7af7ebca8d2385422973d2b3ee22ac1c809448f16523a2c82`; evidence: `docs/runs/archive/release-v0.5.2.md`. 0.5.2 was not installed locally and its other-Mac downloaded/quarantined test is pending.
-- Previous release: **0.5.1 / build 7 / 8f229fe**, last verified installed at `/Applications/BabbelStream.app`.
-- 0.5.1 original artifact: `dist/BabbelStream-0.5.1.dmg`; checksum and release/installation evidence: `docs/runs/archive/release-v0.5.1.md`. The four additional `pretty`/`pretty-r2` preview assets were removed by explicit user request after 0.5.2 became available. The original canonical pair was subsequently withdrawn for the data scrub; its scrubbed tag remains. Future releases upload only one polished DMG and checksum, shared with Homebrew. Cleanup evidence: `docs/runs/archive/clean-release-assets.md`. Layout evidence: `docs/runs/archive/pretty-dmg-layout.md` and `docs/runs/archive/dmg-bottom-spacing.md`.
-- Scope: clipboard paste for every application; provider/credential/parser/instance safeguards; private diagnostics/HUD fixes; guided provider setup; first-run permission onboarding/local paste verification; unified subtle Settings/dialog layout. Version 0.5.1 corrects the first-use microphone request action found during final 0.5.0 verification.
-- Supported workflow: tap/hold Control + Option + Space into Slack and other focused macOS text fields; no auto-send.
-- Canonical validation: `task check`; full app, behavior/loopback/setup/onboarding/release-tooling checks PASS.
-- Optimized ad-hoc artifact (internal candidate verification mode), now published as an explicitly approved non-notarized own-tap pilot. Developer ID/notarization and in-app automatic updates remain deferred.
+- Latest release: **0.5.3**, bundle build **11**, annotated tag **v0.5.3**, published on 2026-10-24 and pinned by the re-enabled Homebrew tap.
+- App-source commit: `b9c0641f14598abe7388c496a78074b60cb168bf` on main.
+- Canonical DMG: `dist/BabbelStream-0.5.3.dmg`; SHA-256 `41b8aed841824c66862b65a11c576364300e3cbd07760370e81f76b77a6a99a2`. The portable checksum and anonymous download match the same fully scanned bytes.
+- Privacy evidence: source/history scans and complete mounted-payload/attribute scans find zero known private matches. Debug maps are stripped before signing; Finder metadata uses a neutral backing-image path.
+- Release/cask evidence: `docs/runs/archive/release-v0.5.3.md`. This is the explicitly approved optimized ad-hoc, non-notarized pilot. Developer ID/notarization remains a separate channel.
+- Older 0.5.1/0.5.2 installers and checksum assets remain withdrawn; their sanitized notes/tags remain historical. Local copies and backup mirrors are unchanged.
+- No app installation or upgrade was performed for this release. Last reported installed copy remains the previously verified 0.5.1; no new native workflow validation is claimed here.
+- Supported workflow remains tap/hold Control + Option + Space into Slack and other focused macOS text fields; no auto-send. Saved routing choices persist; direct pre-routing LiteLLM upgrades require one explicit routing selection.
+- Canonical `task check`, full-payload privacy/signature/integrity checks, independent public-download verification and Homebrew recipe style/strict audit pass.
 
 ## Active Work
 
-Finalizing the explicitly requested clean 0.5.3/build 11 public pilot release.
-Run: `docs/runs/active/release-v0.5.3.md`; scrub evidence:
-`docs/runs/active/data-scrub.md`. No production installation or new live provider/
-microphone validation is included. Restoring the tap follows verified public assets.
+No active implementation or release work. The public-data scrub, authorized local
+migration/pruning, old remote installer withdrawal and clean replacement release
+are complete. Evidence: `docs/runs/archive/data-scrub.md`, its ref map, and
+`docs/runs/archive/release-v0.5.3.md`. Existing worktrees and private stores were preserved.
 
 ## Known Limitations And Deferred Follow-Ups
 
-- Original 0.5.1/0.5.2 remote DMGs/checksums were removed under explicit owner authorization. Local copies retain their original source IDs. The explicit 0.5.3 release request authorizes the clean replacement and tap advancement; real workflow validation remains separately recorded.
+- Real old-to-new upgrade, permission/Keychain behavior and expanded microphone/provider/editor coverage for 0.5.3 remain follow-up validation. The maintainer explicitly requested release without a new smoke result; no pass was fabricated.
 
 
 - At initial local installation, microphone was Not requested and Accessibility Not allowed. After the explicitly authorized targeted repair on 2026-10-23, native setup reports both Allowed and Codex insertion works. Ad-hoc future builds may require reapproval; no global TCC reset was used.
@@ -47,5 +43,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Complete exact-tag packaging, full-payload privacy checks and public-download
-verification for 0.5.3, then restore the tap.
+On the pilot Mac, optionally upgrade to 0.5.3 with `brew upgrade --cask sichgeis/tap/babbelstream` and record the real old-to-new upgrade and permission/Keychain behavior using `docs/implementation-plan.md`.

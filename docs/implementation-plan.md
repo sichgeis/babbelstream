@@ -118,7 +118,7 @@ Keep these follow-ups in the existing candidate plan rather than reopening close
 The initial distribution pilot is closed. Keep these cases explicitly untested
 until their own evidence is recorded:
 
-- **Genuine version upgrade:** test 0.5.1 to the next legitimate release with
+- **Genuine version upgrade:** test 0.5.1 to the clean 0.5.3 release with
   increased VERSION/BUILD_NUMBER. Verify installed source/version, settings,
   dictionary/recovery preservation, permissions and Keychain trust. A same-version
   reinstall does not prove this case.
