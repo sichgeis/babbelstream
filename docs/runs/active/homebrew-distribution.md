@@ -119,3 +119,21 @@ All independent preparation is complete; current daily app remains unchanged.
 
 the maintainer performs docs/homebrew-pilot-smoke-test.md using the staged draft download
 and reports the result before the agent publishes/activates the channel.
+
+## Documentation Polish (2026-10-23)
+
+the maintainer requested a further documentation/README cleanup. The app README now
+leads with pilot availability, requirements, onboarding, dictation and explicit
+Homebrew update steps. Detailed provider/recovery/removal guidance is in
+`docs/getting-started.md`; developer build/install details moved to
+`docs/development.md`. `docs/README.md` provides navigation by reader task, and
+pilot support distinguishes user setup from company/operator responsibilities.
+No rollout gate, runtime behavior, release asset or installed app changes.
+
+The staged tap README also links the user/developer documentation; its latest
+commit is ff1c06c2e9091e69e6ca8e78e272da7b8a3157e8 (cask unchanged). Default tap
+main remains README-only. The operator checklist now includes switching staging
+documentation links to main after integration and before branch cleanup.
+Validation: 7 documentation entry points checked; 46 local links/section anchors
+resolve, and git diff --check passes. This pass changes only Markdown; the
+previous full task check evidence remains applicable to unchanged app/tooling.

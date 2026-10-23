@@ -3,7 +3,7 @@
 Owner: the maintainer (`sichgeis`). Contract: [Homebrew distribution](features/homebrew-distribution/spec.md).
 This is the approved ad-hoc/non-notarized pilot, not the Developer ID channel.
 The current release and cask are staged pending the other-Mac launch gate; see
-[runtime evidence](runs/active/homebrew-distribution.md). Commands that publish or
+[staging evidence](runs/active/homebrew-distribution.md). Commands that publish or
 replace an app are operator steps, not steps performed automatically by this guide.
 
 ## First publication
@@ -15,7 +15,7 @@ replace an app are operator steps, not steps performed automatically by this gui
 5. On the other Apple Silicon Mac, try that downloaded/quarantined DMG normally. Record macOS version, approval warnings, successful Applications launch, current permissions, local paste and the explicitly authorized harmless unsent dictation test. Never grant permissions or use a provider on another user's behalf.
 6. After that gate passes, publish the release. Download its public HTTPS URL without authentication, verify SHA-256 and the portable checksum. Do not skip failures or substitute the local payload for this test.
 7. Validate `Casks/babbelstream.rb` in `sichgeis/homebrew-tap`: exact version/hash/URL; arm64 and macOS minimum; app-only artifact; no executable hooks, zap or security bypass. Validate with the installed Homebrew's style/audit tooling. Record expected non-notarized Gatekeeper findings, not a false official acceptance claim.
-8. Fast-forward the tested cask into the tap default branch. Validate the exact public install command on the pilot Mac. Keep colleague rollout marked pending until it works. App documentation/main integration can then reflect actual channel availability; no app-source version bump/tag is needed for metadata-only channel setup.
+8. Fast-forward the tested cask into the tap default branch. Validate the exact public install command on the pilot Mac. Keep colleague rollout marked pending until it works. App documentation/main integration can then reflect actual channel availability; no app-source version bump/tag is needed for metadata-only channel setup. After app documentation integration, change the tap README’s staging-branch documentation links to main before deleting feature branches.
 
 Connector-first publishing is preferred. If release upload is unavailable there,
 use an already authenticated `gh` without putting credentials into arguments or

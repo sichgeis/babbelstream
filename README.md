@@ -1,165 +1,131 @@
 # BabbelStream
 
-BabbelStream is a native macOS menu-bar hybrid dictation helper for Slack and other focused text fields.
+Speak a draft. Keep your own words. Send it when you're ready.
 
-Tap `Control + Option + Space` for hands-free recording or hold it for push-to-talk. BabbelStream transcribes through an OpenAI-compatible endpoint, optionally cleans the draft for Slack, and inserts it into the focused field. It never auto-sends messages.
+BabbelStream is a native macOS menu-bar app for dictating into Slack and other
+focused text fields. It supports German, English and mixed technical speech,
+with optional cleanup for punctuation and filler words. **It never presses Enter
+or sends your message.**
 
-The latest local release is **0.5.1**, with first-run permission setup, a local
-paste test, a cleaner adaptive Settings layout, clipboard-based insertion for
-every application, and provider/credential safeguards. the maintainer approved the
-local smoke test; macOS 27.0.1 visual comparison is deferred. The artifact
-is ad-hoc signed and not notarized by Apple. An own Homebrew tap is being staged
-for colleague installation and user-initiated upgrades; other-Mac validation is
-pending. No in-app updater is included.
-See [project status](docs/project-status.md) and [pilot setup/support](docs/pilot-support.md).
+## Try the pilot
 
-## Current MVP
+**Version 0.5.1 · Apple Silicon · Homebrew distribution is staged**
 
-- Native macOS menu-bar app.
-- Postponable first-run setup with live microphone/Accessibility checks, permission repair, saved provider guidance and an explicit local sample-paste test.
-- Consistent Settings and secondary dialogs with a nearly white Light Mode canvas, native Dark Mode and fixed action footers.
-- Global hybrid hotkey: tap `Control + Option + Space` to record hands-free; hold it for at least 0.5 seconds for push-to-talk.
-- Compact non-activating status HUD for recording, processing, cancellation, and paste recovery.
-- Escape cancels only while a recording or provider operation is active; canceling a stopped recording's provider work preserves it under Failed Recordings.
-- AVFoundation microphone recording with configurable max duration, defaulting to 10 minutes.
-- OpenAI-compatible transcription endpoint, default path `/v1/audio/transcriptions`, using `gpt-transcribe` by default.
-- OpenAI-compatible cleanup endpoint, default path `/v1/chat/completions`.
-- One bounded hedge for transient transcription slowness: primary starts immediately, Mini starts after 10 seconds if needed, the first valid result wins, and both share a 75-second deadline. A zero-byte connection stall is canceled after 15 seconds.
-- Optional personal OpenAI fallback, off by default, uses a separate Keychain key
-  and one sequential official-API request only when the primary connection is
-  unreachable. Gateway/service-unavailable HTTP 502/503/504 qualify; credential,
-  rate-limit, other HTTP, model, and response errors never switch accounts.
-- A separate `Use personal OpenAI now (skip primary)` switch handles known
-  weekend downtime without waiting: after Apply, new dictations go straight to
-  personal OpenAI and the HUD turns purple with a personal-provider icon.
-- Failed or interrupted processing keeps the stopped M4A in a local, user-only Failed Recordings store. Retry uses current provider settings and copies the result instead of auto-pasting into a historical target.
-- The HUD stays compact and passive; it distinguishes primary/Mini processing and shows Recording saved after failure. Privacy-safe diagnostics record stage, timing, status/error category, and byte counts.
-- Cleanup preserves German, English, and mixed German-English speech without translating.
-- Local personal dictionary injects preferred vocabulary and correction hints into cleanup.
-- Local usage counters show dictations, recorded minutes, cleanup requests, and safe failure counts.
-- Optional local dictation archive writes daily JSONL text files and provides monthly word-count review/export.
-- Copyable diagnostics summarize state and provider settings without transcripts, private filesystem paths, raw messages or API keys.
-- Clipboard plus `Cmd+V` for every application, with target/cancellation/clipboard ownership guards and Copy Last Draft recovery. Direct field writes are deferred.
-- Automatic insertion only while the originally captured app remains frontmost; the currently focused field in that app receives the draft, including in VS Code, Codex, and other reactive editors.
-- One trailing space after inserted dictation chunks so repeated dictations do not run together.
-- In-app launch-at-login toggle backed by macOS ServiceManagement.
-- API key stored in macOS Keychain; no transcript or audio history by default.
+The DMG is in a draft GitHub release. The tap is prepared, but public installation
+is waiting for the other-Mac download/launch quality test. The commands below
+become available after that gate and publication finish.
 
-## Build Locally
+| Requirement | What to expect |
+| --- | --- |
+| Mac | Apple Silicon; Intel is not supported by this build |
+| macOS | Declared minimum 13.0; native evidence currently on 26.7.1, other versions pending |
+| Installation | Ad-hoc signed, not notarized by Apple; macOS may require explicit approval |
+| Dictation provider | Your own approved OpenAI-compatible endpoint and API key; provider charges may apply |
+| Permissions | Microphone for recording; Accessibility for automatic paste |
 
-```bash
+**Testing the draft?** Follow the [download/launch checklist](docs/homebrew-pilot-smoke-test.md).
+Draft assets require a GitHub account authorized to view them. See
+[project status](docs/project-status.md) for current evidence and remaining gates.
+
+### Install with Homebrew — after activation
+
+```sh
+brew install --cask sichgeis/tap/babbelstream
+open /Applications/BabbelStream.app
+```
+
+This uses [our own tap](https://github.com/sichgeis/homebrew-tap), independently of
+Homebrew's official catalogue. Homebrew must already be installed. If you have a
+manual BabbelStream installation, quit it and preserve a backup before migrating;
+see [installation guidance](docs/getting-started.md).
+
+You can also use the versioned DMG and checksum from GitHub Releases once
+published. The app is **not Apple-notarized**. If macOS blocks first launch, use
+[Apple's per-app approval instructions](https://support.apple.com/en-gb/102445)
+where device policy permits. On a managed Mac, ask IT if approval is unavailable.
+
+## Set up once
+
+1. Open BabbelStream from Applications. Its setup dialog can be postponed and
+   reopened through **Set Up BabbelStream…**.
+2. Deliberately allow Microphone and Accessibility access. Without Accessibility,
+   completed drafts can still be copied for manual paste.
+3. Confirm your approved provider destination, enter your own key, and choose
+   **Apply Settings**. No provider key is bundled with the app.
+4. Try the optional local paste test, then dictate a harmless sample into an
+   unsent draft. The local test uses no microphone or provider, and replaces the
+   clipboard with its sample.
+
+[Setup and troubleshooting →](docs/getting-started.md)
+
+## Dictate where you write
+
+| Action | Result |
+| --- | --- |
+| Tap `Control + Option + Space` | Start hands-free recording; tap again to stop and process |
+| Hold the shortcut for at least 0.5 seconds | Record while held; release to process |
+| Press Escape while active | Cancel recording or processing |
+| Switch to another app before delivery | Keep the draft available for copying instead of pasting into that app |
+
+Automatic delivery puts the draft on the clipboard and posts `Command + V` to the
+currently focused field in the original app. Review the result before sending.
+Use **Copy Last Draft** for manual recovery, **Failed Recordings…** to recover a
+failed attempt, and **Teach Correction…** to add vocabulary hints. Leave the
+language hint blank for mixed German-English dictation.
+
+## Update when you're ready
+
+After the tap is activated, finish or cancel active work and quit BabbelStream
+normally before upgrading. Copy Last Draft is session-only and is lost on quit.
+
+```sh
+brew update
+brew upgrade --cask sichgeis/tap/babbelstream
+open /Applications/BabbelStream.app
+```
+
+Confirm the version/commit in Diagnostics. macOS or Keychain may request approval
+again after an update. Settings, dictionary and retained recordings should remain;
+the first real Homebrew upgrade is still awaiting pilot validation. There is no
+in-app updater or automatic background update check.
+
+[Upgrade and rollback guidance →](docs/homebrew-release.md#bad-release-and-rollback)
+
+## Privacy by default
+
+- Recording starts only when you request it. Audio goes to the configured provider;
+  optional cleanup sends transcript text and dictionary hints to that provider.
+- Successful audio is deleted. Failed or interrupted stopped recordings stay
+  locally in **Failed Recordings** until recovery succeeds or you delete them.
+- Draft text stays in session memory and the clipboard unless you explicitly enable
+  the local archive. Other apps and clipboard managers may read clipboard text.
+- API keys stay in macOS Keychain. Personal OpenAI fallback is off by default and
+  requires separate consent, a separate key and possible personal charges.
+- No telemetry, cloud sync, Slack API integration or auto-send.
+
+For work dictation, use only content and provider destinations your company
+allows. [Privacy contract →](docs/security-privacy.md)
+
+## Remove the app
+
+For a Homebrew-managed installation, disable launch at login if enabled, quit the
+app, then run `brew uninstall --cask sichgeis/tap/babbelstream`. For a manual
+installation, remove the Applications bundle after quitting.
+
+Removing the app retains keys, settings, dictionary, failed recordings and any
+optional archive. Complete data removal is a separate deliberate choice; see
+[removal and local data](docs/getting-started.md#remove-local-data-deliberately).
+
+## Build or contribute
+
+```sh
 task check
 scripts/build-app.sh
 ```
 
-`task check` builds the app, runs the fixture-based `BabbelStreamChecks` executable (including loopback-only transport checks), and verifies release preflight in disposable Git repositories. Project commands select the validated installed macOS 26.5 SDK locally; see `docs/release.md` for toolchain prerequisites and explicit overrides. This CLT-only environment does not expose XCTest or Swift Testing through SwiftPM, so the repository intentionally has no misleading empty `swift test` target.
+Swift, SwiftUI and AppKit; no third-party runtime dependencies. The canonical
+checks use executable fixtures rather than an unavailable XCTest runner in this
+Command Line Tools environment. [Development guide →](docs/development.md)
 
-The app bundle is written to:
-
-```text
-dist/BabbelStream.app
-```
-
-For stable local permissions, create a local signing identity once, then install the app from a stable path:
-
-```bash
-scripts/create-local-codesign-identity.sh
-scripts/install-dev-app.sh
-```
-
-`scripts/install-dev-app.sh` is the daily development install loop. It builds the app, packages the local DMG, opens the Finder drag-to-Applications window, and stops any running BabbelStream copy so Finder can replace it cleanly. The script does not use `sudo`; if `/Applications` needs authorization, Finder shows the standard macOS prompt during the drag copy. After copying, restart the installed app with:
-
-```bash
-RESTART_ONLY=1 scripts/install-dev-app.sh
-```
-
-Set `WAIT_FOR_INSTALL=1` if you want the script to wait for the drag copy and launch `/Applications/BabbelStream.app` after it appears.
-
-For a clean optimized review artifact without installation or signing-key lookup, use `task app:candidate`. The approved non-notarized Homebrew pilot and optional Developer ID channel have separate requirements; see [release guide](docs/release.md).
-
-Equivalent Taskfile shortcuts are available as `task app:build`, `task app:install-dev`, `task app:restart`, and `task app:package-dmg`.
-
-## Package A DMG
-
-```bash
-scripts/package-dmg.sh
-```
-
-The DMG is written to:
-
-```text
-dist/BabbelStream-$(cat VERSION).dmg
-```
-
-The approved own-tap pilot reuses an exact tagged ad-hoc DMG, clearly labeled as non-notarized. Developer ID signing/notarization remains an optional later channel; see [docs/release.md](docs/release.md).
-
-## First-Run Setup
-
-1. Run `scripts/install-dev-app.sh`, then drag `BabbelStream.app` onto the Applications link in Finder.
-2. Grant Microphone permission when prompted.
-3. Open Settings from the menu-bar icon.
-4. Configure the provider base URL and choose `OpenAI (standard model IDs)` for
-   the official OpenAI API or `LiteLLM (openai/ model prefix)` for a proxy that
-   exposes OpenAI models through `openai/*`. Choose `gpt-transcribe`,
-   `gpt-4o-transcribe`, or `gpt-4o-mini-transcribe` from the primary-model menu,
-   verify the displayed effective primary/fallback IDs, configure the cleanup
-   model/timeout and API key, then click `Apply Settings` in the persistent
-   Settings footer. `gpt-transcribe` and standard OpenAI routing are the
-   defaults. Existing company proxy installations migrate once to LiteLLM
-   routing. The Provider pane also shows the fixed Mini hedge, 10-second hedge
-   delay, 75-second overall deadline, and separate 15-second connection
-   watchdog. During rare slow requests the same safeguarded audio may be sent
-   to both models and may incur two transcription charges. If you explicitly
-   want weekend/offline-cluster availability, enable the Personal OpenAI
-   fallback, review its fixed `api.openai.com` transcription/cleanup
-   destinations and cross-account disclosure, add a separate personal key, and
-   Apply. This can send work audio, cleanup text, and dictionary context to your
-   personal OpenAI account and incur personal charges.
-   When you already know LiteLLM is offline, also enable `Use personal OpenAI
-   now (skip primary)` and Apply. This persisted mode avoids both the work
-   primary and Mini attempts until you turn it off again.
-5. If processing fails, open **Failed Recordings…** from the menu to retry and copy the draft, save the M4A elsewhere, or explicitly delete it.
-6. Request Accessibility permission so BabbelStream can insert text automatically.
-7. Optionally enable `Launch at login` in Settings.
-8. Optionally enable `Archive completed dictations` if you want local daily text files and monthly word-count review.
-9. Focus Slack or another text field. Tap `Control + Option + Space`, release, speak hands-free, then press it again to process; or hold it while speaking and release for push-to-talk. The HUD Stop button also processes. Escape or the menu Cancel action discards/cancels instead of pasting.
-
-For mixed German-English dictation, leave the language field blank. Use the optional transcription prompt only for transcription hints, not cleanup instructions.
-
-Open `Teach Correction...` from the menu-bar icon or Settings to quickly add a wrong-to-right hint such as `David => Dawid`. Open `Personal Dictionary...` for bulk vocabulary and correction editing. BabbelStream stores these local hints at `~/Library/Application Support/BabbelStream/personal-dictionary.json`.
-
-Open `Dictation Archive...` from the menu-bar icon to review monthly local word counts, copy a Markdown export, reveal the archive folder, or clear archive data. When enabled, archive files are stored under `~/Library/Application Support/BabbelStream/Archive/YYYY-MM/YYYY-MM-DD.jsonl`.
-
-An optional local Codex skill can edit the same file from `~/.codex/skills/babbelstream-dictionary`.
-
-## Privacy Defaults
-
-- Audio is safeguarded after recording stops and deleted after transcription and any enabled cleanup succeed. Failed, canceled-after-stop, or interrupted work remains local under Failed Recordings until retry succeeds or you delete it.
-- Transcripts and cleaned drafts are kept only in memory for the running app session unless the local dictation archive is explicitly enabled.
-- Dictation archive is off by default. When enabled, it stores final draft text and word counts locally; raw transcript storage is a separate opt-in.
-- Primary and personal-fallback API keys are stored as separate Keychain items,
-  not in files or `UserDefaults`.
-- Non-secret `UserDefaults` markers may remember that each key was saved so
-  startup does not read Keychain.
-- The personal dictionary stores only explicit vocabulary/correction hints, not transcript history.
-- Usage counters are local `UserDefaults` numbers only; they do not contain transcript text or audio metadata.
-- Diagnostics copied from the app are redacted and omit transcripts, cleaned drafts, archive contents, audio paths, and clipboard contents.
-- No telemetry, analytics, cloud database, transcript history, or Slack API integration.
-
-## Uninstall And Local Data Cleanup
-
-1. Disable `Launch at login` and delete both API keys from Settings before removing the app when possible.
-2. Quit BabbelStream and remove `BabbelStream.app` from `/Applications`.
-3. If you no longer want the dictionary or optional archive, remove `~/Library/Application Support/BabbelStream` manually after reviewing its contents.
-4. Remove the BabbelStream entry from System Settings > Privacy & Security > Microphone and Accessibility if desired.
-5. Remove BabbelStream from System Settings > General > Login Items if it is
-   still listed. Installations older than v0.4.1 may also leave
-   `~/Library/LaunchAgents/com.sichgeis.babbelstream.loginitem.plist`; v0.4.1
-   migrates and removes that legacy file after successful system registration.
-6. The optional `BabbelStream Local Code Signing` identity can be removed in Keychain Access when it is no longer used for development builds.
-
-Removing the app bundle alone intentionally does not delete local dictionary or archive data.
-
-## Release Status
-
-Version 0.5.1 is the current locally released app. Its GitHub download and [Homebrew tap](https://github.com/sichgeis/homebrew-tap) are staged for a non-notarized colleague pilot. The normal `brew install --cask sichgeis/tap/babbelstream` command is not active until the other-Mac test and publication sequence finish. See [release operations](docs/homebrew-release.md) and [project status](docs/project-status.md).
+[Documentation](docs/README.md) · [Changelog](CHANGELOG.md) ·
+[Release operations](docs/homebrew-release.md) · [Project status](docs/project-status.md)

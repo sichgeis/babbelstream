@@ -1,6 +1,18 @@
-# Internal Pilot Setup And Support
+# Pilot Setup And Support
 
-Version 0.5.1 is the corrected approved local release (0.5.0 introduced the feature set), following the maintainer’s successful smoke test and explicit finalization request on 2026-10-23. The same exact ad-hoc artifact is approved for a clearly labeled non-notarized own-tap colleague pilot, now staged pending the other-Mac launch/install gate. Developer ID/notarization is optional for this pilot; company configuration/issuance inputs remain necessary for work-provider use. The other-Mac visual check is deferred. Previous installed bundles are preserved under `dist/rollback/`; exact final installation evidence lives in `docs/runs/archive/release-v0.5.1.md`. The final ad-hoc build may require microphone/Accessibility reapproval; its onboarding page shows actual trust and the explicit request actions.
+For first installation and everyday help, use [Get started](getting-started.md).
+This guide covers company provider setup, connection states and support.
+
+**Current pilot:** 0.5.1, ad-hoc signed and not notarized. The GitHub release and
+own Homebrew tap are staged pending the other-Mac download/launch test. Company
+provider configuration and per-user key issuance remain separate requirements.
+[Project status](project-status.md) owns availability; the
+[release run](runs/active/homebrew-distribution.md) records staging evidence.
+
+The [local 0.5.1 release record](runs/archive/release-v0.5.1.md) retains its build
+and installation provenance. Local rollback bundles remain under `dist/rollback/`.
+Rebuilt/ad-hoc apps may need fresh macOS or Keychain approval; setup reports actual
+permission status rather than relying on the previous installation's grants.
 
 ## Install And Set Up
 
