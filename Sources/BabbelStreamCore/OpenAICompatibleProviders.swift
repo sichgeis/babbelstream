@@ -308,7 +308,7 @@ public final class OpenAICompatibleTranscriptionProvider: TranscriptionProvider 
             }
             try ProviderResponseValidator.validate(response, data: data)
 
-            let text = try TranscriptionResponseParser.parse(data: data)
+            let text = try TranscriptionResponseParser.parse(data: data, contentType: (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Content-Type"))
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty else {
                 throw ProviderError.emptyTranscript
@@ -520,6 +520,7 @@ private final class ProviderURLSessionOperation: @unchecked Sendable {
                 let task = urlSession.dataTask(with: request) { [weak self] data, response, error in
                     self?.complete(data: data, response: response, error: error)
                 }
+                task.delegate = ProviderRedirectDelegate.shared
                 dataTask = task
                 lock.unlock()
 
@@ -767,22 +768,28 @@ public enum ProviderErrorMessageExtractor {
 }
 
 public enum TranscriptionResponseParser {
-    public static func parse(data: Data) throws -> String {
-        if let object = try? JSONSerialization.jsonObject(with: data) {
-            guard let dictionary = object as? [String: Any],
-                  let text = dictionary["text"] as? String
-            else {
+    /// JSON is the requested contract. Legacy plain text requires explicit text/plain.
+    /// With no MIME type, accept valid JSON only rather than guessing arbitrary UTF-8.
+    public static func parse(data: Data, contentType: String? = nil) throws -> String {
+        let mediaType = contentType?.split(separator: ";").first?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard mediaType == nil || mediaType == "application/json" || mediaType?.hasSuffix("+json") == true || mediaType == "text/plain" else {
+            throw ProviderError.malformedResponse
+        }
+        if let object = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) {
+            guard let dictionary = object as? [String: Any], let text = dictionary["text"] as? String else {
                 throw ProviderError.malformedResponse
             }
-
             return text
         }
-
-        if let plainText = String(data: data, encoding: .utf8) {
-            return plainText
+        guard mediaType == "text/plain", let text = String(data: data, encoding: .utf8) else {
+            throw ProviderError.malformedResponse
         }
-
-        throw ProviderError.malformedResponse
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // A proxy's HTML error page or broken JSON must never become a dictated draft.
+        guard !trimmed.hasPrefix("<"), !trimmed.hasPrefix("{"), !trimmed.hasPrefix("[") else {
+            throw ProviderError.malformedResponse
+        }
+        return text
     }
 }
 

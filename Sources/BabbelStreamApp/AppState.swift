@@ -131,6 +131,7 @@ final class AppState: ObservableObject {
     private let runtime: any AppRuntime
     private var shouldStopDictationAfterStart = false
     private var dictationHotkeyPressedAt: ContinuousClock.Instant?
+    private var retainedOperationKeys: [String: String] = [:]
     private var cachedAPIKey: String?
     private var cachedPersonalOpenAIFallbackAPIKey: String?
     private var activeDictationSettings: AppSettings?
@@ -209,6 +210,11 @@ final class AppState: ObservableObject {
 
         self.microphonePermissionStatus = audioRecorder.microphonePermissionStatus()
         self.accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
+        // One-time non-secret migration binds legacy installations to their saved origin.
+        // A sentinel left by an interrupted key update is never migrated implicitly.
+        if apiKeyPresenceStore.approvedOrigin == nil {
+            apiKeyPresenceStore.approvedOrigin = ProviderOrigin(loadedSettings.providerConfiguration.baseURL)?.description
+        }
         self.hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
         self.hasPersonalOpenAIFallbackAPIKey = personalOpenAIFallbackAPIKeyPresenceStore.hasSavedAPIKey
         self.launchAtLoginEnabled = launchAtLoginService.snapshot.isEnabled
@@ -680,8 +686,26 @@ final class AppState: ObservableObject {
             }
 
             let trimmedKey = apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
+            if ProviderOrigin(settings.providerConfiguration.baseURL) != ProviderOrigin(appSettings.providerConfiguration.baseURL),
+               (hasAPIKey || cachedAPIKey != nil), trimmedKey.isEmpty {
+                throw SettingsValidationError.providerOriginRequiresKey
+            }
             if !trimmedKey.isEmpty {
-                try secretStore.saveAPIKey(trimmedKey)
+                let priorOrigin = apiKeyPresenceStore.approvedOrigin
+                // Preserve the already-approved operation snapshot when Apply replaces
+                // a credential while recording or processing. Never reuse it for a new origin.
+                if !canStart, let priorOrigin, retainedOperationKeys[priorOrigin] == nil {
+                    retainedOperationKeys[priorOrigin] = try cachedAPIKey ?? secretStore.readAPIKey()
+                }
+                cachedAPIKey = nil
+                apiKeyPresenceStore.approvedOrigin = "unassociated"
+                do {
+                    try secretStore.saveAPIKey(trimmedKey)
+                } catch {
+                    apiKeyPresenceStore.approvedOrigin = priorOrigin
+                    throw error
+                }
+                apiKeyPresenceStore.approvedOrigin = ProviderOrigin(settings.providerConfiguration.baseURL)?.description
                 cachedAPIKey = trimmedKey
                 apiKeyInput = ""
                 apiKeyPresenceStore.hasSavedAPIKey = true
@@ -1072,57 +1096,42 @@ final class AppState: ObservableObject {
         notifyStateChanged()
     }
 
-    private func diagnosticsReport() -> String {
-        let lines = [
-            "\(ProjectDefaults.appName) diagnostics",
-            "version: \(BuildMetadata.appVersion)",
-            "build commit: \(BuildMetadata.gitCommitShortHash)",
-            "bundle path: \(appBundlePath)",
-            "bundle identifier: \(appBundleIdentifier)",
-            "code signing: \(codeSigningSummary)",
-            "status: \(status)",
-            "last failure category: \(lastFailureCategory)",
-            "transcription destination: \(providerDestinationSummary)",
-            "active transcription destination: \(activeProviderDestinationSummary)",
-            "cleanup destination: \(cleanupDestinationSummary)",
-            "personal openai fallback enabled: \(appSettings.personalOpenAIFallbackEnabled)",
-            "personal openai direct mode enabled: \(appSettings.personalOpenAIDirectModeEnabled)",
-            "personal openai fallback key saved: \(hasPersonalOpenAIFallbackAPIKey)",
-            "personal openai fallback transcription destination: \(personalOpenAIFallbackDestinationSummary)",
-            "transcription model: \(appSettings.providerConfiguration.transcriptionModel)",
-            "transcription model routing: \(appSettings.providerConfiguration.transcriptionModelRouting.displayName)",
-            "effective transcription model: \(appSettings.providerConfiguration.transcriptionModelRouting.providerModelID(for: appSettings.providerConfiguration.transcriptionModel))",
-            "fallback transcription model: \(ProjectDefaults.fallbackTranscriptionModel)",
-            "effective fallback transcription model: \(appSettings.providerConfiguration.transcriptionModelRouting.providerModelID(for: ProjectDefaults.fallbackTranscriptionModel))",
-            "transcription hedge delay seconds: \(String(format: "%.1f", ProjectDefaults.transcriptionHedgeDelaySeconds))",
-            "transcription overall deadline seconds: \(String(format: "%.1f", ProjectDefaults.transcriptionOverallTimeoutSeconds))",
-            "cleanup model: \(appSettings.providerConfiguration.cleanupModel)",
-            "cleanup timeout seconds: \(String(format: "%.1f", appSettings.providerConfiguration.timeoutSeconds))",
-            "connection timeout seconds: \(String(format: "%.1f", ProjectDefaults.providerConnectionTimeoutSeconds))",
-            "max recording minutes: \(Self.durationMinutesText(for: appSettings.maxAudioDurationSeconds))",
-            "cleanup enabled: \(appSettings.cleanupEnabled)",
-            "api key saved: \(hasAPIKey)",
-            "microphone: \(microphonePermissionStatus.displayName)",
-            "accessibility: \(accessibilityPermissionStatus.displayName)",
-            "launch at login: \(launchAtLoginEnabled)",
-            "personal dictionary: \(personalDictionarySummary)",
-            "archive enabled: \(dictationArchiveEnabled)",
-            "archive raw transcript enabled: \(dictationArchiveEnabled && archiveRawTranscriptEnabled)",
-            "archive path: \(archiveDirectoryPath)",
-            "archive loaded month: \(archiveSnapshot.month.directoryName)",
-            "archive loaded entries: \(archiveSnapshot.entries.count)",
-            "failed recordings: \(recoverySnapshot.recordings.count)",
-            "failed recording bytes: \(recoverySnapshot.totalByteCount)",
-            "usage dictations: \(usageSnapshot.totalDictations)",
-            "usage recorded seconds: \(String(format: "%.1f", usageSnapshot.totalRecordedSeconds))",
-            "cleanup requests: \(usageSnapshot.cleanupRequests)",
-            "transcription failures: \(usageSnapshot.transcriptionFailures)",
-            "cleanup fallbacks: \(usageSnapshot.cleanupFallbacks)",
-            "recent events:",
-            diagnosticReportSummaries.joined(separator: "\n")
-        ]
+    private var exportedFailureCategory: String {
+        let pattern = #"^(ProviderError|SettingsValidationError|AudioRecordingError|TextInsertionError|SecretStoreError)\.[A-Za-z]+(\((HTTP )?-?[0-9]+\))?$"#
+        return lastFailureCategory.range(of: pattern, options: .regularExpression) != nil ? lastFailureCategory : "none-or-other"
+    }
 
-        return lines.joined(separator: "\n")
+    /// Export only reviewed fields. Never append arbitrary status/errors/events or paths.
+    func diagnosticsReport() -> String {
+        let configuration = appSettings.providerConfiguration
+        let fields: [(String, String)] = [
+            ("version", BuildMetadata.appVersion),
+            ("build commit", BuildMetadata.gitCommitShortHash),
+            ("recording", String(isRecording)),
+            ("processing", String(isProcessing)),
+            ("primary origin", ProviderOrigin(configuration.baseURL)?.description ?? "invalid"),
+            ("primary model", configuration.transcriptionModel),
+            ("routing", configuration.transcriptionModelRouting.rawValue),
+            ("cleanup model", configuration.cleanupModel == ProjectDefaults.defaultCleanupModel ? "default" : "custom"),
+            ("cleanup timeout seconds", String(configuration.timeoutSeconds)),
+            ("connection watchdog seconds", String(ProjectDefaults.providerConnectionTimeoutSeconds)),
+            ("personal fallback enabled", String(appSettings.personalOpenAIFallbackEnabled)),
+            ("personal direct mode enabled", String(appSettings.personalOpenAIDirectModeEnabled)),
+            ("primary key saved", String(hasAPIKey)),
+            ("personal key saved", String(hasPersonalOpenAIFallbackAPIKey)),
+            ("microphone", microphonePermissionStatus.rawValue),
+            ("accessibility", accessibilityPermissionStatus.displayName),
+            ("archive enabled", String(appSettings.dictationArchiveEnabled)),
+            ("archive entries", String(archiveSnapshot.entries.count)),
+            ("failed recordings", String(recoverySnapshot.recordings.count)),
+            ("dictations", String(usageSnapshot.totalDictations)),
+            ("recorded seconds", String(usageSnapshot.totalRecordedSeconds)),
+            ("transcription failures", String(usageSnapshot.transcriptionFailures)),
+            ("last failure category", exportedFailureCategory),
+            ("cleanup fallbacks", String(usageSnapshot.cleanupFallbacks)),
+            ("diagnostic event count", String(diagnostics.count))
+        ]
+        return "BabbelStream diagnostics\n" + fields.map { "\($0.0): \($0.1)" }.joined(separator: "\n")
     }
 
     private func settingsFromDraft() throws -> AppSettings {
@@ -1698,7 +1707,7 @@ final class AppState: ObservableObject {
         }
 
         let keyLoadStartedAt = ContinuousClock.now
-        let apiKey = try loadAPIKeyForDictation()
+        let apiKey = try loadAPIKeyForDictation(settings: settings)
         recordDiagnostic("api key loaded in \(elapsedMilliseconds(since: keyLoadStartedAt)) ms")
         guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             recordDiagnostic("transcription not started: missing API key")
@@ -2333,7 +2342,12 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func loadAPIKeyForDictation() throws -> String {
+    private func loadAPIKeyForDictation(settings: AppSettings) throws -> String {
+        if let origin = ProviderOrigin(settings.providerConfiguration.baseURL)?.description,
+           let retained = retainedOperationKeys[origin] { return retained }
+        guard apiKeyPresenceStore.approvedOrigin == ProviderOrigin(settings.providerConfiguration.baseURL)?.description else {
+            throw SettingsValidationError.providerOriginRequiresKey
+        }
         if let cachedAPIKey {
             return cachedAPIKey
         }
@@ -2548,6 +2562,7 @@ final class AppState: ObservableObject {
     }
 
     private func completeDiagnosticOperation() {
+        retainedOperationKeys.removeAll()
         guard let operationID = activeDiagnosticOperationID else {
             return
         }
@@ -2676,6 +2691,8 @@ private func diagnosticErrorCategory(_ error: Error) -> String {
 
     if let validationError = error as? SettingsValidationError {
         switch validationError {
+        case .providerOriginRequiresKey:
+            return "SettingsValidationError.providerOriginRequiresKey"
         case .invalidBaseURL:
             return "SettingsValidationError.invalidBaseURL"
         case .missingPersonalOpenAIAPIKey:

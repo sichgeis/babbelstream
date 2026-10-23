@@ -40,6 +40,7 @@ public struct AppSettings: Equatable, Sendable {
 
 public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable {
     case invalidBaseURL
+    case providerOriginRequiresKey
     case missingPersonalOpenAIAPIKey
     case insecureBaseURL
     case ambiguousBaseURL
@@ -55,6 +56,8 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
 
     public var errorDescription: String? {
         switch self {
+        case .providerOriginRequiresKey:
+            "The provider origin changed. Re-enter a key explicitly approved for this destination before applying. Your saved key and active settings were not changed."
         case .invalidBaseURL:
             "Provider base URL must include a valid http or https host."
         case .missingPersonalOpenAIAPIKey:

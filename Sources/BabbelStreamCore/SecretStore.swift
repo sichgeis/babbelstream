@@ -23,6 +23,7 @@ public protocol SecretStore: AnyObject {
 
 public protocol APIKeyPresenceStore: AnyObject {
     var hasSavedAPIKey: Bool { get set }
+    var approvedOrigin: String? { get set }
 }
 
 public final class UserDefaultsAPIKeyPresenceStore: APIKeyPresenceStore {
@@ -35,6 +36,11 @@ public final class UserDefaultsAPIKeyPresenceStore: APIKeyPresenceStore {
     ) {
         self.userDefaults = userDefaults
         self.key = key
+    }
+
+    public var approvedOrigin: String? {
+        get { userDefaults.string(forKey: key + ".approvedOrigin") }
+        set { userDefaults.set(newValue, forKey: key + ".approvedOrigin") }
     }
 
     public var hasSavedAPIKey: Bool {

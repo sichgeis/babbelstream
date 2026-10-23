@@ -129,7 +129,7 @@ through `languages[]`; older compatible models retain the singular `language`
 field. Language-field selection uses the logical model before routing, so
 `openai/gpt-transcribe` retains the same request contract. Additional response
 metadata such as detected `languages` is ignored. The provider accepts a JSON
-object with a string `text` field or a genuinely plain-text response; other
+object with a string `text` field or an explicitly labeled `text/plain` response; HTML, malformed JSON, untyped non-JSON and other
 successful JSON shapes are rejected. The app disables same-model retries and
 permits only the configured primary plus one bounded Mini hedge.
 Authentication and other permanent client failures fail immediately.
@@ -213,7 +213,7 @@ The daily developer install helper opens that DMG and lets Finder perform the co
 
 ## Logging And Debugging
 
-Default in-memory and macOS Unified Logs may include state transitions, provider names, durations, counts, semantic version, build commit hash, attempt numbers, timeout values, HTTP status, URL error codes, fallback/retry categories, and request/response byte counts. Copyable diagnostics include provider settings, state, permissions, counters, dictionary counts, optional archive enabled state, archive entry counts, version/build metadata, connection timeout, and recent sanitized event categories. They must not include audio, transcripts, archive contents, cleanup input, cleanup output, API keys, clipboard contents, audio file paths, raw provider messages, or request/response bodies. Debug persistence must be explicit and visibly enabled.
+Default in-memory and macOS Unified Logs may include state transitions, provider names, durations, counts, semantic version, build commit hash, attempt numbers, timeout values, HTTP status, URL error codes, fallback/retry categories, and request/response byte counts. Copyable diagnostics are built from an explicit field allowlist of content-free build/provider-origin/configuration categories, booleans, permission/key-presence flags, timeouts, counters and constrained failure categories. Arbitrary status/errors and recent event messages are never appended. They must not include audio, transcripts, archive contents, cleanup input, cleanup output, API keys, clipboard contents, any private filesystem paths, raw provider messages, or request/response bodies. Debug persistence must be explicit and visibly enabled.
 
 ## Security And Privacy
 
@@ -222,3 +222,11 @@ The main risks are accidental capture, accidental paste, clipboard exposure, ove
 ## Shared Dialog Layout
 
 Settings and secondary dialogs use AppGroupedForm as the only scroll owner, with explicit AppFormSection stack spacing, semantic macOS window/control surfaces and separators, and native controls. They avoid nesting a grouped Form inside a ScrollView, whose automatic insets vary by SDK/OS. Footer status and actions remain outside scrolling content. Long values wrap vertically.
+
+## Pilot Boundary Policies
+
+`ProviderOrigin` compares scheme, normalized host and effective port. A task-level redirect delegate enforces it for transcription and cleanup even with injected URLSessions. Primary-key presence metadata stores the approved origin; legacy metadata binds to saved settings without startup secret reads. Explicit new-origin key entry is required and partial persistence fails closed. Existing operations retain their prior origin/key only in memory until completion, preserving settings snapshots during Apply.
+
+`SingleInstanceLock` holds an advisory user-scoped lock before AppDelegate construction and shared cleanup; bootstrap first checks existing production bundle processes. Fixtures acquire locks only in disposable directories. The lock file is never unlinked while live.
+
+`DictationHUDVisibilityPolicy` owns active-to-completion transitions. Repeated idle notifications retain the existing 1.5-second success or 6-second attention deadline; a late warning may extend once. A new active operation cancels the prior dismissal. Expiry cannot be resurrected by idle notifications. HUD size and nonactivation stay unchanged.

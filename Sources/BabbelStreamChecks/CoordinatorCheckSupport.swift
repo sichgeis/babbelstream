@@ -3,10 +3,11 @@ import BabbelStreamCore
 @testable import BabbelStreamApplication
 
 final class MemorySettings: SettingsStore {
+    var failSave = false
     var value: AppSettings
     init(_ value: AppSettings) { self.value = value }
     func load() -> AppSettings { value }
-    func save(_ settings: AppSettings) throws { value = settings }
+    func save(_ settings: AppSettings) throws { if failSave { throw ProviderError.malformedResponse }; value = settings }
 }
 
 final class FixtureSecret: SecretStore {
@@ -16,7 +17,7 @@ final class FixtureSecret: SecretStore {
     func deleteAPIKey() throws {}
 }
 
-final class MemoryKeyPresence: APIKeyPresenceStore { var hasSavedAPIKey = true }
+final class MemoryKeyPresence: APIKeyPresenceStore { var hasSavedAPIKey = true; var approvedOrigin: String? }
 final class MemoryUsage: UsageTracker {
     var value = UsageSnapshot()
     func load() -> UsageSnapshot { value }
@@ -131,6 +132,7 @@ final class CoordinatorFixture {
     let mini = FixtureTranscriber()
     let cleanup = FixtureCleanup()
     let insertion = FixtureInsertion()
+    let keyPresence = MemoryKeyPresence()
     let secret = FixtureSecret()
     let personalSecret = FixtureSecret()
     let hotkey = FixtureHotkey()
@@ -147,7 +149,7 @@ final class CoordinatorFixture {
         recovery = FileDictationRecoveryStore(recoveryDirectoryURL: root.appendingPathComponent("Recovery"), fileManager: fm, temporaryDirectories: [root])
         app = AppState(
             audioRecorder: recorder, settingsStore: settings, secretStore: secret,
-            apiKeyPresenceStore: MemoryKeyPresence(), personalOpenAIFallbackSecretStore: personalSecret,
+            apiKeyPresenceStore: keyPresence, personalOpenAIFallbackSecretStore: personalSecret,
             personalOpenAIFallbackAPIKeyPresenceStore: MemoryKeyPresence(),
             transcriptionProvider: transcription, fallbackTranscriptionProvider: mini, cleanupProvider: cleanup,
             textInsertionService: insertion, hotkeyService: hotkey, launchAtLoginService: FixtureLogin(),

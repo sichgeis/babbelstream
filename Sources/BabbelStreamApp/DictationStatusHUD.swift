@@ -31,7 +31,7 @@ final class DictationStatusHUDController {
     private var stateObserverID: UUID?
     private var dismissalTask: Task<Void, Never>?
     private var meteringTask: Task<Void, Never>?
-    private var presentedActiveOperation = false
+    private var visibilityPolicy = DictationHUDVisibilityPolicy()
 
     init(appState: AppState) {
         let metrics = DictationHUDMetrics()
@@ -55,35 +55,31 @@ final class DictationStatusHUDController {
     }
 
     private func refreshVisibility() {
-        dismissalTask?.cancel()
-        dismissalTask = nil
         refreshMetering()
-
-        if appState.isRecording || appState.isProcessing || appState.canCancel {
-            presentedActiveOperation = true
-            show()
-            return
-        }
-
-        guard presentedActiveOperation else {
+        let action = visibilityPolicy.update(
+            isActive: appState.isRecording || appState.isProcessing || appState.canCancel,
+            needsAttention: appState.status == "Copied" || appState.status == "Copy Last Draft"
+                || appState.errorMessage != nil || appState.warningMessage != nil
+        )
+        switch action {
+        case .hide:
             panel.orderOut(nil)
-            return
-        }
-        presentedActiveOperation = false
-
-        show()
-        let visibilitySeconds: TimeInterval
-        if appState.status == "Copied" || appState.errorMessage != nil || appState.warningMessage != nil {
-            visibilitySeconds = 6
-        } else {
-            visibilitySeconds = 1.5
-        }
-        dismissalTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(visibilitySeconds * 1_000_000_000))
-            guard !Task.isCancelled else {
-                return
+        case .showActive:
+            dismissalTask?.cancel()
+            dismissalTask = nil
+            show()
+        case .keepCompletion:
+            break
+        case .beginCompletion(let seconds):
+            dismissalTask?.cancel()
+            show()
+            dismissalTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                guard !Task.isCancelled, let self else { return }
+                self.visibilityPolicy.completionExpired()
+                self.dismissalTask = nil
+                self.panel.orderOut(nil)
             }
-            self?.panel.orderOut(nil)
         }
     }
 

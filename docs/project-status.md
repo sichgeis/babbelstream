@@ -65,4 +65,4 @@ recorded.
 
 ## Next Action
 
-Implement and validate fixture-backed provider, credentials, instance, HUD and diagnostics boundaries for pilot readiness.
+Implement guided per-user connection setup and an explicitly disclosed synthetic transcription test.

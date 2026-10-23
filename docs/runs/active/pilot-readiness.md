@@ -34,12 +34,17 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 
 ### C. Destination, credential, audio, parser, HUD and diagnostics boundaries
 
-- Status: In progress
+- Status: Completed
 - Plan: fixture-backed focused fixes, update durable specs and checks together.
+
+- Evidence: `task check` passes full application and expanded suite. Real loopback URLSession 307 test: synthetic audio and cleanup requests stop at redirect origin; second-origin count zero. No real provider or key accessed.
+- Delivered: scheme/host/port redirect delegate; non-secret primary credential origin binding with explicit re-entry on change and fail-closed partial persistence; old in-flight origin/key retained only in memory to preserve approved snapshots; pre-store user-scoped instance lock and older-bundle check; explicit JSON/plain-text parsing; completion deadline policy; export allowlist excluding all private paths/arbitrary messages.
+- Tests cover normalized/default origins, downgrade/port/userinfo/missing origin, HTML/broken JSON/scalars/untyped bodies, credential rejection/replacement/partial save, actual AppState Apply snapshots, lock contention/reacquisition, repeated HUD notifications and diagnostics path injection. Loopback fixture shutdown is bounded and uses a wake connection for Darwin accept.
+- Limitation: all updated app copies enforce the lock; an old binary directly launched later cannot be retroactively changed. Quit older copies before pilot use. Native process lifecycle and HUD rendering remain manual.
 
 ### D. Guided setup and support
 
-- Status: Pending
+- Status: In progress
 - Plan: explicit generic presets, per-user credentials, disclosed synthetic test and honest connection status, Advanced settings; company inputs pending.
 
 ### E. Release preparation and final regression
@@ -73,4 +78,4 @@ Canonical build restored. macOS 27.0.1 visual acceptance unavailable here; autho
 
 ## Next Action
 
-Implement and validate fixture-backed provider, credentials, instance, HUD and diagnostics boundaries.
+Implement guided per-user connection setup and an explicitly disclosed synthetic transcription test.

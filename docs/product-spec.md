@@ -214,3 +214,7 @@ The user may enable a local archive for work self-review and month-end reporting
 - Provider settings make the destination explicit.
 - Personal OpenAI fallback remains off until explicitly enabled and applied;
   when used, its activation and destination are visible.
+
+## Internal Pilot Safety Refinements
+
+Provider origin changes require an explicitly supplied key for the new destination. Redirects cannot move audio or transcript text outside the original approved origin or downgrade transport. Startup permits one active updated copy per user before shared cleanup. HTML and malformed transcription responses never become drafts. Completion feedback retains its timed visibility despite repeated state notifications. Copy Diagnostics exports only reviewed content-free fields and no private paths. Detailed migration and failure contracts live in `docs/features/pilot-readiness/spec.md` and `docs/security-privacy.md`.

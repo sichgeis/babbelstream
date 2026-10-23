@@ -129,3 +129,37 @@ public enum DictationHUDPresentation {
         return .done
     }
 }
+
+/// Completion timing belongs to the active-to-idle transition, not every notification.
+public struct DictationHUDVisibilityPolicy: Sendable {
+    public enum Action: Equatable, Sendable {
+        case hide
+        case showActive
+        case beginCompletion(seconds: Double)
+        case keepCompletion
+    }
+    private enum State { case idle, active, completing(attention: Bool) }
+    private var state: State = .idle
+    public init() {}
+
+    public mutating func update(isActive: Bool, needsAttention: Bool) -> Action {
+        if isActive {
+            state = .active
+            return .showActive
+        }
+        switch state {
+        case .idle: return .hide
+        case .active:
+            state = .completing(attention: needsAttention)
+            return .beginCompletion(seconds: needsAttention ? 6 : 1.5)
+        case .completing(let hadAttention):
+            if needsAttention && !hadAttention {
+                state = .completing(attention: true)
+                return .beginCompletion(seconds: 6)
+            }
+            return .keepCompletion
+        }
+    }
+
+    public mutating func completionExpired() { state = .idle }
+}

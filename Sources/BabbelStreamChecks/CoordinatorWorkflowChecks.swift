@@ -11,6 +11,7 @@ func runCoordinatorWorkflowChecks() async throws {
         check(f.secret.reads == 0 && f.personalSecret.reads == 0, "Coordinator startup must not read credentials.")
         await f.app.startDictation()
         f.app.baseURLText = "https://later.example.invalid"
+        f.app.apiKeyInput = "replacement-fixture-key"
         f.app.saveSettings()
         check(f.app.settingsErrorMessage == nil, "Fixture settings edit must actually apply.")
         await f.app.stopActiveRecording()
@@ -30,9 +31,11 @@ func runCoordinatorWorkflowChecks() async throws {
         check(item.state == .cleanupFailed && f.insertion.inserted == ["raw fixture "], "Cleanup fallback must deliver raw text and retain audio.")
         let initialInsertCount = f.insertion.inserted.count
         f.app.baseURLText = "https://retry.example.invalid"
+        f.app.apiKeyInput = "replacement-fixture-key"
         f.app.saveSettings()
         f.transcription.action = { [weak app = f.app] _ in
             app?.baseURLText = "https://next.example.invalid"
+            app?.apiKeyInput = "next-fixture-key"
             app?.saveSettings()
             return "raw fixture"
         }
