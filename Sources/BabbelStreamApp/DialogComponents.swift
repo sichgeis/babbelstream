@@ -109,7 +109,7 @@ struct AppDialogFooter<Status: View, Actions: View>: View {
         HStack(spacing: 12) {
             status
                 .font(.caption)
-                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: 8) {

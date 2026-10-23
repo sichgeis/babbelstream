@@ -39,8 +39,7 @@ start a tracker under `docs/runs/active/`.
 
 - Goal: produce a Developer ID-signed and notarized build suitable for a GitHub
   Release.
-- Dependency: signing identity, notarization credentials, hardened-runtime review,
-  clean release automation, and an approved publication gate.
+- Dependency: authorized signing identity/notarization profile, real hardened-runtime microphone/paste validation, notarization/Gatekeeper evidence and an approved publication gate. Pilot readiness prepares the fail-closed tooling; it does not authorize or claim public distribution.
 
 ### 5. Update Delivery
 

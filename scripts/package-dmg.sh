@@ -2,12 +2,19 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/scripts/release-preflight.sh"
 APP_NAME="BabbelStream"
 VERSION="${VERSION:-$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")}"
 CONFIGURATION="${CONFIGURATION:-debug}"
 DIST_DIR="$ROOT_DIR/dist"
 APP_DIR="$DIST_DIR/$APP_NAME.app"
-DMG_NAME="${DMG_NAME:-$APP_NAME-$VERSION.dmg}"
+if [[ "$BUILD_MODE" == candidate ]]; then
+  DMG_NAME="${DMG_NAME:-$APP_NAME-$VERSION-candidate.$BUILD_NUMBER-$GIT_COMMIT.dmg}"
+else
+  DMG_NAME="${DMG_NAME:-$APP_NAME-$VERSION.dmg}"
+fi
+DMG_LAYOUT="${DMG_LAYOUT:-plain}"
+[[ "$DMG_LAYOUT" == plain || "$DMG_LAYOUT" == finder ]] || { echo "DMG_LAYOUT must be plain or finder." >&2; exit 1; }
 DMG_PATH="$DIST_DIR/$DMG_NAME"
 RW_DMG_PATH="$DIST_DIR/$APP_NAME-$VERSION-rw.dmg"
 STAGING_DIR="$DIST_DIR/dmg-staging"
@@ -136,36 +143,37 @@ if [[ ! -d "$APP_DIR" ]]; then
   fail "Expected app bundle not found: $APP_DIR"
 fi
 
-trap detach_mounted_dmg EXIT
-detach_existing_volume
-
 rm -rf "$STAGING_DIR"
 mkdir -p "$STAGING_DIR"
 cp -R "$APP_DIR" "$STAGING_DIR/$APP_NAME.app"
 ln -s /Applications "$STAGING_DIR/Applications"
-render_dmg_background
 
-rm -f "$DMG_PATH" "$RW_DMG_PATH"
-hdiutil create \
-  -volname "$VOLUME_NAME" \
-  -srcfolder "$STAGING_DIR" \
-  -fs HFS+ \
-  -ov \
-  -format UDRW \
-  "$RW_DMG_PATH" >/dev/null
-
-MOUNT_DIR="$(attach_dmg "$RW_DMG_PATH")"
-prettify_dmg_window
-copy_finder_metadata
-hdiutil detach "$MOUNT_DIR" >/dev/null
-MOUNT_DIR=""
-rm -f "$RW_DMG_PATH"
+if [[ "$DMG_LAYOUT" == finder ]]; then
+  # Optional interactive developer layout; plain packaging never opens Finder or mounts a volume.
+  trap detach_mounted_dmg EXIT
+  detach_existing_volume
+  render_dmg_background
+  rm -f "$RW_DMG_PATH"
+  hdiutil create -volname "$VOLUME_NAME" -srcfolder "$STAGING_DIR" -fs HFS+ -ov -format UDRW "$RW_DMG_PATH" >/dev/null
+  MOUNT_DIR="$(attach_dmg "$RW_DMG_PATH")"
+  prettify_dmg_window
+  copy_finder_metadata
+  hdiutil detach "$MOUNT_DIR" >/dev/null
+  MOUNT_DIR=""
+  rm -f "$RW_DMG_PATH"
+fi
 create_compressed_dmg
 
 hdiutil verify "$DMG_PATH" >/dev/null
 
+if [[ "$BUILD_MODE" == distribution ]]; then
+  DMG_CODESIGN_IDENTITY="${DMG_CODESIGN_IDENTITY:-$CODESIGN_IDENTITY}"
+  [[ "$DMG_CODESIGN_IDENTITY" == "Developer ID Application: "* ]] || fail "Distribution DMG requires Developer ID; no fallback."
+fi
 if [[ -n "$DMG_CODESIGN_IDENTITY" ]]; then
-  codesign --force --sign "$DMG_CODESIGN_IDENTITY" "$DMG_PATH" >/dev/null
+  DMG_SIGNING_ARGUMENTS=(--force --sign "$DMG_CODESIGN_IDENTITY")
+  if [[ "$BUILD_MODE" == distribution ]]; then DMG_SIGNING_ARGUMENTS+=(--timestamp); fi
+  codesign "${DMG_SIGNING_ARGUMENTS[@]}" "$DMG_PATH" >/dev/null
   codesign --verify --verbose=2 "$DMG_PATH"
 fi
 

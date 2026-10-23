@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CONFIGURATION="${CONFIGURATION:-debug}"
+source "$ROOT_DIR/scripts/release-preflight.sh"
 APP_NAME="BabbelStream"
 VERSION="${VERSION:-$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")}"
 BUNDLE_IDENTIFIER="com.sichgeis.babbelstream"
@@ -103,6 +103,7 @@ if command -v codesign >/dev/null 2>&1; then
     fi
   fi
 else
+  [[ "$BUILD_MODE" == development ]] || { echo "codesign is required for candidate/distribution." >&2; exit 1; }
   CODESIGN_IDENTITY="not signed"
 fi
 
@@ -112,6 +113,11 @@ else
   CODE_SIGNING_SUMMARY="$CODESIGN_IDENTITY"
 fi
 
+plist_escape() {
+  printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+}
+CODE_SIGNING_PLIST_VALUE="$(plist_escape "$CODE_SIGNING_SUMMARY")"
+GIT_COMMIT_PLIST_VALUE="$(plist_escape "$GIT_COMMIT")"
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -136,11 +142,13 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key>
   <string>$VERSION</string>
   <key>CFBundleVersion</key>
-  <string>1</string>
+  <string>$BUILD_NUMBER</string>
+  <key>BabbelStreamBuildMode</key>
+  <string>$BUILD_MODE</string>
   <key>BabbelStreamGitCommit</key>
-  <string>$GIT_COMMIT</string>
+  <string>$GIT_COMMIT_PLIST_VALUE</string>
   <key>BabbelStreamCodeSigning</key>
-  <string>$CODE_SIGNING_SUMMARY</string>
+  <string>$CODE_SIGNING_PLIST_VALUE</string>
   <key>LSMinimumSystemVersion</key>
   <string>13.0</string>
   <key>LSUIElement</key>
@@ -148,7 +156,7 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
   <key>NSHighResolutionCapable</key>
   <true/>
   <key>NSMicrophoneUsageDescription</key>
-  <string>BabbelStream records audio only when you start a test recording or use its tap-or-hold dictation shortcut, then deletes temporary audio after processing.</string>
+  <string>BabbelStream records audio only when you start a test recording or use its tap-or-hold dictation shortcut, deletes successful audio after processing, and retains stopped failed recordings locally until retry succeeds or you delete them.</string>
   <key>NSPrincipalClass</key>
   <string>NSApplication</string>
 </dict>
@@ -156,7 +164,17 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
 PLIST
 
 if command -v codesign >/dev/null 2>&1; then
-  codesign --force --sign "$CODESIGN_IDENTITY" "$APP_DIR" >/dev/null
+  SIGNING_ARGUMENTS=(--force --sign "$CODESIGN_IDENTITY")
+  if [[ "$BUILD_MODE" != development ]]; then
+    SIGNING_ARGUMENTS+=(--options runtime --entitlements "$ROOT_DIR/Resources/BabbelStream.entitlements")
+  fi
+  if [[ "$BUILD_MODE" == distribution ]]; then
+    SIGNING_ARGUMENTS+=(--timestamp)
+  else
+    SIGNING_ARGUMENTS+=(--timestamp=none)
+  fi
+  codesign "${SIGNING_ARGUMENTS[@]}" "$APP_DIR" >/dev/null
+  "$ROOT_DIR/scripts/verify-app.sh" "$APP_DIR" "$BUILD_MODE"
   echo "Signed with identity: $CODESIGN_IDENTITY"
   if [[ "$CODESIGN_IDENTITY" == "-" ]]; then
     echo "Warning: ad-hoc signing changes the app identity on rebuilds; Accessibility may not stay trusted."

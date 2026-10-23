@@ -48,7 +48,7 @@ task check
 scripts/build-app.sh
 ```
 
-`task check` builds the app and runs `BabbelStreamChecks`, the dependency-free behavior-check executable. This CLT-only environment does not expose XCTest or Swift Testing through SwiftPM, so the repository intentionally has no misleading empty `swift test` target.
+`task check` builds the app, runs the fixture-based `BabbelStreamChecks` executable (including loopback-only transport checks), and verifies release preflight in disposable Git repositories. Project commands select the validated installed macOS 26.5 SDK locally; see `docs/release.md` for toolchain prerequisites and explicit overrides. This CLT-only environment does not expose XCTest or Swift Testing through SwiftPM, so the repository intentionally has no misleading empty `swift test` target.
 
 The app bundle is written to:
 
@@ -70,6 +70,8 @@ RESTART_ONLY=1 scripts/install-dev-app.sh
 ```
 
 Set `WAIT_FOR_INSTALL=1` if you want the script to wait for the drag copy and launch `/Applications/BabbelStream.app` after it appears.
+
+For a clean optimized review artifact without installation or signing-key lookup, use `task app:candidate`. Public distribution requires explicit Developer ID credentials and notarization; see [release guide](docs/release.md).
 
 Equivalent Taskfile shortcuts are available as `task app:build`, `task app:install-dev`, `task app:restart`, and `task app:package-dmg`.
 

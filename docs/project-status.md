@@ -54,8 +54,7 @@ by their dedicated specifications.
   and settings-snapshot workflows through fakes. Native AppKit/Accessibility,
   microphone, Keychain, Carbon, and process termination remain manual checks.
 - The global shortcut remains fixed at `Control + Option + Space`.
-- Local Whisper, Developer ID signing, notarization, and an update mechanism are
-  not implemented.
+- Local Whisper and automatic updates remain deferred. Developer ID and notarization tooling is prepared but requires authorized identity/profile and actual distribution validation.
 
 ## Candidate Work
 
@@ -65,4 +64,4 @@ recorded.
 
 ## Next Action
 
-Prepare fail-closed candidate/distribution tooling and reconcile provider lifecycle/support documentation.
+Finish clean candidate packaging and record the remaining UI, company-profile and distribution gates.

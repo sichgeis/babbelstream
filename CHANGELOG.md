@@ -4,6 +4,8 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+- Prepare distinct clean candidate and fail-closed Developer ID distribution modes, increasing bundle build numbers, hardened-runtime/audio entitlements, signature checks and an explicit notarization path.
+
 - Restore full build/check reproducibility with a project-local validated SDK selection.
 - Compact and align Settings/shared dialogs using semantic macOS surfaces, readable labels and one scrolling content area with fixed footers.
 - Enforce provider redirect and credential-origin boundaries; reject HTML/malformed transcription responses and prevent competing updated app copies from touching shared recording storage.

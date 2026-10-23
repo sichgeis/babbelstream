@@ -6,6 +6,7 @@ tasks:
     cmds:
       - scripts/swift-project.sh build --product BabbelStream
       - scripts/swift-project.sh run BabbelStreamChecks
+      - scripts/check-release-tooling.sh
 
   app:build:
     desc: Build the local macOS app bundle into dist/
@@ -50,3 +51,13 @@ tasks:
     dir: tools/provider-benchmark
     cmds:
       - python3 benchmark.py {{.CLI_ARGS}}
+
+  app:candidate:
+    desc: Package a clean optimized local candidate without installation or private signing-key lookup
+    cmds:
+      - BUILD_MODE=candidate scripts/package-dmg.sh
+
+  app:distribution:
+    desc: Prepare a clean Developer ID artifact (requires explicitly supplied signing identity)
+    cmds:
+      - BUILD_MODE=distribution scripts/package-dmg.sh

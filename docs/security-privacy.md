@@ -149,3 +149,7 @@ Transcription accepts the requested JSON object/string-text contract (including 
 ## Explicit Connection Tests
 
 Only an explicit confirmation sends synthetic silence to the saved primary transcription endpoint; it uses the origin-approved key and selected model with no user-supplied prompt/language hints. Maximum request timeout is 30 seconds, retry count zero, and no hedge/fallback/cleanup/dictionary/microphone or paste occurs. Cost and destination are disclosed before sending. The short WAV uses user-only temporary storage, is removed on completion/cancellation, and response text is discarded. No test transcript, history, archive, telemetry or verification record is persisted. Only session status is displayed. Apply and key deletion cancel and invalidate test evidence; no live check runs automatically.
+
+## Release Artifact Boundaries
+
+Candidate preparation uses ad-hoc signing unless an identity is explicitly authorized/supplied; it never silently accesses a private signing key. Distribution mode requires explicit Developer ID, hardened runtime and secure timestamp and cannot fall back to local/ad-hoc signing. The audio-input entitlement only supports the existing microphone permission; no debug-task, JIT, sandbox, camera or Apple Events entitlement is added. Notarization uses an explicitly approved existing profile and separate submission authorization; no credential is stored in source or build metadata. Packaging does not install, launch, publish or send diagnostics.

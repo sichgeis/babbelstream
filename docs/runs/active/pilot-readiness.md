@@ -56,6 +56,10 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 - Status: In progress
 - Plan: dedicated fail-closed distribution tooling, support/rollback docs, verify official lifecycle notices, broad regression and clean candidate packaging if possible.
 
+- Implemented: shared release preflight, source BUILD_NUMBER=2 (previous fixed build 1), optimized clean candidate/distribution modes, explicit Developer ID without fallback, runtime/audio entitlement verification, secure distribution timestamp flag, noninteractive plain DMG path, explicit notarize/staple/Gatekeeper helper and support procedure. No private identity lookup, signing material, notarization, publication or installation used in validation.
+- Evidence: `task check` passes full app + behavior/loopback/setup + disposable Git preflight fixtures. Shell syntax and entitlement plist lint pass. Candidate packaging still pending from the next clean committed milestone. Distribution positive validation requires owner-authorized identity/profile; negative preflight rejects absent/ad-hoc identities before lookup.
+- Reviewed official Apple release/signing/runtime/entitlement/build-number guidance and official OpenAI deprecations. `docs/provider-lifecycle.md` records dated cleanup/transcription migration milestones without changing any model/provider/cost or creating an automation.
+
 ## Decisions And Risks
 
 - Preserve clipboard-only delivery and separate tracker; no AX-first restoration.
@@ -82,4 +86,4 @@ Canonical build restored. macOS 27.0.1 visual acceptance unavailable here; autho
 
 ## Next Action
 
-Prepare fail-closed candidate/distribution tooling and reconcile provider lifecycle/support documentation.
+Finish clean candidate packaging and record the remaining UI, company-profile and distribution gates.

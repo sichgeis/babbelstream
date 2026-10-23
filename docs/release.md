@@ -1,15 +1,23 @@
 # Release Guide
 
-## Versioning
+## Versioning And Build Provenance
 
-The root `VERSION` file is the source of truth for the app bundle version, DMG filename, and local release tooling. BabbelStream uses `MAJOR.MINOR.PATCH` Semantic Versioning:
+`VERSION` owns the semantic app/DMG version; `BUILD_NUMBER` owns the increasing integer `CFBundleVersion`. Increment BUILD_NUMBER before each newly distributed iteration, including a materially new candidate, and keep it committed. The previous fixed bundle build was 1; this pilot preparation uses 2. No semantic release/version/tag is created by this branch.
 
-- Before 1.0, increment `MINOR` for substantial user-facing workflow, UI, or compatibility changes.
-- Increment `PATCH` for compatible fixes, reliability work, and incremental behavior improvements.
-- Create an annotated Git tag named `v<version>` on every release commit.
-- Keep `CHANGELOG.md`, `VERSION`, the release commit, and its tag aligned.
+- Before 1.0, increment MINOR for substantial user-facing changes and PATCH for compatible fixes.
+- Keep VERSION, CHANGELOG, final main commit and annotated `v<version>` tag aligned after the human smoke gate.
+- Candidate/distribution packaging requires all tracked/untracked work clean, release optimization, source-matching version/build metadata, and the exact HEAD hash. Overrides cannot disguise a different source version/commit.
+- Preflight compares BUILD_NUMBER to the most recent reachable release tag. Rebuilding the exact clean tagged commit with that tag's version/build remains allowed; new iterations must increase it. Avoid shallow/incomplete tag history for release work.
 
-Build scripts accept an explicit `VERSION=x.y.z` override for release automation, but ordinary local builds read `VERSION` automatically.
+## Build Modes
+
+| Mode | Configuration | Signature | Preconditions |
+| --- | --- | --- | --- |
+| development (default) | debug unless explicitly set | existing local identity or ad-hoc fallback | Local development; may be dirty |
+| candidate | release | ad-hoc by default, no private-identity lookup | Clean commit, increasing source build; local review only |
+| distribution | release | explicitly supplied Developer ID Application, secure timestamp | Clean commit/build; fails without authorized identity, never falls back |
+
+Candidate/distribution signatures enable hardened runtime and the reviewed audio-input entitlement for existing microphone behavior. No App Sandbox, new permission, debug task allowance, JIT, library-validation exception or telemetry is added. `verify-app.sh` checks signature integrity, runtime flags and microphone entitlement; distribution additionally requires Developer ID and timestamp. Native microphone/Accessibility behavior under that signature still requires human QA.
 
 ## Release Levels
 
@@ -43,27 +51,35 @@ dist/BabbelStream-$(cat VERSION).dmg
 
 The local build signs with `BabbelStream Local Code Signing` when that identity exists, otherwise it falls back to ad-hoc signing. This is not enough for public distribution.
 
-For deterministic window layout screenshots, launch a local build with one window selector:
+For visual QA, use the fixture-only bundle rather than another production-store copy:
 
 ```bash
-open -na dist/BabbelStream.app --args --settings --settings-tab=provider
-open -na dist/BabbelStream.app --args --teach-correction
-open -na dist/BabbelStream.app --args --personal-dictionary
-open -na dist/BabbelStream.app --args --dictation-archive
+scripts/preview-layout.sh --settings --settings-tab=provider
+scripts/preview-layout.sh --teach-correction --minimum-window-size
+scripts/preview-layout.sh --personal-dictionary --minimum-window-size
+scripts/preview-layout.sh --dictation-archive --minimum-window-size
 ```
 
-Add `--minimum-window-size` to an auxiliary-window command to inspect its documented minimum size. Supported Settings tab names are `general`, `provider`, `writing`, `archive`, and `diagnostics`. Window sharing is enabled only for this explicit QA mode; normal launches retain the default non-shareable window behavior.
+Use `--preview-dark`, `--preview-high-contrast`, or `--preview-incomplete` for scoped fixtures/appearance without changing global settings. This is the actual UI with fake OS/store adapters, not a second daily app. Quit the preview when done. Settings dimensions refer to content size (minimum 700×560, default 760×640); native title bars add height. Capture all tabs/scroll extremes on both required macOS versions, restore the original tab, and never alter saved settings just for screenshots.
 
-### GitHub Release Candidate
-
-Use this once the app is signed with a real Developer ID Application certificate:
+### Clean Local Candidate
 
 ```bash
-CONFIGURATION=release CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" scripts/build-app.sh
-DMG_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" scripts/package-dmg.sh
+task check
+task app:candidate
 ```
 
-Then notarize the DMG with Apple's notary service and staple the result before publishing it.
+This produces `dist/BabbelStream-<VERSION>-candidate.<BUILD_NUMBER>-<COMMIT>.dmg` from a clean commit without opening Finder, installing, launching the daily app or looking up a private signing identity. The ad-hoc candidate is not a distributable Developer ID artifact and does not pass the public Gatekeeper/notarization gate. An explicitly authorized stable signing identity can be supplied for later local permission QA; do not infer authorization from its availability.
+
+DMG packaging defaults to a plain, noninteractive drag-to-Applications image with an Applications symlink. `DMG_LAYOUT=finder` retains the optional decorative developer layout, which mounts the image and drives Finder; do not use it in unattended validation. Packaging alone never installs or launches an app.
+
+### Developer ID Distribution Artifact (Separate Authorization)
+
+```bash
+BUILD_MODE=distribution CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" scripts/package-dmg.sh
+```
+
+Only run after the identity owner authorizes signing-material use. The same Developer ID identity signs the DMG unless a separate explicit Developer ID identity is supplied. No ad-hoc fallback occurs. This prepares an artifact; publication and installation remain separate gates.
 
 ## Developer ID And Notarization
 
@@ -75,21 +91,30 @@ Official references:
 - [Notarizing macOS software before distribution](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
 - [Customizing the notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow)
 
-Typical command shape:
+After explicit authorization to submit the signed artifact to Apple, use an already configured approved Keychain profile; never put passwords/API keys into shell arguments, source files or this guide:
 
 ```bash
-xcrun notarytool submit "dist/BabbelStream-$(cat VERSION).dmg" \
-  --keychain-profile "notarytool-profile" \
-  --wait
-
-xcrun stapler staple "dist/BabbelStream-$(cat VERSION).dmg"
-spctl --assess --type open --verbose "dist/BabbelStream-$(cat VERSION).dmg"
+NOTARY_PROFILE="approved-notarytool-profile" scripts/notarize-dmg.sh "dist/BabbelStream-$(cat VERSION).dmg"
 ```
+
+The helper verifies Developer ID/timestamp, submits with `notarytool --wait`, saves submission metadata and the notary log, requires Accepted, staples and validates the ticket, assesses the DMG with Gatekeeper, and regenerates the checksum after stapling. Always review the notary log for warnings, even on acceptance. Actual signing, Apple submission, stapling/Gatekeeper and clean-Mac installation were not performed during automated pilot preparation.
+
+Verify the installed app (only after authorized installation):
+
+```bash
+scripts/verify-app.sh /Applications/BabbelStream.app distribution
+spctl --assess --type execute --verbose=2 /Applications/BabbelStream.app
+```
+
+Test a downloaded/quarantined artifact on a clean pilot Mac, including offline ticket availability. Do not bypass Gatekeeper warnings to manufacture acceptance. `scripts/install-dev-app.sh` is a development convenience and may stop existing copies/open Finder; do not run it as an implicit packaging step or use it to replace a daily app without authorization. Follow `docs/pilot-support.md` for installation, upgrade, rollback, credentials and support.
+
+Reviewed Apple references (2026-10-23): [distribution signing](https://developer.apple.com/documentation/xcode/creating-distribution-signed-code-for-the-mac/), [hardened runtime](https://developer.apple.com/documentation/xcode/configuring-the-hardened-runtime), [audio input entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.security.device.audio-input), [CFBundleVersion](https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundleversion), [notarization troubleshooting](https://developer.apple.com/documentation/security/resolving-common-notarization-issues). Secure timestamps, Developer ID, hardened runtime and absence of get-task-allow are distribution requirements; fixture preflight tests cannot establish certificate availability or notarization success.
 
 ## Manual Release Checklist
 
 - `task check`
-- `scripts/package-dmg.sh`
+- Clean `task app:candidate` for local review or the explicitly authorized Developer ID path for distribution.
+- Record artifact version/build/commit/checksum and signature/runtime/entitlement evidence.
 - Open the DMG and copy `BabbelStream.app` to `/Applications`.
 - Launch from `/Applications`.
 - Confirm menu-bar icon appears.
@@ -97,8 +122,8 @@ spctl --assess --type open --verbose "dist/BabbelStream-$(cat VERSION).dmg"
 - Confirm the menu is concise and Copy Last Draft remains a direct action; confirm Local Test Recording is available under Diagnostics.
 - Confirm General Settings readiness matches permissions, Keychain/provider configuration, and the Login Items state.
 - Toggle Launch at login and confirm the app appears in System Settings > General > Login Items; when upgrading an older installation, confirm the legacy LaunchAgent is removed only after registration succeeds.
-- Confirm all five Settings tabs render without clipping at the 700×560 minimum and 760×640 default window sizes; Provider and Diagnostics should scroll without moving the Apply footer.
-- Confirm Teach Correction renders at 500×420 minimum and 560×500 default sizes; grouped content scrolls without moving its footer.
+- Confirm all five Settings tabs render without clipping at the 700×560 minimum and 760×640 default content sizes on macOS 26.7.1 and 27.0.1; Provider and Diagnostics should scroll without moving the Apply footer.
+- Confirm Teach Correction renders at 500×420 minimum and 560×500 default sizes; section content scrolls without moving its footer.
 - Confirm Personal Dictionary renders at 620×520 minimum and 720×640 default sizes; both editors remain usable and the footer stays fixed.
 - Confirm Dictation Archive renders at 680×520 minimum and 760×640 default sizes; long daily/recovery content scrolls without moving its footer.
 - Confirm Microphone and Accessibility prompts are understandable.

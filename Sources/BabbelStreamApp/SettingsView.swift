@@ -262,7 +262,7 @@ private struct SettingsProviderPane: View {
                     Button("Official OpenAI") { appState.selectConnectionPreset(.officialOpenAI) }
                 }
                 AppFormTextField("Provider base URL", text: $appState.baseURLText)
-                Text("Company profile and key issuance: awaiting approved details from IT. Existing applied settings are preserved; do not guess a development or production host. Presets contain no keys and leave models unchanged.")
+                Text("Ask IT for your approved company URL and per-user key. A company preset is not available yet. Existing saved configuration is retained; presets leave models unchanged.")
                     .font(.caption).foregroundStyle(.secondary)
                 AppFormSecureField(
                     appState.hasAPIKey ? "Saved in your Keychain; re-enter to replace or approve a new origin" : "Paste your per-user API key",
@@ -488,6 +488,8 @@ private struct SettingsDiagnosticsPane: View {
             AppFormSection("Diagnostics") {
                 AppLabeledContent("Version", value: BuildMetadata.appVersion)
                 AppLabeledContent("Build commit", value: BuildMetadata.gitCommitShortHash)
+                AppLabeledContent("Bundle build", value: BuildMetadata.bundleBuildNumber)
+                AppLabeledContent("Build mode", value: BuildMetadata.buildMode)
                 AppLongValue(label: "App bundle", value: appState.appBundlePath)
                 AppLabeledContent("Bundle ID", value: appState.appBundleIdentifier)
                 AppLabeledContent("Code signing", value: appState.codeSigningSummary)

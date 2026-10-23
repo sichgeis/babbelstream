@@ -1193,6 +1193,8 @@ final class AppState: ObservableObject {
         let fields: [(String, String)] = [
             ("version", BuildMetadata.appVersion),
             ("build commit", BuildMetadata.gitCommitShortHash),
+            ("bundle build", BuildMetadata.bundleBuildNumber),
+            ("build mode", BuildMetadata.buildMode),
             ("recording", String(isRecording)),
             ("processing", String(isProcessing)),
             ("primary origin", ProviderOrigin(configuration.baseURL)?.description ?? "invalid"),

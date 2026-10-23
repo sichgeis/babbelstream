@@ -94,6 +94,14 @@ public enum BuildMetadata {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? unknownVersion
     }
 
+    public static var bundleBuildNumber: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
+    }
+
+    public static var buildMode: String {
+        Bundle.main.object(forInfoDictionaryKey: "BabbelStreamBuildMode") as? String ?? "unknown"
+    }
+
     public static var gitCommitShortHash: String {
         Bundle.main.object(forInfoDictionaryKey: gitCommitInfoKey) as? String ?? unknownGitCommit
     }
