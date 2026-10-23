@@ -15,7 +15,8 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Active: clipboard-only insertion implemented 2026-10-23; unreleased on `codex/clipboard-only-insertion`.
+- Active pilot readiness: `docs/features/pilot-readiness/spec.md`, tracker `docs/runs/active/pilot-readiness.md`, branch `codex/pilot-readiness`. Approved autonomous implementation, unreleased.
+- Preserved dependency: clipboard-only insertion implemented 2026-10-23; unreleased on `codex/clipboard-only-insertion`.
 - Contract: `docs/features/clipboard-only-insertion/spec.md`.
 - Tracker: `docs/runs/active/clipboard-only-insertion.md`.
 - Latest released compatibility feature remains Signal paste compatibility.
@@ -64,4 +65,4 @@ recorded.
 
 ## Next Action
 
-Restore a working SwiftUI build environment and rerun `task check` before candidate packaging and authorized native smoke testing.
+Finish installed-SDK build diagnosis and establish a reproducible canonical check configuration for pilot readiness.
