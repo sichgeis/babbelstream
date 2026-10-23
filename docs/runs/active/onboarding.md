@@ -30,7 +30,7 @@ None.
 
 ## Next Action
 
-the maintainer completes live permission onboarding and the local sample test in installed build 5, then reports the unsent dictation smoke result.
+Obtain macOS 27.0.1 visual acceptance of onboarding and Settings at both documented window sizes.
 
 ## Acceptance Remaining
 
@@ -38,7 +38,8 @@ the maintainer completes live permission onboarding and the local sample test in
 - [x] Native fixture review at both sizes/light/dark on this host; other-host 27.0.1 comparison remains manual.
 - [x] Clean candidate packaging.
 - [x] Explicitly authorized candidate build 5 installation/launch verified.
-- [ ] Human consent/local paste/real dictation smoke.
+- [x] the maintainer reports the installed build 5 seems to be working after the onboarding/smoke handoff.
+- [ ] Detailed permission/paste/editor/language/gesture/recovery matrix and cross-version acceptance; no blanket pass inferred.
 
 ## Implementation And Validation Evidence
 
@@ -85,3 +86,7 @@ Candidate installation was explicitly authorized in the final-review request. Af
 - Installed `/Applications/BabbelStream.app` and launched normally (no forced window argument). Native UI confirms first-use Set Up BabbelStream window, step 1 of 5. Running executable, strict signature and installed metadata verified. Installed/payload executable SHA-256 both `5cbfc0220f3462e11d20c9fc4a106a54159d6945f820eba32cd56006bee8dab9`.
 - Quality/checks/docs/source fixes committed and pushed before packaging/install. Final `task check`, shell syntax, entitlement plist lint and complete feature diff whitespace checks PASS. Final docs reconcile installation evidence; no code changed after candidate validation.
 - User action remaining: complete permission consent and local paste test, then real unsent dictation smoke. No real recording/provider request, permission grant, main/tag/PR or publication was performed by automation. Sparkle/signing remains deferred. Tracker stays active until human acceptance.
+
+## Human Feedback (2026-10-23)
+
+the maintainer reported “This seems to be working” after build 5 installation and the onboarding/local-paste smoke handoff. Record this as a positive basic smoke result for 0.4.5 build 5 / b3f7ff0, without inventing individual test outcomes. The broader native compatibility matrix, macOS 27.0.1 evidence, colleague signing/updating and release/main/tag/publication remain separate gates. No code or installed payload changed in this documentation update.

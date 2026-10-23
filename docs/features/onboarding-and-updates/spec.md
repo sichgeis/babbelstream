@@ -2,7 +2,7 @@
 
 ## Status
 
-Onboarding approved by the maintainer on 2026-10-23: implement the proposed first-run flow, live permission checks and local paste test. Sparkle, distribution signing and all update delivery changes remain deferred. Local implementation, final quality review, canonical fixtures and candidate build 5 packaging/authorized local installation completed; native human consent/local-paste acceptance remains pending. No signing-key access, background network traffic or release approval is implied.
+Onboarding approved by the maintainer on 2026-10-23: implement the proposed first-run flow, live permission checks and local paste test. Sparkle, distribution signing and all update delivery changes remain deferred. Local implementation, final quality review, canonical fixtures and candidate build 5 packaging/authorized local installation completed; the maintainer reported positive basic smoke feedback for installed build 5; detailed native and cross-version acceptance remain pending. No signing-key access, background network traffic or release approval is implied.
 
 ## Problem And Desired Outcome
 
