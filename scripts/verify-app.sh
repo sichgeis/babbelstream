@@ -6,10 +6,11 @@ case "$VERIFY_MODE" in development|candidate|distribution) ;; *) echo "Invalid v
 codesign --verify --strict --verbose=2 "$APP_PATH"
 SIGNATURE="$(codesign --display --verbose=3 "$APP_PATH" 2>&1)"
 if [[ "$VERIFY_MODE" != development ]]; then
-  [[ "$SIGNATURE" == *"(runtime)"* ]] || { echo "Hardened runtime missing." >&2; exit 1; }
+  SIGNATURE_FLAGS="$(printf '%s\n' "$SIGNATURE" | sed -n 's/.*flags=0x[[:xdigit:]]*(\([^)]*\)).*/,\1,/p')"
+  [[ "$SIGNATURE_FLAGS" == *",runtime,"* ]] || { echo "Hardened runtime missing." >&2; exit 1; }
   ENTITLEMENTS_FILE="$(mktemp "${TMPDIR:-/tmp}/babbelstream-entitlements.XXXXXX")"
   trap 'rm -f "$ENTITLEMENTS_FILE"' EXIT
-  codesign --display --entitlements - "$APP_PATH" > "$ENTITLEMENTS_FILE" 2>/dev/null
+  codesign --display --xml --entitlements - "$APP_PATH" > "$ENTITLEMENTS_FILE" 2>/dev/null
   [[ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.device.audio-input' "$ENTITLEMENTS_FILE")" == true ]] || { echo "Audio-input entitlement missing." >&2; exit 1; }
   if [[ "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.get-task-allow' "$ENTITLEMENTS_FILE" 2>/dev/null || true)" == true ]]; then
     echo "Distribution must not permit debugger task access." >&2; exit 1

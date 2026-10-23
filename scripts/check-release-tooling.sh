@@ -43,4 +43,34 @@ git -C "$FIXTURE_DIR" add BUILD_NUMBER
 git -C "$FIXTURE_DIR" -c user.name=Fixture -c user.email=fixture@example.invalid -c commit.gpgsign=false -c core.hooksPath=/dev/null commit -qm invalid-build
 expect_failure 'increment BUILD_NUMBER' BUILD_MODE=candidate
 
+# Exercise signature acceptance/rejection using fixture output, never a private identity.
+mkdir -p "$FIXTURE_DIR/bin"
+cat > "$FIXTURE_DIR/bin/codesign" <<'MOCK'
+#!/usr/bin/env bash
+set -euo pipefail
+case "$*" in
+  *--verify*) exit 0 ;;
+  *--entitlements*)
+    [[ "$*" == *--xml* ]] || { echo '[Dict] not XML'; exit 0; }
+    cat "$FIXTURE_ENTITLEMENTS" ;;
+  *) printf '%s\n' "$FIXTURE_SIGNATURE" >&2 ;;
+esac
+MOCK
+chmod +x "$FIXTURE_DIR/bin/codesign"
+printf '%s\n' '<?xml version="1.0"?><plist version="1.0"><dict><key>com.apple.security.device.audio-input</key><true/></dict></plist>' > "$FIXTURE_DIR/audio.plist"
+printf '%s\n' '<?xml version="1.0"?><plist version="1.0"><dict><key>com.apple.security.device.audio-input</key><false/></dict></plist>' > "$FIXTURE_DIR/no-audio.plist"
+printf '%s\n' '<?xml version="1.0"?><plist version="1.0"><dict><key>com.apple.security.device.audio-input</key><true/><key>com.apple.security.get-task-allow</key><true/></dict></plist>' > "$FIXTURE_DIR/debug.plist"
+verify_fixture() {
+  local signature="$1" entitlement="$2" mode="$3"
+  env PATH="$FIXTURE_DIR/bin:$PATH" FIXTURE_SIGNATURE="$signature" FIXTURE_ENTITLEMENTS="$FIXTURE_DIR/$entitlement" "$ROOT_DIR/scripts/verify-app.sh" "$FIXTURE_DIR/NoApp.app" "$mode" > "$FIXTURE_LOG" 2>&1
+}
+verify_fixture 'CodeDirectory flags=0x10002(adhoc,runtime)' audio.plist candidate
+verify_fixture $'CodeDirectory flags=0x10000(runtime)\nAuthority=Developer ID Application: Fixture\nTimestamp=fixture' audio.plist distribution
+for output in 'CodeDirectory flags=0x2(adhoc)' $'CodeDirectory flags=0x10000(runtime)\nAuthority=Developer ID Application: Fixture' ; do
+  if verify_fixture "$output" audio.plist distribution; then echo 'Invalid distribution signature accepted.' >&2; exit 1; fi
+done
+if verify_fixture 'CodeDirectory flags=0x10002(adhoc,runtime)' no-audio.plist candidate; then echo 'Missing audio entitlement accepted.' >&2; exit 1; fi
+if verify_fixture 'CodeDirectory flags=0x10002(adhoc,runtime)' debug.plist candidate; then echo 'Debug task entitlement accepted.' >&2; exit 1; fi
+if verify_fixture 'CodeDirectory flags=0x2(adhoc)' audio.plist candidate; then echo 'Missing runtime accepted.' >&2; exit 1; fi
+
 echo "Release preflight fixture checks passed. No signing identity or credentials accessed."
