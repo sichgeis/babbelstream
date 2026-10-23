@@ -65,6 +65,5 @@ The Homebrew pilot's approved envelope and human gate are in its
 
 Manual/user-facing DMGs default to the illustrated Finder layout. Candidate
 packaging stays plain for unattended checks; use `DMG_LAYOUT=plain` explicitly
-when a desktop/Finder is unavailable in other modes. For the existing released
-app, use the separately named `BabbelStream-0.5.1-pretty-r2.dmg` rather than rebuilding
-over the original release artifact. See the [release guide](release.md).
+when a desktop/Finder is unavailable in other modes. Since 0.5.2, a release
+ships one decorative `BabbelStream-<version>.dmg` that also serves Homebrew. See the [release guide](release.md).

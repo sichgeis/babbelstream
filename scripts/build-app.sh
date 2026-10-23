@@ -35,11 +35,6 @@ make_app_icon() {
     exit 1
   fi
 
-  if ! command -v iconutil >/dev/null 2>&1; then
-    echo "iconutil is required to build the app .icns file." >&2
-    exit 1
-  fi
-
   rm -rf "$ICONSET_DIR" "$ICON_PNG"
   mkdir -p "$ICONSET_DIR"
 
@@ -52,19 +47,26 @@ make_app_icon() {
 
   mv "$rendered_png" "$ICON_PNG"
 
-  sips -z 16 16 "$ICON_PNG" --out "$ICONSET_DIR/icon_16x16.png" >/dev/null
-  sips -z 32 32 "$ICON_PNG" --out "$ICONSET_DIR/icon_16x16@2x.png" >/dev/null
-  sips -z 32 32 "$ICON_PNG" --out "$ICONSET_DIR/icon_32x32.png" >/dev/null
-  sips -z 64 64 "$ICON_PNG" --out "$ICONSET_DIR/icon_32x32@2x.png" >/dev/null
-  sips -z 128 128 "$ICON_PNG" --out "$ICONSET_DIR/icon_128x128.png" >/dev/null
-  sips -z 256 256 "$ICON_PNG" --out "$ICONSET_DIR/icon_128x128@2x.png" >/dev/null
-  sips -z 256 256 "$ICON_PNG" --out "$ICONSET_DIR/icon_256x256.png" >/dev/null
-  sips -z 512 512 "$ICON_PNG" --out "$ICONSET_DIR/icon_256x256@2x.png" >/dev/null
-  sips -z 512 512 "$ICON_PNG" --out "$ICONSET_DIR/icon_512x512.png" >/dev/null
-  sips -z 1024 1024 "$ICON_PNG" --out "$ICONSET_DIR/icon_512x512@2x.png" >/dev/null
+  # Write PNG entries directly instead of using iconutil: it stores 16/32 px as
+  # ARGB PackBits (ic04/ic05), which corrupts light artwork at 16 px. The 1x
+  # 16/32 px slots stay empty because macOS misreads PNG data in icp4/icp5; it
+  # scales those sizes down from the @2x entries instead.
+  local entry type px png_size
+  : > "$ICONSET_DIR/body"
+  for entry in ic11:32 ic12:64 ic07:128 ic13:256 ic08:256 ic14:512 ic09:512 ic10:1024; do
+    type="${entry%%:*}"
+    px="${entry##*:}"
+    sips -z "$px" "$px" "$ICON_PNG" --out "$ICONSET_DIR/$type.png" >/dev/null
+    png_size="$(wc -c < "$ICONSET_DIR/$type.png")"
+    { printf '%s' "$type"; write_be32 $((png_size + 8)); cat "$ICONSET_DIR/$type.png"; } >> "$ICONSET_DIR/body"
+  done
 
-  iconutil -c icns "$ICONSET_DIR" -o "$RESOURCES_DIR/$APP_ICON_NAME"
+  { printf 'icns'; write_be32 $(($(wc -c < "$ICONSET_DIR/body") + 8)); cat "$ICONSET_DIR/body"; } > "$RESOURCES_DIR/$APP_ICON_NAME"
   rm -rf "$ICONSET_DIR" "$ICON_PNG"
+}
+
+write_be32() {
+  printf "\\x$(printf '%02x' $((($1 >> 24) & 255)))\\x$(printf '%02x' $((($1 >> 16) & 255)))\\x$(printf '%02x' $((($1 >> 8) & 255)))\\x$(printf '%02x' $(($1 & 255)))"
 }
 
 cd "$ROOT_DIR"

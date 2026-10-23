@@ -6,6 +6,12 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 No changes yet.
 
+## 0.5.2 - 2026-10-23
+
+- Redesign the app icon in blue brand colors: a light blue-white tile with a centered slate voice waveform ending in a blue text cursor. It replaces the near-black bar-chart look and stays legible on light and dark backgrounds.
+- Write the app `.icns` with PNG entries only. `iconutil` encoded 16 px icons in a legacy ARGB format that corrupted light artwork into a yellow band; macOS now scales the small sizes from the @2x PNG entries.
+- Ship a single decorative drag-to-Applications DMG that also serves the Homebrew cask.
+
 ## 0.5.1 - 2026-10-23
 
 - Show Allow Microphone in onboarding when access has not yet been requested; previously the button incorrectly checked the unknown state. Explicit consent refreshes readiness without starting a recording.

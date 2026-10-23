@@ -1,6 +1,6 @@
 # Get Started With BabbelStream
 
-BabbelStream 0.5.1 is published through its non-notarized GitHub/Homebrew colleague
+BabbelStream 0.5.2 is published through its non-notarized GitHub/Homebrew colleague
 pilot. The [download/launch quality test](homebrew-pilot-smoke-test.md) has other-Mac
 results recorded, including the Keychain repair linked below. Public Homebrew
 installation and subsequent missing-bundle reinstall passed; the maintainer confirmed
@@ -15,15 +15,15 @@ native evidence is on 26.7.1, with pilot smoke also reported on 27.0.1.
 
 Use `brew install --cask sichgeis/tap/babbelstream` for Homebrew, or follow the
 [illustrated DMG instructions](../README.md#install-with-the-illustrated-dmg).
-The public [0.5.1 release page](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1)
-lists `BabbelStream-0.5.1-pretty-r2.dmg` and its `.sha256` under Assets. This is the
-refined drag-to-Applications window; the original DMG remains plain. Neither
-changes the actual app or provides automatic in-app updates.
+The public [0.5.2 release page](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.2)
+lists `BabbelStream-0.5.2.dmg` and its `.sha256` under Assets. It opens the
+illustrated drag-to-Applications window and is the same file Homebrew installs.
+It does not provide automatic in-app updates.
 
 From the download folder, verify both downloaded files before opening the image:
 
 ```sh
-shasum -a 256 -c BabbelStream-0.5.1-pretty-r2.dmg.sha256
+shasum -a 256 -c BabbelStream-0.5.2.dmg.sha256
 ```
 
 Quit an existing copy, open the DMG, drag BabbelStream onto Applications, wait for
@@ -34,7 +34,7 @@ checksum file that matches its exact filename.
 For an existing manual installation, finish or cancel active work, quit normally,
 and preserve its app bundle before moving it aside. Keep Application Support and
 Keychain intact. The ordinary install command rejects an existing Applications
-bundle, even for the matching 0.5.1 app in our pilot. Move the quit manual app to
+bundle, even for the matching app version in our pilot. Move the quit manual app to
 a backup folder, then repeat the same command. Homebrew's optional identical-app
 adoption mode is not tested; do not force an overwrite or run two copies.
 

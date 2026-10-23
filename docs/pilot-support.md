@@ -3,7 +3,7 @@
 For first installation and everyday help, use [Get started](getting-started.md).
 This guide covers company provider setup, connection states and support.
 
-**Current pilot:** 0.5.1, ad-hoc signed and not notarized. The GitHub release and
+**Current pilot:** 0.5.2, ad-hoc signed and not notarized. The GitHub release and
 own Homebrew tap are public, with the initial pilot completed. Company
 provider configuration and per-user key issuance remain separate requirements.
 [Project status](project-status.md) owns availability; the

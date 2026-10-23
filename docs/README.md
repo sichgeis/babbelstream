@@ -1,6 +1,6 @@
 # BabbelStream Documentation
 
-Start with the [app README](../README.md) for a short introduction. Version 0.5.1
+Start with the [app README](../README.md) for a short introduction. Version 0.5.2
 is publicly available through the non-notarized own-tap pilot; its initial
 installation and dictation validation is complete. Deferred lifecycle checks
 remain in the implementation plan. [Project status](project-status.md) owns the current

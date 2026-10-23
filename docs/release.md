@@ -230,3 +230,21 @@ The outer height includes the 28-point title bar; do not reuse background height
 as outer-window height. Its card border/corners remain visible with extra lower
 padding and a softer shadow. Keep the original and first pretty assets intact.
 Evidence: `docs/runs/archive/dmg-bottom-spacing.md`.
+
+## 0.5.2 App Icon Release
+
+the maintainer approved the blue icon (light tile, slate waveform, blue cursor)
+on 2026-10-23 and explicitly authorized pushing main, the v0.5.2 tag, the GitHub
+release and the tap update in the same request. Version 0.5.2/build 8 changes only
+the icon and its `.icns` encoding. Since this release, one decorative
+`BabbelStream-<version>.dmg` plus portable checksum serves both direct download and
+the cask; there is no separate `-pretty` asset. Package it from the clean tag:
+
+```bash
+BUILD_MODE=candidate DMG_LAYOUT=finder CODESIGN_IDENTITY=- DMG_CODESIGN_IDENTITY=- DMG_NAME=BabbelStream-0.5.2.dmg scripts/package-dmg.sh
+```
+
+Finder layout needs an unlocked desktop with Finder automation access. The
+other-Mac downloaded/quarantined pilot test was not repeated for this icon-only
+release; record its outcome when performed. Evidence:
+`docs/runs/archive/release-v0.5.2.md`.

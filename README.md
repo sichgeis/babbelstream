@@ -9,10 +9,11 @@ or sends your message.**
 
 ## Try the pilot
 
-**Version 0.5.1 · Apple Silicon · Non-notarized Homebrew pilot**
+**Version 0.5.2 · Apple Silicon · Non-notarized Homebrew pilot**
 
-The [0.5.1 release](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1)
-is public and the tap is active. Public Homebrew installation passed on the
+The [0.5.2 release](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.2)
+is public and the tap is active. It adds the new blue app icon to the 0.5.1 app; the pilot evidence
+below was gathered on 0.5.1. Public Homebrew installation passed on the
 macOS 27.0.1 pilot Mac after moving its manual app aside. After a missing-bundle
 reinstall, launch and dictation passed without a Keychain prompt. This remains a
 limited colleague pilot; future-version upgrades are not yet validated.
@@ -43,38 +44,38 @@ see [installation guidance](docs/getting-started.md).
 
 ### Install with the illustrated DMG
 
-The installer is already public on the
-[GitHub 0.5.1 release page](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1).
+The installer is public on the
+[GitHub 0.5.2 release page](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.2).
 Under **Assets**, choose
-[BabbelStream-0.5.1-pretty-r2.dmg](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty-r2.dmg)
+[BabbelStream-0.5.2.dmg](https://github.com/sichgeis/babbelstream/releases/download/v0.5.2/BabbelStream-0.5.2.dmg)
 for the illustrated window with the arrow. Download its
-[checksum file](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty-r2.dmg.sha256)
+[checksum file](https://github.com/sichgeis/babbelstream/releases/download/v0.5.2/BabbelStream-0.5.2.dmg.sha256)
 too. No GitHub sign-in is needed. The Source code ZIP/tar downloads are not installers.
 
 1. Finish any dictation and quit an existing BabbelStream normally. Preserve a
    backup of its app bundle if replacing it; keep settings and Keychain entries.
-2. Double-click **BabbelStream-0.5.1-pretty-r2.dmg** in your download folder.
+2. Double-click **BabbelStream-0.5.2.dmg** in your download folder.
    It opens a Finder window with BabbelStream on the left and Applications on the right.
 3. **Drag BabbelStream onto Applications.** If Finder asks to replace an existing
    app, confirm only when you intend to replace that quit copy. Wait for copying
    to finish.
-4. Eject **BabbelStream 0.5.1 Installer R2** in Finder.
+4. Eject **BabbelStream 0.5.2** in Finder.
 5. Open **Finder → Applications → BabbelStream**. Launch this installed copy,
    rather than the app inside the disk image.
-6. Follow setup, confirm **0.5.1 / build 7 / commit 8f229fe** in Diagnostics,
-   and verify microphone, Accessibility and the local paste test before dictating.
+6. Follow setup, confirm **0.5.2 / build 8** and the commit listed in the release
+   notes in Diagnostics, and verify microphone, Accessibility and the local paste
+   test before dictating.
 
 To verify the download, run this from the folder containing both downloaded files
-and expect `BabbelStream-0.5.1-pretty-r2.dmg: OK`:
+and expect `BabbelStream-0.5.2.dmg: OK`:
 
 ```sh
-shasum -a 256 -c BabbelStream-0.5.1-pretty-r2.dmg.sha256
+shasum -a 256 -c BabbelStream-0.5.2.dmg.sha256
 ```
 
-R2 changes the installation window's layout only; it contains the same released
-app. The original `BabbelStream-0.5.1.dmg` and Homebrew still use the plain image.
-Manually installed copies receive updates by replacing the app with a later DMG;
-this installer does not add an automatic updater.
+Since 0.5.2 this one DMG is both the illustrated installer and the file Homebrew
+installs. Manually installed copies receive updates by replacing the app with a
+later DMG; this installer does not add an automatic updater.
 
 The app is **not Apple-notarized**. If macOS blocks first launch, follow
 [Apple's per-app approval instructions](https://support.apple.com/en-gb/102445)
