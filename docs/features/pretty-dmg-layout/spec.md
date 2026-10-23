@@ -34,7 +34,7 @@ asset IDs/digests, tag and Homebrew recipe must remain unchanged.
 
 ## Bottom-spacing revision (2026-10-23)
 
-the maintainer reported clipped/cramped lower corners in the first pretty installer.
+The maintainer reported clipped/cramped lower corners in the first pretty installer.
 Use a 440-point background in a 468-point outer window (28 points reserved for
 the title bar), add lower card padding and soften the border/shadow. Keep the
 icon positions/arrow and exact app payload. Preview/publish as a separately named
@@ -44,7 +44,7 @@ The first pretty artifact's outer window was only 420 points, cropping its
 
 ## Canonical release cleanup (2026-10-23)
 
-the maintainer subsequently approved one polished canonical DMG and checksum per release,
+The maintainer subsequently approved one polished canonical DMG and checksum per release,
 shared with Homebrew, and removal of the additional preview variants. This supersedes
 the earlier requirements to publish and retain `-pretty` and `-pretty-r2` assets.
 Version 0.5.2 already supplies the polished layout and new icon under the canonical

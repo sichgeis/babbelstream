@@ -2,7 +2,7 @@
 
 ## Authority And Baseline
 
-the maintainer chose icon variant 8 (light blue-tinted tile, slate waveform, blue
+The maintainer chose icon variant 8 (light blue-tinted tile, slate waveform, blue
 cursor; brand tokens #FFFFFF→#E2EAFF, #030436, #0039D5) on 2026-10-23 and in the
 same request authorized updating the repository, pushing main, a GitHub release with
 a new DMG and the Homebrew tap update. That request waived the separate smoke gate

@@ -257,7 +257,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         {
             transcriptionModelRouting = routing
         } else {
-            transcriptionModelRouting = .initialValue(forExistingBaseURL: baseURL)
+            transcriptionModelRouting = .standardOpenAI
             userDefaults.set(transcriptionModelRouting.rawValue, forKey: Key.transcriptionModelRouting)
         }
         let configuration = ProviderConfiguration(

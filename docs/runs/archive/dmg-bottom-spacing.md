@@ -38,12 +38,12 @@ No new app release/version/tag or Homebrew update.
 
 ## Next action
 
-the maintainer reviews the open R2 installer visually and installs manually if desired.
+The maintainer reviews the open R2 installer visually and installs manually if desired.
 
 
 ## Installation documentation follow-up
 
-the maintainer requested explicit README installation instructions and the GitHub
+The maintainer requested explicit README installation instructions and the GitHub
 download location. README now links the public release page, exact R2 DMG and
 checksum, explains Assets versus source archives, and documents quit/copy/eject/
 launch/setup plus managed-Mac restrictions. Getting Started links to that single

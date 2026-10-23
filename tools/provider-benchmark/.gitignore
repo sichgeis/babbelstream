@@ -1,3 +1,5 @@
 .env
 __pycache__/
 *.pyc
+*.m4a
+!audio-fixture.m4a

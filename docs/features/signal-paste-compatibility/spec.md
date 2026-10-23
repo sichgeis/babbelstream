@@ -52,7 +52,7 @@ With installed 0.4.5 candidate, focus an unsent Signal composer, dictate a harml
 
 ## Authority And Release Gate
 
-the maintainer explicitly approved committing the Signal-only fix and installing a 0.4.5 candidate on 2026-09-05 after the initial automatic approval rejection. Ordinary direct-main commits/pushes, checks, versioning, packaging, and local installation are authorized. the maintainer confirmed successful Signal smoke on 2026-09-05, satisfying the final release gate. Do not access private conversation content or send messages to validate the repair.
+The maintainer explicitly approved committing the Signal-only fix and installing a 0.4.5 candidate on 2026-09-05 after the initial automatic approval rejection. Ordinary direct-main commits/pushes, checks, versioning, packaging, and local installation are authorized. the maintainer confirmed successful Signal smoke on 2026-09-05, satisfying the final release gate. Do not access private conversation content or send messages to validate the repair.
 
 ## Open Questions
 

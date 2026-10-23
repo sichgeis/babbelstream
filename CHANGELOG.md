@@ -4,7 +4,8 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
-No changes yet.
+- Remove private names, company-specific hosts/branding and recorded fixture metadata from the source tree; use synthetic benchmark speech and public repository hygiene checks.
+- Preserve saved transcription routing. An upgrade directly from a pre-routing version using a LiteLLM namespace must select LiteLLM once in Settings; unset routing now defaults to standard OpenAI IDs for every host.
 
 ## 0.5.2 - 2026-10-23
 
@@ -76,7 +77,7 @@ Local release approved after the build 5 smoke test. Other-Mac macOS 27.0.1 visu
   mixed-language auto-detection without an HTTP 400 validation failure.
 - Add per-installation transcription model routing: standard IDs for the
   official OpenAI API or `openai/`-prefixed IDs for LiteLLM. Existing company
-  proxy settings migrate once, the Mini hedge follows the same routing, and
+  proxy settings migrated once in that release, the Mini hedge follows the same routing, and
   Settings/diagnostics show the effective IDs.
 
 ## 0.4.1 - 2026-07-20

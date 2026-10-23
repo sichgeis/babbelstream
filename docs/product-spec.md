@@ -42,9 +42,9 @@ The primary user is a technical Mac user who writes many Slack messages during t
   `gpt-transcribe`, `gpt-4o-transcribe`, and `gpt-4o-mini-transcribe`; arbitrary
   model strings are not accepted. A separate persisted routing menu sends
   standard model IDs to the official OpenAI API or `openai/`-prefixed IDs to a
-  LiteLLM namespace, and shows the effective primary and fallback IDs. Existing
-  company proxy settings migrate once to LiteLLM routing; other installations
-  default to standard routing.
+  LiteLLM namespace, and shows the effective primary and fallback IDs. Saved routing choices remain authoritative. With no saved routing choice,
+  use standard IDs without inspecting the host. Upgrading directly from a
+  pre-routing version with a LiteLLM proxy requires selecting LiteLLM once in Settings.
 - Cleanup provider using an OpenAI-compatible chat endpoint.
 - Optional personal OpenAI fallback, disabled by default. After the user sees
   the fixed official destination, supplies a separate Keychain API key, and

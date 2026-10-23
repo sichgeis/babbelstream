@@ -61,7 +61,7 @@ Mini hedge.
 - Keep official model IDs as the logical settings value and resolve the wire ID
   only while constructing transcription multipart fields. This preserves
   `gpt-transcribe` language-field behavior under both routing modes.
-- Migrate the known company development/production proxy hosts to LiteLLM
+- Migrate the then-known company development/production proxy hosts to LiteLLM
   `openai/` routing only when no routing choice exists; persist the result so
   later URL changes do not silently alter routing.
 

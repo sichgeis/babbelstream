@@ -17,7 +17,7 @@ Continue the maintainer’s explicit release-finalization/main/tag/install/clean
 
 ## Next Action
 
-the maintainer grants microphone/Accessibility access for the final ad-hoc build using the open onboarding permission page.
+The maintainer grants microphone/Accessibility access for the final ad-hoc build using the open onboarding permission page.
 
 ## Final Release Evidence
 

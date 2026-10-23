@@ -277,3 +277,21 @@ permission/Keychain repair, rollback, uninstall retention and reinstall. Use an
 isolated pilot installation, never mutate the daily app or private data to prove
 these cases. First install does not prove upgrades. Other-Mac/native checks remain
 pending until reported; see `docs/runs/archive/homebrew-distribution.md`.
+
+## Public Repository Hygiene
+
+`task check` scans tracked and non-ignored new files and the effective Git identity.
+The local, untracked `.git/info/hygiene-denylist` holds one private literal per line;
+without it only generic patterns are checked. Diagnostics contain categories/counts,
+never matched content. Deliberate synthetic private-path redaction fixtures remain
+allowed only in their dedicated test file. Fixture checks exercise detection,
+ignored-secret exclusion, denylist matching, identity enforcement and history scans.
+Before push, run `python3 scripts/check-public-hygiene.py --history` to audit all
+reachable commit/tag identities, messages and blobs. Before release, additionally
+pass `--binary <optimized-executable>` for a `strings` scan. Historical violations
+require a separately authorized rewrite; current-file success does not clear history.
+
+Routing checks preserve saved LiteLLM choices after host edits and use standard
+IDs when routing is absent or invalid, including a generic company proxy host.
+A direct pre-routing LiteLLM upgrade requires one explicit Settings selection.
+The benchmark speech fixture is synthetic with optional metadata removed.

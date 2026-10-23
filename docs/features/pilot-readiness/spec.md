@@ -53,7 +53,7 @@ Authoritative company connection profile and credential issuance; authorized Dev
 
 ## Approved Visual Refinement (2026-10-23)
 
-the maintainer requested a color/background review against Apple HIG during implementation. Use semantic NSColor windowBackgroundColor, controlBackgroundColor and separatorColor instead of compounded gray opacity fills. Primary headings and native accent-colored actions carry hierarchy; status color always retains text. Honor system appearance without a new app theme setting. Preview light, dark and increased-contrast appearances without changing global settings. Keep five tabs, fixed Apply and resizable/scrolling behavior; defer a toolbar/navigation redesign.
+The maintainer requested a color/background review against Apple HIG during implementation. Use semantic NSColor windowBackgroundColor, controlBackgroundColor and separatorColor instead of compounded gray opacity fills. Primary headings and native accent-colored actions carry hierarchy; status color always retains text. Honor system appearance without a new app theme setting. Preview light, dark and increased-contrast appearances without changing global settings. Keep five tabs, fixed Apply and resizable/scrolling behavior; defer a toolbar/navigation redesign.
 
 Sources: [Apple Color](https://developer.apple.com/design/human-interface-guidelines/color), [Materials](https://developer.apple.com/design/human-interface-guidelines/materials), [Settings](https://developer.apple.com/design/human-interface-guidelines/settings), reviewed 2026-10-23. Apple recommends semantic adaptive colors and native Settings conventions; the specific surface/spacing implementation is a project design decision, not a prescribed HIG palette.
 

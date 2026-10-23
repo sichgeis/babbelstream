@@ -124,7 +124,7 @@ Archived after final release verification on 2026-09-05.
 
 ## Human Smoke Approval And Follow-up
 
-the maintainer reported the 0.4.4 smoke test successful on 2026-09-05 and asked for an investigation of application-specific paste failures, specifically Signal. This authorizes the final 0.4.4 release steps already agreed in the plan. Signal is currently absent from clipboard-preferred routing; its installed bundle is `org.whispersystems.signal-desktop` (8.26.0) and its bundled composer includes Quill. The false-success mechanism is a likely explanation, not a live Signal reproduction. No Signal conversations or message content were accessed.
+The maintainer reported the 0.4.4 smoke test successful on 2026-09-05 and asked for an investigation of application-specific paste failures, specifically Signal. This authorizes the final 0.4.4 release steps already agreed in the plan. Signal is currently absent from clipboard-preferred routing; its installed bundle is `org.whispersystems.signal-desktop` (8.26.0) and its bundled composer includes Quill. The false-success mechanism is a likely explanation, not a live Signal reproduction. No Signal conversations or message content were accessed.
 
 ## Final Release Evidence
 

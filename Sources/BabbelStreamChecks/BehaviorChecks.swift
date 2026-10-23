@@ -384,38 +384,38 @@ check(
     "Dictionary prompt should stay bounded even after adding the truncation note."
 )
 let parsedDictionary = try PersonalDictionaryTextCodec.dictionary(
-    vocabularyText: "company\nLiteLLM\nlitellm\n",
+    vocabularyText: "ExampleTerm\nLiteLLM\nlitellm\n",
     correctionsText: "light LM => LiteLLM\nexample service => example-service\n"
 )
 check(parsedDictionary.vocabulary.count == 2, "Vocabulary parsing should remove duplicate terms case-insensitively.")
 check(parsedDictionary.corrections.count == 2, "Correction parsing should parse wrong-to-right pairs.")
 var trainerDictionary = PersonalDictionary()
 let trainerCreated = try PersonalDictionaryTextCodec.upsertCorrection(
-    from: "David",
-    to: "Dawid",
+    from: "Cafe",
+    to: "Caffe",
     in: &trainerDictionary
 )
 check(trainerCreated, "Teaching a new correction should create a dictionary correction.")
 check(trainerDictionary.enabledCorrections.count == 1, "New taught corrections should be enabled.")
 let trainerUpdated = try PersonalDictionaryTextCodec.upsertCorrection(
-    from: "david",
-    to: "dawid",
+    from: "cafe",
+    to: "caffe",
     in: &trainerDictionary
 )
 check(!trainerUpdated, "Teaching the same correction with different casing should update instead of duplicating.")
 check(trainerDictionary.corrections.count == 1, "Taught corrections should de-duplicate case-insensitively.")
 let trainerPreferredTextUpdated = try PersonalDictionaryTextCodec.upsertCorrection(
-    from: "David",
-    to: "Dávid",
+    from: "Cafe",
+    to: "Café",
     in: &trainerDictionary
 )
 check(!trainerPreferredTextUpdated, "Teaching a new preferred spelling for the same wrong form should update in place.")
 check(trainerDictionary.corrections.count == 1, "One wrong form should not produce conflicting correction hints.")
-check(trainerDictionary.corrections[0].to == "Dávid", "The latest explicit preferred spelling should win.")
+check(trainerDictionary.corrections[0].to == "Café", "The latest explicit preferred spelling should win.")
 trainerDictionary.corrections[0].enabled = false
 let trainerReenabled = try PersonalDictionaryTextCodec.upsertCorrection(
-    from: "David",
-    to: "Dawid",
+    from: "Cafe",
+    to: "Caffe",
     in: &trainerDictionary
 )
 check(!trainerReenabled, "Teaching a disabled correction should re-enable the existing entry.")
@@ -647,7 +647,7 @@ check(
         .load()
         .providerConfiguration
         .transcriptionModelRouting == .standardOpenAI,
-    "Existing other settings should migrate to standard OpenAI model IDs."
+    "Existing settings should migrate to standard OpenAI model IDs."
 )
 presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
 presenceDefaults.set(
@@ -656,9 +656,12 @@ presenceDefaults.set(
 )
 let migratedProxySettings = UserDefaultsSettingsStore(userDefaults: presenceDefaults).load()
 check(
-    migratedProxySettings.providerConfiguration.transcriptionModelRouting == .liteLLMOpenAINamespace,
-    "The existing company proxy should migrate once to LiteLLM openai/ model routing."
+    migratedProxySettings.providerConfiguration.transcriptionModelRouting == .standardOpenAI,
+    "An unset routing choice must use standard model IDs without inferring routing from the host."
 )
+var explicitProxyRoutingSettings = migratedProxySettings
+explicitProxyRoutingSettings.providerConfiguration.transcriptionModelRouting = .liteLLMOpenAINamespace
+try UserDefaultsSettingsStore(userDefaults: presenceDefaults).save(explicitProxyRoutingSettings)
 presenceDefaults.set(
     "https://api.openai.com/v1",
     forKey: "provider.baseURL"
@@ -668,7 +671,7 @@ check(
         .load()
         .providerConfiguration
         .transcriptionModelRouting == .liteLLMOpenAINamespace,
-    "A migrated routing choice should remain authoritative when the base URL later changes."
+    "A saved LiteLLM routing choice should remain authoritative when the base URL later changes."
 )
 var explicitStandardRoutingSettings = migratedProxySettings
 explicitStandardRoutingSettings.providerConfiguration.baseURL = URL(string: "https://api.openai.com/v1")!
@@ -680,6 +683,16 @@ check(
         .providerConfiguration
         .transcriptionModelRouting == .standardOpenAI,
     "An explicit standard OpenAI routing selection should persist."
+)
+presenceDefaults.set("invalid-routing", forKey: "provider.transcriptionModelRouting")
+check(
+    UserDefaultsSettingsStore(userDefaults: presenceDefaults).load()
+        .providerConfiguration.transcriptionModelRouting == .standardOpenAI,
+    "An invalid saved routing choice should default to standard IDs."
+)
+check(
+    presenceDefaults.string(forKey: "provider.transcriptionModelRouting") == TranscriptionModelRouting.standardOpenAI.rawValue,
+    "Default routing should be persisted once so future host edits cannot infer a different route."
 )
 presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
 let apiKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(

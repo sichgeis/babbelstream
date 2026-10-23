@@ -19,7 +19,7 @@ an explicit, narrow, and visible fallback to the user's personal OpenAI account.
 ## Authority And Gates
 
 - Approved spec: `docs/features/personal-openai-fallback/spec.md`, authorized by
-  the maintainer's 2026-08-16 request
+  The maintainer's 2026-08-16 request
 - Agent may proceed through: implementation, checks, coherent commits, and
   feature-branch push
 - Required human gates: real LiteLLM/personal OpenAI smoke test; merge/push

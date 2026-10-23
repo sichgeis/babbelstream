@@ -12,7 +12,7 @@ Investigate Signal draft insertion and prepare a targeted repair using the exist
 
 - Installed app metadata: Signal 8.26.0, `org.whispersystems.signal-desktop`.
 - Shipped app bundle contains a Quill editor. Source inspection only; no user conversation files read.
-- the maintainer confirms Copy Last Draft plus Cmd+V works.
+- The maintainer confirms Copy Last Draft plus Cmd+V works.
 - Treat AX false success as the likely mechanism and route this app through normal paste. Do not claim live confirmation until smoke.
 
 ## Stages
@@ -42,7 +42,7 @@ None; release complete. Broader input compatibility remains unapproved candidate
 - SHA-256: `c18f266e5c63fa61e097b18c0cd47cba8902a2b19a5bac815255af35e6d4cca1`; independent hash matches `.sha256` file.
 - Mounted candidate read-only; contained app reports 0.4.5 / dfa0a5a and passes strict/deep local-signature verification.
 - Installed via Finder at `/Applications/BabbelStream.app`; verified version, commit, signature, and running executable (PID 77537) on 2026-09-05. DMG detached afterward.
-- the maintainer confirmed successful Signal smoke on 2026-09-05. Manual Cmd+V was already confirmed working.
+- The maintainer confirmed successful Signal smoke on 2026-09-05. Manual Cmd+V was already confirmed working.
 - Release-finalization `task check`: passed on 2026-09-05.
 
 ## Final Release Evidence

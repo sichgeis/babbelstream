@@ -60,7 +60,7 @@ With a separately authorized candidate, use harmless unsent drafts in Slack chan
 
 ## Approval Gate And Rollback
 
-the maintainer authorizes specification, implementation, fixture checks and feature-branch commits/pushes. Installation, main/tag/release remain gated. Revert this feature commit to restore prior routing; no data migration is required.
+The maintainer authorizes specification, implementation, fixture checks and feature-branch commits/pushes. Installation, main/tag/release remain gated. Revert this feature commit to restore prior routing; no data migration is required.
 
 ## Open Questions
 

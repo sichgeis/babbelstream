@@ -12,7 +12,7 @@ Deliver the approved internal-pilot improvements in `docs/features/pilot-readine
 
 ## Authority And Gates
 
-the maintainer explicitly requested autonomous implementation on 2026-10-23, carried in the new-chat delegation. Feature commits/pushes and local candidate preparation authorized. Initial scope excluded subagents, PR, main/tag/publication, production installation/launch, real data/keys/providers or signing-material access. the maintainer subsequently explicitly authorized installation and launch of candidate build 3 for his own smoke test; this does not authorize automated recording/provider calls or release/publication. No new providers/dependencies/permissions/retention/cost changes.
+The maintainer explicitly requested autonomous implementation on 2026-10-23, carried in the new-chat delegation. Feature commits/pushes and local candidate preparation authorized. Initial scope excluded subagents, PR, main/tag/publication, production installation/launch, real data/keys/providers or signing-material access. the maintainer subsequently explicitly authorized installation and launch of candidate build 3 for their own smoke test; this does not authorize automated recording/provider calls or release/publication. No new providers/dependencies/permissions/retention/cost changes.
 
 ## Stages
 
@@ -29,7 +29,7 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 
 - Evidence: full `task check` passed with the local SDK wrapper. Actual native fixture preview inspected all five tabs at default 760×640 and minimum 700×560 content sizes (window captures include the 28-point title bar). Provider/Diagnostics scrolling and fixed Apply observed; General restored before preview exit, no saved production values changed. Long fixture paths wrap. Shared Teach Correction, Personal Dictionary and Archive minimum windows inspected; NSHostingController constraint reset discovered and corrected by assigning contentMinSize after hosting attachment.
 - Screenshots: `/tmp/babbelstream-pilot-screenshots/`, five `*-default-macos-26.7.1.png`, five `*-minimum-macos-26.7.1.png`, `general-dark-default-macos-26.7.1.png`, `teach-minimum-macos-26.7.1.png`, `dictionary-minimum-contrast-macos-26.7.1.png`, `archive-dialog-minimum-macos-26.7.1.png`. Temporary resources may expire. Light/dark and app-scoped high-contrast appearance inspected; full OS accessibility-setting validation remains manual.
-- the maintainer requested HIG color review during implementation. Reviewed Apple Color, Materials and Settings. Chose semantic window/control surfaces and separator, primary headings, native accent and no custom glass. See feature spec for links and decision. No claim of exact Apple-prescribed palette.
+- The maintainer requested HIG color review during implementation. Reviewed Apple Color, Materials and Settings. Chose semantic window/control surfaces and separator, primary headings, native accent and no custom glass. See feature spec for links and decision. No claim of exact Apple-prescribed palette.
 - Refreshed after the maintainer unlocked the Mac: all five tabs at default/minimum; Advanced, canceled synthetic-test confirmation and denied permissions at both sizes; metadata and incomplete setup in dark appearance; Teach Correction/Dictionary/Archive at minimum sizes. Evidence: `/tmp/babbelstream-pilot-screenshots/resumed/`. Native review found truncated Provider captions and automatic hosting-controller fitting enlarging Teach Correction. Fixed explicit vertical caption wrapping and disabled automatic dialog hosting sizing; final five-tab and secondary minimum captures verify the corrections. All isolated previews quit; no production stores or live providers used.
 - Remaining: obtain 27.0.1 comparison and hands-on acceptance on both installations.
 
@@ -105,17 +105,17 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 
 ## Authorized Local Installation (2026-10-23)
 
-- the maintainer requested install/launch of candidate build 3 for his UI review and smoke test. Verified the exact DMG SHA-256, mounted read-only, checked payload metadata/signature/runtime/entitlements, and staged the Applications replacement.
+- The maintainer requested install/launch of candidate build 3 for their UI review and smoke test. Verified the exact DMG SHA-256, mounted read-only, checked payload metadata/signature/runtime/entitlements, and staged the Applications replacement.
 - Asked the prior running Applications copy to quit normally through macOS. Preserved its actual installed bundle (`0.4.5`, build 1, `a9c5547`) at `dist/rollback/BabbelStream-0.4.5-a9c5547.app`; this supersedes older installed-version evidence. No settings, Keychain entries, recordings or archives were copied or changed manually.
 - Installed `/Applications/BabbelStream.app`, launched with `--settings`, and verified running process, version 0.4.5/build 3/commit 4e6da0d, strict candidate signature, and executable SHA-256 matching the prepared payload. Settings visible in General. DMG detached.
-- Native General reports Microphone Not requested and Accessibility Not allowed under the candidate identity. the maintainer must grant permissions for his smoke test; ad-hoc identity may require Accessibility reapproval. No permission buttons, provider tests or recording controls were activated by automation.
+- Native General reports Microphone Not requested and Accessibility Not allowed under the candidate identity. the maintainer must grant permissions for their smoke test; ad-hoc identity may require Accessibility reapproval. No permission buttons, provider tests or recording controls were activated by automation.
 - Release/main/tag/publication and full acceptance remain pending; local install authorization is not a smoke-test pass or release approval.
 
 ## Human Paste Retest (2026-10-23)
 
-- the maintainer reported dictation completed but only copied to the clipboard in ChatGPT and Slack. Native General showed Microphone Allowed, Accessibility Not allowed. The insertion service correctly uses its copy-only fallback when AXIsProcessTrusted is false.
+- The maintainer reported dictation completed but only copied to the clipboard in ChatGPT and Slack. Native General showed Microphone Allowed, Accessibility Not allowed. The insertion service correctly uses its copy-only fallback when AXIsProcessTrusted is false.
 - System Settings showed the BabbelStream toggle enabled while the running candidate remained untrusted. Removing/re-adding initially did not resolve it. Reset only `Accessibility` for bundle `com.sichgeis.babbelstream` using tccutil; the maintainer reauthorized the installed Applications copy. No other application permission was reset.
-- After a normal candidate restart, native General showed both Microphone Allowed and Accessibility Allowed. the maintainer then reported: “Now it works as expected.” This confirms his basic dictation/automatic-paste retest, without claiming the complete editor/language/gesture/recovery matrix or release approval. No automated recording/provider call or draft inspection was performed.
+- After a normal candidate restart, native General showed both Microphone Allowed and Accessibility Allowed. the maintainer then reported: “Now it works as expected.” This confirms the basic dictation/automatic-paste retest, without claiming the complete editor/language/gesture/recovery matrix or release approval. No automated recording/provider call or draft inspection was performed.
 
 ## Historical Human Gates At Implementation Handoff
 
@@ -141,7 +141,7 @@ Obtain macOS 27.0.1 visual comparison of the current Settings and secondary dial
 
 ## Release Closeout — 0.5.0 (2026-10-23)
 
-the maintainer explicitly approved the smoke test and requested release finalization, integration into main, tagging, cleanup and final local installation. The other-Mac macOS 27.0.1 check is deferred by the user and is not claimed as passed. Detailed native compatibility/accessibility/provider coverage remains recorded as a limitation, rather than invented test evidence. Colleague signing/notarization, company profile/issuance and Sparkle remain future work, not blockers for this approved local release.
+The maintainer explicitly approved the smoke test and requested release finalization, integration into main, tagging, cleanup and final local installation. The other-Mac macOS 27.0.1 check is deferred by the user and is not claimed as passed. Detailed native compatibility/accessibility/provider coverage remains recorded as a limitation, rather than invented test evidence. Colleague signing/notarization, company profile/issuance and Sparkle remain future work, not blockers for this approved local release.
 
 Implementation is integrated into the 0.5.0 release scope (build 6). Full canonical checks were restored and passed during pilot/onboarding work; clipboard insertion was exercised by the user after Accessibility repair. The successful build 5 smoke report is accepted as the human release gate. Final source/artifact/installation evidence is owned by `docs/runs/archive/release-v0.5.0.md` until that tracker is archived at `docs/runs/archive/release-v0.5.0.md`.
 

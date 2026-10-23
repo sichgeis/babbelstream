@@ -71,9 +71,9 @@ Reviewed 2026-10-23:
 
 ## Approved Surface Refinement (2026-10-23)
 
-the maintainer requested a nearly white Light Mode canvas because the native window gray contrasted too strongly with white sections. Blend 80% semantic control background over semantic window background in normal Light Mode; keep native Dark Mode surfaces and native separation under Increase Contrast. Text, accent and separator colors retain their semantic roles. Apply through the shared form component to Settings, onboarding and secondary dialogs. This is a project preference supported by adaptive-color guidance, not an Apple-prescribed gray value. Native before/after/light/dark evidence is required. Source rechecked: https://developer.apple.com/design/human-interface-guidelines/color and https://developer.apple.com/design/human-interface-guidelines/dark-mode .
+The maintainer requested a nearly white Light Mode canvas because the native window gray contrasted too strongly with white sections. Blend 80% semantic control background over semantic window background in normal Light Mode; keep native Dark Mode surfaces and native separation under Increase Contrast. Text, accent and separator colors retain their semantic roles. Apply through the shared form component to Settings, onboarding and secondary dialogs. This is a project preference supported by adaptive-color guidance, not an Apple-prescribed gray value. Native before/after/light/dark evidence is required. Source rechecked: https://developer.apple.com/design/human-interface-guidelines/color and https://developer.apple.com/design/human-interface-guidelines/dark-mode .
 
-the maintainer also approved removing the gray Settings TabView bezel/header bands. Keep the five native segments using a segmented Picker above the selected pane, on the same shared canvas. Preserve keyboard selection, staged settings, scrolling and fixed Apply footer; no custom tab widget or toolbar redesign.
+The maintainer also approved removing the gray Settings TabView bezel/header bands. Keep the five native segments using a segmented Picker above the selected pane, on the same shared canvas. Preserve keyboard selection, staged settings, scrolling and fixed Apply footer; no custom tab widget or toolbar redesign.
 
 The approved Settings spacing cleanup uses 24-point horizontal margins, 20-point section gaps, 8-point heading/control gaps, 12-point section insets, 10-point independent rows, 6-point control/help groups and 8-point button gaps. Settings panes fill available width so scrollbars do not shift the left alignment between sections. Short Writing labels keep the common 168-point label column; Advanced pickers use that column too. Readiness actions are grouped after the status rows.
 
@@ -83,7 +83,7 @@ The final 0.5.0 native check exposed a missing first-use microphone request butt
 
 ## Update Direction Supersession (2026-10-23)
 
-the maintainer approved `docs/features/homebrew-distribution/spec.md` as the first
+The maintainer approved `docs/features/homebrew-distribution/spec.md` as the first
 colleague install/update channel without paid Apple membership. Its clearly
 labeled non-notarized pilot uses GitHub release DMGs and an own Homebrew cask.
 The earlier Developer ID-then-Sparkle proposal above remains historical and

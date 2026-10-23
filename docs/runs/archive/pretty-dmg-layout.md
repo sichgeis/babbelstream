@@ -68,5 +68,5 @@ this ad-hoc app remains unproven by an appearance-only change.
 
 ## Next action
 
-the maintainer tries the separately named decorative installer manually if desired.
+The maintainer tries the separately named decorative installer manually if desired.
 

@@ -103,7 +103,7 @@ Canonical command: `task check`. Add focused storage fault, clipboard/event, and
 
 ## Approval Gate
 
-- the maintainer authorized direct-main implementation, regular commits/pushes, docs, and a 0.4.4 candidate.
+- The maintainer authorized direct-main implementation, regular commits/pushes, docs, and a 0.4.4 candidate.
 - Stop before final release tag until real microphone/provider/Slack smoke approval (or explicit waiver).
 
 ## Open Questions

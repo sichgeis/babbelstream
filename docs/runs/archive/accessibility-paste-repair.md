@@ -3,9 +3,9 @@
 ## Baseline and authority
 
 - Clean main 874df0858e5fee4cd5ff60f4bd58ee8c30a9e3dd; branch codex/accessibility-paste-repair.
-- the maintainer reported clipboard-only dictation into Codex and requested investigation plus README guidance.
+- The maintainer reported clipboard-only dictation into Codex and requested investigation plus README guidance.
 - Installed running app: /Applications/BabbelStream.app, 0.5.1 / source 8f229fe, PID 73318 before repair.
-- the maintainer explicitly approved repairing only BabbelStream's Accessibility entry and personally approved the resulting macOS authentication dialog.
+- The maintainer explicitly approved repairing only BabbelStream's Accessibility entry and personally approved the resulting macOS authentication dialog.
 
 ## Findings
 
@@ -37,7 +37,7 @@ proven. No need to change Codex permissions or Keychain for this repair.
 
 ## Post-restart verification
 
-the maintainer reopened setup. Native UI now reports Microphone Allowed and Automatic
+The maintainer reopened setup. Native UI now reports Microphone Allowed and Automatic
 paste Allowed; the exact running app's OS trust is restored. Navigation to the
 local paste step performed no provider action. Automated Test Automatic Paste
 attempts stopped at "Keep the setup window active and try again", including after
@@ -47,19 +47,19 @@ missing. Left the test open and asked the maintainer to click it directly.
 
 ## Local paste and Codex verification
 
-the maintainer clicked the test and reported that the sample appeared and the test
+The maintainer clicked the test and reported that the sample appeared and the test
 passed. Independently verified the native field contains exactly "BabbelStream
 paste test." and the result says "Sample received. Automatic paste worked in
 this test field." OS trust and actual local synthetic-paste receipt now PASS.
 No microphone/provider use or external-field inspection was automated.
 
-the maintainer confirmed on 2026-10-23: "It works now, dictation inserts directly into
+The maintainer confirmed on 2026-10-23: "It works now, dictation inserts directly into
 the Codex input." The external-editor smoke check now passes by user report.
 No automated recording/provider request or private dictation inspection occurred.
 
 ## Closeout
 
-the maintainer explicitly requested merging the README update into main and pushing it.
+The maintainer explicitly requested merging the README update into main and pushing it.
 README and Getting Started document the targeted repair; live Allowed status,
 actual local sample receipt and human Codex insertion all passed. Archived this
 run and reconciled project status. Documentation-only changes; no rebuild,

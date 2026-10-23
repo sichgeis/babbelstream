@@ -73,14 +73,6 @@ public enum TranscriptionModelRouting: String, CaseIterable, Sendable {
             return model.hasPrefix("openai/") ? model : "openai/\(model)"
         }
     }
-
-    public static func initialValue(forExistingBaseURL baseURL: URL) -> Self {
-        let host = baseURL.host?.lowercased()
-        if host == "litellm-proxy.dev.example.invalid" || host == "litellm-proxy.prod.example.invalid" {
-            return .liteLLMOpenAINamespace
-        }
-        return .standardOpenAI
-    }
 }
 
 public enum BuildMetadata {

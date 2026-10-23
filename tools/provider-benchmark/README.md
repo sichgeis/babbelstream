@@ -15,7 +15,13 @@ Set the same destination, key, and models as the app. `.env` is git-ignored.
 
 ## Run
 
-Use a representative short recording. Reusing exactly the same file reduces input variability and makes provider jitter easier to see.
+The bundled `audio-fixture.m4a` is synthetic speech generated locally with macOS
+`say` (Samantha), not a person’s recording. It says: “This is a test of a dictation
+in English. Please transcribe this to text. Thank you. Have a nice day. Goodbye.”
+It is remuxed with FFmpeg using `-map_metadata -1 -fflags +bitexact
+-flags:a +bitexact -write_btrt 0` and its optional metadata atoms removed.
+Reusing exactly the same file reduces input variability and makes jitter easier to see.
+No provider calls are needed to generate or inspect it.
 
 ```bash
 python3 benchmark.py /path/to/sample.m4a --iterations 20 --output results.json

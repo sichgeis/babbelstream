@@ -92,9 +92,10 @@ The default request shape supports both the official OpenAI API and
 OpenAI-compatible LiteLLM endpoints. The selected model remains a logical
 official model ID. Immediately before multipart construction, the pure routing
 policy either keeps that ID bare or adds one `openai/` prefix; primary and Mini
-requests share the same immutable settings snapshot and routing. Existing
-company proxy installations migrate once to prefixed routing, while the saved
-choice remains authoritative afterward.
+requests share the same immutable settings snapshot and routing. Saved routing choices remain authoritative across host edits and upgrades.
+When routing is absent or invalid, persist standard OpenAI routing without host
+inference. An installation upgrading directly from a pre-routing version with a
+LiteLLM namespace must select LiteLLM once in Settings.
 
 `PersonalOpenAIFallbackPolicy` derives a fixed official profile from the
 immutable primary settings snapshot. It preserves the supported logical

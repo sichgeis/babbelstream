@@ -91,13 +91,23 @@ Do not allow these artifacts to contradict each other. A feature spec may refine
 - Keep Carbon event delivery, microphone permission, Accessibility insertion, real Slack fields, signing identity, Finder installation, and visual layout in the manual/release matrix.
 - Never claim an unavailable or unrun check passed. Record the limitation and the closest valid evidence.
 
+## Public Repository Hygiene
+
+- This repository and `sichgeis/homebrew-tap` are public. Files, commit/tag messages, release notes and built binaries are public inputs.
+- Never include employer/customer names, internal hostnames, proxy URLs, internal service/repository names, ticket keys, Slack workspaces/channels, colleague names or company branding names. Use `example.com`/`example.invalid` and generic wording such as “a company LiteLLM proxy”. Public product/protocol names remain valid.
+- Refer to people by role (“the maintainer”, “a pilot user”) and use neutral pronouns.
+- Commits and annotated tags use `sichgeis <25384988+sichgeis@users.noreply.github.com>`. Before committing, check `git config user.name` and `git config user.email`; stop if they differ. Do not change global configuration implicitly.
+- Audio/image/data fixtures must be synthetic, stripped of optional metadata and explicitly whitelisted in `.gitignore` when their extension is ignored. Never force-add fixtures. Preserve only documented synthetic redaction inputs.
+- `task check` includes `python3 scripts/check-public-hygiene.py` and its disposable fixture tests. Store private forbidden terms only in the untracked `.git/info/hygiene-denylist` (one literal per line); never commit that list. With no list, the script runs generic identity, email, private home-path and local-hostname checks. `example.local` examples and the dedicated synthetic redaction fixture are allowed.
+- Before every push, run `python3 scripts/check-public-hygiene.py --history` to scan all reachable blobs, commit/tag messages and identities. Before every release, also pass `--binary <optimized-executable>` to scan `strings` output. Reports contain only categories/counts. Review asset metadata separately. Never read ignored credentials or production stores for these checks.
+
 ## Git And Release Discipline
 
 - Begin substantial work from a clean, pushed baseline. Use `codex/<feature>` branches.
 - Commit coherent milestones; keep behavior and its tests/spec updates together.
 - Do not mix unrelated user changes into a feature commit.
 - Push feature branches early and after meaningful milestones.
-- Do not force-push shared branches or rewrite published release history.
+- Do not force-push shared branches or rewrite published release history unless the owner explicitly authorizes a data-removal scrub; record that authorization and reason in the run tracker.
 - A release candidate may be installed from a feature branch for human smoke testing.
 - Do not push `main` or create the final annotated release tag until the human smoke gate passes, unless the user explicitly waives that gate.
 - The final tag must point at the final release commit on `main`, with `VERSION` and `CHANGELOG.md` aligned.

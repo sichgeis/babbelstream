@@ -40,7 +40,7 @@ Restore a working SwiftUI build environment and rerun `task check` before candid
 
 ## Release Closeout — 0.5.0 (2026-10-23)
 
-the maintainer explicitly approved the smoke test and requested release finalization, integration into main, tagging, cleanup and final local installation. The other-Mac macOS 27.0.1 check is deferred by the user and is not claimed as passed. Detailed native compatibility/accessibility/provider coverage remains recorded as a limitation, rather than invented test evidence. Colleague signing/notarization, company profile/issuance and Sparkle remain future work, not blockers for this approved local release.
+The maintainer explicitly approved the smoke test and requested release finalization, integration into main, tagging, cleanup and final local installation. The other-Mac macOS 27.0.1 check is deferred by the user and is not claimed as passed. Detailed native compatibility/accessibility/provider coverage remains recorded as a limitation, rather than invented test evidence. Colleague signing/notarization, company profile/issuance and Sparkle remain future work, not blockers for this approved local release.
 
 Implementation is integrated into the 0.5.0 release scope (build 6). Full canonical checks were restored and passed during pilot/onboarding work; clipboard insertion was exercised by the user after Accessibility repair. The successful build 5 smoke report is accepted as the human release gate. Final source/artifact/installation evidence is owned by `docs/runs/archive/release-v0.5.0.md` until that tracker is archived at `docs/runs/archive/release-v0.5.0.md`.
 

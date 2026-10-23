@@ -2,7 +2,7 @@
 
 ## Authority and baseline
 
-the maintainer approved one polished DMG/checksum, Homebrew alignment, removal of extra
+The maintainer approved one polished DMG/checksum, Homebrew alignment, removal of extra
 preview variants and main/public cleanup. Coordinate with the finished icon release.
 Baseline: clean main 808f601, app-source/tag v0.5.2 at 3fb7a73, version 0.5.2/build 8.
 Branch: codex/clean-release-assets. No app changes, new version or tag required.

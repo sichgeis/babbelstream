@@ -70,13 +70,23 @@ If these conflict, stop and reconcile them explicitly. A run tracker never overr
 - Never claim an unavailable or unrun check passed.
 - Use fakes/fixtures instead of private production data unless explicitly authorized.
 
+## Public Repository Hygiene
+
+- This repository and `sichgeis/homebrew-tap` are public. Files, commit/tag messages, release notes and built binaries are public inputs.
+- Never include employer/customer names, internal hostnames, proxy URLs, internal service/repository names, ticket keys, Slack workspaces/channels, colleague names or company branding names. Use `example.com`/`example.invalid` and generic wording such as “a company LiteLLM proxy”. Public product/protocol names remain valid.
+- Refer to people by role (“the maintainer”, “a pilot user”) and use neutral pronouns.
+- Commits and annotated tags use `sichgeis <25384988+sichgeis@users.noreply.github.com>`. Before committing, check `git config user.name` and `git config user.email`; stop if they differ. Do not change global configuration implicitly.
+- Audio/image/data fixtures must be synthetic, stripped of optional metadata and explicitly whitelisted in `.gitignore` when their extension is ignored. Never force-add fixtures. Preserve only documented synthetic redaction inputs.
+- `task check` includes `python3 scripts/check-public-hygiene.py` and its disposable fixture tests. Store private forbidden terms only in the untracked `.git/info/hygiene-denylist` (one literal per line); never commit that list. With no list, the script runs generic identity, email, private home-path and local-hostname checks. `example.local` examples and the dedicated synthetic redaction fixture are allowed.
+- Before every push, run `python3 scripts/check-public-hygiene.py --history` to scan all reachable blobs, commit/tag messages and identities. Before every release, also pass `--binary <optimized-executable>` to scan `strings` output. Reports contain only categories/counts. Review asset metadata separately. Never read ignored credentials or production stores for these checks.
+
 ## Git And Release Discipline
 
 - Branch prefix: `[prefix/]`.
 - Begin substantial work from a clean, pushed baseline.
 - Commit coherent milestones and push the feature branch for recovery/handoff.
 - Preserve unrelated user changes.
-- Do not force-push shared history.
+- Do not force-push or rewrite history unless the owner explicitly authorizes a data-removal scrub; record the reason in the run tracker.
 - Install/deploy a candidate before the final tag when human smoke is required.
 - Merge/push main and create the final tag only after the release gate passes, unless explicitly preauthorized otherwise.
 - Build final artifacts from a clean tagged commit with exact version/commit metadata.

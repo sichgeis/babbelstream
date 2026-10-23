@@ -47,8 +47,9 @@ LiteLLM's `openai/*` namespace. The bounded Mini hedge remains compatible.
 - Keep the selected logical model unchanged while mapping all transcription
   requests, including the Mini hedge, to an `openai/`-prefixed wire ID only in
   LiteLLM mode.
-- Migrate existing company development/production proxy installations once to
-  LiteLLM routing. Other installations default to standard OpenAI routing.
+- Preserve saved routing choices. When no valid routing choice exists, persist
+  standard OpenAI routing without inferring it from a hostname. A direct upgrade
+  from a pre-routing version using a LiteLLM namespace requires selecting LiteLLM once.
 - Show effective primary and fallback wire IDs in Settings and diagnostics.
 - Send a configured single language hint as `languages[]` for `gpt-transcribe`.
 - Keep the singular `language` field for older compatible models.
@@ -106,9 +107,9 @@ LiteLLM's `openai/*` namespace. The bounded Mini hedge remains compatible.
 - Whitespace around the configured model is trimmed before request-field selection.
 - A legacy model chosen after the one-time migration must persist and must not be
   migrated again on restart.
-- The known company proxy hosts migrate only when no routing setting exists.
-  Once stored, an explicit routing choice remains authoritative even if the base
-  URL changes.
+- An absent or invalid routing choice defaults to standard OpenAI IDs for every
+  host. Once stored, an explicit routing choice remains authoritative even if
+  the base URL changes.
 - Unsupported/custom model aliases normalize to the default instead of appearing
   as an invalid picker state.
 - Additional response metadata, including detected languages, does not break parsing.
@@ -154,8 +155,9 @@ LiteLLM's `openai/*` namespace. The bounded Mini hedge remains compatible.
 - Standard routing sends `gpt-transcribe`; LiteLLM routing sends
   `openai/gpt-transcribe`.
 - The Mini hedge follows the selected routing.
-- Existing company proxy settings migrate once to LiteLLM routing; official
-  OpenAI and other installations use standard routing by default.
+- Existing saved LiteLLM routing remains unchanged. With no saved routing, every
+  installation defaults to standard IDs; a pre-routing LiteLLM upgrade needs one
+  explicit selection in Settings.
 - The routing selection and effective primary/fallback IDs are visible and
   persist across restart.
 - `gpt-transcribe` sends `languages[]` and never `language`.

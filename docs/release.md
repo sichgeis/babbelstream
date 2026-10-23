@@ -155,7 +155,7 @@ requires a new version. Do not publish local `.env` files or provider secrets.
 
 ## 0.4.4 Reliability Smoke Test
 
-the maintainer approved this smoke test on 2026-09-05. Final release `v0.4.4` is tagged at `d662a72`; release/install evidence is archived in `docs/runs/archive/recovery-delivery-reliability.md`.
+The maintainer approved this smoke test on 2026-09-05. Final release `v0.4.4` is tagged at `d662a72`; release/install evidence is archived in `docs/runs/archive/recovery-delivery-reliability.md`.
 
 1. Open `dist/BabbelStream-0.4.4.dmg`, quit the previous app, and drag the candidate to Applications. Launch it and verify version 0.4.4 plus the candidate commit shown in the run tracker under Diagnostics.
 2. In an unsent Slack composer, dictate short synthetic English, German, and mixed-language phrases. Exercise both tap-to-latch and hold-to-talk. Confirm the text appears once, retains a trailing separator, and nothing is sent.
@@ -168,7 +168,7 @@ Report pass/fail and any unexpected behavior. The pre-existing expanded personal
 
 ## 0.4.5 Signal Smoke Test
 
-the maintainer confirmed successful Signal smoke on 2026-09-05. Final release evidence is retained in `docs/runs/archive/signal-paste-compatibility.md`.
+The maintainer confirmed successful Signal smoke on 2026-09-05. Final release evidence is retained in `docs/runs/archive/signal-paste-compatibility.md`.
 
 After installing the candidate, verify version 0.4.5 and its source commit under Diagnostics. Focus a Signal composer and dictate a harmless short phrase; confirm the draft appears exactly once and remains unsent. Repeat in one previously working application, and confirm Copy Last Draft/manual paste still works. Report pass/fail before the final v0.4.5 tag. Do not send a message just to validate insertion.
 
@@ -182,7 +182,7 @@ Shared sections use explicit 20-point section gaps, 24-point horizontal canvas m
 
 ## 0.5.0 Local Release Approval
 
-the maintainer approved release finalization on 2026-10-23 after successful build 5 smoke. The macOS 27.0.1 comparison is deferred to the other Mac, not marked passed. Full canonical fixture checks remain required. Developer ID signing/notarization and colleague update delivery remain separately gated.
+The maintainer approved release finalization on 2026-10-23 after successful build 5 smoke. The macOS 27.0.1 comparison is deferred to the other Mac, not marked passed. Full canonical fixture checks remain required. Developer ID signing/notarization and colleague update delivery remain separately gated.
 
 For this local release, use the clean optimized candidate pipeline with explicit ad-hoc identities and the stable final filename:
 
@@ -198,7 +198,7 @@ The final 0.5.0 native check found that Allow Microphone checked unknown instead
 
 ## Own Homebrew Tap: Approved Non-Notarized Pilot
 
-the maintainer approved this channel on 2026-10-23 without paid Apple membership.
+The maintainer approved this channel on 2026-10-23 without paid Apple membership.
 The app stays ad-hoc signed, explicitly non-notarized, arm64-only initially.
 Keep existing Developer ID mode and checks unchanged; use exact clean-tag candidate
 artifacts and their signature verification for this channel. Do not label these
@@ -224,7 +224,7 @@ as Apple-verified or official Homebrew catalogue builds.
 ## Historical 0.5.1 Decorative Previews
 
 The following records the original authorization, superseded by the cleanup below.
-the maintainer authorized `BabbelStream-0.5.1-pretty.dmg` plus its portable SHA-256 as
+The maintainer authorized `BabbelStream-0.5.1-pretty.dmg` plus its portable SHA-256 as
 additional v0.5.1 release assets. This is a container/layout variant of the exact
 released 0.5.1/build 7/8f229fe app, not a new app build or notarized installer.
 Do not replace the original DMG/checksum, move v0.5.1 or change Homebrew's URL/hash.
@@ -248,7 +248,7 @@ verification: `docs/runs/archive/clean-release-assets.md`.
 
 ## 0.5.2 App Icon Release
 
-the maintainer approved the blue icon (light tile, slate waveform, blue cursor)
+The maintainer approved the blue icon (light tile, slate waveform, blue cursor)
 on 2026-10-23 and explicitly authorized pushing main, the v0.5.2 tag, the GitHub
 release and the tap update in the same request. Version 0.5.2/build 8 changes only
 the icon and its `.icns` encoding. Since this release, one decorative

@@ -22,7 +22,7 @@ Earlier staging entries below are historical evidence, not current availability.
 
 ## Authority And Gates
 
-the maintainer approved the complete feature contract and autonomous implementation on
+The maintainer approved the complete feature contract and autonomous implementation on
 2026-10-23, including the narrow ad-hoc public-pilot exception. Later steering
 explicitly reaffirmed the download/launch quality test before public rollout.
 Do not publish the draft release or merge the cask into the tap default branch
@@ -117,7 +117,7 @@ are in docs/implementation-plan.md.
 ## Current Blocker
 
 Public release/tap activation and Homebrew installation are complete, under
-the maintainer's explicit authorization recorded below. After the missing-bundle Brew
+The maintainer's explicit authorization recorded below. After the missing-bundle Brew
 reinstall, the maintainer confirmed launch and dictation without a Keychain prompt.
 Earlier DMG restart smoke passed after the targeted Keychain repair; a further
 restart of the Brew copy is not separately evidenced. No installation or
@@ -130,7 +130,7 @@ docs/implementation-plan.md; project-status.md owns the next project action.
 
 ## Documentation Polish (2026-10-23)
 
-the maintainer requested a further documentation/README cleanup. The app README now
+The maintainer requested a further documentation/README cleanup. The app README now
 leads with pilot availability, requirements, onboarding, dictation and explicit
 Homebrew update steps. Detailed provider/recovery/removal guidance is in
 `docs/getting-started.md`; developer build/install details moved to
@@ -209,7 +209,7 @@ on this host with unchanged runtime/tooling; not rerun for these documentation e
 
 ## Authorized Publication And Public Installation — 2026-10-23
 
-the maintainer explicitly authorized publishing the staged release, activating the tap,
+The maintainer explicitly authorized publishing the staged release, activating the tap,
 and testing Homebrew installation on this Mac. This supersedes the earlier pending
 publication direction; it does not authorize an untested later-release upgrade or
 destructive data removal.
@@ -256,7 +256,7 @@ destructive data removal.
 
 ### Missing Bundle And Brew Reinstall
 
-the maintainer reported the app appeared absent again. Fresh checks confirmed
+The maintainer reported the app appeared absent again. Fresh checks confirmed
 /Applications/BabbelStream.app missing and no running Applications process, while
 Homebrew still recorded babbelstream 0.5.1 installed. Cause of disappearance is
 unknown; do not infer deletion or Gatekeeper approval from the installed record.
@@ -271,7 +271,7 @@ reinstall success alone does not establish that outcome.
 
 ### Human Confirmation After Reinstall
 
-the maintainer confirmed: "Dictation works now. It worked without a keychain prompt."
+The maintainer confirmed: "Dictation works now. It worked without a keychain prompt."
 The Homebrew-installed app is visible in Applications and launch/dictation now
 PASS. This is user evidence after reinstall, not an automated provider test. It
 does not establish an additional quit/reopen cycle of the Brew copy or a genuine
@@ -285,7 +285,7 @@ PASS; no runtime changes, so the earlier canonical fixture evidence applies.
 
 ## Closeout — 2026-10-23
 
-the maintainer explicitly authorized merging the Homebrew documentation into main and
+The maintainer explicitly authorized merging the Homebrew documentation into main and
 closing the pilot while preserving upgrade, uninstall and rollback follow-ups.
 Archived this run, updated contract/status/support/navigation links and moved the
 untested lifecycle matrix into docs/implementation-plan.md. The release's exact

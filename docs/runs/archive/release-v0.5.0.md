@@ -2,7 +2,7 @@
 
 ## Authority And Scope
 
-the maintainer explicitly approved release finalization on 2026-10-23, accepted the smoke test, deferred the other-Mac check, and requested cleanup. Authorized: release metadata, main fast-forward, annotated tag/push, clean local packaging, installation/launch and verification. Private signing-material access, notarization submission, public binary distribution, new providers/costs and Sparkle remain deferred.
+The maintainer explicitly approved release finalization on 2026-10-23, accepted the smoke test, deferred the other-Mac check, and requested cleanup. Authorized: release metadata, main fast-forward, annotated tag/push, clean local packaging, installation/launch and verification. Private signing-material access, notarization submission, public binary distribution, new providers/costs and Sparkle remain deferred.
 
 ## Baseline And Version
 
@@ -14,7 +14,7 @@ the maintainer explicitly approved release finalization on 2026-10-23, accepted 
 
 ## Acceptance
 
-- the maintainer explicitly accepts the successful smoke test as the release gate.
+- The maintainer explicitly accepts the successful smoke test as the release gate.
 - macOS 26.7.1 native fixture layout evidence, full behavior/setup/loopback/onboarding/release-policy checks and content-free privacy/diff review exist in the archived implementation runs.
 - Other-Mac macOS 27.0.1 and detailed native/accessibility/provider matrices are deferred limitations, not passed checks.
 - Final task check, release metadata/diff checks, clean packaging, actual signature/entitlements/DMG verification and final local installation remain to be completed below.

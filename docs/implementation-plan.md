@@ -104,7 +104,7 @@ The approved pilot work records a separately gated model migration follow-up in 
 
 The local release was explicitly approved on 2026-10-23. Deferred work does not imply the following checks passed:
 
-- the maintainer’s macOS 27.0.1 comparison of Settings/onboarding at both documented sizes; full OS Increase Contrast review.
+- The maintainer’s macOS 27.0.1 comparison of Settings/onboarding at both documented sizes; full OS Increase Contrast review.
 - Broader permission repair, language/editor/gesture/recovery and personal-provider compatibility matrix.
 - Approved company connection profile, per-user key issuance and support/revocation owner.
 - Distribution/update direction is now approved as the non-notarized own-tap pilot

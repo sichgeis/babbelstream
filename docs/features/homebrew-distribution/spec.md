@@ -207,7 +207,7 @@ is accessible beyond colleagues; describe it as a pilot, not restricted access.
 
 ## Approval And Closeout
 
-the maintainer approved this contract and autonomous implementation on 2026-10-23,
+The maintainer approved this contract and autonomous implementation on 2026-10-23,
 then explicitly authorized publication, tap activation, local Homebrew testing,
 main documentation integration and pilot closeout. Initial public install/reinstall
 and user dictation passed. Untested genuine upgrade, uninstall retention and rollback

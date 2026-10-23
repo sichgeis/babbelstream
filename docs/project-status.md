@@ -16,21 +16,16 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-No active repair implementation. On 2026-10-23, removing and re-adding the exact
-Applications copy restored live Accessibility trust. The local sample actually
-pasted, and the maintainer confirmed direct dictation insertion into Codex. Repair
-procedure: README Troubleshooting; completed evidence:
-`docs/runs/archive/accessibility-paste-repair.md`. No app code or release artifact
-changed. The underlying reason for the stale OS grant remains unproven.
-
-The Homebrew pilot is closed; public 0.5.1 release/tap and its completed installation
-evidence remain in `docs/runs/archive/homebrew-distribution.md`. Genuine upgrade,
-uninstall retention and rollback tests remain in `docs/implementation-plan.md`.
+Public data scrub in progress on `codex/data-scrub`, explicitly authorized with
+history rewriting after backups/verification. Contract:
+`docs/features/data-scrub/spec.md`; evidence: `docs/runs/active/data-scrub.md`.
+No production installation or new public release is authorized by this run.
+Earlier permission-repair and Homebrew evidence remains in archived trackers.
 
 ## Known Limitations And Deferred Follow-Ups
 
 - At initial local installation, microphone was Not requested and Accessibility Not allowed. After the explicitly authorized targeted repair on 2026-10-23, native setup reports both Allowed and Codex insertion works. Ad-hoc future builds may require reapproval; no global TCC reset was used.
-- the maintainer approved the successful build 5 smoke test and explicitly authorized finalization on 2026-10-23, deferring macOS 27.0.1 comparison to the other Mac. Local 26.7.1 fixture evidence exists at both documented sizes in light/dark appearance. The 0.5.1 patch has focused grant/deny and native button/refresh evidence. Full OS Increase Contrast and expanded native/accessibility/provider matrices are not claimed complete.
+- The maintainer approved the successful build 5 smoke test and explicitly authorized finalization on 2026-10-23, deferring macOS 27.0.1 comparison to the other Mac. Local 26.7.1 fixture evidence exists at both documented sizes in light/dark appearance. The 0.5.1 patch has focused grant/deny and native button/refresh evidence. Full OS Increase Contrast and expanded native/accessibility/provider matrices are not claimed complete.
 - Company-approved connection profile, model aliases, per-user key issuance and support/revocation ownership remain required before colleague deployment. No company destination is guessed or bundled master key supplied.
 - Ad-hoc rebuilds may require permission reapproval; onboarding reports actual running-process trust. Stable Developer ID signing/notarization and signed updates remain future work.
 - On macOS 27.0.1, upgrading manual 0.4.5 to ad-hoc 0.5.1 caused a Keychain password prompt after every restart despite Always Allow. Adding the installed Applications copy to the saved item's restricted Access Control list resolved the user retest. See README Troubleshooting; root cause and future upgrade trust remain unproven. This does not complete the separate visual layout matrix.
@@ -45,4 +40,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-On the pilot Mac, run `brew upgrade --cask sichgeis/tap/babbelstream` from 0.5.1 to 0.5.2 and record the old-to-new upgrade, the new icon and the permission/Keychain behavior, using the follow-up matrix in docs/implementation-plan.md.
+Complete the backed-up all-ref rewrite and verification recorded in
+`docs/runs/active/data-scrub.md`.
