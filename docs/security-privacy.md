@@ -159,3 +159,16 @@ Candidate preparation uses ad-hoc signing unless an identity is explicitly autho
 Onboarding stores only introduction dismissal and two previously-observed permission booleans in UserDefaults. These are presentation hints, never authorization. OS permissions are queried at launch, app activation, explicit refresh and paste delivery; only explicit user actions request microphone/Accessibility access. Missing permission retains the established copy-only fallback. No silent TCC reset, new permission, telemetry or updater request is introduced.
 
 An explicit local paste test writes one documented sample to the clipboard and checks only the dedicated app-owned test editor. It never reads an external editor, existing clipboard, key, dictionary, recording or archive. It does not restore the old clipboard or set Last Draft. Sample receipt/result stays session-only and is neither logged nor persisted. Exact editor/window focus, clipboard ownership, current permission and cancellation are checked before posting; changing apps/windows or closing setup cancels remaining work. As with ordinary paste, macOS offers no atomic focus/clipboard/event transaction and an already-posted event cannot be recalled. Coordinator reservation excludes simultaneous recording, provider testing, recovery and draft delivery. Deferred setup never implicitly sends a provider request.
+
+## Approved Homebrew Pilot Exception
+
+On 2026-10-23 the maintainer approved explicit non-notarized ad-hoc distribution through
+GitHub Releases and `sichgeis/homebrew-tap` under the Homebrew feature contract.
+This exception does not change Developer ID distribution-mode requirements.
+Downloads keep quarantine and require user/IT approval where macOS demands it;
+no recipe hook bypasses security checks, resets permissions or accesses keys.
+Exact versioned HTTPS assets and SHA-256 protect byte consistency, not independent
+publisher authentication. GitHub/Homebrew see ordinary user-initiated connection
+metadata; BabbelStream adds no updater requests or telemetry. Artifacts include no
+provider keys or company configuration. Ordinary cask removal preserves local data;
+no zap deletion is supplied. Public rollout requires the documented pilot evidence.

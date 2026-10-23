@@ -37,16 +37,27 @@ start a tracker under `docs/runs/active/`.
 
 ### 4. Public macOS Distribution
 
-- Goal: produce a Developer ID-signed and notarized build suitable for a GitHub
-  Release.
-- Dependency: authorized signing identity/notarization profile, real hardened-runtime microphone/paste validation, notarization/Gatekeeper evidence and an approved publication gate. Pilot readiness prepares the fail-closed tooling; it does not authorize or claim public distribution.
+- Approved path (2026-10-23): a clearly labeled ad-hoc, non-notarized colleague
+  pilot via GitHub Releases and our own Homebrew tap, without paid Apple membership.
+  The approved contract, publication sequence, upgrade/rollback tests and
+  required policy reconciliation are in
+  `docs/features/homebrew-distribution/spec.md` (2026-10-23).
+- Implementation and the narrow non-notarized pilot exception are approved.
+  Execution state: `docs/runs/active/homebrew-distribution.md`; general rollout
+  still requires the downloaded-payload and public install evidence.
+- Developer ID/notarization remains an optional later channel requiring authorized
+  identity/profile access and real distribution validation; do not weaken that
+  build mode to accommodate the ad-hoc pilot.
 
 ### 5. Update Delivery
 
 - First-run onboarding is released in 0.5.0; see `docs/features/onboarding-and-updates/spec.md`. Its Sparkle/update proposal remains deferred and does not authorize updater dependencies or network traffic.
 
-- Goal: provide a predictable way to discover and install later releases.
-- Dependency: the public distribution path and an approved update/security model.
+- Approved first update mechanism: user-initiated Homebrew upgrades using a
+  versioned cask and verified GitHub release assets; no in-app network traffic or
+  Sparkle dependency. See the Homebrew distribution contract above.
+- Dependency: first downloaded install and a separately
+  evidenced upgrade to the next real release. Sparkle remains optional future work.
 
 ## Additional Product Candidates
 
@@ -95,6 +106,8 @@ The local release was explicitly approved on 2026-10-23. Deferred work does not 
 - the maintainer’s macOS 27.0.1 comparison of Settings/onboarding at both documented sizes; full OS Increase Contrast review.
 - Broader permission repair, language/editor/gesture/recovery and personal-provider compatibility matrix.
 - Approved company connection profile, per-user key issuance and support/revocation owner.
-- Developer ID/notarized colleague installer, followed by the separately approved Sparkle/update plan.
+- Distribution/update direction is now approved as the non-notarized own-tap pilot
+  above. Developer ID/notarization and Sparkle remain deferred alternatives;
+  neither is a prerequisite for that explicitly limited pilot.
 
 Keep these follow-ups in the existing candidate plan rather than reopening closed implementation runs. Provider lifecycle milestones remain in `docs/provider-lifecycle.md`.

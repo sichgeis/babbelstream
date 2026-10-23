@@ -7,9 +7,10 @@ Tap `Control + Option + Space` for hands-free recording or hold it for push-to-t
 The latest local release is **0.5.1**, with first-run permission setup, a local
 paste test, a cleaner adaptive Settings layout, clipboard-based insertion for
 every application, and provider/credential safeguards. the maintainer approved the
-local smoke test; macOS 27.0.1 visual comparison is deferred. The local artifact
-is ad-hoc signed. Developer ID/notarized colleague distribution and automatic
-updates remain separate follow-ups.
+local smoke test; macOS 27.0.1 visual comparison is deferred. The artifact
+is ad-hoc signed and not notarized by Apple. An own Homebrew tap is being staged
+for colleague installation and user-initiated upgrades; other-Mac validation is
+pending. No in-app updater is included.
 See [project status](docs/project-status.md) and [pilot setup/support](docs/pilot-support.md).
 
 ## Current MVP
@@ -74,7 +75,7 @@ RESTART_ONLY=1 scripts/install-dev-app.sh
 
 Set `WAIT_FOR_INSTALL=1` if you want the script to wait for the drag copy and launch `/Applications/BabbelStream.app` after it appears.
 
-For a clean optimized review artifact without installation or signing-key lookup, use `task app:candidate`. Public distribution requires explicit Developer ID credentials and notarization; see [release guide](docs/release.md).
+For a clean optimized review artifact without installation or signing-key lookup, use `task app:candidate`. The approved non-notarized Homebrew pilot and optional Developer ID channel have separate requirements; see [release guide](docs/release.md).
 
 Equivalent Taskfile shortcuts are available as `task app:build`, `task app:install-dev`, `task app:restart`, and `task app:package-dmg`.
 
@@ -90,7 +91,7 @@ The DMG is written to:
 dist/BabbelStream-$(cat VERSION).dmg
 ```
 
-This local DMG is suitable for personal testing. Public distribution should use a Developer ID Application certificate and Apple notarization; see [docs/release.md](docs/release.md).
+The approved own-tap pilot reuses an exact tagged ad-hoc DMG, clearly labeled as non-notarized. Developer ID signing/notarization remains an optional later channel; see [docs/release.md](docs/release.md).
 
 ## First-Run Setup
 
@@ -161,4 +162,4 @@ Removing the app bundle alone intentionally does not delete local dictionary or 
 
 ## Release Status
 
-BabbelStream is currently a local MVP. The next production release step is Developer ID signing and notarization for GitHub Releases.
+Version 0.5.1 is the current locally released app. Its GitHub download and [Homebrew tap](https://github.com/sichgeis/homebrew-tap) are staged for a non-notarized colleague pilot. The normal `brew install --cask sichgeis/tap/babbelstream` command is not active until the other-Mac test and publication sequence finish. See [release operations](docs/homebrew-release.md) and [project status](docs/project-status.md).

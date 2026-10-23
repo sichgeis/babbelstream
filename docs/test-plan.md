@@ -260,3 +260,20 @@ Canonical checks include disposable Git fixtures for missing/ad-hoc distribution
 Use `scripts/preview-layout.sh --onboarding` with `--preview-not-requested` (fake microphone consent), `--preview-incomplete`, `--preview-dark`, `--preview-high-contrast`, `--preview-repair` and `--minimum-window-size` for isolated native review. Preview uses fake permissions and insertion; it cannot prove real Accessibility consent or native event acceptance. All five steps must remain readable at 640×580/default and 600×500/minimum content size, with scrollable content and a fixed footer. Verify the nearly white canvas across Settings and secondary dialogs, native Dark Mode and Increase Contrast separation.
 
 After separately authorized installation, manually test first-use/postpone/reopen, granting denied permissions in System Settings and returning without restart when macOS permits, stale-grant repair, and permission loss after a signing update. The local test must receive its sample, preserve newer clipboard content on contention, cancel safely on window/app switch/close, and leave Last Draft intact. Test the real unsent dictation workflow separately; local paste does not verify provider speech quality or every editor. Other-host macOS 27.0.1 visual acceptance remains pending.
+
+## Homebrew Pilot Distribution
+
+Run `task check` plus Homebrew syntax/style/recipe audits on the own-tap cask.
+Record Homebrew/macOS versions and expected non-notarized Gatekeeper failures
+separately from recipe errors. Verify the exact DMG checksum, signature, runtime,
+entitlements, architecture, minimum OS and version/build/source. Review the
+complete payload inventory; publish no user data or secrets. Verify uploaded bytes
+by an independent download before updating the cask.
+
+Manual pilot tests cover downloaded/quarantined launch, supported per-app approval,
+first-run permission/local paste setup, explicitly authorized unsent dictation,
+manual-install adoption/conflicts, first real old-to-new Homebrew upgrade,
+permission/Keychain repair, rollback, uninstall retention and reinstall. Use an
+isolated pilot installation, never mutate the daily app or private data to prove
+these cases. First install does not prove upgrades. Other-Mac/native checks remain
+pending until reported; see `docs/runs/active/homebrew-distribution.md`.

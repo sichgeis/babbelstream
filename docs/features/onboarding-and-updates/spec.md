@@ -80,3 +80,12 @@ The approved Settings spacing cleanup uses 24-point horizontal margins, 20-point
 Final local release authorization on 2026-10-23 supersedes the earlier main/tag/install stop gates above for v0.5.0 only. Human smoke is accepted; deferred native/distribution follow-ups remain explicit.
 
 The final 0.5.0 native check exposed a missing first-use microphone request button. Version 0.5.1 corrects the display condition to notDetermined (Not requested), with explicit grant/deny fixtures and native fake-consent evidence. This is a bounded correctness patch within the approved onboarding/release scope; v0.5.0 is not rewritten.
+
+## Update Direction Supersession (2026-10-23)
+
+the maintainer approved `docs/features/homebrew-distribution/spec.md` as the first
+colleague install/update channel without paid Apple membership. Its clearly
+labeled non-notarized pilot uses GitHub release DMGs and an own Homebrew cask.
+The earlier Developer ID-then-Sparkle proposal above remains historical and
+deferred; neither is a prerequisite for this approved pilot. Permission repair
+and data-preservation rules still apply.

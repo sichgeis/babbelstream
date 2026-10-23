@@ -12,19 +12,22 @@ validation and release procedure remain in their dedicated specifications.
 - Scope: clipboard paste for every application; provider/credential/parser/instance safeguards; private diagnostics/HUD fixes; guided provider setup; first-run permission onboarding/local paste verification; unified subtle Settings/dialog layout. Version 0.5.1 corrects the first-use microphone request action found during final 0.5.0 verification.
 - Supported workflow: tap/hold Control + Option + Space into Slack and other focused macOS text fields; no auto-send.
 - Canonical validation: `task check`; full app, behavior/loopback/setup/onboarding/release-tooling checks PASS.
-- Local optimized ad-hoc artifact only (internal candidate verification mode). Developer ID/notarized colleague distribution and automatic updates remain deferred.
+- Local optimized ad-hoc artifact (internal candidate verification mode). Own-tap distribution staging is approved; not generally published. Developer ID/notarization and in-app automatic updates remain deferred.
 
 ## Active Work
 
-No release implementation remains active. The checkout is on main. All three
-implementation trackers and the 0.5.0/0.5.1 release runs are archived under
-`docs/runs/archive/`. Fully merged task branches were removed locally/remotely;
-commits remain reachable from main/release tags. Artifacts, native evidence and
-rollback bundles are preserved. The original v0.5.0 tag was not rewritten.
+Approved non-notarized Homebrew colleague pilot on `codex/homebrew-distribution`.
+Contract: `docs/features/homebrew-distribution/spec.md`; current staging/evidence:
+`docs/runs/active/homebrew-distribution.md`. The existing v0.5.1 app is reused;
+no source/version/tag or daily installation change. The release is a GitHub draft
+and the cask is only on the tap's `codex/babbelstream-pilot` branch. The default
+branch has instructions only; normal Brew installation is intentionally inactive
+until the maintainer's other-Mac download/launch test passes. Public URL/install tests
+follow activation; first real upgrade evidence needs a later release.
 
 ## Known Limitations And Deferred Follow-Ups
 
-- Current final-build permissions: Microphone Not requested; Accessibility Not allowed under the ad-hoc identity. Onboarding is open at the permission step with Allow Microphone and Enable Automatic Paste. The user must consent before recording/automatic paste. No TCC reset or grant was automated.
+- At final local installation, microphone was Not requested and Accessibility Not allowed under the ad-hoc identity. Subsequent user grants have not been re-queried in this distribution-only task. Onboarding supports explicit repair; no TCC reset/grant is automated.
 - the maintainer approved the successful build 5 smoke test and explicitly authorized finalization on 2026-10-23, deferring macOS 27.0.1 comparison to the other Mac. Local 26.7.1 fixture evidence exists at both documented sizes in light/dark appearance. The 0.5.1 patch has focused grant/deny and native button/refresh evidence. Full OS Increase Contrast and expanded native/accessibility/provider matrices are not claimed complete.
 - Company-approved connection profile, model aliases, per-user key issuance and support/revocation ownership remain required before colleague deployment. No company destination is guessed or bundled master key supplied.
 - Ad-hoc rebuilds may require permission reapproval; onboarding reports actual running-process trust. Stable Developer ID signing/notarization and signed updates remain future work.
@@ -39,4 +42,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-the maintainer grants microphone/Accessibility access to the final build through the open onboarding permission page.
+the maintainer performs `docs/homebrew-pilot-smoke-test.md` on the other Apple Silicon Mac and reports the downloaded-launch quality result before public rollout.

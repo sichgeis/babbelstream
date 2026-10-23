@@ -246,3 +246,14 @@ Project Swift invocations pass through a local SDK selector. Packaging shares a 
 The optional local test uses the same ClipboardTextInsertionService as dictation, with an additional predicate checking its own NSTextView/window focus. Production dictation retains its existing application-only target policy. The native adapter inspects only its owned test field for the known sample; bounded receipt observation rejects posting-only success. Cancellation on navigation/close, window key loss and app deactivation prevents a rapid focus return from reviving an old test. Completion refreshes actual permissions. AppState test/delivery occupancy prevents overlapping operations. The fixture preview injects memory progress and fake insertion; it never requests native access or posts a real paste.
 
 `AppFormBackground` blends semantic control/window surfaces for a nearly white normal Light Mode canvas. Dark Mode and increased contrast retain native window surfaces. No fixed RGB system colors or global theme change is used.
+
+## Homebrew Distribution Boundary
+
+The approved own-tap pilot reuses exact clean-tag optimized ad-hoc DMGs. GitHub
+Releases owns immutable versioned payloads/checksums; `sichgeis/homebrew-tap` owns
+Casks/babbelstream.rb with the version, URL, SHA-256 and platform declarations.
+Homebrew performs explicit installation and upgrade outside the app. No runtime
+updater, new app dependency, appcast, network request or provider change is added.
+The app bundle ID/data locations remain unchanged; OS/Keychain trust can require
+repair after replacement. Candidate mode remains ad-hoc; Developer ID mode remains
+strict. Publication/test ordering lives in `docs/homebrew-release.md`.

@@ -102,7 +102,7 @@ Do not allow these artifacts to contradict each other. A feature spec may refine
 - Do not push `main` or create the final annotated release tag until the human smoke gate passes, unless the user explicitly waives that gate.
 - The final tag must point at the final release commit on `main`, with `VERSION` and `CHANGELOG.md` aligned.
 - Final packaging must come from a clean commit so the installed app reports an exact non-dirty build hash.
-- Public distribution additionally requires Developer ID signing and notarization; local signing is only for the development Mac.
+- The explicitly approved Homebrew colleague pilot may publish optimized ad-hoc artifacts without Developer ID/notarization, clearly labeled as non-notarized, following `docs/features/homebrew-distribution/spec.md`. Keep quarantine and OS approval intact; no security bypass hooks or TCC resets. Other-Mac pilot validation gates general rollout. All other public distribution channels require their separately approved signing/security contract; the existing Developer ID distribution mode remains fail-closed.
 
 ## Autonomy And Approval Gates
 

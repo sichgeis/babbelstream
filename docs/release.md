@@ -14,7 +14,7 @@
 | Mode | Configuration | Signature | Preconditions |
 | --- | --- | --- | --- |
 | development (default) | debug unless explicitly set | existing local identity or ad-hoc fallback | Local development; may be dirty |
-| candidate | release | ad-hoc by default, no private-identity lookup | Clean commit, increasing source build; local review only |
+| candidate | release | ad-hoc by default, no private-identity lookup | Clean commit, increasing source build; local review or approved non-notarized pilot |
 | distribution | release | explicitly supplied Developer ID Application, secure timestamp | Clean commit/build; fails without authorized identity, never falls back |
 
 Candidate/distribution signatures enable hardened runtime and the reviewed audio-input entitlement for existing microphone behavior. No App Sandbox, new permission, debug task allowance, JIT, library-validation exception or telemetry is added. `verify-app.sh` checks signature integrity, runtime flags and microphone entitlement; distribution additionally requires Developer ID and timestamp. Native microphone/Accessibility behavior under that signature still requires human QA.
@@ -49,7 +49,7 @@ Output:
 dist/BabbelStream-$(cat VERSION).dmg
 ```
 
-The local build signs with `BabbelStream Local Code Signing` when that identity exists, otherwise it falls back to ad-hoc signing. This is not enough for public distribution.
+The local build signs with `BabbelStream Local Code Signing` when that identity exists, otherwise it falls back to ad-hoc signing. This does not provide Apple-verified publisher identity or notarization. The approved own-tap pilot is a narrowly scoped exception described below.
 
 For visual QA, use the fixture-only bundle rather than another production-store copy:
 
@@ -187,3 +187,26 @@ The internal build-mode metadata stays `candidate` to describe the local ad-hoc 
 ## 0.5.1 First-Use Correction
 
 The final 0.5.0 native check found that Allow Microphone checked unknown instead of notDetermined. Ship the correction as 0.5.1/build 7 with a new immutable tag, using the same explicit ad-hoc local pipeline and `DMG_NAME=BabbelStream-0.5.1.dmg`. Native fixture consent and grant/deny checks pass; real OS consent remains user-controlled. Preserve the original 0.5.0 tag and artifact history.
+
+## Own Homebrew Tap: Approved Non-Notarized Pilot
+
+the maintainer approved this channel on 2026-10-23 without paid Apple membership.
+The app stays ad-hoc signed, explicitly non-notarized, arm64-only initially.
+Keep existing Developer ID mode and checks unchanged; use exact clean-tag candidate
+artifacts and their signature verification for this channel. Do not label these
+as Apple-verified or official Homebrew catalogue builds.
+
+- Contract and staged acceptance: `docs/features/homebrew-distribution/spec.md`.
+- Maintainer: the maintainer (`sichgeis`) for app releases and `sichgeis/homebrew-tap`.
+- Operator checklist: `docs/homebrew-release.md`.
+- Public release rollout waits for the other-Mac downloaded/quarantined-payload
+  test. A draft release is visible only to authorized repository users.
+- Upload only the DMG and portable checksum file. Never upload all of dist,
+  rollback bundles, local settings, secrets or user data.
+- Update the cask only after the public asset is reachable and its downloaded
+  SHA-256 matches; never rewrite old tags or replace published same-version bytes.
+- No cask hooks that launch/kill the app, access Keychain, grant/reset permissions,
+  remove quarantine or disable Gatekeeper. Users quit normally before upgrading.
+- Homebrew/GitHub network activity is initiated outside BabbelStream; no Sparkle
+  or in-app update request is introduced. Signing/notarization remains an optional
+  separately authorized later transition.

@@ -109,7 +109,8 @@ If the clipboard changes during automatic paste preparation, the HUD says Copy L
 - Optional deterministic local correction pass when exact replacement guarantees become more important than cleanup-only behavior.
 - Optional preview/editor mode.
 - Optional email-specific cleanup style.
-- Developer ID signing, notarization, GitHub release automation, and update flow.
+- Optional Developer ID signing/notarization, release automation and in-app updates.
+- Approved own-tap colleague pilot: explicitly non-notarized GitHub DMGs with user-initiated Homebrew install/upgrade; see `docs/features/homebrew-distribution/spec.md`. Public rollout is gated by downloaded-payload validation. No in-app updater or security bypass is included.
 
 ## UX Requirements
 
