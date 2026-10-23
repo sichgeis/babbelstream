@@ -62,7 +62,7 @@ release assets. Existing release-note text may be sanitized as part of the scrub
 
 ### 3. Candidate And Handoff
 
-- Status: Candidate prepared; local migration and human handoff pending.
+- Status: Candidate prepared; local migration completed on 2026-10-24. Human installation/smoke approval remains pending.
 - Candidate source: `92efa2bcd354e15cf1be6a79c7bfbe74599399b3`; version 0.5.3, build 9.
 - Artifact: `dist/BabbelStream-0.5.3-candidate.9-92efa2b.dmg` and portable checksum.
 - SHA-256: `be0aa44db4aca13020f698005fd58bb9fde1e2c16a8be6d2d09f3a76f04f1059`.
@@ -94,23 +94,44 @@ Disconnected mirrors outside both repositories:
 - `~/babbelstream-pre-scrub-backup-20261023.git` (remote app refs).
 - `~/homebrew-tap-pre-scrub-backup-20261023.git` (remote tap refs).
 - `~/babbelstream-local-pre-scrub-backup-20261023.git` (all original local refs).
+- `~/babbelstream-local-pre-migration-20261024.git` (all local refs immediately before adoption/pruning).
 
 These deliberately contain pre-scrub data. They have no push remote and must
 remain private until the owner confirms deletion. Temporary helpers/mirrors live
 outside the repositories and must not be published.
 
+## Local Migration And Purge (2026-10-24)
+
+- The maintainer explicitly replied “do it” to the question authorizing migration
+  of all clean local checkouts/worktrees and the installed tap, followed by
+  expiring reflogs and pruning obsolete Git objects. This resolves the earlier
+  automatic approval rejection; the authorized retry succeeded.
+- Rechecked all branch tips, all three app worktrees and the installed tap for
+  uncommitted/untracked work before mutation. All were clean and matched the
+  recorded inventory. Existing disconnected backups were verified first.
+- Added a fourth disconnected mirror, `~/babbelstream-local-pre-migration-20261024.git`,
+  preserving the forward cleanup commits and current tool snapshots as well.
+- Owner main migrated from `95e5238` to rewritten `4d50f8e` (before this evidence
+  commit). Both existing worktrees migrated from `808f601` to the corresponding
+  rewritten `2fbf595`; neither worktree was removed. Local branch tips were mapped
+  individually, preserving their prior position rather than flattening them.
+- Installed Homebrew tap migrated from `2c07bde` to `f28f4e4`. Its cask remains
+  version 0.5.2 with unchanged URL/checksum; no Homebrew install/upgrade was run.
+- Removed obsolete local snapshot refs only after backing them up. Expired all
+  local reflogs and ran `git gc --prune=now` in the owner repository and tap.
+- Ignored files, credentials, production settings, installed applications and
+  older local release artifacts were preserved. Public noreply identity is set
+  locally in both repositories; global configuration is unchanged.
+
 ## Current Blocker
 
-Local adoption and pruning require an explicit follow-up approval: automatic
-approval review rejected resetting multiple worktrees plus expiring reflogs and
-pruning objects as broader local destruction than the public-history permission.
-The owner checkout, worktrees and installed Homebrew tap remain on original local
-history; the public remotes are clean. Nothing was lost. An approval question is
-pending in this chat. Backups remain disconnected and private.
+None for the authorized source/history/local-Git scrub. Production installation,
+real microphone/provider/Slack validation, replacement release publication, tap
+version changes and retirement of older public binaries remain separately gated.
 
 ## Next Action
 
-Resolve the local migration/purge approval, then hand off the verified candidate for installation/smoke approval.
+Obtain approval to install the verified 0.5.3 candidate for the maintainer’s real microphone/provider/Slack smoke test.
 
 ## Residual Exposure And Owner Actions
 
@@ -135,3 +156,16 @@ notes independently reread through the GitHub connector: zero private-reference
 matches; each still has exactly its original DMG/checksum pair. Cask file is
 unchanged. The newly copied local candidate has a portable checksum. Older ignored
 build outputs/installers and private files were preserved, not scanned or deleted.
+
+## Local Post-Migration Verification
+
+- `task check` from the actual owner checkout: PASS (full app build, executable
+  behavior suite, release-tooling fixtures, hygiene and its four fixture tests).
+- Owner all-ref scan with local denylist plus optimized candidate binary: PASS.
+- Installed tap all-ref scan, four hygiene fixture tests and Ruby syntax: PASS.
+- `git fsck --full --no-reflogs` in owner repository and installed tap: PASS.
+- Every original commit object from both rewrite maps and every original app tag
+  object is absent from the active object stores after pruning. Original recorded
+  audio blob is absent too. Disconnected backups intentionally retain them.
+- Owner main and installed tap match their public rewritten mains; all three
+  app worktrees remain present. Only these evidence documents changed afterward.

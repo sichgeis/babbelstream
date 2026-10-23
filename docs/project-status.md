@@ -20,9 +20,10 @@ The public data scrub is pushed and verified in both repositories. A clean
 optimized 0.5.3/build 9 candidate is prepared from `92efa2b`; it is not installed,
 published or pinned by the tap. Current run/evidence:
 `docs/runs/active/data-scrub.md`; ref mapping: `docs/runs/active/data-scrub-refs.tsv`.
-Local checkout/worktree migration and old-object pruning await explicit approval
-after automatic approval review rejected that broader local destruction. The
-public source and release notes are sanitized; original downloads remain unchanged.
+The maintainer approved local migration/pruning on 2026-10-24; the owner checkout,
+both existing worktrees and installed tap now use rewritten history, and obsolete
+Git objects/reflogs were purged after backups. Public source and release notes are
+sanitized; original downloads and the installed application remain unchanged.
 
 ## Known Limitations And Deferred Follow-Ups
 
@@ -45,5 +46,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Resolve the local migration/object-pruning approval recorded in
-`docs/runs/active/data-scrub.md` before installing the verified candidate for smoke testing.
+Obtain approval to install the verified 0.5.3 candidate for a real
+microphone/provider/Slack smoke test; see `docs/runs/active/data-scrub.md`.

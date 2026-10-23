@@ -4,7 +4,7 @@
 
 - State: Approved for implementation by the maintainer on 2026-10-23.
 - Owner: the maintainer.
-- Authority: scrub personal/company data without breaking functionality; follow-up explicitly authorizes backed-up, verified force-pushes of both public repositories and tags.
+- Authority: scrub personal/company data without breaking functionality; follow-up explicitly authorizes backed-up, verified force-pushes of both public repositories and tags. On 2026-10-24 the maintainer explicitly approved migrating clean local checkouts/worktrees and purging obsolete local Git objects.
 
 ## Problem And Desired Outcome
 
@@ -39,7 +39,8 @@ unchanged. No migration reads real settings or keys during development.
 
 Never auto-send. Preserve application identifiers and explicit destinations.
 Preserve every branch, including unmerged/local work; keep disconnected backup
-mirrors. Do not reset other worktrees or delete private/ignored files. A rewrite
+mirrors. Migrate only verified-clean worktrees after explicit authorization; never
+delete private/ignored files. A rewrite
 changes source SHAs; older release bytes retain their original build provenance.
 Failure of any all-ref scan blocks pushing. Use leased pushes against captured
 remote refs so concurrent upstream changes fail safely.
