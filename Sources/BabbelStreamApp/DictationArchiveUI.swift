@@ -32,7 +32,7 @@ final class DictationArchiveWindowController {
         if AppWindowLaunchMode.requested == .dictationArchive {
             window.sharingType = .readOnly
         }
-        window.contentViewController = NSHostingController(
+        window.contentViewController = makeDialogHostingController(
             rootView: DictationArchiveView()
                 .environmentObject(appState)
         )

@@ -55,7 +55,7 @@ final class SettingsWindowController {
         if AppWindowLaunchMode.requested == .settings {
             window.sharingType = .readOnly
         }
-        window.contentViewController = NSHostingController(
+        window.contentViewController = makeDialogHostingController(
             rootView: SettingsView()
                 .environmentObject(appState)
         )
@@ -97,7 +97,7 @@ final class PersonalDictionaryWindowController {
         if AppWindowLaunchMode.requested == .personalDictionary {
             window.sharingType = .readOnly
         }
-        window.contentViewController = NSHostingController(
+        window.contentViewController = makeDialogHostingController(
             rootView: PersonalDictionaryView(
                 store: store,
                 onTeachCorrection: onTeachCorrection
@@ -142,7 +142,7 @@ final class TeachCorrectionWindowController {
         if AppWindowLaunchMode.requested == .teachCorrection {
             window.sharingType = .readOnly
         }
-        window.contentViewController = NSHostingController(
+        window.contentViewController = makeDialogHostingController(
             rootView: TeachCorrectionView(store: store)
                 .environmentObject(appState)
         )

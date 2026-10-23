@@ -33,7 +33,7 @@ final class DictationRecoveryWindowController {
         if AppWindowLaunchMode.requested == .failedRecordings {
             window.sharingType = .readOnly
         }
-        window.contentViewController = NSHostingController(
+        window.contentViewController = makeDialogHostingController(
             rootView: DictationRecoveryView()
                 .environmentObject(appState)
         )

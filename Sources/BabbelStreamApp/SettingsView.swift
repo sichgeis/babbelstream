@@ -246,10 +246,13 @@ private struct SettingsProviderPane: View {
                     ? "After Apply, every new dictation goes directly to personal OpenAI. LiteLLM and its Mini hedge are skipped. The HUD turns purple while this mode is active."
                     : "Leave this off for primary-first behavior with automatic personal fallback only after an eligible outage.")
                     .font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.secondary)
                 if appState.personalOpenAIFallbackEnabled {
                     Text("Work audio and text may be sent to https://api.openai.com with personal API charges. A separate per-user key is required; review the fallback details below before Apply.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -263,13 +266,17 @@ private struct SettingsProviderPane: View {
                 }
                 AppFormTextField("Provider base URL", text: $appState.baseURLText)
                 Text("Ask IT for your approved company URL and per-user key. A company preset is not available yet. Existing saved configuration is retained; presets leave models unchanged.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(.secondary)
                 AppFormSecureField(
                     appState.hasAPIKey ? "Saved in your Keychain; re-enter to replace or approve a new origin" : "Paste your per-user API key",
                     text: $appState.apiKeyInput
                 )
                 Text("Keys stay in your macOS Keychain. Changing origin requires explicit key entry for that destination; never distribute a shared master key.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(.secondary)
                 HStack {
                     Button("Test Saved Connection…") { showTestConfirmation = true }
                         .disabled(!appState.canTestSavedConnection)
@@ -280,10 +287,14 @@ private struct SettingsProviderPane: View {
                         .disabled(!appState.hasAPIKey)
                 }
                 Text(appState.connectionTestFeedback)
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(.secondary)
                 if appState.hasUnsavedSettingsChanges {
                     Text("Apply edited settings and keys before testing. The test uses only the saved primary connection.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -302,6 +313,7 @@ private struct SettingsProviderPane: View {
                         .pickerStyle(.menu)
                         Text("GPT Transcribe is the default. Choose a GPT-4o model only when your provider requires it.")
                             .font(.caption)
+                            .fixedSize(horizontal: false, vertical: true)
                             .foregroundStyle(.secondary)
                         Picker("Model routing", selection: $appState.transcriptionModelRouting) {
                             ForEach(TranscriptionModelRouting.allCases, id: \.rawValue) { routing in
@@ -311,6 +323,7 @@ private struct SettingsProviderPane: View {
                         .pickerStyle(.menu)
                         Text(appState.transcriptionModelRouting.helpText)
                             .font(.caption)
+                            .fixedSize(horizontal: false, vertical: true)
                             .foregroundStyle(.secondary)
                         AppLabeledContent("Effective primary model", value: appState.effectiveTranscriptionModel)
                         AppLabeledContent("Effective fallback model", value: appState.effectiveFallbackTranscriptionModel)
@@ -323,6 +336,7 @@ private struct SettingsProviderPane: View {
                         AppLabeledContent("Personal fallback limit", value: "One sequential request")
                         Text("If primary transcription is still pending after 10 seconds, BabbelStream may send the same safeguarded audio once to Mini. The first valid result wins and both requests share one 75-second deadline. This rare recovery path may incur two transcription charges. Authentication and configuration failures do not hedge.")
                             .font(.caption)
+                            .fixedSize(horizontal: false, vertical: true)
                             .foregroundStyle(.secondary)
                     }
 
@@ -351,6 +365,7 @@ private struct SettingsProviderPane: View {
                 )
                 Text("When the primary connection cannot be reached or returns gateway/service-unavailable HTTP 502, 503, or 504, BabbelStream may send the safeguarded audio, transcript cleanup, and personal dictionary context to your personal OpenAI account. This can expose work content outside the company provider and incur personal API charges. Invalid credentials, rate limits, model errors, and other HTTP failures never trigger this fallback.")
                     .font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.secondary)
 
                 Button(role: .destructive) {

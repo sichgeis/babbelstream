@@ -221,7 +221,7 @@ The main risks are accidental capture, accidental paste, clipboard exposure, ove
 
 ## Shared Dialog Layout
 
-Settings and secondary dialogs use AppGroupedForm as the only scroll owner, with explicit AppFormSection stack spacing, semantic macOS window/control surfaces and separators, and native controls. They avoid nesting a grouped Form inside a ScrollView, whose automatic insets vary by SDK/OS. Footer status and actions remain outside scrolling content. Long values wrap vertically.
+Settings and secondary dialogs use AppGroupedForm as the only scroll owner, with explicit AppFormSection stack spacing, semantic macOS window/control surfaces and separators, and native controls. They avoid nesting a grouped Form inside a ScrollView, whose automatic insets vary by SDK/OS. Footer status and actions remain outside scrolling content. Long values wrap vertically. Dialog hosting controllers disable automatic SwiftUI sizing options so AppKit controllers retain ownership of documented initial and minimum content sizes. Provider guidance explicitly permits vertical wrapping.
 
 ## Pilot Boundary Policies
 

@@ -1,6 +1,15 @@
 import AppKit
 import SwiftUI
 
+/// Window controllers own documented content sizes; SwiftUI must not replace them
+/// with a transient fitting minimum while scroll content/footer are being measured.
+@MainActor
+func makeDialogHostingController<Content: View>(rootView: Content) -> NSHostingController<Content> {
+    let controller = NSHostingController(rootView: rootView)
+    controller.sizingOptions = []
+    return controller
+}
+
 struct AppGroupedForm<Content: View>: View {
     let maxContentWidth: CGFloat
     private let content: Content
