@@ -1,6 +1,6 @@
 # Internal Pilot Setup And Support
 
-This branch is an unreleased candidate. Do not distribute or replace the daily app until the release/manual gates in `docs/release.md` are approved. the maintainer explicitly authorized local candidate build 3 installation/launch on 2026-10-23 for his smoke test. It now replaces the Applications copy; the prior bundle is preserved under `dist/rollback/`. Public pilot distribution remains gated.
+This branch is an unreleased candidate. Do not distribute or replace the daily app until the release/manual gates in `docs/release.md` are approved. the maintainer explicitly authorized installation/launch of the reviewed onboarding candidate on 2026-10-23. Build 5 / b3f7ff0 is installed in Applications with first-use setup open; the preceding build 3 bundle is preserved at `dist/rollback/BabbelStream-0.4.5-build3-4e6da0d.app`. Public pilot distribution remains gated.
 
 ## Install And Set Up
 

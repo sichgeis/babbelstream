@@ -15,14 +15,14 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Onboarding implementation/local preparation delivered on `codex/onboarding`; approved contract `docs/features/onboarding-and-updates/spec.md`, tracker `docs/runs/active/onboarding.md`. First-run/repair permissions, local sample verification and accepted nearly white shared canvas; Sparkle/signing deferred. Final quality review adds focus-loss cancellation and post-test permission refresh; candidate build 5 packaging/local installation is authorized and in progress. Installed build 3 remains until replacement. Human onboarding/paste acceptance pending.
+- Onboarding implementation/local preparation delivered on `codex/onboarding`; approved contract `docs/features/onboarding-and-updates/spec.md`, tracker `docs/runs/active/onboarding.md`. First-run/repair permissions, local sample verification and accepted nearly white shared canvas; Sparkle/signing deferred. Final quality review adds focus-loss cancellation and post-test permission refresh; clean candidate 0.4.5 build 5 / b3f7ff0 is packaged, installed and running after explicit authorization. Human onboarding/paste acceptance pending.
 
 - Pilot readiness implementation/local preparation delivered; full acceptance pending: `docs/features/pilot-readiness/spec.md`, tracker `docs/runs/active/pilot-readiness.md`, branch `codex/pilot-readiness`. Approved autonomous implementation, unreleased; clean local candidate 0.4.5 build 3 / 4e6da0d prepared after native UI corrections; explicitly authorized local installation/launch completed for human smoke on 2026-10-23.
 - Preserved dependency: clipboard-only insertion implemented 2026-10-23; unreleased on `codex/clipboard-only-insertion`.
 - Contract: `docs/features/clipboard-only-insertion/spec.md`.
 - Tracker: `docs/runs/active/clipboard-only-insertion.md`.
 - Latest released compatibility feature remains Signal paste compatibility.
-- Installed/running local candidate: `0.4.5`, build `3`, commit `4e6da0d` at `/Applications/BabbelStream.app`; version, signature, running executable and payload hash verified. the maintainer confirmed dictation/automatic paste works after Accessibility repair; expanded smoke coverage remains pending. Previous installed bundle `0.4.5` / `a9c5547` preserved under `dist/rollback/`.
+- Installed/running local candidate: `0.4.5`, build `5`, commit `b3f7ff0` at `/Applications/BabbelStream.app`; version, signature, running executable and payload hash verified. Normal launch opens first-use onboarding. New onboarding/local-paste smoke remains pending; the maintainer previously confirmed build 3 automatic paste after Accessibility repair. Build 3 / `4e6da0d` preserved at `dist/rollback/BabbelStream-0.4.5-build3-4e6da0d.app`.
 - Spec: `docs/features/signal-paste-compatibility/spec.md`.
 - Tracker: `docs/runs/archive/signal-paste-compatibility.md`.
 - Completed reliability evidence: `docs/runs/archive/recovery-delivery-reliability.md`.
@@ -66,4 +66,4 @@ recorded.
 
 ## Next Action
 
-Package and install the quality-reviewed candidate build 5, then hand off live permission onboarding and local sample receipt validation.
+the maintainer completes first-use permission setup and the local paste test in installed build 5, then reports the real unsent dictation smoke result.
