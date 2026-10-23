@@ -59,6 +59,7 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 
 - Implemented: shared release preflight, source BUILD_NUMBER=3 (previous fixed build 1; candidate 2 preceded final UI corrections), optimized clean candidate/distribution modes, explicit Developer ID without fallback, runtime/audio entitlement verification, secure distribution timestamp flag, noninteractive plain DMG path, explicit notarize/staple/Gatekeeper helper and support procedure. No private identity lookup, signing material, notarization, publication or installation used in validation.
 - Evidence: `task check` passes full app + behavior/loopback/setup + disposable Git preflight fixtures. Shell syntax and entitlement plist lint pass. First optimized candidate build from 3b52773 succeeded; packaging stopped honestly because the new verifier matched only `(runtime)` instead of actual combined `(adhoc,runtime)` flags. Corrected flag token parsing and requested XML entitlement output explicitly; actual ad-hoc app verification now passes. Added fixture acceptance/rejection checks for combined runtime flags, missing runtime/audio, debug-task access and missing Developer ID/timestamp. Repackaged successfully from clean 5dd0e34: optimized arm64 app, actual ad-hoc signature, runtime flag, audio-input entitlement, embedded source metadata, DMG integrity and checksum verified. No install or production launch. Distribution positive validation requires owner-authorized identity/profile; negative preflight rejects absent/ad-hoc identities before lookup.
+- Final UI correction candidate rebuilt from clean 4e6da0d with explicit ad-hoc identities: build 3, optimized arm64, actual signature/runtime/audio entitlement, embedded version/build/commit and DMG integrity/SHA-256 verified. Full `task check` passed after the final corrections (`/tmp/babbelstream-pilot-final-ui-check.log`).
 - Reviewed official Apple release/signing/runtime/entitlement/build-number guidance and official OpenAI deprecations. `docs/provider-lifecycle.md` records dated cleanup/transcription migration milestones without changing any model/provider/cost or creating an automation.
 
 ## Decisions And Risks
@@ -75,7 +76,7 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 | --- | --- | --- |
 | task check | sandbox cache failure; parent normal-cache missing SwiftUIMacros | full app and behavior suite pass with SDK26.5 wrapper |
 | fixtures | parent partial core/coordinator pass | full existing suite plus origin/transport, credential, parser, HUD, instance, diagnostics, setup and release-policy fixtures pass |
-| build/package | parent full build blocked | clean optimized arm64 candidate from 5dd0e34; actual signature/runtime/audio entitlement and DMG integrity/checksum verified |
+| build/package | parent full build blocked | clean optimized arm64 candidate build 3 from 4e6da0d; actual signature/runtime/audio entitlement and DMG integrity/checksum verified |
 | Settings screenshots | installed 0.4.5 baseline in temporary parent resources | layout milestone 323d7ea: five tabs at both content sizes, shared dialogs at minimum, dark and scoped high contrast; current setup/metadata/Advanced/confirmation/permissions and shared minimum dialogs refreshed in resumed captures |
 | macOS 27.0.1 | unavailable on this host | human gate |
 | microphone/provider/Slack | not authorized in automation | human gate |
@@ -91,13 +92,14 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 | D guided setup/support/lifecycle | 008c505 |
 | E release tooling | 3b52773 |
 | E actual signature-format correction and fixtures | 5dd0e34 |
+| B/D final native wrapping and hosting-size corrections | 4e6da0d |
 
-- Previous candidate (superseded by pending build 3 UI correction): clean `5dd0e340a6564c04cc80731b388ac15351da40cd`; final handoff documentation may be a later commit with no app-code change.
-- Artifact: `dist/BabbelStream-0.4.5-candidate.2-5dd0e34.dmg` (892 KiB), version 0.4.5, bundle build 2, mode candidate, embedded commit 5dd0e34 (no dirty suffix).
-- SHA-256: `13d40f917d9ae3ca8d86c2a171f2cb5573a7706609fea33bc9eed9a446b1cefb`; checksum file beside artifact; verification passed.
+- Current candidate source: clean `4e6da0d23fd0f400edf8754b5bb44d54169cb5cc`; final handoff documentation may be a later commit with no app-code change. Build 3 supersedes build 2 from 5dd0e34.
+- Artifact: `dist/BabbelStream-0.4.5-candidate.3-4e6da0d.dmg` (893 KiB), version 0.4.5, bundle build 3, mode candidate, embedded commit 4e6da0d (no dirty suffix).
+- SHA-256: `235618294924b162428de35721f983acccaf5ea1e7f193c8c16bc46d283a7cdd`; checksum file beside artifact; verification passed.
 - Signature: ad-hoc, actual flags `0x10002(adhoc,runtime)`, audio-input entitlement true, no debugger-task entitlement. Host arm64 only; no universal/distribution compatibility claim.
-- Final canonical `task check`: PASS (full app + behavior/setup/loopback + release-policy fixtures). `bash -n scripts/*.sh`, entitlement plist lint, baseline-to-HEAD `git diff --check`: PASS. Existing Swift capture and CLT framework-search warnings remain; no unavailable XCTest claim.
-- GitHub connector independently confirmed pilot branch at 5dd0e34 and original insertion branch still at 162ddf3. No PR, main/tag/release, private signing identity, notarization or production install/launch.
+- Refreshed canonical `task check` after final UI corrections: PASS (full app + behavior/setup/loopback + release-policy fixtures). `bash -n scripts/*.sh`, entitlement plist lint, baseline-to-HEAD `git diff --check`: PASS. Existing Swift capture and CLT framework-search warnings remain; no unavailable XCTest claim.
+- Feature source commit 4e6da0d pushed successfully; original insertion branch remains preserved at 162ddf3. No PR, main/tag/release, private signing identity, notarization or production install/launch.
 - All resumed isolated previews closed normally. No daily app was stopped. Temporary screenshot/log resources remain available but may expire.
 - Safest rollback point: secured/pushed insertion baseline 162ddf3; use ordinary forward/revert work, never reset shared checkout or rewrite published history.
 
