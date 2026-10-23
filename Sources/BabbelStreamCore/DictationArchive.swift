@@ -1,6 +1,7 @@
 import Foundation
 
 public enum DictationArchiveInsertionOutcome: String, Codable, Equatable, Sendable {
+    // Historical archive compatibility only; new delivery never emits this outcome.
     case directAccessibilityInsertion
     case pasteShortcutPosted
     case copiedForManualPaste

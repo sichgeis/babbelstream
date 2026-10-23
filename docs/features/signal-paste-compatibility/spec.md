@@ -2,6 +2,8 @@
 
 ## Status
 
+Historical release contract: its routing/direct-first rules are superseded for new development by [Clipboard-Only Insertion](../clipboard-only-insertion/spec.md). Retained as release evidence.
+
 - State: Released in 0.4.5; the maintainer confirmed successful Signal smoke on 2026-09-05.
 - Owner: the maintainer.
 - Evidence: 2026-09-05 Signal failure report and explicit confirmation that Copy Last Draft plus manual Cmd+V works.

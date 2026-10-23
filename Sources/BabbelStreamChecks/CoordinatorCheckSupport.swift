@@ -110,7 +110,7 @@ final class FixtureInsertion: TextInsertionService {
     var inserted: [String] = []
     var copied: [String] = []
     var failCopy = false
-    var result = TextInsertionResult.insertedDirectly
+    var result = TextInsertionResult.pasteShortcutPosted
     func accessibilityPermissionStatus() -> AccessibilityPermissionStatus { .trusted }
     func requestAccessibilityPermission() {}
     func captureTarget() -> TextInsertionTarget? { TextInsertionTarget(processIdentifier: 123, localizedName: "Fixture", bundleIdentifier: "example.fixture") }

@@ -76,19 +76,9 @@ These remain unsequenced until the user selects them:
 
 ## Input Compatibility Candidates (2026-09-05)
 
-Following successful Signal smoke, consider these without changing current routing:
+Clipboard-only insertion is approved active work; see `docs/features/clipboard-only-insertion/spec.md` and `docs/project-status.md` for execution state. Remaining unapproved candidates:
 
-- Explicit per-application insertion overrides: Automatic, Prefer Clipboard,
-  Accessibility First, and Copy Only. Define clipboard exposure and precedence
-  over the shipped application policy in a feature contract.
-- Content-free delivery diagnostics: selected route, AX error code, application
-  match, and event-posted outcome; never record draft, clipboard, or field text.
-- Broaden native/manual coverage across native editors, browser forms and rich
-  editors, Electron apps, alternate keyboard layouts/IME, selection replacement,
-  multiline input, held modifiers, and focus changes within the same application.
-  The current paste uses physical ANSI-V keycode 9; alternate-layout behavior
-  needs measurement before choosing a different event strategy.
-- Define protected-field, terminal, and remote-desktop policies. Current target
-  validation identifies an application, not an original field. Stricter focus
-  handling needs an explicit contract compatible with unstable rich-editor AX
-  elements. Avoid blind retries after ambiguous insertion to prevent duplicates.
+- Direct Accessibility insertion, including ChatGPT: postponed. A future feature must demonstrate a concrete clipboard-avoidance benefit, validate editor state beyond AX success, define application/field eligibility and duplicate-safe failure behavior, and preserve focus/clipboard/cancellation rules. No dormant direct-writing implementation or allowlist remains.
+- Content-free delivery diagnostics: permission, application match, clipboard ownership and event-posted outcome; never draft, clipboard or field text.
+- Broader native/manual coverage across rich/native editors, alternate layouts/IME, held modifiers, selection replacement and multiline input. Current paste uses ANSI-V keycode 9; measure before changing event strategy.
+- Explicit protected-field, terminal and remote-desktop policies. Current targeting identifies an application, not an original field. Stricter behavior needs a feature contract compatible with unstable rich-editor AX elements. Never blindly retry ambiguous delivery.

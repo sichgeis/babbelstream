@@ -64,11 +64,11 @@ The primary user is a technical Mac user who writes many Slack messages during t
 - Local personal dictionary for preferred vocabulary and wrong-to-right correction hints; entries are injected into the existing cleanup call.
 - Personal dictionary cleanup context is capped locally; oversized dictionaries continue to work with a visible skipped-entry warning.
 - Teach Correction flow for explicitly adding wrong-to-right hints after a bad dictation, without automatic learning or transcript history.
-- Direct Accessibility insertion into the focused text field when reliable, with
-  clipboard plus Cmd+V for known web-backed editors and as the general fallback.
-  Signal, ChatGPT/Codex, Chrome-family browsers, Arc, Mail, and Outlook prefer the paste
-  path because a successful Accessibility selected-text write does not prove
-  that a rich editor accepted the draft into its internal editing state.
+- Clipboard plus synthetic Cmd+V is the sole automatic insertion method for all
+  applications, including native, unknown, Slack, Claude, ChatGPT/Codex, browsers,
+  Signal and email editors. No direct Accessibility writes or per-app routing.
+  Every delivered draft reaches the system clipboard and remains available for
+  manual recovery; posting the shortcut does not prove editor acceptance.
 - Automatic insertion only if the captured application remains frontmost. Insert into whichever field is focused in that application when processing completes; this deliberately supports reactive editors whose Accessibility element cannot be verified reliably. If another application becomes active, copy without stealing focus.
 - Inserted dictation text ends with one trailing space so consecutive dictation chunks do not run together in the same composer.
 - API key storage in macOS Keychain.
@@ -99,6 +99,10 @@ If the clipboard changes during automatic paste preparation, the HUD says Copy L
 - Optional price inputs and estimated cleanup tokens.
 
 ## Future Scope
+
+- Direct Accessibility insertion is deferred and unapproved, including ChatGPT.
+  A future feature must justify clipboard avoidance, define explicit application/
+  field eligibility, prove editor-state correctness and guard against duplicates.
 
 - Local Whisper or `whisper.cpp` backend.
 - More advanced correction dictionary for names, acronyms, projects, and ticket prefixes.

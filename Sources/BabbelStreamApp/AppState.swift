@@ -2398,13 +2398,6 @@ final class AppState: ObservableObject {
         priorWarning: String?
     ) -> DictationArchiveInsertionOutcome {
         switch insertionResult {
-        case .insertedDirectly:
-            status = "Ready"
-            lastResult = "Draft inserted. Review it before sending."
-            errorMessage = nil
-            warningMessage = priorWarning
-            recordDiagnostic("paste succeeded: direct accessibility insertion")
-            return .directAccessibilityInsertion
         case .pasteShortcutPosted:
             status = "Ready"
             lastResult = "Paste shortcut sent; draft is also on the clipboard."

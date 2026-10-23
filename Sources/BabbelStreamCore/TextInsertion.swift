@@ -3,7 +3,6 @@ import ApplicationServices
 import Foundation
 
 public enum TextInsertionResult: Equatable, Sendable {
-    case insertedDirectly
     case pasteShortcutPosted
     case copiedForManualPaste
     case copiedBecauseTargetChanged
@@ -74,42 +73,6 @@ public enum TextInsertionTargetPolicy {
     }
 }
 
-public enum TextInsertionStrategyPolicy {
-    public static func prefersPasteShortcut(forBundleIdentifier bundleIdentifier: String?) -> Bool {
-        guard let bundleIdentifier = normalized(bundleIdentifier) else {
-            return false
-        }
-
-        return clipboardPreferredBundleIdentifiers.contains(bundleIdentifier)
-            || bundleIdentifier == chromeBundleIdentifierPrefix
-            || bundleIdentifier.hasPrefix("\(chromeBundleIdentifierPrefix).")
-    }
-
-    private static func normalized(_ bundleIdentifier: String?) -> String? {
-        guard let normalized = bundleIdentifier?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased(),
-            !normalized.isEmpty
-        else {
-            return nil
-        }
-
-        return normalized
-    }
-
-    private static let chromeBundleIdentifierPrefix = "com.google.chrome"
-
-    private static let clipboardPreferredBundleIdentifiers: Set<String> = [
-        "com.apple.mail",
-        "com.microsoft.outlook",
-        "com.openai.chat",
-        "com.openai.chatgpt",
-        "com.openai.codex",
-        "org.whispersystems.signal-desktop",
-        "company.thebrowser.browser"
-    ]
-}
-
 public enum AccessibilityPermissionStatus: String, Equatable, Sendable {
     case trusted
     case notTrusted
@@ -130,7 +93,6 @@ public protocol TextInsertionEnvironment: AnyObject {
     func accessibilityPermissionStatus() -> AccessibilityPermissionStatus
     func requestAccessibilityPermission()
     func captureTarget() -> TextInsertionTarget?
-    func insertDirectlyIntoFocusedElement(_ text: String, target: TextInsertionTarget?) -> Bool
     func writeToClipboard(_ text: String) throws -> Int
     func waitForPastePreparation() async throws
     func postPasteShortcut() async -> Bool
@@ -165,10 +127,6 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         guard targetIsStillFocused(target) else {
             _ = try environment.writeToClipboard(insertionText)
             return .copiedBecauseTargetChanged
-        }
-        if !TextInsertionStrategyPolicy.prefersPasteShortcut(forBundleIdentifier: target?.bundleIdentifier),
-           environment.insertDirectlyIntoFocusedElement(insertionText, target: target) {
-            return .insertedDirectly
         }
         let writtenChangeCount = try environment.writeToClipboard(insertionText)
         try await environment.waitForPastePreparation()
@@ -235,60 +193,6 @@ private final class MacOSTextInsertionEnvironment: TextInsertionEnvironment {
         }
 
         return pasteboard.changeCount
-    }
-
-    private func targetIsStillFocused(_ target: TextInsertionTarget?) -> Bool {
-        let frontmostProcessIdentifier = NSWorkspace.shared.frontmostApplication?.processIdentifier
-        return TextInsertionTargetPolicy.applicationMatches(
-            target,
-            frontmostProcessIdentifier: frontmostProcessIdentifier
-        )
-    }
-
-    private func currentFocusedElement() -> AXUIElement? {
-        let systemWideElement = AXUIElementCreateSystemWide()
-        var focusedElement: CFTypeRef?
-        let copyResult = AXUIElementCopyAttributeValue(
-            systemWideElement,
-            kAXFocusedUIElementAttribute as CFString,
-            &focusedElement
-        )
-
-        guard copyResult == .success, let focusedElement else {
-            return nil
-        }
-
-        guard CFGetTypeID(focusedElement) == AXUIElementGetTypeID() else {
-            return nil
-        }
-
-        return (focusedElement as! AXUIElement)
-    }
-
-    func insertDirectlyIntoFocusedElement(_ text: String, target: TextInsertionTarget?) -> Bool {
-        guard targetIsStillFocused(target),
-              let focusedElement = currentFocusedElement()
-        else {
-            return false
-        }
-        var selectedTextIsSettable = DarwinBoolean(false)
-        let settableResult = AXUIElementIsAttributeSettable(
-            focusedElement,
-            kAXSelectedTextAttribute as CFString,
-            &selectedTextIsSettable
-        )
-
-        guard settableResult == .success, selectedTextIsSettable.boolValue else {
-            return false
-        }
-
-        let setResult = AXUIElementSetAttributeValue(
-            focusedElement,
-            kAXSelectedTextAttribute as CFString,
-            text as CFTypeRef
-        )
-
-        return setResult == .success
     }
 
     func postPasteShortcut() async -> Bool {

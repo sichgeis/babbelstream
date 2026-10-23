@@ -4,6 +4,10 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+- Use clipboard plus Command+V for every application; remove direct Accessibility
+  writes and application routing exceptions while preserving delivery guards and
+  recovery. Direct insertion is deferred future work.
+
 ## 0.4.5 - 2026-09-05
 
 - Prefer clipboard plus Command+V in Signal on macOS so dictation reaches its

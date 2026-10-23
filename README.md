@@ -33,8 +33,7 @@ clipboard contents. The real-workflow smoke test passed on 2026-09-05.
 - Local usage counters show dictations, recorded minutes, cleanup requests, and safe failure counts.
 - Optional local dictation archive writes daily JSONL text files and provides monthly word-count review/export.
 - Copyable diagnostics summarize state and provider settings without transcripts, audio paths, or API keys.
-- Direct Accessibility insertion for reliable native fields; ChatGPT/Codex,
-  Chrome-family browsers, Arc, Mail, and Outlook prefer clipboard plus `Cmd+V`.
+- Clipboard plus `Cmd+V` for every application, with target/cancellation/clipboard ownership guards and Copy Last Draft recovery. Direct field writes are deferred.
 - Automatic insertion only while the originally captured app remains frontmost; the currently focused field in that app receives the draft, including in VS Code, Codex, and other reactive editors.
 - One trailing space after inserted dictation chunks so repeated dictations do not run together.
 - In-app launch-at-login toggle backed by macOS ServiceManagement.

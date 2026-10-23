@@ -16,7 +16,7 @@
 
 - Audio: temporary while recording, then safeguarded under Application Support before provider processing. Delete immediately after transcription and any enabled cleanup succeed. Preserve failed, canceled-after-stop, or interrupted processing until retry succeeds or the user explicitly deletes it.
 - Transcript text: memory only by default, plus last transcript in memory for retry/paste-last during the running app session.
-- Cleaned text: memory and, when the clipboard fallback path is used, the clipboard.
+- Cleaned text: session memory and the system clipboard for every delivery attempt that successfully copies the draft.
 - API keys: macOS Keychain only. Primary and personal-fallback credentials use
   separate Keychain items. Separate non-secret `UserDefaults` markers may
   remember that keys were saved so the app can avoid reading Keychain on startup.
@@ -55,7 +55,7 @@ Stopped dictation awaiting adoption carries a user-only `.m4a.stopped.json` owne
 
 ## Clipboard Implications
 
-Clipboard insertion places work text on the system clipboard. Direct Accessibility insertion avoids clipboard writes for native and unknown targets when the focused element supports it, while known web-backed and rich-editor applications, including Signal, prefer clipboard plus synthetic Cmd+V because their Accessibility bridge may report success without updating internal editor state. Automatic insertion is allowed only while the captured application remains frontmost, but the field focused at completion may differ from the field focused at recording start. This explicit tradeoff supports VS Code, ChatGPT/Codex, and other reactive editors that do not expose stable field identity. Switching to another application fails closed: the draft is copied without reactivating the original app. Paste success cannot be confirmed reliably across all targets, so the final text remains on the clipboard with a visible HUD message.
+All automatic insertion places the draft on the system clipboard and posts synthetic Cmd+V. This applies to native and unknown targets as well as rich editors; other applications and clipboard managers may read that text. BabbelStream neither restores the prior clipboard nor reads existing field text. There are no direct Accessibility writes or application routing exceptions. Automatic insertion is allowed only while the captured application remains frontmost, but the field focused at completion may differ from the field focused at recording start. This explicit tradeoff supports reactive editors that do not expose stable field identity. Switching to another application fails closed: the draft is copied without reactivating the original app. Shortcut posting does not prove editor acceptance, so the final draft remains on the clipboard and in session memory for recovery.
 
 Before posting Cmd+V, BabbelStream verifies the pasteboard change count still matches its write, in addition to cancellation and the frontmost-app check. If another writer replaces the clipboard during preparation, no paste is posted and the newer clipboard is preserved. The draft remains in memory via Copy Last Draft. This is a best-effort preflight; macOS does not provide an atomic clipboard-and-target paste transaction.
 
@@ -117,7 +117,7 @@ Default logs may include timestamps, state names, durations, provider labels, co
 
 ## Accessibility Risks
 
-Accessibility permission allows the app to inspect the focused element, insert selected text, and synthesize paste shortcuts. The app should request it only with clear explanation, avoid broad automation beyond paste, and fail safely when permission is absent or the original focused element changes.
+Accessibility permission enables synthetic paste shortcuts. The insertion service does not inspect or write field content. Request permission with clear explanation, avoid broad automation beyond paste, and fall back to copying if permission is absent or the target application changes. Direct field writes are deferred future work requiring an approved contract.
 
 The hybrid hotkey does not require Input Monitoring or any new permission. A tap-latched recording remains visibly active in the HUD and menu until the same shortcut, an explicit Stop action, Escape/Cancel, or the configured maximum duration ends it. Tap/hold classification and activation style are privacy-safe state only and must not be persisted or included with transcript content.
 

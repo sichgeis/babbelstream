@@ -2,7 +2,7 @@
 
 ## Recommended Architecture
 
-BabbelStream is a native macOS menu-bar app with an AppKit status item, SwiftUI settings, and a small core layer for testable logic. The MVP uses native macOS APIs before adding dependencies: AVFoundation for audio recording, Carbon for the global hotkey, URLSession for provider calls, Security/Keychain for secrets, Accessibility for direct insertion where reliable, and NSPasteboard plus synthetic Cmd+V for known web-backed editors and as a fallback.
+BabbelStream is a native macOS menu-bar app with an AppKit status item, SwiftUI settings, and a small core layer for testable logic. The MVP uses native macOS APIs before adding dependencies: AVFoundation for audio recording, Carbon for the global hotkey, URLSession for provider calls, Security/Keychain for secrets, Accessibility permission for synthetic paste, and NSPasteboard plus Cmd+V for all insertion.
 
 ## Alternatives Considered
 
@@ -48,7 +48,7 @@ This boundary keeps lifecycle and UI wiring out of the dictation flow without in
 ## Data Flow
 
 1. Hotkey press starts `AudioRecorder` immediately. `HybridDictationHotkeyPolicy` classifies release before 0.5 seconds as hands-free latch and release at or after 0.5 seconds as push-to-talk completion.
-2. `AppState` snapshots the saved settings and the focused application/Accessibility element for the whole dictation.
+2. `AppState` snapshots the saved settings and the focused application identity for the whole dictation.
 3. The bottom-centered, non-activating capsule HUD shows live microphone activity and the target while recording, then progressively discloses only the current processing, Mini fallback, completion, or recovery state. Full provider and timeout details remain in the menu, Settings, and diagnostics.
 4. A held-hotkey release, a second press while hands-free, or an explicit Stop action stops recording and returns a temporary audio URL. All paths converge on the same coordinator action. `DictationRecoveryStore` copies the file into user-only Application Support storage before provider work and only then removes the temporary source.
 5. The configured primary transcription begins immediately. If it remains pending for 10 seconds, an independent Mini request starts; the first valid response wins within one 75-second overall deadline.
@@ -56,7 +56,7 @@ This boundary keeps lifecycle and UI wiring out of the dictation flow without in
 7. `AppState` reloads the local personal dictionary from Application Support when cleanup is enabled.
 8. `CleanupProvider` lightly formats the transcript when cleanup is enabled, using dictionary context in the same model call.
 9. Usage counters are updated locally for dictation attempts, recorded duration, cleanup requests, transcription failures, and cleanup fallbacks.
-10. `TextInsertionService` inserts only if the captured application remains frontmost. A pure strategy policy routes known web-backed editors and rich email editors through clipboard plus Cmd+V because a successful Accessibility write can still be ignored by their internal editor state; other targets use the currently focused Accessibility element first and retain the same clipboard fallback. It never steals focus back from a different app. If the active application changed, the final draft is copied and the HUD instructs the user to paste manually.
+10. `TextInsertionService` copies the prepared draft to NSPasteboard for every target. With Accessibility permission and the captured process still frontmost, it waits for paste preparation, verifies cancellation and clipboard ownership, rechecks the application and posts Cmd+V once. There is no AX field write or application routing policy. It never steals focus; copied-only and clipboard-contention outcomes retain honest recovery guidance.
 11. If the optional local archive is enabled, `DictationArchiveStore` appends a text-only entry for completed dictations with the final draft, word counts, provider labels, cleanup state, and insertion outcome. Raw transcript text is stored only when a separate raw-transcript archive setting is enabled. Archive write failures are surfaced but must not undo paste or block access to the final draft.
 12. The app keeps the latest successful raw/final draft in memory for copy/retry and does not discard it merely because a later attempt starts or fails.
 13. Recovery retry always uses current saved settings and copies the result to the clipboard rather than auto-pasting into the historical target.
@@ -170,9 +170,11 @@ The archive should use local daily JSONL text files instead of a database for th
 
 ## Paste Insertion Approach
 
-Capture the intended application's process identifier at hotkey press. At insertion time, require that same process to remain frontmost and use its currently focused element. This application-level guard is intentional: VS Code, ChatGPT/Codex, and other reactive editors do not expose a stable AX field identity across processing. If the user moves between fields inside the same application, the field focused at paste time receives the draft. Prefer NSPasteboard and simulated Cmd+V for known web-backed and rich-editor application bundles, including Signal (`org.whispersystems.signal-desktop`); use direct Accessibility selected-text insertion first for other targets and fall back to the same paste path when unsupported. Recheck the frontmost application after clipboard preparation. If another application becomes active, do not reactivate the old app: leave the final text on the clipboard and explain the manual paste recovery in the HUD.
+Capture the intended application's process identifier at hotkey press. Every target uses NSPasteboard plus synthetic Cmd+V. Require the captured process to remain frontmost before clipboard preparation and again before event posting; insertion goes to its currently focused field. Stable original-field identity is intentionally not required for reactive editors. If another application becomes active, leave the draft on the clipboard without reactivation. Retain the existing 150 ms preparation and paste event sequence. No direct Accessibility writes, field-content queries, application allowlist or alternate strategy exists. Direct insertion is deferred future work under a new feature contract.
 
 `ClipboardTextInsertionService` owns insertion sequencing through a native `TextInsertionEnvironment` adapter. The adapter exposes clipboard version, focused target, AX insertion, preparation wait, and paste event posting, allowing deterministic checks without system clipboard access. Clipboard ownership is checked after the wait and immediately before event posting. A distinct `clipboardChanged` outcome preserves the newer clipboard and maps to the Copy Last Draft HUD and archive outcome.
+
+The archive decoder retains `directAccessibilityInsertion` only for historical entries; new delivery results cannot produce that outcome. No archive migration or deletion occurs.
 
 ## Settings And Secrets
 

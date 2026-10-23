@@ -33,9 +33,9 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
 - Privacy-safe diagnostics redaction.
 - Temp-file deletion policy.
 - Text insertion result handling behind an adapter.
-- Clipboard-preferred insertion routing for Mail, Outlook, ChatGPT/Codex,
-  Chrome-family, and Arc bundle identities, including case/channel normalization;
-  Slack, native, unknown, and missing bundle identities remain direct-first.
+- Clipboard-only insertion for native, unknown, missing-bundle and previously
+  special-cased applications; exactly one clipboard write and paste event.
+- Historical direct-insertion archive outcome decoding/export compatibility.
 - Hybrid hotkey release classification below, at, and above the 0.5-second threshold.
 - Keychain wrapper behavior with an in-memory fake.
 - Startup does not read either Keychain secret; primary and personal-key
@@ -48,9 +48,7 @@ The executable suite injects copy, metadata-permission, and source-deletion fail
 
 ### Clipboard Workflow Regression Checks
 
-Signal checks verify the exact installed bundle id, normalization, rejection of a similarly named helper, and bypass of a fake successful AX write in favor of exactly one clipboard write/paste.
-
-Fake clipboard/event checks cover unchanged clipboard (one paste), clipboard replacement (no paste or second write), application switching, cancellation during preparation, direct native insertion without clipboard writes, and Copy Last Draft HUD mapping. Native AX and event delivery remain manual checks.
+All target identities, including Slack, TextEdit, VS Code, Claude, ChatGPT/Codex, Signal, browsers, email and missing/unknown ids, use exactly one clipboard write and paste. Fakes cover clipboard replacement, simultaneous clipboard/app changes, missing/changed target, cancellation, denied Accessibility, clipboard write failure, event failure and truthful Copy Last Draft HUD mapping. No AX field-writing interface remains. Native event delivery remains manual.
 
 ### Coordinator Workflow Regression Checks
 
@@ -83,8 +81,7 @@ The actual main-actor AppState runs with fixture-only recording, provider, inser
 - Successful paste feedback disappears quickly; Copied and Error feedback remain visible longer, while full provider, timeout, fallback, and recovery details remain available from the menu and copyable diagnostics.
 - The capsule remains correctly positioned on normal and full-screen Spaces and does not steal focus when shown or clicked.
 - Dictation pastes into the currently focused field in native Mail and in reactive editors such as VS Code and Codex.
-- ChatGPT/Codex, Chrome page fields, and Arc page fields receive drafts through
-  clipboard plus Cmd+V rather than a direct Accessibility selected-text write.
+- All applications receive drafts through clipboard plus Cmd+V, including native fields and Claude desktop’s Code surface.
 - Moving focus to another field inside the same app directs the draft to that current field; switching to another application blocks auto-paste and leaves the draft on the clipboard.
 - Escape cancels while recording and processing but behaves normally after the operation ends.
 - Cleanup can be toggled.
@@ -121,7 +118,7 @@ The actual main-actor AppState runs with fixture-only recording, provider, inser
 - Empty composer.
 - Composer with existing text.
 - Consecutive dictations into the same composer leave at least one space between chunks.
-- Focus changes before paste copy the draft instead of inserting into the wrong Slack composer.
+- Switching applications before paste blocks automatic insertion; moving between fields within Slack intentionally uses the field focused at completion.
 
 ## Slack Browser Cases
 
@@ -135,7 +132,7 @@ The actual main-actor AppState runs with fixture-only recording, provider, inser
 - Chrome and Arc page editors receive an unsent/unsubmitted test draft.
 - Chrome-family channel bundle suffixes retain the same routing.
 - Native browser chrome such as the address bar still accepts the paste-shortcut
-  path when its application bundle is clipboard-preferred.
+  path used for all applications.
 
 ## Email Compose Cases
 
@@ -226,6 +223,6 @@ The actual main-actor AppState runs with fixture-only recording, provider, inser
 - Clipboard unavailable.
 - Paste target missing or focus lost.
 
-## Signal Composer Case
+## Clipboard-Only Candidate Matrix
 
-With the installed 0.4.5 candidate, dictate a harmless phrase into an unsent Signal composer. Confirm it appears once, with no message sent. Check Copy Last Draft and a previously working application. The user confirmed manual Cmd+V works in Signal before this targeted routing fix; automatic Signal insertion awaits its own smoke confirmation.
+After authorized candidate installation, validate Slack channel/thread/edit, Claude desktop Code/chat, ChatGPT/Codex, Signal, Chrome/Arc, Mail/Outlook and TextEdit with harmless unsent drafts. Check existing text, selection replacement, multiline, repeated chunks, English/German/mixed input, tap/hold/menu stop, app switching, same-app field changes, cancellation, Copy Last Draft and clipboard contention. Characterize alternate layouts/IME, held modifiers, terminals and protected fields without changing their policy. No candidate has been installed or smoke-tested for this feature.

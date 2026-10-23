@@ -2,6 +2,8 @@
 
 ## Status
 
+Historical release contract: its routing/direct-first rules are superseded for new development by [Clipboard-Only Insertion](../clipboard-only-insertion/spec.md). Retained as release evidence.
+
 - State: Released in `0.4.3`
 - Owner: the maintainer
 - Last approved: 2026-08-27 implementation authorization and successful ChatGPT

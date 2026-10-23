@@ -15,7 +15,10 @@ by their dedicated specifications.
 
 ## Active Work
 
-- No active implementation. Signal paste compatibility released after successful human smoke on 2026-09-05.
+- Active: clipboard-only insertion implemented 2026-10-23; unreleased on `codex/clipboard-only-insertion`.
+- Contract: `docs/features/clipboard-only-insertion/spec.md`.
+- Tracker: `docs/runs/active/clipboard-only-insertion.md`.
+- Latest released compatibility feature remains Signal paste compatibility.
 - Installed/running final release: `0.4.5` / `069acc3`; version, signature, and executable verified.
 - Spec: `docs/features/signal-paste-compatibility/spec.md`.
 - Tracker: `docs/runs/archive/signal-paste-compatibility.md`.
@@ -45,8 +48,7 @@ by their dedicated specifications.
 - Personal OpenAI automatic fallback plus direct-personal mode and the purple
   HUD are integrated on `main`. The expanded real-provider matrix remains
   pending.
-- Normal-cache `task check` and a fresh app build passed on 2026-09-05;
-  the previously recorded Swift/SDK fresh-build blocker is no longer observed.
+- Normal-cache `task check` passed on 2026-09-05, but on 2026-10-23 full builds fail because the selected CLT SDK cannot load `SwiftUIMacros.StateMacro`. Isolated fixture checks provide partial validation only.
 - The executable suite now covers AppState recovery, cancellation, delivery,
   and settings-snapshot workflows through fakes. Native AppKit/Accessibility,
   microphone, Keychain, Carbon, and process termination remain manual checks.
@@ -62,4 +64,4 @@ recorded.
 
 ## Next Action
 
-Select the next compatibility feature contract from the unapproved candidates in `docs/implementation-plan.md`.
+Restore a working SwiftUI build environment and rerun `task check` before candidate packaging and authorized native smoke testing.
