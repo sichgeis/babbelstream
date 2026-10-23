@@ -94,6 +94,23 @@ in-app updater or automatic background update check.
 
 ## Troubleshooting
 
+### Homebrew says installed, but the app is missing
+
+Homebrew's installed record can remain when the Applications bundle is missing.
+Quit any remaining BabbelStream copy, then restore the app without deleting its
+settings or keys:
+
+```sh
+brew reinstall --cask sichgeis/tap/babbelstream
+```
+
+Open **Finder → Applications → BabbelStream**. If macOS displays the
+non-notarized-app warning, choose **Done**, then use **Privacy & Security → Open
+Anyway** where device policy permits. **Move to Trash** removes the app bundle;
+it is not the approval action. The pilot encountered a missing bundle despite a
+Homebrew installed record; its disappearance cause was not established. Reinstall
+restored the verified 0.5.1 bundle successfully.
+
 ### Keychain asks for your password after every restart
 
 **Symptom:** dictation works, but the first transcription after quitting and

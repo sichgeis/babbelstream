@@ -246,3 +246,18 @@ destructive data removal.
   source/tooling. This metadata-only publication does not rebuild/re-sign the app.
 - App documentation remains on codex/homebrew-distribution; app main/tag untouched.
   Tap documentation links intentionally retain that branch until app-doc integration.
+
+### Missing Bundle And Brew Reinstall
+
+the maintainer reported the app appeared absent again. Fresh checks confirmed
+/Applications/BabbelStream.app missing and no running Applications process, while
+Homebrew still recorded babbelstream 0.5.1 installed. Cause of disappearance is
+unknown; do not infer deletion or Gatekeeper approval from the installed record.
+Under the explicit request to install via Brew, ran
+`brew reinstall --cask sichgeis/tap/babbelstream` with unrelated auto-update
+disabled. It completed successfully without zap or settings/Keychain changes.
+Filesystem presence, strict candidate signature, 0.5.1/build 7/8f229fe metadata,
+retained quarantine and Homebrew 0.5.1 record independently verified afterward.
+README Troubleshooting now records this case and distinguishes Done/Open Anyway
+from Move to Trash. User-visible launch/dictation confirmation is still pending;
+reinstall success alone does not establish that outcome.
