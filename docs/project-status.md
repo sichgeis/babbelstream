@@ -5,10 +5,10 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Current Release
 
-- Latest local release: **0.5.1**, bundle build **7**, annotated tag **v0.5.1**.
-- App-source commit: **8f229fefe2ef344bf2e1c1869779f6d6b077b42e**, integrated into main and tagged/pushed. Later evidence-only documentation on main does not change the tagged payload.
-- Installed/running: **0.5.1 / build 7 / 8f229fe** at `/Applications/BabbelStream.app`; actual signature, source/version metadata, running process and executable payload match verified.
-- Original artifact: `dist/BabbelStream-0.5.1.dmg`; checksum and release/installation evidence: `docs/runs/archive/release-v0.5.1.md`. Additional illustrated installer `dist/BabbelStream-0.5.1-pretty-r2.dmg` is published on the same GitHub release page, with corrected lower spacing/borders. App payload and original/Homebrew/first-pretty artifacts unchanged. Layout evidence: `docs/runs/archive/pretty-dmg-layout.md` and `docs/runs/archive/dmg-bottom-spacing.md`.
+- Latest release: **0.5.2**, bundle build **8**, annotated tag **v0.5.2**, published on GitHub and pinned by the tap cask. It changes only the app icon (blue design) and its `.icns` encoding; app behavior equals 0.5.1.
+- App-source commit: **3fb7a736110a540e7f1c1de1e36247e9c0433509** on main. Artifact `dist/BabbelStream-0.5.2.dmg`, SHA-256 `728b702d394a21a7af7ebca8d2385422973d2b3ee22ac1c809448f16523a2c82`; evidence: `docs/runs/archive/release-v0.5.2.md`. 0.5.2 was not installed locally and its other-Mac downloaded/quarantined test is pending.
+- Previous release: **0.5.1 / build 7 / 8f229fe**, last verified installed at `/Applications/BabbelStream.app`.
+- 0.5.1 original artifact: `dist/BabbelStream-0.5.1.dmg`; checksum and release/installation evidence: `docs/runs/archive/release-v0.5.1.md`. Additional illustrated installer `dist/BabbelStream-0.5.1-pretty-r2.dmg` is published on the same GitHub release page, with corrected lower spacing/borders. App payload and original/Homebrew/first-pretty artifacts unchanged. Layout evidence: `docs/runs/archive/pretty-dmg-layout.md` and `docs/runs/archive/dmg-bottom-spacing.md`.
 - Scope: clipboard paste for every application; provider/credential/parser/instance safeguards; private diagnostics/HUD fixes; guided provider setup; first-run permission onboarding/local paste verification; unified subtle Settings/dialog layout. Version 0.5.1 corrects the first-use microphone request action found during final 0.5.0 verification.
 - Supported workflow: tap/hold Control + Option + Space into Slack and other focused macOS text fields; no auto-send.
 - Canonical validation: `task check`; full app, behavior/loopback/setup/onboarding/release-tooling checks PASS.
@@ -45,4 +45,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-At the next genuine app release, validate the Homebrew old-to-new upgrade and its permission/Keychain behavior using the follow-up matrix in docs/implementation-plan.md.
+On the pilot Mac, run `brew upgrade --cask sichgeis/tap/babbelstream` from 0.5.1 to 0.5.2 and record the old-to-new upgrade, the new icon and the permission/Keychain behavior, using the follow-up matrix in docs/implementation-plan.md.

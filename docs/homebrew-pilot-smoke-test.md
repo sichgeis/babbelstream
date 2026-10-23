@@ -1,24 +1,24 @@
 # Download And Launch Quality Gate
 
-Run this on an Apple Silicon pilot Mac before broader rollout. The 0.5.1 release
-is now public; GitHub sign-in is not required. Its prepublication download/launch
+Run this on an Apple Silicon pilot Mac before broader rollout. The 0.5.2 release
+(new app icon; behavior unchanged from 0.5.1) is now public; GitHub sign-in is not required. For 0.5.1, the prepublication download/launch
 gate passed on macOS 27.0.1 after the documented Keychain access repair. Public
 Homebrew installation/reinstall also passed, followed by successful launch and
 dictation without a Keychain prompt. A further Homebrew-copy restart and a real
 upgrade to a later version remain separately untested.
 
-[Open the release](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1)
+[Open the release](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.2)
 
-1. In your browser, download both `BabbelStream-0.5.1.dmg` and its `.sha256` asset.
+1. In your browser, download both `BabbelStream-0.5.2.dmg` and its `.sha256` asset.
    Use the browser for the actual downloaded/quarantined launch test; a CLI download
    and local signature check alone do not prove this path.
 2. In Terminal, change to the folder containing both downloads and run:
 
    ```sh
-   shasum -a 256 -c BabbelStream-0.5.1.dmg.sha256
+   shasum -a 256 -c BabbelStream-0.5.2.dmg.sha256
    ```
 
-   Expect `BabbelStream-0.5.1.dmg: OK`. Stop if the checksum differs.
+   Expect `BabbelStream-0.5.2.dmg: OK`. Stop if the checksum differs.
 3. Finish any dictation/recovery and quit old BabbelStream copies normally. Keep a
    backup of the existing app if present. Open the DMG, copy the app to Applications,
    eject the DMG, and launch the Applications copy. Keep user data/Keychain intact.
@@ -26,7 +26,7 @@ upgrade to a later version remain separately untested.
    Apple's supported Privacy & Security > Open Anyway flow if device policy allows.
    If unavailable, stop and report the IT restriction. Do not disable Gatekeeper,
    remove quarantine, reset permissions or grant Full Disk Access as a workaround.
-5. Confirm **0.5.1 / build 7 / commit 8f229fe** in Settings/Diagnostics. In setup,
+5. Confirm **0.5.2 / build 8 / commit 3fb7a73** in Settings/Diagnostics. In setup,
    explicitly approve microphone and Accessibility if desired. Run the local paste
    test: its sample must actually appear, without a provider call or recording.
 6. Only with your authorized provider/key and harmless sample content, dictate into
@@ -44,7 +44,8 @@ Reply with:
 - Any unexpected behavior.
 
 For a new release, a pass gates publication, anonymous-download verification and
-advancing the cask into the tap default branch. For published 0.5.1, test the public
+advancing the cask into the tap default branch. For published 0.5.2, test the public
 `brew install --cask sichgeis/tap/babbelstream` path, including handling a preexisting
 manual app: quit it, preserve/move its bundle aside, then run the ordinary install.
-First real upgrade, uninstall retention and rollback remain separate pilot checks.
+On a Mac that already has 0.5.1 from Homebrew, also test
+`brew upgrade --cask sichgeis/tap/babbelstream`. First real upgrade, uninstall retention and rollback remain separate pilot checks.
