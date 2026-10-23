@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct AppGroupedForm<Content: View>: View {
@@ -14,15 +15,47 @@ struct AppGroupedForm<Content: View>: View {
 
     var body: some View {
         ScrollView {
-            Form {
+            VStack(alignment: .leading, spacing: 16) {
                 content
             }
-            .formStyle(.grouped)
-            .padding(.vertical, 12)
-            .frame(maxWidth: maxContentWidth, alignment: .top)
+            .padding(16)
+            .frame(maxWidth: maxContentWidth, alignment: .topLeading)
             .frame(maxWidth: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+}
+
+/// Explicit section metrics avoid OS-dependent grouped Form insets and nested scrolling.
+/// Controls remain native; the outer AppGroupedForm owns scrolling.
+struct AppFormSection<Content: View>: View {
+    let title: String
+    private let content: Content
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: 10) {
+                content
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color(nsColor: .separatorColor), lineWidth: 0.5)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .textFieldStyle(.roundedBorder)
     }
 }
 
@@ -96,14 +129,73 @@ struct AppLongValue: View {
     var isPending = false
 
     var body: some View {
-        LabeledContent(label) {
+        AppLabeledContent(label) {
             Text(value)
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(isPending ? .orange : .secondary)
-                .multilineTextAlignment(.trailing)
-                .lineLimit(3)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)
-                .frame(maxWidth: 420, alignment: .trailing)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+/// Stable label column with wrapping values, independent of Form's platform styles.
+struct AppLabeledContent<Content: View>: View {
+    let title: String
+    let content: Content
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    init(_ title: String, value: String) where Content == Text {
+        self.title = title
+        self.content = Text(value)
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(title)
+                .frame(width: 168, alignment: .leading)
+            content
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct AppFormTextField: View {
+    let title: String
+    let axis: Axis
+    @Binding var text: String
+    init(_ title: String, text: Binding<String>, axis: Axis = .horizontal) {
+        self.title = title
+        self.axis = axis
+        self._text = text
+    }
+    var body: some View {
+        AppLabeledContent(title) {
+            TextField(title, text: $text, axis: axis)
+                .labelsHidden()
+        }
+    }
+}
+
+struct AppFormSecureField: View {
+    let title: String
+    @Binding var text: String
+    init(_ title: String, text: Binding<String>) {
+        self.title = title
+        self._text = text
+    }
+    var body: some View {
+        AppLabeledContent("API key") {
+            SecureField(title, text: $text)
+                .labelsHidden()
         }
     }
 }

@@ -18,18 +18,23 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 
 ### A. Baseline, contract and build confidence
 
-- Status: In progress
+- Status: Completed
 - Plan: record approval and baseline, inspect compiler/SDK selection, select a supported installed configuration locally, confirm `task check` without weakening checks.
 - Evidence: baseline sandbox check fails writing normal module cache. Installed CLT Swift 6.4; default SDK symlink is macOS 27.0. No SwiftUIMacros plugin in CLT host plugins. Testing installed 26.5 SDK with normal cache access.
 
 ### B. Settings layout and visual evidence
 
-- Status: Pending
+- Status: Blocked (other-host acceptance; local implementation complete)
 - Plan: inspect shared form/scroll ownership; implement coherent native spacing, retain footer, inspect five tabs and secondary dialogs with isolated state. Record both-size evidence; 27.0.1 requires external host.
+
+- Evidence: full `task check` passed with the local SDK wrapper. Actual native fixture preview inspected all five tabs at default 760×640 and minimum 700×560 content sizes (window captures include the 28-point title bar). Provider/Diagnostics scrolling and fixed Apply observed; General restored before preview exit, no saved production values changed. Long fixture paths wrap. Shared Teach Correction, Personal Dictionary and Archive minimum windows inspected; NSHostingController constraint reset discovered and corrected by assigning contentMinSize after hosting attachment.
+- Screenshots: `/tmp/babbelstream-pilot-screenshots/`, five `*-default-macos-26.7.1.png`, five `*-minimum-macos-26.7.1.png`, `general-dark-default-macos-26.7.1.png`, `teach-minimum-macos-26.7.1.png`, `dictionary-minimum-contrast-macos-26.7.1.png`, `archive-dialog-minimum-macos-26.7.1.png`. Temporary resources may expire. Light/dark and app-scoped high-contrast appearance inspected; full OS accessibility-setting validation remains manual.
+- the maintainer requested HIG color review during implementation. Reviewed Apple Color, Materials and Settings. Chose semantic window/control surfaces and separator, primary headings, native accent and no custom glass. See feature spec for links and decision. No claim of exact Apple-prescribed palette.
+- Remaining: macOS 27.0.1 comparison and hands-on acceptance on both installations.
 
 ### C. Destination, credential, audio, parser, HUD and diagnostics boundaries
 
-- Status: Pending
+- Status: In progress
 - Plan: fixture-backed focused fixes, update durable specs and checks together.
 
 ### D. Guided setup and support
@@ -54,18 +59,18 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 
 | Check | Baseline | Current |
 | --- | --- | --- |
-| task check | sandbox cache failure; parent normal-cache missing SwiftUIMacros | pending SDK diagnosis |
+| task check | sandbox cache failure; parent normal-cache missing SwiftUIMacros | full app and behavior suite pass with SDK26.5 wrapper |
 | fixtures | parent partial core/coordinator pass | pending |
 | build/package | parent full build blocked | pending |
-| Settings screenshots | installed 0.4.5 baseline in temporary parent resources | pending isolated candidate |
+| Settings screenshots | installed 0.4.5 baseline in temporary parent resources | actual views/fake OS adapters: five tabs at both content sizes; shared dialogs at minimum |
 | macOS 27.0.1 | unavailable on this host | human gate |
 | microphone/provider/Slack | not authorized in automation | human gate |
 | privacy/diff | clean baseline | pending |
 
 ## Current Blocker
 
-Full canonical build environment under diagnosis; authoritative company preset/key issuance and other-host visual validation remain external inputs. No real data or production application touched.
+Canonical build restored. macOS 27.0.1 visual acceptance unavailable here; authoritative company preset/key issuance and other-host visual validation remain external inputs. No real data or production application touched.
 
 ## Next Action
 
-Finish installed-SDK build diagnosis and establish a reproducible canonical check configuration.
+Implement and validate fixture-backed provider, credentials, instance, HUD and diagnostics boundaries.

@@ -19,12 +19,10 @@ enum AppWindowLaunchMode: String, CaseIterable {
 }
 
 extension NSWindow {
-    func setDialogInitialContentSize(_ defaultContentSize: NSSize) {
-        if AppWindowLaunchMode.usesMinimumWindowSize {
-            setFrame(NSRect(origin: .zero, size: minSize), display: false)
-        } else {
-            setContentSize(defaultContentSize)
-        }
+    func setDialogInitialContentSize(_ defaultContentSize: NSSize, minimum: NSSize) {
+        // Set constraints after attaching NSHostingController, which may replace them.
+        contentMinSize = minimum
+        setContentSize(AppWindowLaunchMode.usesMinimumWindowSize ? minimum : defaultContentSize)
     }
 }
 
@@ -61,6 +59,7 @@ final class SettingsWindowController {
             rootView: SettingsView()
                 .environmentObject(appState)
         )
+        window.setDialogInitialContentSize(NSSize(width: 760, height: 640), minimum: NSSize(width: 700, height: 560))
         window.isReleasedWhenClosed = false
         window.center()
 
@@ -104,7 +103,7 @@ final class PersonalDictionaryWindowController {
                 onTeachCorrection: onTeachCorrection
             )
         )
-        window.setDialogInitialContentSize(NSSize(width: 720, height: 640))
+        window.setDialogInitialContentSize(NSSize(width: 720, height: 640), minimum: NSSize(width: 620, height: 520))
         window.isReleasedWhenClosed = false
         window.center()
 
@@ -147,7 +146,7 @@ final class TeachCorrectionWindowController {
             rootView: TeachCorrectionView(store: store)
                 .environmentObject(appState)
         )
-        window.setDialogInitialContentSize(NSSize(width: 560, height: 500))
+        window.setDialogInitialContentSize(NSSize(width: 560, height: 500), minimum: NSSize(width: 500, height: 420))
         window.isReleasedWhenClosed = false
         window.center()
 

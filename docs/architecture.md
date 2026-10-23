@@ -172,7 +172,7 @@ The archive should use local daily JSONL text files instead of a database for th
 
 Capture the intended application's process identifier at hotkey press. Every target uses NSPasteboard plus synthetic Cmd+V. Require the captured process to remain frontmost before clipboard preparation and again before event posting; insertion goes to its currently focused field. Stable original-field identity is intentionally not required for reactive editors. If another application becomes active, leave the draft on the clipboard without reactivation. Retain the existing 150 ms preparation and paste event sequence. No direct Accessibility writes, field-content queries, application allowlist or alternate strategy exists. Direct insertion is deferred future work under a new feature contract.
 
-`ClipboardTextInsertionService` owns insertion sequencing through a native `TextInsertionEnvironment` adapter. The adapter exposes clipboard version, focused target, AX insertion, preparation wait, and paste event posting, allowing deterministic checks without system clipboard access. Clipboard ownership is checked after the wait and immediately before event posting. A distinct `clipboardChanged` outcome preserves the newer clipboard and maps to the Copy Last Draft HUD and archive outcome.
+`ClipboardTextInsertionService` owns insertion sequencing through a native `TextInsertionEnvironment` adapter. The adapter exposes clipboard version, focused target, preparation wait, and paste event posting, allowing deterministic checks without system clipboard access. Clipboard ownership is checked after the wait and immediately before event posting. A distinct `clipboardChanged` outcome preserves the newer clipboard and maps to the Copy Last Draft HUD and archive outcome.
 
 The archive decoder retains `directAccessibilityInsertion` only for historical entries; new delivery results cannot produce that outcome. No archive migration or deletion occurs.
 
@@ -218,3 +218,7 @@ Default in-memory and macOS Unified Logs may include state transitions, provider
 ## Security And Privacy
 
 The main risks are accidental capture, accidental paste, clipboard exposure, overbroad Accessibility permission, local archive exposure, and sending work content to the wrong provider. The app should prefer obvious state, explicit provider configuration, no history by default, explicit opt-in archive controls, immediate audio deletion, and no auto-send.
+
+## Shared Dialog Layout
+
+Settings and secondary dialogs use AppGroupedForm as the only scroll owner, with explicit AppFormSection stack spacing, semantic macOS window/control surfaces and separators, and native controls. They avoid nesting a grouped Form inside a ScrollView, whose automatic insets vary by SDK/OS. Footer status and actions remain outside scrolling content. Long values wrap vertically.

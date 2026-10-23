@@ -1,0 +1,59 @@
+import AppKit
+import BabbelStreamCore
+@testable import BabbelStreamApplication
+
+/// Explicit visual QA entry point: actual windows, isolated stores and fake OS adapters.
+/// It never constructs AppDelegate or any production-store/native-recording adapter.
+@MainActor
+func runLayoutPreview() throws {
+    let application = NSApplication.shared
+    let delegate = LayoutPreviewDelegate(fixture: try CoordinatorFixture())
+    application.delegate = delegate
+    application.setActivationPolicy(.regular)
+    application.run()
+    _ = delegate
+}
+
+@MainActor
+private final class LayoutPreviewDelegate: NSObject, NSApplicationDelegate {
+    let fixture: CoordinatorFixture
+    var controller: AnyObject?
+
+    init(fixture: CoordinatorFixture) {
+        self.fixture = fixture
+        super.init()
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        if CommandLine.arguments.contains("--preview-dark") {
+            NSApp.appearance = NSAppearance(named: .darkAqua)
+        } else if CommandLine.arguments.contains("--preview-high-contrast") {
+            NSApp.appearance = NSAppearance(named: .accessibilityHighContrastAqua)
+        }
+        let menu = NSMenu()
+        let item = NSMenuItem()
+        let appMenu = NSMenu()
+        appMenu.addItem(withTitle: "Quit Layout Preview", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        item.submenu = appMenu
+        menu.addItem(item)
+        NSApp.mainMenu = menu
+        switch AppWindowLaunchMode.requested {
+        case .personalDictionary:
+            let window = PersonalDictionaryWindowController(store: JSONPersonalDictionaryStore(fileURL: fixture.root.appendingPathComponent("dictionary.json")), onTeachCorrection: {})
+            controller = window; window.show()
+        case .teachCorrection:
+            let window = TeachCorrectionWindowController(store: JSONPersonalDictionaryStore(fileURL: fixture.root.appendingPathComponent("dictionary.json")), appState: fixture.app)
+            controller = window; window.show()
+        case .dictationArchive:
+            let window = DictationArchiveWindowController(appState: fixture.app)
+            controller = window; window.show()
+        default:
+            let window = SettingsWindowController(appState: fixture.app)
+            controller = window; window.show()
+        }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        try? fixture.dispose()
+    }
+}

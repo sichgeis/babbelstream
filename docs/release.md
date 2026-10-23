@@ -138,3 +138,11 @@ Report pass/fail and any unexpected behavior. The pre-existing expanded personal
 the maintainer confirmed successful Signal smoke on 2026-09-05. Final release evidence is retained in `docs/runs/archive/signal-paste-compatibility.md`.
 
 After installing the candidate, verify version 0.4.5 and its source commit under Diagnostics. Focus a Signal composer and dictate a harmless short phrase; confirm the draft appears exactly once and remains unsent. Repeat in one previously working application, and confirm Copy Last Draft/manual paste still works. Report pass/fail before the final v0.4.5 tag. Do not send a message just to validate insertion.
+
+## Pilot Readiness Build And Layout Validation
+
+`task check` and packaging use `scripts/swift-project.sh`, selecting the installed macOS 26.5 SDK locally. The current CLT default macOS 27 SDK lacks its required SwiftUI macros. No system selection is changed. Explicit `SDKROOT` or `BABBELSTREAM_SDK` overrides require independent full validation; a missing validated SDK fails with an actionable prerequisite. On 2026-10-23 the full application build and executable suite pass with 26.5; compiler capture warnings and CLT framework-search warnings remain pre-existing.
+
+For isolated visual inspection, run `scripts/swift-project.sh run BabbelStreamChecks --layout-preview --settings --settings-tab=general` (optionally `--minimum-window-size`). This constructs the real views with CoordinatorFixture stores and fake recording/provider/Keychain/insertion/hotkey/login/runtime adapters; it never starts the production app or accesses its stores. Quit the preview to remove its temporary fixture directory. The same preview supports `--teach-correction`, `--personal-dictionary`, and `--dictation-archive`. Do not launch a second production-store copy for screenshots.
+
+Shared sections use explicit 16-point gaps, 12-point section insets and 10-point row spacing inside one scroll owner. The footer stays outside the scroll view. Validate all five tabs at 700×560 and 760×640, long content, scrolling and secondary dialogs on macOS 26.7.1 and 27.0.1; evidence from one host cannot establish the other.

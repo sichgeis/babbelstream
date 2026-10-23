@@ -53,8 +53,7 @@ struct SettingsView: View {
                     }
                     .tag(Tab.diagnostics)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
+            .padding(.top, 8)
 
             Divider()
             settingsFooter
@@ -113,15 +112,15 @@ private struct SettingsGeneralPane: View {
 
     var body: some View {
         SettingsPane {
-            Section("Readiness") {
-                LabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
-                LabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
-                LabeledContent("Primary API key", value: appState.hasAPIKey ? "Saved in Keychain" : "Missing")
-                LabeledContent(
+            AppFormSection("Readiness") {
+                AppLabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
+                AppLabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
+                AppLabeledContent("Primary API key", value: appState.hasAPIKey ? "Saved in Keychain" : "Missing")
+                AppLabeledContent(
                     "Personal fallback",
                     value: appState.personalOpenAIFallbackReadinessSummary
                 )
-                LabeledContent("Launch at login", value: appState.launchAtLoginStatusSummary)
+                AppLabeledContent("Launch at login", value: appState.launchAtLoginStatusSummary)
                 AppLongValue(label: "Active provider", value: appState.activeProviderDestinationSummary)
 
                 if appState.microphonePermissionStatus != .authorized
@@ -149,7 +148,7 @@ private struct SettingsGeneralPane: View {
                 }
             }
 
-            Section("Behavior") {
+            AppFormSection("Behavior") {
                 Toggle(
                     "Cleanup enabled",
                     isOn: Binding(
@@ -164,15 +163,15 @@ private struct SettingsGeneralPane: View {
                         set: { appState.setLaunchAtLoginEnabled($0) }
                     )
                 )
-                TextField("Max recording minutes", text: $appState.maxAudioDurationMinutesText)
-                LabeledContent("Hybrid hotkey", value: ProjectDefaults.fixedHotkeyDescription)
-                LabeledContent("Shortcut behavior", value: ProjectDefaults.hybridHotkeyUsageDescription)
+                AppFormTextField("Max recording minutes", text: $appState.maxAudioDurationMinutesText)
+                AppLabeledContent("Hybrid hotkey", value: ProjectDefaults.fixedHotkeyDescription)
+                AppLabeledContent("Shortcut behavior", value: ProjectDefaults.hybridHotkeyUsageDescription)
             }
 
-            Section("Safety") {
-                LabeledContent("Saved max duration", value: formatSettingsDuration(appState.maxAudioDurationSeconds))
-                LabeledContent("Auto-send", value: ProjectDefaults.autoSendEnabledByDefault ? "On" : "Off")
-                LabeledContent("Default transcript history", value: ProjectDefaults.transcriptHistoryEnabledByDefault ? "On" : "Off")
+            AppFormSection("Safety") {
+                AppLabeledContent("Saved max duration", value: formatSettingsDuration(appState.maxAudioDurationSeconds))
+                AppLabeledContent("Auto-send", value: ProjectDefaults.autoSendEnabledByDefault ? "On" : "Off")
+                AppLabeledContent("Default transcript history", value: ProjectDefaults.transcriptHistoryEnabledByDefault ? "On" : "Off")
             }
         }
     }
@@ -192,7 +191,7 @@ private struct SettingsProviderPane: View {
 
     var body: some View {
         SettingsPane {
-            Section("Active Destinations") {
+            AppFormSection("Active Destinations") {
                 AppLongValue(label: "Transcription", value: appState.providerDestinationSummary)
                 AppLongValue(label: "Cleanup", value: appState.cleanupDestinationSummary)
                 if appState.isPersonalOpenAIFallbackApplied {
@@ -201,7 +200,7 @@ private struct SettingsProviderPane: View {
                         value: appState.personalOpenAIFallbackDestinationSummary
                     )
                 }
-                LabeledContent(
+                AppLabeledContent(
                     "Applied provider mode",
                     value: appState.isPersonalOpenAIDirectModeApplied
                         ? "Personal OpenAI now"
@@ -222,7 +221,7 @@ private struct SettingsProviderPane: View {
                 }
             }
 
-            Section("Provider Mode") {
+            AppFormSection("Provider Mode") {
                 Toggle(
                     "Enable personal OpenAI fallback",
                     isOn: Binding(
@@ -245,13 +244,13 @@ private struct SettingsProviderPane: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Connection") {
-                TextField("Base URL", text: $appState.baseURLText)
-                TextField("Transcription path", text: $appState.transcriptionPathText)
-                TextField("Cleanup path", text: $appState.cleanupPathText)
+            AppFormSection("Connection") {
+                AppFormTextField("Base URL", text: $appState.baseURLText)
+                AppFormTextField("Transcription path", text: $appState.transcriptionPathText)
+                AppFormTextField("Cleanup path", text: $appState.cleanupPathText)
             }
 
-            Section("Models And Timeouts") {
+            AppFormSection("Models And Timeouts") {
                 Picker("Primary transcription model", selection: $appState.transcriptionModelText) {
                     ForEach(ProjectDefaults.supportedTranscriptionModels, id: \.self) { model in
                         Text(model).tag(model)
@@ -270,26 +269,26 @@ private struct SettingsProviderPane: View {
                 Text(appState.transcriptionModelRouting.helpText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                LabeledContent("Effective primary model", value: appState.effectiveTranscriptionModel)
-                LabeledContent("Effective fallback model", value: appState.effectiveFallbackTranscriptionModel)
-                TextField("Cleanup model", text: $appState.cleanupModelText)
-                LabeledContent("Mini hedge delay", value: "\(Int(ProjectDefaults.transcriptionHedgeDelaySeconds))s")
-                LabeledContent("Overall transcription deadline", value: "\(Int(ProjectDefaults.transcriptionOverallTimeoutSeconds))s")
-                TextField("Cleanup timeout (seconds)", text: $appState.timeoutText)
-                LabeledContent("Connection watchdog", value: appState.providerConnectionTimeoutSummary)
-                LabeledContent("Transcription requests", value: "Primary + one bounded Mini hedge")
-                LabeledContent("Personal fallback limit", value: "One sequential request")
+                AppLabeledContent("Effective primary model", value: appState.effectiveTranscriptionModel)
+                AppLabeledContent("Effective fallback model", value: appState.effectiveFallbackTranscriptionModel)
+                AppFormTextField("Cleanup model", text: $appState.cleanupModelText)
+                AppLabeledContent("Mini hedge delay", value: "\(Int(ProjectDefaults.transcriptionHedgeDelaySeconds))s")
+                AppLabeledContent("Overall transcription deadline", value: "\(Int(ProjectDefaults.transcriptionOverallTimeoutSeconds))s")
+                AppFormTextField("Cleanup timeout (seconds)", text: $appState.timeoutText)
+                AppLabeledContent("Connection watchdog", value: appState.providerConnectionTimeoutSummary)
+                AppLabeledContent("Transcription requests", value: "Primary + one bounded Mini hedge")
+                AppLabeledContent("Personal fallback limit", value: "One sequential request")
                 Text("If primary transcription is still pending after 10 seconds, BabbelStream may send the same safeguarded audio once to Mini. The first valid result wins and both requests share one 75-second deadline. This rare recovery path may incur two transcription charges. Authentication and configuration failures do not hedge.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("API Key") {
-                SecureField(
+            AppFormSection("API Key") {
+                AppFormSecureField(
                     appState.hasAPIKey ? "API key saved in Keychain" : "Paste API key",
                     text: $appState.apiKeyInput
                 )
-                LabeledContent("Keychain", value: appState.hasAPIKey ? "Saved" : "Missing")
+                AppLabeledContent("Keychain", value: appState.hasAPIKey ? "Saved" : "Missing")
 
                 Button(role: .destructive) {
                     appState.deleteAPIKey()
@@ -299,7 +298,7 @@ private struct SettingsProviderPane: View {
                 .disabled(!appState.hasAPIKey)
             }
 
-            Section("Personal OpenAI Fallback") {
+            AppFormSection("Personal OpenAI Fallback") {
                 AppLongValue(
                     label: "Transcription",
                     value: appState.personalOpenAIFallbackDestinationSummary
@@ -308,13 +307,13 @@ private struct SettingsProviderPane: View {
                     label: "Cleanup",
                     value: appState.personalOpenAIFallbackCleanupDestinationSummary
                 )
-                SecureField(
+                AppFormSecureField(
                     appState.hasPersonalOpenAIFallbackAPIKey
                         ? "Personal OpenAI key saved in Keychain"
                         : "Paste personal OpenAI API key",
                     text: $appState.personalOpenAIFallbackAPIKeyInput
                 )
-                LabeledContent(
+                AppLabeledContent(
                     "Personal Keychain item",
                     value: appState.hasPersonalOpenAIFallbackAPIKey ? "Saved" : "Missing"
                 )
@@ -338,15 +337,15 @@ private struct SettingsWritingPane: View {
 
     var body: some View {
         SettingsPane {
-            Section("Transcription Hints") {
-                TextField("Language code, optional (blank = auto)", text: $appState.transcriptionLanguageText)
-                TextField("Transcription prompt, optional", text: $appState.transcriptionPromptText, axis: .vertical)
+            AppFormSection("Transcription Hints") {
+                AppFormTextField("Language code, optional (blank = auto)", text: $appState.transcriptionLanguageText)
+                AppFormTextField("Transcription prompt, optional", text: $appState.transcriptionPromptText, axis: .vertical)
                     .lineLimit(2...4)
             }
 
-            Section("Personal Dictionary") {
-                LabeledContent("Cleanup context", value: appState.personalDictionarySummary)
-                LabeledContent(
+            AppFormSection("Personal Dictionary") {
+                AppLabeledContent("Cleanup context", value: appState.personalDictionarySummary)
+                AppLabeledContent(
                     "Prompt limit",
                     value: "\(ProjectDefaults.maxPersonalDictionaryPromptCharacters) characters"
                 )
@@ -365,7 +364,7 @@ private struct SettingsArchivePane: View {
 
     var body: some View {
         SettingsPane {
-            Section("Dictation Archive") {
+            AppFormSection("Dictation Archive") {
                 Toggle(
                     "Archive completed dictations",
                     isOn: Binding(
@@ -394,12 +393,12 @@ private struct SettingsDiagnosticsPane: View {
 
     var body: some View {
         SettingsPane {
-            Section("Usage") {
-                LabeledContent("Dictations", value: "\(appState.usageSnapshot.totalDictations)")
-                LabeledContent("Recorded", value: appState.usageRecordedMinutesSummary)
-                LabeledContent("Cleanup requests", value: "\(appState.usageSnapshot.cleanupRequests)")
-                LabeledContent("Transcription failures", value: "\(appState.usageSnapshot.transcriptionFailures)")
-                LabeledContent("Cleanup fallbacks", value: "\(appState.usageSnapshot.cleanupFallbacks)")
+            AppFormSection("Usage") {
+                AppLabeledContent("Dictations", value: "\(appState.usageSnapshot.totalDictations)")
+                AppLabeledContent("Recorded", value: appState.usageRecordedMinutesSummary)
+                AppLabeledContent("Cleanup requests", value: "\(appState.usageSnapshot.cleanupRequests)")
+                AppLabeledContent("Transcription failures", value: "\(appState.usageSnapshot.transcriptionFailures)")
+                AppLabeledContent("Cleanup fallbacks", value: "\(appState.usageSnapshot.cleanupFallbacks)")
                 Button {
                     appState.resetUsageCounters()
                 } label: {
@@ -407,9 +406,9 @@ private struct SettingsDiagnosticsPane: View {
                 }
             }
 
-            Section("Permissions") {
-                LabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
-                LabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
+            AppFormSection("Permissions") {
+                AppLabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
+                AppLabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
 
                 HStack {
                     Button {
@@ -425,9 +424,9 @@ private struct SettingsDiagnosticsPane: View {
                 }
             }
 
-            Section("Latest Draft") {
-                LabeledContent("Raw transcript", value: appState.latestRawTranscriptSummary)
-                LabeledContent("Final draft", value: appState.latestFinalDraftSummary)
+            AppFormSection("Latest Draft") {
+                AppLabeledContent("Raw transcript", value: appState.latestRawTranscriptSummary)
+                AppLabeledContent("Final draft", value: appState.latestFinalDraftSummary)
 
                 HStack {
                     Button {
@@ -448,13 +447,13 @@ private struct SettingsDiagnosticsPane: View {
                 }
             }
 
-            Section("Diagnostics") {
-                LabeledContent("Version", value: BuildMetadata.appVersion)
-                LabeledContent("Build commit", value: BuildMetadata.gitCommitShortHash)
+            AppFormSection("Diagnostics") {
+                AppLabeledContent("Version", value: BuildMetadata.appVersion)
+                AppLabeledContent("Build commit", value: BuildMetadata.gitCommitShortHash)
                 AppLongValue(label: "App bundle", value: appState.appBundlePath)
-                LabeledContent("Bundle ID", value: appState.appBundleIdentifier)
-                LabeledContent("Code signing", value: appState.codeSigningSummary)
-                LabeledContent("Last failure", value: appState.lastFailureCategory)
+                AppLabeledContent("Bundle ID", value: appState.appBundleIdentifier)
+                AppLabeledContent("Code signing", value: appState.codeSigningSummary)
+                AppLabeledContent("Last failure", value: appState.lastFailureCategory)
                 Button {
                     appState.copyDiagnosticsReport()
                 } label: {
@@ -494,7 +493,7 @@ struct PersonalDictionaryView: View {
 
     var body: some View {
         AppDialogScaffold(maxContentWidth: 680) {
-            Section("Vocabulary") {
+            AppFormSection("Vocabulary") {
                 Text("Add one preferred term per line. BabbelStream uses enabled entries as cleanup context.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -503,7 +502,7 @@ struct PersonalDictionaryView: View {
                     .frame(minHeight: 140)
             }
 
-            Section("Corrections") {
+            AppFormSection("Corrections") {
                 Text("Use one mapping per line in the form heard text => preferred spelling.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -512,7 +511,7 @@ struct PersonalDictionaryView: View {
                     .frame(minHeight: 140)
             }
 
-            Section("Storage") {
+            AppFormSection("Storage") {
                 AppLongValue(label: "Dictionary file", value: store.fileURL.path)
                 Button {
                     onTeachCorrection()
@@ -600,17 +599,17 @@ struct TeachCorrectionView: View {
 
     var body: some View {
         AppDialogScaffold(maxContentWidth: 520) {
-            Section("Correction") {
-                TextField("Wrong / heard as", text: $wrongText)
-                TextField("Preferred spelling", text: $preferredText)
+            AppFormSection("Correction") {
+                AppFormTextField("Wrong / heard as", text: $wrongText)
+                AppFormTextField("Preferred spelling", text: $preferredText)
                 Text("Used as a cleanup hint, not transcript history.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("Recent Examples") {
-                LabeledContent("Raw transcript", value: appState.latestRawTranscriptSummary)
-                LabeledContent("Final draft", value: appState.latestFinalDraftSummary)
+            AppFormSection("Recent Examples") {
+                AppLabeledContent("Raw transcript", value: appState.latestRawTranscriptSummary)
+                AppLabeledContent("Final draft", value: appState.latestFinalDraftSummary)
 
                 HStack {
                     Button("Use Raw As Wrong") {

@@ -79,8 +79,8 @@ if [[ "$GIT_COMMIT" == "unknown" ]] && command -v git >/dev/null 2>&1; then
   fi
 fi
 
-swift build -c "$CONFIGURATION" --product "$APP_NAME"
-BIN_PATH="$(swift build -c "$CONFIGURATION" --show-bin-path)"
+"$ROOT_DIR/scripts/swift-project.sh" build -c "$CONFIGURATION" --product "$APP_NAME"
+BIN_PATH="$("$ROOT_DIR/scripts/swift-project.sh" build -c "$CONFIGURATION" --show-bin-path)"
 EXECUTABLE="$BIN_PATH/$APP_NAME"
 
 if [[ ! -x "$EXECUTABLE" ]]; then

@@ -49,7 +49,7 @@ by their dedicated specifications.
 - Personal OpenAI automatic fallback plus direct-personal mode and the purple
   HUD are integrated on `main`. The expanded real-provider matrix remains
   pending.
-- Normal-cache `task check` passed on 2026-09-05, but on 2026-10-23 full builds fail because the selected CLT SDK cannot load `SwiftUIMacros.StateMacro`. Isolated fixture checks provide partial validation only.
+- Full `task check` restored on 2026-10-23 using the installed macOS 26.5 SDK selected by `scripts/swift-project.sh`; the CLT default macOS 27 SDK lacks required SwiftUI macros. Settings layout has local 26.7.1 fixture-preview evidence; 27.0.1 acceptance remains pending.
 - The executable suite now covers AppState recovery, cancellation, delivery,
   and settings-snapshot workflows through fakes. Native AppKit/Accessibility,
   microphone, Keychain, Carbon, and process termination remain manual checks.
@@ -65,4 +65,4 @@ recorded.
 
 ## Next Action
 
-Finish installed-SDK build diagnosis and establish a reproducible canonical check configuration for pilot readiness.
+Implement and validate fixture-backed provider, credentials, instance, HUD and diagnostics boundaries for pilot readiness.

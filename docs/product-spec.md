@@ -122,7 +122,7 @@ If the clipboard changes during automatic paste preparation, the HUD says Copy L
   target-app label, gesture state, waveform, and completion/error semantics.
 - Detailed provider, timeout, and recovery information belongs in the menu, Settings, or diagnostics; the HUD may temporarily show a concise recovery instruction when manual action is required.
 - The saved/effective provider destination must be visible before any audio/text is sent; edited settings must not masquerade as active.
-- Settings retain five task-focused tabs (General, Provider, Writing, Archive, and Diagnostics), a persistent Apply footer, grouped sections with aligned values, and independent scrolling inside a resizable window.
+- Settings retain five task-focused tabs (General, Provider, Writing, Archive, and Diagnostics), a persistent Apply footer, compact sections with native controls and aligned values, and one scrolling content area inside a resizable window.
 - The everyday menu leads with current state and dictation/recovery actions. Static build, permission, provider, draft, and usage details live in Settings or Diagnostics; **Copy Last Draft** remains a first-level menu action.
 - General Settings shows compact readiness for microphone, Accessibility, the Keychain API key, the active provider destination, and launch-at-login approval.
 - Teach Correction, Personal Dictionary, and Dictation Archive reuse the same grouped sections, independent scrolling, persistent status/action footer, and resizable-window design language as Settings.

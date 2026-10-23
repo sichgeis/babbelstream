@@ -37,7 +37,7 @@ final class DictationRecoveryWindowController {
             rootView: DictationRecoveryView()
                 .environmentObject(appState)
         )
-        window.setDialogInitialContentSize(NSSize(width: 720, height: 620))
+        window.setDialogInitialContentSize(NSSize(width: 720, height: 620), minimum: NSSize(width: 620, height: 500))
         window.isReleasedWhenClosed = false
         window.center()
         return NSWindowController(window: window)
@@ -49,12 +49,12 @@ struct DictationRecoveryView: View {
 
     var body: some View {
         AppDialogScaffold(maxContentWidth: 660) {
-            Section("Recovery") {
+            AppFormSection("Recovery") {
                 Text("BabbelStream keeps stopped audio here only when processing did not complete normally. Retry uses the currently applied provider settings and copies the result instead of pasting into the old target.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                LabeledContent("Saved recordings", value: "\(appState.recoverySnapshot.recordings.count)")
-                LabeledContent(
+                AppLabeledContent("Saved recordings", value: "\(appState.recoverySnapshot.recordings.count)")
+                AppLabeledContent(
                     "Disk usage",
                     value: ByteCountFormatter.string(
                         fromByteCount: appState.recoverySnapshot.totalByteCount,
@@ -64,7 +64,7 @@ struct DictationRecoveryView: View {
             }
 
             if appState.recoverySnapshot.recordings.isEmpty {
-                Section("Recordings") {
+                AppFormSection("Recordings") {
                     Label("No Failed Recordings", systemImage: "waveform.badge.checkmark")
                     Text("Successful dictations delete their safeguarded audio automatically.")
                         .font(.caption)
@@ -76,7 +76,7 @@ struct DictationRecoveryView: View {
                 }
             }
 
-            Section("Storage") {
+            AppFormSection("Storage") {
                 AppLongValue(label: "Recovery folder", value: appState.recoveryDirectoryPath)
                 Text("Audio files are local M4A recordings with user-only permissions. They are not included in diagnostics or the text archive and are not deleted automatically after failure.")
                     .font(.caption)
@@ -111,13 +111,13 @@ struct DictationRecoveryView: View {
 
     @ViewBuilder
     private func recordingSection(_ recording: DictationRecoveryRecording) -> some View {
-        Section(Self.timestampFormatter.string(from: recording.recordedAt)) {
-            LabeledContent("Status", value: recording.state.displayName)
-            LabeledContent("Duration", value: durationText(recording.durationSeconds))
-            LabeledContent("Size", value: ByteCountFormatter.string(fromByteCount: recording.byteCount, countStyle: .file))
-            LabeledContent("Original target", value: recording.targetApplicationName ?? "Unknown")
-            LabeledContent("Provider", value: "\(recording.providerHost) / \(recording.primaryModel)")
-            LabeledContent("Retries", value: "\(recording.retryCount)")
+        AppFormSection(Self.timestampFormatter.string(from: recording.recordedAt)) {
+            AppLabeledContent("Status", value: recording.state.displayName)
+            AppLabeledContent("Duration", value: durationText(recording.durationSeconds))
+            AppLabeledContent("Size", value: ByteCountFormatter.string(fromByteCount: recording.byteCount, countStyle: .file))
+            AppLabeledContent("Original target", value: recording.targetApplicationName ?? "Unknown")
+            AppLabeledContent("Provider", value: "\(recording.providerHost) / \(recording.primaryModel)")
+            AppLabeledContent("Retries", value: "\(recording.retryCount)")
 
             HStack {
                 Button {

@@ -226,3 +226,13 @@ The actual main-actor AppState runs with fixture-only recording, provider, inser
 ## Clipboard-Only Candidate Matrix
 
 After authorized candidate installation, validate Slack channel/thread/edit, Claude desktop Code/chat, ChatGPT/Codex, Signal, Chrome/Arc, Mail/Outlook and TextEdit with harmless unsent drafts. Check existing text, selection replacement, multiline, repeated chunks, English/German/mixed input, tap/hold/menu stop, app switching, same-app field changes, cancellation, Copy Last Draft and clipboard contention. Characterize alternate layouts/IME, held modifiers, terminals and protected fields without changing their policy. No candidate has been installed or smoke-tested for this feature.
+
+## Pilot Readiness Build And Layout Validation
+
+`task check` and packaging use `scripts/swift-project.sh`, selecting the installed macOS 26.5 SDK locally. The current CLT default macOS 27 SDK lacks its required SwiftUI macros. No system selection is changed. Explicit `SDKROOT` or `BABBELSTREAM_SDK` overrides require independent full validation; a missing validated SDK fails with an actionable prerequisite. On 2026-10-23 the full application build and executable suite pass with 26.5; compiler capture warnings and CLT framework-search warnings remain pre-existing.
+
+For isolated visual inspection, run `scripts/swift-project.sh run BabbelStreamChecks --layout-preview --settings --settings-tab=general` (optionally `--minimum-window-size`). This constructs the real views with CoordinatorFixture stores and fake recording/provider/Keychain/insertion/hotkey/login/runtime adapters; it never starts the production app or accesses its stores. Quit the preview to remove its temporary fixture directory. The same preview supports `--teach-correction`, `--personal-dictionary`, and `--dictation-archive`. Do not launch a second production-store copy for screenshots.
+
+Shared sections use explicit 16-point gaps, 12-point section insets and 10-point row spacing inside one scroll owner. The footer stays outside the scroll view. Validate all five tabs at 700×560 and 760×640, long content, scrolling and secondary dialogs on macOS 26.7.1 and 27.0.1; evidence from one host cannot establish the other.
+
+`script` convenience: `scripts/preview-layout.sh --settings` builds a separately identified temporary bundle. Use `--preview-dark` or `--preview-high-contrast` for app-scoped appearance inspection; these do not toggle OS settings. Window sizes in the layout matrix refer to content dimensions, excluding the title bar. Native accessibility settings still require manual review.

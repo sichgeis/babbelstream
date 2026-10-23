@@ -36,7 +36,7 @@ final class DictationArchiveWindowController {
             rootView: DictationArchiveView()
                 .environmentObject(appState)
         )
-        window.setDialogInitialContentSize(NSSize(width: 760, height: 640))
+        window.setDialogInitialContentSize(NSSize(width: 760, height: 640), minimum: NSSize(width: 680, height: 520))
         window.isReleasedWhenClosed = false
         window.center()
 
@@ -49,8 +49,8 @@ struct DictationArchiveView: View {
 
     var body: some View {
         AppDialogScaffold(maxContentWidth: 680) {
-            Section("Month") {
-                TextField("Month (YYYY-MM)", text: $appState.archiveMonthText)
+            AppFormSection("Month") {
+                AppFormTextField("Month (YYYY-MM)", text: $appState.archiveMonthText)
                 Text("Review local, text-only entries for one calendar month.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -61,20 +61,20 @@ struct DictationArchiveView: View {
                 }
             }
 
-            Section("Summary") {
-                LabeledContent("Entries", value: "\(appState.archiveSnapshot.entries.count)")
-                LabeledContent("Raw words", value: "\(appState.archiveSnapshot.totalRawWordCount)")
-                LabeledContent("Final words", value: "\(appState.archiveSnapshot.totalFinalWordCount)")
-                LabeledContent("Archive", value: appState.dictationArchiveEnabled ? "Enabled" : "Disabled")
+            AppFormSection("Summary") {
+                AppLabeledContent("Entries", value: "\(appState.archiveSnapshot.entries.count)")
+                AppLabeledContent("Raw words", value: "\(appState.archiveSnapshot.totalRawWordCount)")
+                AppLabeledContent("Final words", value: "\(appState.archiveSnapshot.totalFinalWordCount)")
+                AppLabeledContent("Archive", value: appState.dictationArchiveEnabled ? "Enabled" : "Disabled")
             }
 
-            Section("Daily Totals") {
+            AppFormSection("Daily Totals") {
                 if appState.archiveSnapshot.dailySummaries.isEmpty {
                     Text("No archived dictations for this month.")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(appState.archiveSnapshot.dailySummaries) { summary in
-                        LabeledContent(
+                        AppLabeledContent(
                             summary.dateString,
                             value: "\(summary.entryCount) dictations, \(summary.rawWordCount) raw words, \(summary.finalWordCount) final words"
                         )
@@ -83,16 +83,16 @@ struct DictationArchiveView: View {
             }
 
             if !appState.archiveSnapshot.readWarnings.isEmpty {
-                Section("Recovery") {
+                AppFormSection("Recovery") {
                     Text("Valid entries were loaded. Damaged JSONL lines were skipped and remain in the local files for manual recovery.")
                         .foregroundStyle(.orange)
                     ForEach(appState.archiveSnapshot.readWarnings.prefix(8)) { warning in
-                        LabeledContent(warning.fileName, value: "line \(warning.line)")
+                        AppLabeledContent(warning.fileName, value: "line \(warning.line)")
                     }
                 }
             }
 
-            Section("Storage") {
+            AppFormSection("Storage") {
                 AppLongValue(label: "Archive folder", value: appState.archiveDirectoryPath)
                 Text("Archive contents stay on this Mac. Audio is never stored here.")
                     .font(.caption)
