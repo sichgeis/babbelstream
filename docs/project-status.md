@@ -16,22 +16,16 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-Approved non-notarized Homebrew colleague pilot on `codex/homebrew-distribution`.
-Contract: `docs/features/homebrew-distribution/spec.md`; current staging/evidence:
-`docs/runs/active/homebrew-distribution.md`. The existing v0.5.1 app is reused;
-no source/version/tag change. The other Mac now has the downloaded candidate
-installed through Homebrew with its prior manual app backed up. the maintainer authorized
-publication, tap activation and installation on this Mac. Release v0.5.1 is public,
-anonymous asset checksums match, and the reviewed cask is on tap main. The exact
-public install command passed after the existing manual app was moved aside.
-The bundle later disappeared while Brew still recorded it installed (cause
-unknown); brew reinstall restored it. the maintainer confirmed launch and dictation
-without a Keychain prompt afterward. A further restart of the Homebrew copy is
-not separately evidenced. the maintainer reported
-successful earlier downloaded-app launch,
-onboarding, tap/hold dictation and restart after a targeted Keychain repair;
-evidence and the initial failure are in the tracker. First real upgrade evidence
-needs a later release; uninstall retention and rollback remain separately untested.
+No active pilot implementation. the maintainer approved documentation integration and
+pilot closeout on 2026-10-23. The public 0.5.1 release and own tap are active;
+Homebrew installation/reinstall and user-confirmed dictation without a Keychain
+prompt passed on macOS 27.0.1. The prior manual app is backed up.
+
+Contract: `docs/features/homebrew-distribution/spec.md`. Completed evidence:
+`docs/runs/archive/homebrew-distribution.md`. Manual-app conflict, the unknown-cause
+missing bundle, reinstall recovery and targeted Keychain repair remain documented.
+No app source, version, build, release tag or installed binary changed during
+channel setup. Deferred lifecycle tests are in `docs/implementation-plan.md`.
 
 ## Known Limitations And Deferred Follow-Ups
 
@@ -51,4 +45,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Review integration of the completed pilot channel documentation from codex/homebrew-distribution into main; future-version upgrade and lifecycle validation remain deferred.
+At the next genuine app release, validate the Homebrew old-to-new upgrade and its permission/Keychain behavior using the follow-up matrix in docs/implementation-plan.md.

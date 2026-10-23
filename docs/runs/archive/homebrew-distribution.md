@@ -2,8 +2,12 @@
 
 ## Outcome
 
-Stage the approved non-notarized GitHub/Homebrew colleague channel and operational
-documentation, then activate it only after the other-Mac quality gate passes.
+Completed on 2026-10-23 by the maintainer's explicit closeout approval. Published the
+non-notarized 0.5.1 release, activated the tap, and verified public install/reinstall
+and user dictation without a Keychain prompt. Main integration is authorized;
+upgrade, uninstall retention and rollback remain recorded follow-ups.
+
+Earlier staging entries below are historical evidence, not current availability.
 
 ## Baseline
 
@@ -72,7 +76,7 @@ No runtime change or weakening of Developer ID distribution mode.
 - Tap README on main explicitly says staged; main has no installable cask.
   Recipe exists only on codex/babbelstream-pilot. No general availability claim.
 
-### 3. Validation — Automated preparation complete; human gate pending
+### 3. Validation — Completed; preparation and later human evidence below
 
 - Baseline full task check PASS: /tmp/babbelstream-homebrew-baseline-check.log.
   Existing compiler/toolchain warnings remain. No XCTest claim.
@@ -95,7 +99,7 @@ No runtime change or weakening of Developer ID distribution mode.
   Temporary audit tap removed; only original unrelated taps remain. Read-only
   image detached successfully. No installation or daily app launch/termination.
 
-### 4. Download/launch and activation — Pending the maintainer
+### 4. Download/launch and activation — Completed
 
 Follow docs/homebrew-pilot-smoke-test.md. On a pass: update evidence/notes, publish
 release, verify anonymous bytes, then fast-forward tested tap cask into main.
@@ -106,8 +110,9 @@ new app tag for distribution-metadata-only changes or rewrite old tags.
 ### 5. First real upgrade and additional lifecycle tests — Deferred explicitly
 
 A genuine later binary release is needed for old-to-new brew upgrade evidence.
-Manual-app adoption/conflicts, uninstall retention/reinstall and rollback need the
-isolated pilot Mac. Do not claim them complete from static checks/first launch.
+Manual-app conflict/move-aside and missing-bundle reinstall passed. Optional
+adoption, uninstall retention and rollback remain untested. Durable follow-ups
+are in docs/implementation-plan.md.
 
 ## Current Blocker
 
@@ -120,8 +125,8 @@ publication blocker remains. Future-version upgrade/lifecycle tests are deferred
 
 ## Next Action
 
-Review integration of completed pilot channel documentation into app main before
-archiving this run and switching tap documentation links off the feature branch.
+None for this closed pilot. Future lifecycle validation is tracked in
+docs/implementation-plan.md; project-status.md owns the next project action.
 
 ## Documentation Polish (2026-10-23)
 
@@ -277,3 +282,19 @@ pilot checklist and release notes to reflect the exact evidence.
 Public release notes updated; tap README evidence commit fdf5748451d845aace7bbfed35761e286b2ce36a
 (recipe unchanged). Validation: 18 local links/section targets and git diff --check
 PASS; no runtime changes, so the earlier canonical fixture evidence applies.
+
+## Closeout — 2026-10-23
+
+the maintainer explicitly authorized merging the Homebrew documentation into main and
+closing the pilot while preserving upgrade, uninstall and rollback follow-ups.
+Archived this run, updated contract/status/support/navigation links and moved the
+untested lifecycle matrix into docs/implementation-plan.md. The release's exact
+binary, VERSION, BUILD_NUMBER and v0.5.1 tag remain unchanged. Main is integrated
+by fast-forward; the tap and release-note documentation links switch to main
+only after that push. No additional provider/microphone or private-data check is
+performed for this documentation closeout.
+
+Closeout validation: task check PASS (behavior and release-tooling fixtures;
+preexisting CLT linker search-path warnings remain), 47 local Markdown links/
+section targets resolve, and git diff --check PASS. Diff against origin/main
+contains only Markdown; no runtime/resource/tooling/VERSION/BUILD_NUMBER changes.

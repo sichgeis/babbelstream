@@ -276,4 +276,4 @@ manual-install adoption/conflicts, first real old-to-new Homebrew upgrade,
 permission/Keychain repair, rollback, uninstall retention and reinstall. Use an
 isolated pilot installation, never mutate the daily app or private data to prove
 these cases. First install does not prove upgrades. Other-Mac/native checks remain
-pending until reported; see `docs/runs/active/homebrew-distribution.md`.
+pending until reported; see `docs/runs/archive/homebrew-distribution.md`.

@@ -43,8 +43,9 @@ start a tracker under `docs/runs/active/`.
   required policy reconciliation are in
   `docs/features/homebrew-distribution/spec.md` (2026-10-23).
 - Implementation and the narrow non-notarized pilot exception are approved.
-  Execution state: `docs/runs/active/homebrew-distribution.md`; general rollout
-  still requires the downloaded-payload and public install evidence.
+  Completed pilot evidence: `docs/runs/archive/homebrew-distribution.md`. The
+  public download, installation/reinstall and human dictation checks passed;
+  the following lifecycle cases remain follow-ups, not acceptance claims.
 - Developer ID/notarization remains an optional later channel requiring authorized
   identity/profile access and real distribution validation; do not weaken that
   build mode to accommodate the ad-hoc pilot.
@@ -111,3 +112,29 @@ The local release was explicitly approved on 2026-10-23. Deferred work does not 
   neither is a prerequisite for that explicitly limited pilot.
 
 Keep these follow-ups in the existing candidate plan rather than reopening closed implementation runs. Provider lifecycle milestones remain in `docs/provider-lifecycle.md`.
+
+## Homebrew Pilot Lifecycle Follow-Ups
+
+The initial distribution pilot is closed. Keep these cases explicitly untested
+until their own evidence is recorded:
+
+- **Genuine version upgrade:** test 0.5.1 to the next legitimate release with
+  increased VERSION/BUILD_NUMBER. Verify installed source/version, settings,
+  dictionary/recovery preservation, permissions and Keychain trust. A same-version
+  reinstall does not prove this case.
+- **Uninstall retention and reinstall:** use an isolated pilot account with benign
+  fixtures. Verify ordinary cask uninstall retains settings, dictionary, recovery,
+  optional archive and Keychain entries, then reinstall. No zap or real-data
+  deletion. The missing-bundle reinstall already passed; uninstall retention did not.
+- **Rollback:** restore a known-good bundle after reviewing data compatibility;
+  verify version, preserved data and Homebrew pin/version-record reconciliation.
+  The documented procedure is not yet a tested recovery guarantee.
+- **Additional restart/trust coverage:** a further quit/reopen cycle of the
+  Homebrew-installed copy and trust across future binaries remain untested.
+  Earlier manual-DMG restart passed after the targeted Keychain repair.
+- **Manual-app adoption and missing bundle:** ordinary install conflict and move-
+  aside recovery passed; optional --adopt is untested. The observed bundle
+  disappearance cause remains unknown; brew reinstall recovery passed.
+
+Follow the operator matrix in `docs/homebrew-release.md`; do not reopen the closed
+initial pilot run merely to imply these follow-ups were completed.

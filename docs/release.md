@@ -196,11 +196,13 @@ Keep existing Developer ID mode and checks unchanged; use exact clean-tag candid
 artifacts and their signature verification for this channel. Do not label these
 as Apple-verified or official Homebrew catalogue builds.
 
-- Contract and staged acceptance: `docs/features/homebrew-distribution/spec.md`.
+- Contract and acceptance: `docs/features/homebrew-distribution/spec.md`.
 - Maintainer: the maintainer (`sichgeis`) for app releases and `sichgeis/homebrew-tap`.
 - Operator checklist: `docs/homebrew-release.md`.
-- Public release rollout waits for the other-Mac downloaded/quarantined-payload
-  test. A draft release is visible only to authorized repository users.
+- For each new release, public rollout waits for the downloaded/quarantined-payload
+  test. The 0.5.1 pilot passed and is public; archived evidence is in
+  `docs/runs/archive/homebrew-distribution.md`. Draft releases remain visible only
+  to authorized repository users.
 - Upload only the DMG and portable checksum file. Never upload all of dist,
   rollback bundles, local settings, secrets or user data.
 - Update the cask only after the public asset is reachable and its downloaded

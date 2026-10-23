@@ -6,7 +6,7 @@ The 0.5.1 release is published, anonymous assets verified, and the cask activate
 public installation/reinstall passed on macOS 27.0.1, followed by user-confirmed
 launch and dictation without a Keychain prompt. A further restart of that copy,
 first real upgrade, uninstall retention and rollback remain separately untested.
-See [execution evidence](runs/active/homebrew-distribution.md). Commands that publish or
+See [execution evidence](runs/archive/homebrew-distribution.md). Commands that publish or
 replace an app are operator steps, not steps performed automatically by this guide.
 
 ## First publication

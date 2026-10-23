@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Approved; implementation in progress, public rollout gated by pilot validation.
+- State: Shipped; initial pilot closed on 2026-10-23. Upgrade, uninstall retention and rollback validation remain deferred.
 - Owner: the maintainer.
 - Requested: 2026-10-23, planning for our own Homebrew tap without paid Apple membership.
 - Baseline: clean main at 47414743f9ab9a517fff50abb7511858d6abc56b.
@@ -118,7 +118,7 @@ channel can be added later as a separately tested transition.
 ### 1. Approve the pilot contract and reconcile policy
 
 - Approve this non-notarized public pilot and repository name.
-- Start codex/homebrew-distribution from a clean pushed baseline; create docs/runs/active/homebrew-distribution.md from the run template.
+- Start codex/homebrew-distribution from a clean pushed baseline; create docs/runs/archive/homebrew-distribution.md from the run template.
 - Amend AGENTS.md's current blanket public Developer ID/notarization requirement with this narrow, explicit pilot exception. Retain stronger guarantees for a notarized distribution channel.
 - Reconcile release.md, security-privacy.md, product-spec.md, architecture.md, test-plan.md, pilot-support.md and README; replace the old assumption that all update delivery depends on Sparkle/Developer ID.
 - Do not change runtime behavior, retention, provider destinations or permission scope.
@@ -205,11 +205,11 @@ is accessible beyond colleagues; describe it as a pilot, not restricted access.
 - Ordinary uninstall preserves data; manual-install conflicts and interrupted updates have documented recovery.
 - App and tap docs identify maintainers and the release checklist. No in-app updater, paid service or private signing key is introduced.
 
-## Approval And Next Action
+## Approval And Closeout
 
-the maintainer approved this contract and autonomous implementation on 2026-10-23.
-Proceed through policy/docs, feature-branch pushes, tap creation, draft release and
-recipe validation. Public rollout follows the other-Mac downloaded-payload test;
-the exact public install and first real upgrade retain their own evidence gates.
-No daily-app replacement, permission grant or real provider call is implicit.
-Execution evidence and next action: `docs/runs/active/homebrew-distribution.md`.
+the maintainer approved this contract and autonomous implementation on 2026-10-23,
+then explicitly authorized publication, tap activation, local Homebrew testing,
+main documentation integration and pilot closeout. Initial public install/reinstall
+and user dictation passed. Untested genuine upgrade, uninstall retention and rollback
+cases remain in docs/implementation-plan.md; closeout does not mark them passed.
+Archived execution evidence: `docs/runs/archive/homebrew-distribution.md`.

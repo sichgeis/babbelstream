@@ -4,10 +4,10 @@ For first installation and everyday help, use [Get started](getting-started.md).
 This guide covers company provider setup, connection states and support.
 
 **Current pilot:** 0.5.1, ad-hoc signed and not notarized. The GitHub release and
-own Homebrew tap are staged pending the other-Mac download/launch test. Company
+own Homebrew tap are public, with the initial pilot completed. Company
 provider configuration and per-user key issuance remain separate requirements.
 [Project status](project-status.md) owns availability; the
-[release run](runs/active/homebrew-distribution.md) records staging evidence.
+[release run](runs/archive/homebrew-distribution.md) records completed pilot evidence.
 
 The [local 0.5.1 release record](runs/archive/release-v0.5.1.md) retains its build
 and installation provenance. Local rollback bundles remain under `dist/rollback/`.
@@ -55,15 +55,14 @@ Report the macOS version, app version/commit, tab/window size or editor, and rep
 
 - Approved company base URL, endpoint paths, model aliases/routing and cleanup availability.
 - Credential issuer, revocation/support owner, per-user scopes, limits and cost responsibility.
-- Other-Mac downloaded-payload/public Homebrew install validation before broad rollout; Developer ID/notarization is not a requirement for this approved pilot.
+- First genuine Homebrew upgrade, uninstall retention and rollback validation; see the implementation-plan follow-ups. Developer ID/notarization is not a requirement for this approved pilot.
 - Both-machine Settings/dialog visual acceptance (macOS 26.7.1 and 27.0.1) and real unsent dictation smoke.
 - Model lifecycle migration approval before the announced shutdowns; see `docs/provider-lifecycle.md`.
 
 ## Homebrew Pilot Channel
 
-The tap is staged at `sichgeis/homebrew-tap`; installability and exact release
-evidence live in `docs/runs/active/homebrew-distribution.md`. Do not advertise
-the install command while staging remains pending. Once active, users install
+The tap is active at `sichgeis/homebrew-tap`; installation and exact release
+evidence live in `docs/runs/archive/homebrew-distribution.md`. Users install
 with `brew install --cask sichgeis/tap/babbelstream` and update explicitly with
 `brew update` followed by `brew upgrade --cask sichgeis/tap/babbelstream`, after
 quitting normally. Manual app conflicts, permission repair, data retention and
