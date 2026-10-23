@@ -45,7 +45,7 @@ raising/clicking the window. No sample arrived, and no pass is claimed. This is
 a focus-guard result under the UI tool, not evidence that permission remains
 missing. Left the test open and asked the maintainer to click it directly.
 
-## Pending verification
+## Local paste and Codex verification
 
 the maintainer clicked the test and reported that the sample appeared and the test
 passed. Independently verified the native field contains exactly "BabbelStream
@@ -53,10 +53,25 @@ paste test." and the result says "Sample received. Automatic paste worked in
 this test field." OS trust and actual local synthetic-paste receipt now PASS.
 No microphone/provider use or external-field inspection was automated.
 
-Actual Codex input dictation remains the final human smoke check.
-Real Codex dictation is a user smoke test, not an automated provider call. Do not
-claim repair success until live status/test evidence exists.
+the maintainer confirmed on 2026-10-23: "It works now, dictation inserts directly into
+the Codex input." The external-editor smoke check now passes by user report.
+No automated recording/provider request or private dictation inspection occurred.
+
+## Closeout
+
+the maintainer explicitly requested merging the README update into main and pushing it.
+README and Getting Started document the targeted repair; live Allowed status,
+actual local sample receipt and human Codex insertion all passed. Archived this
+run and reconciled project status. Documentation-only changes; no rebuild,
+installation, new version/tag, Keychain edit or provider change. Exact underlying
+OS grant mismatch cause and future-build trust remain unproven.
+
+Validation: local documentation links/anchors and git diff --check pass. App,
+resource and release tooling sources are unchanged; canonical task check already
+passed at baseline main 874df08 and is not repeated for Markdown-only changes.
 
 ## Next action
 
-the maintainer confirms insertion in the Codex input with harmless dictation while keeping Codex frontmost.
+None for this completed repair; future Homebrew lifecycle checks remain in
+`docs/implementation-plan.md`.
+

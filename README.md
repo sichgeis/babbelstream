@@ -105,7 +105,8 @@ If BabbelStream says **Not allowed** while System Settings shows its switch on,
 the enabled row may refer to an older app identity. We observed this exact
 mismatch with the installed 0.5.1 build. Removing and re-adding the current
 Applications copy restored its live **Allowed** status, and the local sample-paste
-test then passed. To repair this mismatch:
+test then passed. the maintainer also confirmed direct insertion into the Codex input
+afterward. To repair this mismatch:
 
 1. Finish active work and quit BabbelStream normally.
 2. Open **System Settings → Privacy & Security → Accessibility**. Select only

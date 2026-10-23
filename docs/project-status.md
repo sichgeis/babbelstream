@@ -16,15 +16,12 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-Investigating recurring clipboard-only dictation into Codex on the development
-Mac. Branch: `codex/accessibility-paste-repair`; evidence:
-`docs/runs/active/accessibility-paste-repair.md`. The running 0.5.1 app reported
-Automatic paste Not allowed despite an enabled system Accessibility row. the maintainer
-approved the targeted removal/re-add of the exact Applications copy and personally
-authenticated. Live post-restart setup now reports Automatic paste Allowed. The UI-driven
-sample test stopped at its active-window guard; the maintainer then operated it
-directly and the sample/test success were independently observed. Codex input
-dictation verification remains pending. No runtime or release artifact change.
+No active repair implementation. On 2026-10-23, removing and re-adding the exact
+Applications copy restored live Accessibility trust. The local sample actually
+pasted, and the maintainer confirmed direct dictation insertion into Codex. Repair
+procedure: README Troubleshooting; completed evidence:
+`docs/runs/archive/accessibility-paste-repair.md`. No app code or release artifact
+changed. The underlying reason for the stale OS grant remains unproven.
 
 The Homebrew pilot is closed; public 0.5.1 release/tap and its completed installation
 evidence remain in `docs/runs/archive/homebrew-distribution.md`. Genuine upgrade,
@@ -32,7 +29,7 @@ uninstall retention and rollback tests remain in `docs/implementation-plan.md`.
 
 ## Known Limitations And Deferred Follow-Ups
 
-- At final local installation, microphone was Not requested and Accessibility Not allowed under the ad-hoc identity. Subsequent user grants have not been re-queried in this distribution-only task. Onboarding supports explicit repair; no TCC reset/grant is automated.
+- At initial local installation, microphone was Not requested and Accessibility Not allowed. After the explicitly authorized targeted repair on 2026-10-23, native setup reports both Allowed and Codex insertion works. Ad-hoc future builds may require reapproval; no global TCC reset was used.
 - the maintainer approved the successful build 5 smoke test and explicitly authorized finalization on 2026-10-23, deferring macOS 27.0.1 comparison to the other Mac. Local 26.7.1 fixture evidence exists at both documented sizes in light/dark appearance. The 0.5.1 patch has focused grant/deny and native button/refresh evidence. Full OS Increase Contrast and expanded native/accessibility/provider matrices are not claimed complete.
 - Company-approved connection profile, model aliases, per-user key issuance and support/revocation ownership remain required before colleague deployment. No company destination is guessed or bundled master key supplied.
 - Ad-hoc rebuilds may require permission reapproval; onboarding reports actual running-process trust. Stable Developer ID signing/notarization and signed updates remain future work.
@@ -48,4 +45,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-the maintainer confirms Codex input insertion after verified Accessibility trust repair and successful local sample receipt.
+At the next genuine app release, validate the Homebrew old-to-new upgrade and its permission/Keychain behavior using the follow-up matrix in docs/implementation-plan.md.
