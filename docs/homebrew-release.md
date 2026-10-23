@@ -2,8 +2,9 @@
 
 Owner: the maintainer (`sichgeis`). Contract: [Homebrew distribution](features/homebrew-distribution/spec.md).
 This is the approved ad-hoc/non-notarized pilot, not the Developer ID channel.
-The current release and cask are staged pending the other-Mac launch gate; see
-[staging evidence](runs/active/homebrew-distribution.md). Commands that publish or
+The 0.5.1 release is published, anonymous assets verified, and the cask activated;
+public installation passed on macOS 27.0.1, with post-install human smoke pending.
+See [execution evidence](runs/active/homebrew-distribution.md). Commands that publish or
 replace an app are operator steps, not steps performed automatically by this guide.
 
 ## First publication

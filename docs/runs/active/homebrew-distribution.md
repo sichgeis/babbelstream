@@ -111,15 +111,15 @@ isolated pilot Mac. Do not claim them complete from static checks/first launch.
 
 ## Current Blocker
 
-Other-Mac launch/onboarding and dictation results are now reported below. A
-repeated Keychain prompt blocked restart acceptance until targeted per-item
-repair; the maintainer confirmed the retest now works. Public activation has not been
-authorized in this chat; the exact public Homebrew installation remains untested.
+Public release/tap activation and Homebrew installation are complete, under
+the maintainer's explicit authorization recorded below. Post-Homebrew human dictation/
+restart confirmation is pending. Earlier DMG restart smoke passed after the
+targeted Keychain repair. No installation or publication blocker remains.
 
 ## Next Action
 
-Review the recorded other-Mac result and obtain publication direction before
-activating the staged release/tap and testing the exact public Homebrew command.
+the maintainer confirms retained settings, dictation and prompt-free restart with the
+Homebrew-installed Applications copy.
 
 ## Documentation Polish (2026-10-23)
 
@@ -199,3 +199,50 @@ artifact changed. Public Homebrew installation remains a separate pending test.
 Validation: all 16 local Markdown links/section targets in the four changed
 documents resolve; git diff --check passes. Canonical task check passed earlier
 on this host with unchanged runtime/tooling; not rerun for these documentation edits.
+
+## Authorized Publication And Public Installation — 2026-10-23
+
+the maintainer explicitly authorized publishing the staged release, activating the tap,
+and testing Homebrew installation on this Mac. This supersedes the earlier pending
+publication direction; it does not authorize an untested later-release upgrade or
+destructive data removal.
+
+- Published existing v0.5.1 draft after updating release notes with other-Mac
+  results and Keychain troubleshooting. No asset/tag replacement.
+- Public release: https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1.
+- Fresh anonymous HTTPS DMG/checksum downloads PASS; portable checksum OK and
+  DMG SHA-256 remains 8dc567ac48285cc3612e1743b30262eb3dd40eecdb4b6d7879d322a41125824d.
+- Compared tap main to staged branch: ahead 2/behind 0; reviewed app-only cask
+  plus documentation, no hooks/zap/security bypass.
+- GitHub connector ref mutation was forbidden by integration permissions;
+  authenticated gh API fallback fast-forwarded main from 6f189cc to ff1c06c.
+- Added sichgeis/tap on this Mac. Homebrew 7.0.9 style PASS (one file/no offenses)
+  and named-cask audit PASS. Homebrew fetched its own developer-tool Ruby gems
+  for lint/audit; this added no BabbelStream dependency. Developer mode was set
+  only through the command environment, not persistently configured.
+- Tap README activation/Keychain guidance committed on main at
+  835429953c7f96d7de53c8c105194210fcbd42a2; cask unchanged from reviewed ff1c06c.
+- User confirmed normal quit; process exit verified. Preserved manual 0.5.1
+  bundle and matching executable checksum under ignored dist/pilot-backups/.
+- Exact command `brew install --cask sichgeis/tap/babbelstream` (only unrelated
+  auto-update disabled by environment) downloaded the public artifact, then
+  failed safely with already-an-App conflict. It did not adopt the identical app.
+- Moved the quit manual bundle into the rollback folder without deleting data;
+  reran the same install command and Homebrew reported successful installation.
+  Optional --adopt and --force were not used.
+- Brew scoped trust to this named cask automatically during install. It warned
+  about three preexisting untrusted unrelated taps; their trust was not changed.
+- Installed/brew-recorded 0.5.1/build 7/8f229fe; strict candidate signature PASS,
+  executable SHA-256 cf4862a37d307ca15d4b208f296eaf8effd4b2ce57dc2278e7c3e38446901a84,
+  matching prior manual payload. Quarantine retained. No settings/key changes.
+- Launched through Finder; one Applications process (83671) independently verified.
+  User asked for harmless dictation, retained-settings and prompt-free restart
+  confirmation. No new Gatekeeper/permission result is claimed before that reply.
+- Preserved public downloads and before/after brew JSON under ignored
+  dist/pilot-evidence/2026-10-23/. No private content or secrets were collected.
+- Updated public release notes with actual install/conflict result. All 18 local
+  links/section targets in seven edited docs resolve; git diff --check PASS.
+  Canonical fixture checks remain the earlier same-host PASS for unchanged app
+  source/tooling. This metadata-only publication does not rebuild/re-sign the app.
+- App documentation remains on codex/homebrew-distribution; app main/tag untouched.
+  Tap documentation links intentionally retain that branch until app-doc integration.

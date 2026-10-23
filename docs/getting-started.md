@@ -1,9 +1,9 @@
 # Get Started With BabbelStream
 
-BabbelStream 0.5.1 is available locally; its non-notarized GitHub/Homebrew colleague
-channel is staged; the [download/launch quality test](homebrew-pilot-smoke-test.md)
-has other-Mac results recorded, including the Keychain repair linked below.
-The normal Homebrew commands become usable only after publication and activation.
+BabbelStream 0.5.1 is published through its non-notarized GitHub/Homebrew colleague
+pilot. The [download/launch quality test](homebrew-pilot-smoke-test.md) has other-Mac
+results recorded, including the Keychain repair linked below. Public Homebrew
+installation passed; post-install dictation/restart confirmation is pending.
 Check [current status](project-status.md) before sharing installation instructions.
 
 ## Install the Applications copy
@@ -11,7 +11,7 @@ Check [current status](project-status.md) before sharing installation instructio
 The current build requires Apple Silicon. It declares macOS 13.0 as its minimum;
 native evidence is on 26.7.1, with pilot smoke also reported on 27.0.1.
 
-After tap activation, use `brew install --cask sichgeis/tap/babbelstream`. For a DMG,
+Use `brew install --cask sichgeis/tap/babbelstream`. For a DMG,
 download both release assets, verify the checksum from their download directory,
 then copy the app to Applications and eject the image:
 
@@ -22,8 +22,10 @@ open /Applications/BabbelStream.app
 
 For an existing manual installation, finish or cancel active work, quit normally,
 and preserve its app bundle before moving it aside. Keep Application Support and
-Keychain intact. Homebrew adoption of an identical manual app is not yet tested;
-do not force an overwrite or run two copies to work around a conflict.
+Keychain intact. The ordinary install command rejects an existing Applications
+bundle, even for the matching 0.5.1 app in our pilot. Move the quit manual app to
+a backup folder, then repeat the same command. Homebrew's optional identical-app
+adoption mode is not tested; do not force an overwrite or run two copies.
 
 This pilot is ad-hoc signed, not notarized by Apple. If launch is blocked, follow
 [Apple's Open Anyway instructions](https://support.apple.com/en-gb/102445) where

@@ -9,11 +9,12 @@ or sends your message.**
 
 ## Try the pilot
 
-**Version 0.5.1 · Apple Silicon · Homebrew distribution is staged**
+**Version 0.5.1 · Apple Silicon · Non-notarized Homebrew pilot**
 
-The DMG is in a draft GitHub release. The tap is prepared, but public installation
-is waiting for publication direction following the other-Mac smoke test and
-Keychain repair. The commands below become available after publication finishes.
+The [0.5.1 release](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1)
+is public and the tap is active. Public Homebrew installation passed on the
+macOS 27.0.1 pilot Mac after moving its manual app aside; post-install dictation
+and restart confirmation is pending. This remains a limited colleague pilot.
 
 | Requirement | What to expect |
 | --- | --- |
@@ -23,11 +24,11 @@ Keychain repair. The commands below become available after publication finishes.
 | Dictation provider | Your own approved OpenAI-compatible endpoint and API key; provider charges may apply |
 | Permissions | Microphone for recording; Accessibility for automatic paste |
 
-**Testing the draft?** Follow the [download/launch checklist](docs/homebrew-pilot-smoke-test.md).
-Draft assets require a GitHub account authorized to view them. See
+**Testing the pilot?** Follow the [download/launch checklist](docs/homebrew-pilot-smoke-test.md).
+Downloads are public and do not require GitHub sign-in. See
 [project status](docs/project-status.md) for current evidence and remaining gates.
 
-### Install with Homebrew — after activation
+### Install with Homebrew
 
 ```sh
 brew install --cask sichgeis/tap/babbelstream
@@ -39,8 +40,8 @@ Homebrew's official catalogue. Homebrew must already be installed. If you have a
 manual BabbelStream installation, quit it and preserve a backup before migrating;
 see [installation guidance](docs/getting-started.md).
 
-You can also use the versioned DMG and checksum from GitHub Releases once
-published. The app is **not Apple-notarized**. If macOS blocks first launch, use
+You can also use the versioned DMG and checksum from GitHub Releases.
+The app is **not Apple-notarized**. If macOS blocks first launch, use
 [Apple's per-app approval instructions](https://support.apple.com/en-gb/102445)
 where device policy permits. On a managed Mac, ask IT if approval is unavailable.
 
@@ -75,7 +76,7 @@ language hint blank for mixed German-English dictation.
 
 ## Update when you're ready
 
-After the tap is activated, finish or cancel active work and quit BabbelStream
+Finish or cancel active work and quit BabbelStream
 normally before upgrading. Copy Last Draft is session-only and is lost on quit.
 
 ```sh

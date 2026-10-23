@@ -12,7 +12,7 @@ validation and release procedure remain in their dedicated specifications.
 - Scope: clipboard paste for every application; provider/credential/parser/instance safeguards; private diagnostics/HUD fixes; guided provider setup; first-run permission onboarding/local paste verification; unified subtle Settings/dialog layout. Version 0.5.1 corrects the first-use microphone request action found during final 0.5.0 verification.
 - Supported workflow: tap/hold Control + Option + Space into Slack and other focused macOS text fields; no auto-send.
 - Canonical validation: `task check`; full app, behavior/loopback/setup/onboarding/release-tooling checks PASS.
-- Local optimized ad-hoc artifact (internal candidate verification mode). Own-tap distribution staging is approved; not generally published. Developer ID/notarization and in-app automatic updates remain deferred.
+- Optimized ad-hoc artifact (internal candidate verification mode), now published as an explicitly approved non-notarized own-tap pilot. Developer ID/notarization and in-app automatic updates remain deferred.
 
 ## Active Work
 
@@ -20,13 +20,15 @@ Approved non-notarized Homebrew colleague pilot on `codex/homebrew-distribution`
 Contract: `docs/features/homebrew-distribution/spec.md`; current staging/evidence:
 `docs/runs/active/homebrew-distribution.md`. The existing v0.5.1 app is reused;
 no source/version/tag change. The other Mac now has the downloaded candidate
-installed with its prior app backed up. The release is a GitHub draft
-and the cask is only on the tap's `codex/babbelstream-pilot` branch. The default
-branch has instructions only; normal Brew installation is intentionally inactive
-pending publication direction. the maintainer reported successful other-Mac launch,
+installed through Homebrew with its prior manual app backed up. the maintainer authorized
+publication, tap activation and installation on this Mac. Release v0.5.1 is public,
+anonymous asset checksums match, and the reviewed cask is on tap main. The exact
+public install command passed after the existing manual app was moved aside.
+Post-Homebrew human dictation/restart confirmation is pending. the maintainer reported
+successful earlier downloaded-app launch,
 onboarding, tap/hold dictation and restart after a targeted Keychain repair;
-evidence and the initial failure are in the tracker. Public URL/install tests
-follow activation; first real upgrade evidence needs a later release.
+evidence and the initial failure are in the tracker. First real upgrade evidence
+needs a later release; uninstall retention and rollback remain separately untested.
 
 ## Known Limitations And Deferred Follow-Ups
 
@@ -46,4 +48,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Review the recorded other-Mac smoke result and obtain publication direction before activating the staged release/tap for the public Homebrew installation test.
+the maintainer confirms dictation, retained settings and prompt-free restart with the Homebrew-installed 0.5.1 copy.

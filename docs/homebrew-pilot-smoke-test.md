@@ -1,10 +1,11 @@
 # Download And Launch Quality Gate
 
-Run this on the other Apple Silicon Mac before public rollout. Sign into GitHub
-as `sichgeis` (or an account authorized to view draft releases). The release is
-still a draft; a logged-out browser or ordinary colleague cannot see it yet.
+Run this on an Apple Silicon pilot Mac before broader rollout. The 0.5.1 release
+is now public; GitHub sign-in is not required. Its prepublication download/launch
+gate passed on macOS 27.0.1 after the documented Keychain access repair. Public
+Homebrew installation also passed; its post-install human smoke is pending.
 
-[Open the draft release](https://github.com/sichgeis/babbelstream/releases/tag/untagged-f78f4e549aca8f0b9aea)
+[Open the release](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1)
 
 1. In your browser, download both `BabbelStream-0.5.1.dmg` and its `.sha256` asset.
    Use the browser for the actual downloaded/quarantined launch test; a CLI download
@@ -40,8 +41,8 @@ Reply with:
 - Permission and local paste results; authorized dictation result or explicitly skipped.
 - Any unexpected behavior.
 
-After a pass, the agent publishes the release, verifies the anonymous download,
-and advances the cask into the tap default branch. Then test the actual public
+For a new release, a pass gates publication, anonymous-download verification and
+advancing the cask into the tap default branch. For published 0.5.1, test the public
 `brew install --cask sichgeis/tap/babbelstream` path, including handling a preexisting
-manual app. Until then the normal install command is intentionally unavailable.
+manual app: quit it, preserve/move its bundle aside, then run the ordinary install.
 First real upgrade, uninstall retention and rollback remain separate pilot checks.
