@@ -35,13 +35,28 @@ proven. No need to change Codex permissions or Keychain for this repair.
   separate explanations for lost focus and an unaccepted posted shortcut.
   Getting Started links to the single procedure. No app source/binary changes.
 
+## Post-restart verification
+
+the maintainer reopened setup. Native UI now reports Microphone Allowed and Automatic
+paste Allowed; the exact running app's OS trust is restored. Navigation to the
+local paste step performed no provider action. Automated Test Automatic Paste
+attempts stopped at "Keep the setup window active and try again", including after
+raising/clicking the window. No sample arrived, and no pass is claimed. This is
+a focus-guard result under the UI tool, not evidence that permission remains
+missing. Left the test open and asked the maintainer to click it directly.
+
 ## Pending verification
 
-Check actual Allowed status, then explicitly run the app-owned sample paste test.
+the maintainer clicked the test and reported that the sample appeared and the test
+passed. Independently verified the native field contains exactly "BabbelStream
+paste test." and the result says "Sample received. Automatic paste worked in
+this test field." OS trust and actual local synthetic-paste receipt now PASS.
+No microphone/provider use or external-field inspection was automated.
+
+Actual Codex input dictation remains the final human smoke check.
 Real Codex dictation is a user smoke test, not an automated provider call. Do not
 claim repair success until live status/test evidence exists.
 
 ## Next action
 
-the maintainer reopens Set Up BabbelStream or General Settings, allowing the agent to
-verify the restarted app's live permission status and sample-paste result.
+the maintainer confirms insertion in the Codex input with harmless dictation while keeping Codex frontmost.

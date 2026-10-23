@@ -21,8 +21,10 @@ Mac. Branch: `codex/accessibility-paste-repair`; evidence:
 `docs/runs/active/accessibility-paste-repair.md`. The running 0.5.1 app reported
 Automatic paste Not allowed despite an enabled system Accessibility row. the maintainer
 approved the targeted removal/re-add of the exact Applications copy and personally
-authenticated. Re-added row is on; live post-restart trust/paste verification is
-pending. No runtime or release artifact change.
+authenticated. Live post-restart setup now reports Automatic paste Allowed. The UI-driven
+sample test stopped at its active-window guard; the maintainer then operated it
+directly and the sample/test success were independently observed. Codex input
+dictation verification remains pending. No runtime or release artifact change.
 
 The Homebrew pilot is closed; public 0.5.1 release/tap and its completed installation
 evidence remain in `docs/runs/archive/homebrew-distribution.md`. Genuine upgrade,
@@ -46,4 +48,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Verify Automatic paste Allowed and local sample receipt after the targeted Accessibility repair, then obtain the maintainer’s Codex input smoke result.
+the maintainer confirms Codex input insertion after verified Accessibility trust repair and successful local sample receipt.
