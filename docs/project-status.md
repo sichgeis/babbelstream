@@ -24,7 +24,10 @@ installed through Homebrew with its prior manual app backed up. the maintainer a
 publication, tap activation and installation on this Mac. Release v0.5.1 is public,
 anonymous asset checksums match, and the reviewed cask is on tap main. The exact
 public install command passed after the existing manual app was moved aside.
-Post-Homebrew human dictation/restart confirmation is pending. the maintainer reported
+The bundle later disappeared while Brew still recorded it installed (cause
+unknown); brew reinstall restored it. the maintainer confirmed launch and dictation
+without a Keychain prompt afterward. A further restart of the Homebrew copy is
+not separately evidenced. the maintainer reported
 successful earlier downloaded-app launch,
 onboarding, tap/hold dictation and restart after a targeted Keychain repair;
 evidence and the initial failure are in the tracker. First real upgrade evidence
@@ -48,4 +51,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-the maintainer confirms dictation, retained settings and prompt-free restart with the Homebrew-installed 0.5.1 copy.
+Review integration of the completed pilot channel documentation from codex/homebrew-distribution into main; future-version upgrade and lifecycle validation remain deferred.

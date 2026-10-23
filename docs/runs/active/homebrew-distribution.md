@@ -112,14 +112,16 @@ isolated pilot Mac. Do not claim them complete from static checks/first launch.
 ## Current Blocker
 
 Public release/tap activation and Homebrew installation are complete, under
-the maintainer's explicit authorization recorded below. Post-Homebrew human dictation/
-restart confirmation is pending. Earlier DMG restart smoke passed after the
-targeted Keychain repair. No installation or publication blocker remains.
+the maintainer's explicit authorization recorded below. After the missing-bundle Brew
+reinstall, the maintainer confirmed launch and dictation without a Keychain prompt.
+Earlier DMG restart smoke passed after the targeted Keychain repair; a further
+restart of the Brew copy is not separately evidenced. No installation or
+publication blocker remains. Future-version upgrade/lifecycle tests are deferred.
 
 ## Next Action
 
-the maintainer confirms retained settings, dictation and prompt-free restart with the
-Homebrew-installed Applications copy.
+Review integration of completed pilot channel documentation into app main before
+archiving this run and switching tap documentation links off the feature branch.
 
 ## Documentation Polish (2026-10-23)
 
@@ -261,3 +263,17 @@ retained quarantine and Homebrew 0.5.1 record independently verified afterward.
 README Troubleshooting now records this case and distinguishes Done/Open Anyway
 from Move to Trash. User-visible launch/dictation confirmation is still pending;
 reinstall success alone does not establish that outcome.
+
+### Human Confirmation After Reinstall
+
+the maintainer confirmed: "Dictation works now. It worked without a keychain prompt."
+The Homebrew-installed app is visible in Applications and launch/dictation now
+PASS. This is user evidence after reinstall, not an automated provider test. It
+does not establish an additional quit/reopen cycle of the Brew copy or a genuine
+future-version upgrade. No private text/key was captured. Public channel and
+installation objective are achieved; app documentation integration remains open,
+with no app-main mutation authorized in this chat. Updated README, support/status,
+pilot checklist and release notes to reflect the exact evidence.
+Public release notes updated; tap README evidence commit fdf5748451d845aace7bbfed35761e286b2ce36a
+(recipe unchanged). Validation: 18 local links/section targets and git diff --check
+PASS; no runtime changes, so the earlier canonical fixture evidence applies.

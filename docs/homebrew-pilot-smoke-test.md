@@ -3,7 +3,9 @@
 Run this on an Apple Silicon pilot Mac before broader rollout. The 0.5.1 release
 is now public; GitHub sign-in is not required. Its prepublication download/launch
 gate passed on macOS 27.0.1 after the documented Keychain access repair. Public
-Homebrew installation also passed; its post-install human smoke is pending.
+Homebrew installation/reinstall also passed, followed by successful launch and
+dictation without a Keychain prompt. A further Homebrew-copy restart and a real
+upgrade to a later version remain separately untested.
 
 [Open the release](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1)
 

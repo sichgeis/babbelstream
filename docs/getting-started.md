@@ -3,7 +3,9 @@
 BabbelStream 0.5.1 is published through its non-notarized GitHub/Homebrew colleague
 pilot. The [download/launch quality test](homebrew-pilot-smoke-test.md) has other-Mac
 results recorded, including the Keychain repair linked below. Public Homebrew
-installation passed; post-install dictation/restart confirmation is pending.
+installation and subsequent missing-bundle reinstall passed; the maintainer confirmed
+launch and dictation without a Keychain prompt afterward. A further restart of
+the Homebrew copy and upgrades to a future version remain separately untested.
 Check [current status](project-status.md) before sharing installation instructions.
 
 ## Install the Applications copy

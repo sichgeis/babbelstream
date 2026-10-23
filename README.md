@@ -13,8 +13,9 @@ or sends your message.**
 
 The [0.5.1 release](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.1)
 is public and the tap is active. Public Homebrew installation passed on the
-macOS 27.0.1 pilot Mac after moving its manual app aside; post-install dictation
-and restart confirmation is pending. This remains a limited colleague pilot.
+macOS 27.0.1 pilot Mac after moving its manual app aside. After a missing-bundle
+reinstall, launch and dictation passed without a Keychain prompt. This remains a
+limited colleague pilot; future-version upgrades are not yet validated.
 
 | Requirement | What to expect |
 | --- | --- |
