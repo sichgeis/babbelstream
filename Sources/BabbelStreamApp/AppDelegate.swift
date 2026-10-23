@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     )
     private var statusBarController: StatusBarController?
     private var settingsWindowController: SettingsWindowController?
+    private var onboardingWindowController: OnboardingWindowController?
     private var dictationArchiveWindowController: DictationArchiveWindowController?
     private var dictationRecoveryWindowController: DictationRecoveryWindowController?
     private var personalDictionaryWindowController: PersonalDictionaryWindowController?
@@ -21,6 +22,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         installMainMenu()
         let appState = appState
         let settingsWindowController = SettingsWindowController(appState: appState)
+        let onboardingWindowController = OnboardingWindowController(appState: appState, showProvider: { [weak settingsWindowController] in
+            settingsWindowController?.showProviderSetup()
+        })
+        self.onboardingWindowController = onboardingWindowController
+        settingsWindowController.onShowOnboarding = { [weak onboardingWindowController] in onboardingWindowController?.show() }
         let dictationArchiveWindowController = DictationArchiveWindowController(appState: appState)
         let dictationRecoveryWindowController = DictationRecoveryWindowController(appState: appState)
         let teachCorrectionWindowController = TeachCorrectionWindowController(
@@ -44,6 +50,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusBarController = StatusBarController(
             appState: appState,
             settingsWindowController: settingsWindowController,
+            onboardingWindowController: onboardingWindowController,
             dictationArchiveWindowController: dictationArchiveWindowController,
             dictationRecoveryWindowController: dictationRecoveryWindowController,
             personalDictionaryWindowController: personalDictionaryWindowController,
@@ -52,6 +59,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         dictationStatusHUDController = DictationStatusHUDController(appState: appState)
 
         switch AppWindowLaunchMode.requested {
+        case .onboarding:
+            onboardingWindowController.show()
         case .settings:
             settingsWindowController.show()
         case .personalDictionary:
@@ -63,13 +72,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .failedRecordings:
             dictationRecoveryWindowController.show()
         case nil:
-            if appState.needsConnectionSetup { settingsWindowController.show() }
+            switch onboardingWindowController.model.launchPresentation {
+            case .introduction: onboardingWindowController.show()
+            case .permissionRepair: onboardingWindowController.show(repairOnly: true)
+            case .none: break
+            }
         }
     }
 
+    func applicationDidBecomeActive(_ notification: Notification) {
+        onboardingWindowController?.model.refreshPermissions()
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
+        onboardingWindowController?.pasteTest.cancel()
         appState.prepareForTermination()
     }
+
+    @objc private func showOnboarding() { onboardingWindowController?.show() }
 
     @objc private func showSettings() { settingsWindowController?.show() }
 
@@ -80,6 +100,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appMenu = NSMenu(title: ProjectDefaults.appName)
         let settingsItem = appMenu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
         settingsItem.target = self
+        let setupItem = appMenu.addItem(withTitle: "Set Up BabbelStream…", action: #selector(showOnboarding), keyEquivalent: "")
+        setupItem.target = self
         appMenu.addItem(.separator())
         appMenu.addItem(
             withTitle: "Quit \(ProjectDefaults.appName)",

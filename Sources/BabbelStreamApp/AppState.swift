@@ -56,6 +56,8 @@ final class AppState: ObservableObject {
     @Published var elapsedSeconds: TimeInterval = 0
     @Published var isRecording = false
     @Published var isProcessing = false
+    @Published private(set) var isLocalPasteTesting = false
+    @Published private var isDeliveringDraft = false
     @Published var recordingMode: RecordingMode = .none
     @Published private(set) var dictationControlStyle: DictationControlStyle = .none
     @Published var cleanupEnabled: Bool
@@ -252,7 +254,19 @@ final class AppState: ObservableObject {
     }
 
     var canStart: Bool {
-        !isRecording && !isProcessing && !isConnectionTesting
+        !isRecording && !isProcessing && !isConnectionTesting && !isLocalPasteTesting && !isDeliveringDraft
+    }
+
+    func beginLocalPasteTest() -> Bool {
+        guard canStart else { return false }
+        isLocalPasteTesting = true
+        notifyStateChanged()
+        return true
+    }
+
+    func endLocalPasteTest() {
+        isLocalPasteTesting = false
+        notifyStateChanged()
     }
 
     var canStop: Bool {
@@ -272,7 +286,7 @@ final class AppState: ObservableObject {
     }
 
     var canUseLatestDraft: Bool {
-        latestFinalDraft?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        !isLocalPasteTesting && latestFinalDraft?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
     var pasteTargetSummary: String? {
@@ -993,7 +1007,7 @@ final class AppState: ObservableObject {
     }
 
     func copyLatestDraft() {
-        guard let latestFinalDraft else {
+        guard !isLocalPasteTesting, let latestFinalDraft else {
             return
         }
 
@@ -1130,7 +1144,7 @@ final class AppState: ObservableObject {
     }
 
     func retryPasteLatestDraft() async {
-        guard let latestFinalDraft else {
+        guard canStart, let latestFinalDraft else {
             return
         }
 
@@ -2471,6 +2485,8 @@ final class AppState: ObservableObject {
     }
 
     private func insertFinalDraft(_ finalDraft: String) async throws -> DictationArchiveInsertionOutcome {
+        isDeliveringDraft = true
+        defer { isDeliveringDraft = false }
         status = "Pasting draft"
         let startedAt = ContinuousClock.now
         recordDiagnostic("paste started")

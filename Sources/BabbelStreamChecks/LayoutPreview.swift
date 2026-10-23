@@ -19,6 +19,7 @@ func runLayoutPreview() throws {
 private final class LayoutPreviewDelegate: NSObject, NSApplicationDelegate {
     let fixture: CoordinatorFixture
     var controller: AnyObject?
+    var settingsController: SettingsWindowController?
 
     init(fixture: CoordinatorFixture) {
         self.fixture = fixture
@@ -39,11 +40,20 @@ private final class LayoutPreviewDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(item)
         NSApp.mainMenu = menu
         switch AppWindowLaunchMode.requested {
+        case .onboarding:
+            let settings = SettingsWindowController(appState: fixture.app)
+            settingsController = settings
+            let window = OnboardingWindowController(appState: fixture.app, store: fixture.onboarding, testInsertion: fixture.insertion, showProvider: { settings.showProviderSetup() })
+            controller = window
+            window.show(repairOnly: CommandLine.arguments.contains("--preview-repair"))
         case .personalDictionary:
             let window = PersonalDictionaryWindowController(store: JSONPersonalDictionaryStore(fileURL: fixture.root.appendingPathComponent("dictionary.json")), onTeachCorrection: {})
             controller = window; window.show()
         case .teachCorrection:
             let window = TeachCorrectionWindowController(store: JSONPersonalDictionaryStore(fileURL: fixture.root.appendingPathComponent("dictionary.json")), appState: fixture.app)
+            controller = window; window.show()
+        case .failedRecordings:
+            let window = DictationRecoveryWindowController(appState: fixture.app)
             controller = window; window.show()
         case .dictationArchive:
             let window = DictationArchiveWindowController(appState: fixture.app)

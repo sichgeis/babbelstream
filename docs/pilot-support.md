@@ -4,6 +4,8 @@ This branch is an unreleased candidate. Do not distribute or replace the daily a
 
 ## Install And Set Up
 
+Builds with onboarding open a postponable setup window on first use. Reopen it through Set Up BabbelStream… in the menu or General Settings. It refreshes actual permission status on return from System Settings and offers a local paste test; that explicit test replaces the clipboard with a harmless sample without recording or contacting a provider. A pass verifies only the app-owned test field. Existing users keep their saved provider configuration. Signing changes may still require consent repair; a system toggle alone is not proof that the running app is trusted.
+
 1. Obtain the approved signed/notarized DMG and verify its checksum and source version with the pilot maintainer. Quit every older BabbelStream copy, including copies launched from a DMG or development folder. Drag the app to Applications, eject the DMG, and launch only the Applications copy. Updated copies enforce one active instance per user.
 2. In Provider Settings, confirm the destination authorized for your work. The company profile, production-versus-development endpoint, approved model aliases/routing and key-issuance process are pending authoritative IT input. Do not infer these values from a screenshot or another user's configuration.
 3. Use a per-user, revocable company-issued key with appropriate scopes, usage limits and a documented revocation owner. Never bundle or share a master key in the app, repository, DMG, support message or screenshot. Each user enters their own key in the secure field; Apply stores it in their macOS Keychain.

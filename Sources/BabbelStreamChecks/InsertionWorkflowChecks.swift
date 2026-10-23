@@ -12,6 +12,7 @@ final class FakeInsertionEnvironment: TextInsertionEnvironment {
     var trusted = true
     var target: TextInsertionTarget? = TextInsertionTarget(processIdentifier: 123, localizedName: "Fixture", bundleIdentifier: "com.openai.codex")
     var beforePaste: (() async throws -> Void)?
+    var onPost: (() -> Void)?
 
     func accessibilityPermissionStatus() -> AccessibilityPermissionStatus { trusted ? .trusted : .notTrusted }
     func requestAccessibilityPermission() {}
@@ -24,7 +25,7 @@ final class FakeInsertionEnvironment: TextInsertionEnvironment {
         return clipboardChangeCount
     }
     func waitForPastePreparation() async throws { try await beforePaste?() }
-    func postPasteShortcut() async -> Bool { posts += 1; return postSucceeds }
+    func postPasteShortcut() async -> Bool { posts += 1; onPost?(); return postSucceeds }
 }
 
 @MainActor

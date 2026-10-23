@@ -3,7 +3,7 @@ import BabbelStreamCore
 import SwiftUI
 
 struct SettingsView: View {
-    private enum Tab: String {
+    private enum Tab: String, CaseIterable {
         case general
         case provider
         case writing
@@ -14,50 +14,44 @@ struct SettingsView: View {
     @EnvironmentObject private var appState: AppState
     @State private var selectedTab: Tab
 
-    init() {
+    let onShowOnboarding: () -> Void
+
+    init(initialTab: String? = nil, onShowOnboarding: @escaping () -> Void = {}) {
+        self.onShowOnboarding = onShowOnboarding
         let tabArgument = CommandLine.arguments.first { $0.hasPrefix("--settings-tab=") }
         let tabName = tabArgument?.split(separator: "=", maxSplits: 1).last.map(String.init)
-        _selectedTab = State(initialValue: Tab(rawValue: tabName ?? "") ?? .general)
+        _selectedTab = State(initialValue: Tab(rawValue: initialTab ?? tabName ?? "") ?? .general)
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $selectedTab) {
-                SettingsGeneralPane(onShowSetup: { selectedTab = .provider })
-                    .tabItem {
-                        Label("General", systemImage: "gearshape")
-                    }
-                    .tag(Tab.general)
-
-                SettingsProviderPane()
-                    .tabItem {
-                        Label("Provider", systemImage: "network")
-                    }
-                    .tag(Tab.provider)
-
-                SettingsWritingPane()
-                    .tabItem {
-                        Label("Writing", systemImage: "text.bubble")
-                    }
-                    .tag(Tab.writing)
-
-                SettingsArchivePane()
-                    .tabItem {
-                        Label("Archive", systemImage: "archivebox")
-                    }
-                    .tag(Tab.archive)
-
-                SettingsDiagnosticsPane()
-                    .tabItem {
-                        Label("Diagnostics", systemImage: "stethoscope")
-                    }
-                    .tag(Tab.diagnostics)
+            Picker("Settings section", selection: $selectedTab) {
+                ForEach(Tab.allCases, id: \.self) { tab in
+                    Text(tab.rawValue.capitalized).tag(tab)
+                }
             }
-            .padding(.top, 8)
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+
+            Group {
+                switch selectedTab {
+                case .general:
+                    SettingsGeneralPane(onShowSetup: { selectedTab = .provider }, onShowOnboarding: onShowOnboarding)
+                case .provider: SettingsProviderPane()
+                case .writing: SettingsWritingPane()
+                case .archive: SettingsArchivePane()
+                case .diagnostics: SettingsDiagnosticsPane()
+                }
+            }
 
             Divider()
             settingsFooter
         }
+        .background(AppFormBackground())
+        .onReceive(NotificationCenter.default.publisher(for: .showProviderSetup)) { _ in selectedTab = .provider }
         .onAppear {
             appState.refreshPermissionStatuses()
             if appState.needsConnectionSetup,
@@ -105,7 +99,7 @@ private struct SettingsPane<Content: View>: View {
     }
 
     var body: some View {
-        AppGroupedForm {
+        AppGroupedForm(maxContentWidth: .infinity) {
             content
         }
     }
@@ -114,6 +108,7 @@ private struct SettingsPane<Content: View>: View {
 private struct SettingsGeneralPane: View {
     @EnvironmentObject private var appState: AppState
     let onShowSetup: () -> Void
+    let onShowOnboarding: () -> Void
 
     var body: some View {
         SettingsPane {
@@ -121,18 +116,21 @@ private struct SettingsGeneralPane: View {
                 AppLabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
                 AppLabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
                 AppLabeledContent("Primary connection", value: appState.connectionReadinessSummary)
-                Button("Review Provider Setup…", action: onShowSetup)
                 AppLabeledContent(
                     "Personal fallback",
                     value: appState.personalOpenAIFallbackReadinessSummary
                 )
                 AppLabeledContent("Launch at login", value: appState.launchAtLoginStatusSummary)
                 AppLongValue(label: "Active provider", value: appState.activeProviderDestinationSummary)
+                HStack(spacing: 8) {
+                    Button("Set Up BabbelStream…", action: onShowOnboarding)
+                    Button("Review Provider Setup…", action: onShowSetup)
+                }
 
                 if appState.microphonePermissionStatus != .authorized
                     || appState.accessibilityPermissionStatus != .trusted
                     || appState.launchAtLoginRequiresApproval {
-                    HStack {
+                    HStack(spacing: 8) {
                         if appState.microphonePermissionStatus != .authorized {
                             Button("Request Microphone") {
                                 Task { await appState.requestMicrophonePermission() }
@@ -264,20 +262,24 @@ private struct SettingsProviderPane: View {
                     Button("Custom compatible provider") { appState.selectConnectionPreset(.custom) }
                     Button("Official OpenAI") { appState.selectConnectionPreset(.officialOpenAI) }
                 }
-                AppFormTextField("Provider base URL", text: $appState.baseURLText)
-                Text("Ask IT for your approved company URL and per-user key. A company preset is not available yet. Existing saved configuration is retained; presets leave models unchanged.")
-                    .font(.caption)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .foregroundStyle(.secondary)
-                AppFormSecureField(
-                    appState.hasAPIKey ? "Saved in your Keychain; re-enter to replace or approve a new origin" : "Paste your per-user API key",
-                    text: $appState.apiKeyInput
-                )
-                Text("Keys stay in your macOS Keychain. Changing origin requires explicit key entry for that destination; never distribute a shared master key.")
-                    .font(.caption)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .foregroundStyle(.secondary)
-                HStack {
+                AppFormFieldGroup {
+                    AppFormTextField("Provider base URL", text: $appState.baseURLText)
+                    Text("Ask IT for your approved company URL and per-user key. A company preset is not available yet. Existing saved configuration is retained; presets leave models unchanged.")
+                        .font(.caption)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(.secondary)
+                }
+                AppFormFieldGroup {
+                    AppFormSecureField(
+                        appState.hasAPIKey ? "Saved in your Keychain; re-enter to replace or approve a new origin" : "Paste your per-user API key",
+                        text: $appState.apiKeyInput
+                    )
+                    Text("Keys stay in your macOS Keychain. Changing origin requires explicit key entry for that destination; never distribute a shared master key.")
+                        .font(.caption)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(.secondary)
+                }
+                HStack(spacing: 8) {
                     Button("Test Saved Connection…") { showTestConfirmation = true }
                         .disabled(!appState.canTestSavedConnection)
                     if appState.isConnectionTesting {
@@ -305,22 +307,28 @@ private struct SettingsProviderPane: View {
                         AppFormTextField("Cleanup path", text: $appState.cleanupPathText)
                     }
                     AppFormSection("Models And Timeouts") {
-                        Picker("Primary transcription model", selection: $appState.transcriptionModelText) {
-                            ForEach(ProjectDefaults.supportedTranscriptionModels, id: \.self) { model in
-                                Text(model).tag(model)
+                        AppLabeledContent("Primary transcription") {
+                            Picker("Primary transcription model", selection: $appState.transcriptionModelText) {
+                                ForEach(ProjectDefaults.supportedTranscriptionModels, id: \.self) { model in
+                                    Text(model).tag(model)
+                                }
                             }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
                         }
-                        .pickerStyle(.menu)
                         Text("GPT Transcribe is the default. Choose a GPT-4o model only when your provider requires it.")
                             .font(.caption)
                             .fixedSize(horizontal: false, vertical: true)
                             .foregroundStyle(.secondary)
-                        Picker("Model routing", selection: $appState.transcriptionModelRouting) {
-                            ForEach(TranscriptionModelRouting.allCases, id: \.rawValue) { routing in
-                                Text(routing.displayName).tag(routing)
+                        AppLabeledContent("Model routing") {
+                            Picker("Model routing", selection: $appState.transcriptionModelRouting) {
+                                ForEach(TranscriptionModelRouting.allCases, id: \.rawValue) { routing in
+                                    Text(routing.displayName).tag(routing)
+                                }
                             }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
                         }
-                        .pickerStyle(.menu)
                         Text(appState.transcriptionModelRouting.helpText)
                             .font(.caption)
                             .fixedSize(horizontal: false, vertical: true)
@@ -391,9 +399,19 @@ private struct SettingsWritingPane: View {
     var body: some View {
         SettingsPane {
             AppFormSection("Transcription Hints") {
-                AppFormTextField("Language code, optional (blank = auto)", text: $appState.transcriptionLanguageText)
-                AppFormTextField("Transcription prompt, optional", text: $appState.transcriptionPromptText, axis: .vertical)
-                    .lineLimit(2...4)
+                AppFormFieldGroup {
+                    AppFormTextField("Language code", text: $appState.transcriptionLanguageText)
+                    Text("Optional. Leave blank to detect the spoken language.")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                AppFormFieldGroup {
+                    AppFormTextField("Transcription prompt", text: $appState.transcriptionPromptText, axis: .vertical)
+                        .lineLimit(2...4)
+                    Text("Optional context to help transcription, such as technical terms.")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
             AppFormSection("Personal Dictionary") {
@@ -434,6 +452,8 @@ private struct SettingsArchivePane: View {
                 )
                 .disabled(!appState.dictationArchiveEnabled)
                 Text("When enabled, BabbelStream writes work text to local daily files on this Mac. Audio is never archived.")
+                    .font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.secondary)
                 AppLongValue(label: "Archive folder", value: appState.archiveDirectoryPath)
             }
@@ -463,7 +483,7 @@ private struct SettingsDiagnosticsPane: View {
                 AppLabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
                 AppLabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
 
-                HStack {
+                HStack(spacing: 8) {
                     Button {
                         appState.requestAccessibilityPermission()
                     } label: {
@@ -481,7 +501,7 @@ private struct SettingsDiagnosticsPane: View {
                 AppLabeledContent("Raw transcript", value: appState.latestRawTranscriptSummary)
                 AppLabeledContent("Final draft", value: appState.latestFinalDraftSummary)
 
-                HStack {
+                HStack(spacing: 8) {
                     Button {
                         appState.copyLatestDraft()
                     } label: {
@@ -666,7 +686,7 @@ struct TeachCorrectionView: View {
                 AppLabeledContent("Raw transcript", value: appState.latestRawTranscriptSummary)
                 AppLabeledContent("Final draft", value: appState.latestFinalDraftSummary)
 
-                HStack {
+                HStack(spacing: 8) {
                     Button("Use Raw As Wrong") {
                         wrongText = appState.latestRawTranscriptForCorrection
                     }

@@ -4,6 +4,7 @@ import SwiftUI
 
 enum AppWindowLaunchMode: String, CaseIterable {
     case settings = "--settings"
+    case onboarding = "--onboarding"
     case personalDictionary = "--personal-dictionary"
     case teachCorrection = "--teach-correction"
     case dictationArchive = "--dictation-archive"
@@ -28,6 +29,8 @@ extension NSWindow {
 
 @MainActor
 final class SettingsWindowController {
+    var onShowOnboarding: (() -> Void)?
+    private var initialProviderTab = false
     private let appState: AppState
     private var windowController: NSWindowController?
 
@@ -43,6 +46,12 @@ final class SettingsWindowController {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    func showProviderSetup() {
+        initialProviderTab = true
+        show()
+        NotificationCenter.default.post(name: .showProviderSetup, object: nil)
+    }
+
     private func makeWindowController() -> NSWindowController {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 760, height: 640),
@@ -56,7 +65,7 @@ final class SettingsWindowController {
             window.sharingType = .readOnly
         }
         window.contentViewController = makeDialogHostingController(
-            rootView: SettingsView()
+            rootView: SettingsView(initialTab: initialProviderTab ? "provider" : nil, onShowOnboarding: { [weak self] in self?.onShowOnboarding?() })
                 .environmentObject(appState)
         )
         window.setDialogInitialContentSize(NSSize(width: 760, height: 640), minimum: NSSize(width: 700, height: 560))
@@ -152,4 +161,8 @@ final class TeachCorrectionWindowController {
 
         return NSWindowController(window: window)
     }
+}
+
+extension Notification.Name {
+    static let showProviderSetup = Notification.Name("BabbelStream.showProviderSetup")
 }

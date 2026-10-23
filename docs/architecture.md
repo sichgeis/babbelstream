@@ -221,7 +221,7 @@ The main risks are accidental capture, accidental paste, clipboard exposure, ove
 
 ## Shared Dialog Layout
 
-Settings and secondary dialogs use AppGroupedForm as the only scroll owner, with explicit AppFormSection stack spacing, semantic macOS window/control surfaces and separators, and native controls. They avoid nesting a grouped Form inside a ScrollView, whose automatic insets vary by SDK/OS. Footer status and actions remain outside scrolling content. Long values wrap vertically. Dialog hosting controllers disable automatic SwiftUI sizing options so AppKit controllers retain ownership of documented initial and minimum content sizes. Provider guidance explicitly permits vertical wrapping.
+Settings and secondary dialogs use AppGroupedForm as the only scroll owner, with explicit AppFormSection stack spacing, semantic macOS window/control surfaces and separators, and native controls. They avoid nesting a grouped Form inside a ScrollView, whose automatic insets vary by SDK/OS. Settings uses a native segmented Picker with the selected pane below it, avoiding the TabView bezel and its gray header bands. All Settings panes use the same full-width canvas and left margin, so scrollbars do not shift label columns. Footer status and actions remain outside scrolling content. Long values wrap vertically. Dialog hosting controllers disable automatic SwiftUI sizing options so AppKit controllers retain ownership of documented initial and minimum content sizes. Provider guidance explicitly permits vertical wrapping.
 
 ## Pilot Boundary Policies
 
@@ -238,3 +238,11 @@ AppState exposes connection readiness independently of key presence. Presets sta
 ## Reproducible Release Preparation
 
 Project Swift invocations pass through a local SDK selector. Packaging shares a non-mutating preflight for development, candidate and distribution modes. Candidate/distribution require release optimization, clean source and exact committed VERSION/BUILD_NUMBER/HEAD; no provenance override can conceal another source. New distributed iterations increase BUILD_NUMBER beyond the previous reachable release; exact clean tagged rebuilds remain possible. Candidate defaults to ad-hoc without private identity lookup. Distribution requires an explicit Developer ID and secure timestamp, and signatures enable hardened runtime with only the existing audio-input resource entitlement. Verification is explicit. Plain DMG packaging avoids Finder automation/mounts; an opt-in decorative developer path remains. Notarization is a separate, unexecuted helper requiring an approved existing profile and publication authorization.
+
+## Onboarding And Local Paste Verification
+
+`OnboardingWindowController` composes `OnboardingModel`, the shared native dialog scaffold and `LocalPasteTestSession`. A small injected progress store persists only dismissal/observed-grant booleans; `OnboardingPresentation.resolve` distinguishes first use, deferred setup and permission repair. AppDelegate refreshes live permission adapters on activation. The window also refreshes after explicit requests/Check Again. Menus and General reopen setup; Provider opens the existing Settings pane and retains staged Apply semantics. Explicit window-launch modes bypass automatic setup.
+
+The optional local test uses the same ClipboardTextInsertionService as dictation, with an additional predicate checking its own NSTextView/window focus. Production dictation retains its existing application-only target policy. The native adapter inspects only its owned test field for the known sample; bounded receipt observation rejects posting-only success. Cancellation on navigation/close and AppState test/delivery occupancy prevent overlapping operations. The fixture preview injects memory progress and fake insertion; it never requests native access or posts a real paste.
+
+`AppFormBackground` blends semantic control/window surfaces for a nearly white normal Light Mode canvas. Dark Mode and increased contrast retain native window surfaces. No fixed RGB system colors or global theme change is used.

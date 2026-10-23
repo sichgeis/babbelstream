@@ -101,13 +101,16 @@ public protocol TextInsertionEnvironment: AnyObject {
 @MainActor
 public final class ClipboardTextInsertionService: TextInsertionService {
     private let environment: any TextInsertionEnvironment
+    private let additionalTargetCheck: @MainActor () -> Bool
 
-    public init(pasteboard: NSPasteboard = .general) {
+    public init(pasteboard: NSPasteboard = .general, additionalTargetCheck: @escaping @MainActor () -> Bool = { true }) {
         environment = MacOSTextInsertionEnvironment(pasteboard: pasteboard)
+        self.additionalTargetCheck = additionalTargetCheck
     }
 
-    public init(environment: any TextInsertionEnvironment) {
+    public init(environment: any TextInsertionEnvironment, additionalTargetCheck: @escaping @MainActor () -> Bool = { true }) {
         self.environment = environment
+        self.additionalTargetCheck = additionalTargetCheck
     }
 
     public func accessibilityPermissionStatus() -> AccessibilityPermissionStatus {
@@ -135,6 +138,7 @@ public final class ClipboardTextInsertionService: TextInsertionService {
         // is no longer on the clipboard, so a "Copied" instruction would be false.
         guard environment.clipboardChangeCount == writtenChangeCount else { return .clipboardChanged }
         guard targetIsStillFocused(target) else { return .copiedBecauseTargetChanged }
+        guard accessibilityPermissionStatus() == .trusted else { return .copiedForManualPaste }
         guard await environment.postPasteShortcut() else { return .copiedAfterPasteShortcutFailure }
         return .pasteShortcutPosted
     }
@@ -144,7 +148,7 @@ public final class ClipboardTextInsertionService: TextInsertionService {
     }
 
     private func targetIsStillFocused(_ target: TextInsertionTarget?) -> Bool {
-        TextInsertionTargetPolicy.applicationMatches(target, frontmostProcessIdentifier: environment.captureTarget()?.processIdentifier)
+        additionalTargetCheck() && TextInsertionTargetPolicy.applicationMatches(target, frontmostProcessIdentifier: environment.captureTarget()?.processIdentifier)
     }
 }
 

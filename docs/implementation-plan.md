@@ -43,6 +43,8 @@ start a tracker under `docs/runs/active/`.
 
 ### 5. Update Delivery
 
+- First-run onboarding is separately approved on `codex/onboarding`; see `docs/features/onboarding-and-updates/spec.md`. Its Sparkle/update proposal remains deferred and does not authorize updater dependencies or network traffic.
+
 - Goal: provide a predictable way to discover and install later releases.
 - Dependency: the public distribution path and an approved update/security model.
 

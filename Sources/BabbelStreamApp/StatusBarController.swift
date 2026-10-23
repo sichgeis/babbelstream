@@ -5,6 +5,7 @@ import BabbelStreamCore
 final class StatusBarController: NSObject, NSMenuDelegate {
     private let appState: AppState
     private let settingsWindowController: SettingsWindowController
+    private let onboardingWindowController: OnboardingWindowController
     private let dictationArchiveWindowController: DictationArchiveWindowController
     private let dictationRecoveryWindowController: DictationRecoveryWindowController
     private let personalDictionaryWindowController: PersonalDictionaryWindowController
@@ -15,6 +16,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     init(
         appState: AppState,
         settingsWindowController: SettingsWindowController,
+        onboardingWindowController: OnboardingWindowController,
         dictationArchiveWindowController: DictationArchiveWindowController,
         dictationRecoveryWindowController: DictationRecoveryWindowController,
         personalDictionaryWindowController: PersonalDictionaryWindowController,
@@ -22,6 +24,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     ) {
         self.appState = appState
         self.settingsWindowController = settingsWindowController
+        self.onboardingWindowController = onboardingWindowController
         self.dictationArchiveWindowController = dictationArchiveWindowController
         self.dictationRecoveryWindowController = dictationRecoveryWindowController
         self.personalDictionaryWindowController = personalDictionaryWindowController
@@ -153,6 +156,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             action: #selector(openFailedRecordings),
             enabled: true
         )
+        addAction("Set Up BabbelStream…", action: #selector(openOnboarding), enabled: appState.canStart)
         addAction("Settings...", action: #selector(openSettings), enabled: true)
         addAction("Quit", action: #selector(quit), enabled: true)
     }
@@ -289,6 +293,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         appState.requestAccessibilityPermission()
         rebuildMenu()
     }
+
+    @objc private func openOnboarding() { onboardingWindowController.show() }
 
     @objc private func openSettings() {
         settingsWindowController.show()

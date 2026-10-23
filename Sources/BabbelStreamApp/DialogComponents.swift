@@ -10,6 +10,21 @@ func makeDialogHostingController<Content: View>(rootView: Content) -> NSHostingC
     return controller
 }
 
+/// Subtle light canvas; preserve native dark and increased-contrast separation.
+struct AppFormBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    var body: some View {
+        Color(nsColor: .windowBackgroundColor)
+            .overlay {
+                if colorScheme == .light && contrast != .increased {
+                    Color(nsColor: .controlBackgroundColor).opacity(0.8)
+                }
+            }
+    }
+}
+
 struct AppGroupedForm<Content: View>: View {
     let maxContentWidth: CGFloat
     private let content: Content
@@ -24,15 +39,16 @@ struct AppGroupedForm<Content: View>: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 20) {
                 content
             }
-            .padding(16)
             .frame(maxWidth: maxContentWidth, alignment: .topLeading)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
             .frame(maxWidth: .infinity, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(AppFormBackground())
     }
 }
 
@@ -65,6 +81,16 @@ struct AppFormSection<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .textFieldStyle(.roundedBorder)
+    }
+}
+
+/// Associate help with its control more closely than independent form rows.
+struct AppFormFieldGroup<Content: View>: View {
+    private let content: Content
+    init(@ViewBuilder content: () -> Content) { self.content = content() }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) { content }
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

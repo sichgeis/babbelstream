@@ -114,10 +114,15 @@ final class FixtureInsertion: TextInsertionService {
     var copied: [String] = []
     var failCopy = false
     var result = TextInsertionResult.pasteShortcutPosted
+    var action: ((String) async throws -> TextInsertionResult)?
     func accessibilityPermissionStatus() -> AccessibilityPermissionStatus { permission }
     func requestAccessibilityPermission() {}
     func captureTarget() -> TextInsertionTarget? { TextInsertionTarget(processIdentifier: 123, localizedName: "Fixture", bundleIdentifier: "example.fixture") }
-    func insertText(_ text: String, target: TextInsertionTarget?) async throws -> TextInsertionResult { inserted.append(text); return result }
+    func insertText(_ text: String, target: TextInsertionTarget?) async throws -> TextInsertionResult {
+        inserted.append(text)
+        if let action { return try await action(text) }
+        return result
+    }
     func copyText(_ text: String) throws {
         if failCopy { throw TextInsertionError.pasteboardUnavailable }
         copied.append(text)
@@ -140,6 +145,7 @@ final class CoordinatorFixture {
     let personalSecret = FixtureSecret()
     let hotkey = FixtureHotkey()
     let recovery: FileDictationRecoveryStore
+    let onboarding = MemoryOnboardingProgress()
     let settings: MemorySettings
 
     init(cleanupEnabled: Bool = true, hasPrimaryKey: Bool = true, permissionsReady: Bool = true) throws {
@@ -180,4 +186,11 @@ final class CoordinatorFixture {
         check(snapshot.recordings.count == 1, "Cleanup failure should create one recoverable fixture.")
         return snapshot.recordings[0]
     }
+}
+
+@MainActor
+final class MemoryOnboardingProgress: OnboardingProgressStore {
+    var value = OnboardingProgress()
+    func load() -> OnboardingProgress { value }
+    func save(_ progress: OnboardingProgress) { value = progress }
 }

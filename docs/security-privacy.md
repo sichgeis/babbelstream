@@ -153,3 +153,9 @@ Only an explicit confirmation sends synthetic silence to the saved primary trans
 ## Release Artifact Boundaries
 
 Candidate preparation uses ad-hoc signing unless an identity is explicitly authorized/supplied; it never silently accesses a private signing key. Distribution mode requires explicit Developer ID, hardened runtime and secure timestamp and cannot fall back to local/ad-hoc signing. The audio-input entitlement only supports the existing microphone permission; no debug-task, JIT, sandbox, camera or Apple Events entitlement is added. Notarization uses an explicitly approved existing profile and separate submission authorization; no credential is stored in source or build metadata. Packaging does not install, launch, publish or send diagnostics.
+
+## Onboarding And Local Paste Test
+
+Onboarding stores only introduction dismissal and two previously-observed permission booleans in UserDefaults. These are presentation hints, never authorization. OS permissions are queried at launch, app activation, explicit refresh and paste delivery; only explicit user actions request microphone/Accessibility access. Missing permission retains the established copy-only fallback. No silent TCC reset, new permission, telemetry or updater request is introduced.
+
+An explicit local paste test writes one documented sample to the clipboard and checks only the dedicated app-owned test editor. It never reads an external editor, existing clipboard, key, dictionary, recording or archive. It does not restore the old clipboard or set Last Draft. Sample receipt/result stays session-only and is neither logged nor persisted. Exact editor/window focus, clipboard ownership, current permission and cancellation are checked before posting; changing apps/windows or closing setup prevents further delivery. Coordinator reservation excludes simultaneous recording, provider testing, recovery and draft delivery. Deferred setup never implicitly sends a provider request.

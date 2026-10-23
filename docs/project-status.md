@@ -15,6 +15,8 @@ by their dedicated specifications.
 
 ## Active Work
 
+- Onboarding implementation active on `codex/onboarding`; approved contract `docs/features/onboarding-and-updates/spec.md`, tracker `docs/runs/active/onboarding.md`. First-run/repair permissions, local sample verification and accepted nearly white shared canvas; Sparkle/signing deferred. Installed candidate build 3 remains unchanged.
+
 - Pilot readiness implementation/local preparation delivered; full acceptance pending: `docs/features/pilot-readiness/spec.md`, tracker `docs/runs/active/pilot-readiness.md`, branch `codex/pilot-readiness`. Approved autonomous implementation, unreleased; clean local candidate 0.4.5 build 3 / 4e6da0d prepared after native UI corrections; explicitly authorized local installation/launch completed for human smoke on 2026-10-23.
 - Preserved dependency: clipboard-only insertion implemented 2026-10-23; unreleased on `codex/clipboard-only-insertion`.
 - Contract: `docs/features/clipboard-only-insertion/spec.md`.
@@ -64,4 +66,4 @@ recorded.
 
 ## Next Action
 
-Obtain macOS 27.0.1 visual comparison of the current Settings and secondary dialogs at both documented sizes.
+Complete onboarding validation and clean candidate build 4 packaging, then hand off the human permission/local-paste smoke test.
