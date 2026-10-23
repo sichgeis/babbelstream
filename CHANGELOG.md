@@ -8,6 +8,8 @@ No changes yet.
 
 ## 0.5.3 - 2026-10-24
 
+- Remove local build paths from release debug maps and Finder installer metadata.
+
 - Remove private names, company-specific hosts/branding and recorded fixture metadata from the source tree; use synthetic benchmark speech and public repository hygiene checks.
 - Preserve saved transcription routing. An upgrade directly from a pre-routing version using a LiteLLM namespace must select LiteLLM once in Settings; unset routing now defaults to standard OpenAI IDs for every host.
 

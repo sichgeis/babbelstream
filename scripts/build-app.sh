@@ -90,14 +90,16 @@ if [[ ! -x "$EXECUTABLE" ]]; then
   exit 1
 fi
 
-if [[ "$BUILD_MODE" != development ]]; then
-  python3 "$ROOT_DIR/scripts/check-public-hygiene.py" --history --binary "$EXECUTABLE"
-fi
-
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 cp "$EXECUTABLE" "$MACOS_DIR/$APP_NAME"
 chmod +x "$MACOS_DIR/$APP_NAME"
+if [[ "$BUILD_MODE" != development ]]; then
+  # N_OSO debug-map entries expose the local object-file paths. They are not
+  # needed at runtime; strip them before signing and scan the complete file.
+  strip -S "$MACOS_DIR/$APP_NAME"
+  python3 "$ROOT_DIR/scripts/check-public-hygiene.py" --history --binary "$MACOS_DIR/$APP_NAME"
+fi
 make_app_icon
 
 if command -v codesign >/dev/null 2>&1; then

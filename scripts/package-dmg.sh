@@ -22,7 +22,8 @@ else
 fi
 [[ "$DMG_LAYOUT" == plain || "$DMG_LAYOUT" == finder ]] || { echo "DMG_LAYOUT must be plain or finder." >&2; exit 1; }
 DMG_PATH="$DIST_DIR/$DMG_NAME"
-RW_DMG_PATH="$DIST_DIR/$APP_NAME-$VERSION-rw.dmg"
+RW_DMG_PATH=""
+RW_DMG_DIR=""
 STAGING_DIR="$DIST_DIR/dmg-staging"
 VOLUME_NAME="${VOLUME_NAME:-$APP_NAME $VERSION}"
 DMG_CODESIGN_IDENTITY="${DMG_CODESIGN_IDENTITY:-}"
@@ -74,6 +75,14 @@ detach_mounted_dmg() {
   if [[ -n "${MOUNT_DIR:-}" && -d "$MOUNT_DIR" ]]; then
     hdiutil detach "$MOUNT_DIR" >/dev/null || true
     MOUNT_DIR=""
+  fi
+}
+
+cleanup_layout() {
+  detach_mounted_dmg
+  if [[ -n "${RW_DMG_DIR:-}" && -d "$RW_DMG_DIR" ]]; then
+    rm -rf "$RW_DMG_DIR"
+    RW_DMG_DIR=""
   fi
 }
 
@@ -156,7 +165,11 @@ ln -s /Applications "$STAGING_DIR/Applications"
 
 if [[ "$DMG_LAYOUT" == finder ]]; then
   # Decorative user-facing layout; plain packaging never opens Finder or mounts a volume.
-  trap detach_mounted_dmg EXIT
+  # Finder aliases record the backing image path. Use a neutral, disposable
+  # path outside the developer checkout and outside per-user TMPDIR paths.
+  RW_DMG_DIR="$(mktemp -d /private/tmp/babbelstream-dmg-layout.XXXXXX)"
+  RW_DMG_PATH="$RW_DMG_DIR/$APP_NAME-$VERSION-rw.dmg"
+  trap cleanup_layout EXIT
   detach_existing_volume
   render_dmg_background
   rm -f "$RW_DMG_PATH"

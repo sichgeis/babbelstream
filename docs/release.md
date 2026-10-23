@@ -293,3 +293,8 @@ omitting internal validation status from the release notes; retain it in executi
 evidence. Production installation, permission changes and live provider calls are
 not included. Final bytes must pass exact-tag build, complete-payload privacy,
 signature, DMG integrity and independent public-download verification.
+
+Release images strip N_OSO debug maps before signing and use a neutral temporary
+backing-image path for Finder aliases. The executable scan combines raw bytes, UTF-16 and `strings -a`; native
+Mach-O-aware strings alone can omit debug-map symbol bytes. Mounted-payload QA also scans binary/UTF-16 metadata and
+attributes; a section-only executable scan is insufficient.

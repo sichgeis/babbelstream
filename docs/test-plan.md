@@ -295,3 +295,8 @@ Routing checks preserve saved LiteLLM choices after host edits and use standard
 IDs when routing is absent or invalid, including a generic company proxy host.
 A direct pre-routing LiteLLM upgrade requires one explicit Settings selection.
 The benchmark speech fixture is synthetic with optional metadata removed.
+
+Release privacy QA checks raw executable bytes, UTF-16 and `strings -a`, mounted
+Finder metadata and file attributes in ASCII/UTF-16. Native optimized packaging
+strips debug maps before signing and uses a neutral backing-image path. The
+0.5.3 pre-publication negative control exposed both paths; final bytes must pass.

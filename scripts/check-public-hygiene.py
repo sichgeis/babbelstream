@@ -91,7 +91,14 @@ def main():
             if batch.wait() != 0:
                 raise RuntimeError("History object scan failed")
     for binary in args.binary:
-        findings.update(violations(subprocess.check_output(["strings", str(binary)]), denylist))
+        data = binary.read_bytes()
+        # Mach-O-aware strings can omit debug-map/symbol bytes even with -a.
+        # Inspect raw bytes as well as textual and UTF-16 views of the file.
+        findings.update(violations(data, denylist))
+        findings.update(violations(subprocess.check_output(["strings", "-a", str(binary)]), denylist))
+        for offset in (0, 1):
+            for encoding in ("utf-16-le", "utf-16-be"):
+                findings.update(violations(data[offset:].decode(encoding, errors="replace").encode(), denylist))
     findings = +findings
     if findings:
         print("Public hygiene failed (counts only):")

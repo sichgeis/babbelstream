@@ -8,7 +8,7 @@ Publish one clean polished 0.5.3 DMG/checksum pair and restore the Homebrew cask
 
 - Base: clean pushed `main`, `7d22e4a4e4e4ecbe5eb5f8e1cc9590440082f205`.
 - Implementation branch: `codex/release-0.5.3`.
-- Version: 0.5.3; final build: 10 (local candidate was build 9).
+- Version: 0.5.3; final build: 11 (local candidate was build 9).
 - Existing local installs, private data and backup mirrors must remain untouched.
 
 ## Authority And Gates
@@ -40,7 +40,19 @@ in this tracker, not the release notes, as subsequently requested.
 
 ### 2. Exact-Tag Packaging And Privacy Verification
 
-- Status: Pending.
+- Status: In progress.
+- Pre-publication build 10 failed the complete-payload scan despite the original
+  default `strings` check passing: N_OSO debug maps and the Finder background
+  alias retained the developer checkout path. No assets were uploaded.
+- Fix: strip only debug maps (`strip -S`) before signing, scan raw bytes, UTF-16 and `strings -a`,
+  and create the writable layout image in a neutral `/private/tmp` directory.
+  This preserves app runtime symbols, image pixels and Finder layout. Native
+  Mach-O-aware `strings -a` also omits these symbol bytes, so the actual raw-byte
+  negative control is required; the revised checker correctly rejects build 10.
+- Final build increased to 11. The unpublished v0.5.3 tag must move from the
+  initial source to the corrected source using an exact old-tag lease, under the
+  already-authorized data-removal tag-rewrite exception. Existing released tags
+  and installer assets are untouched. No same-version published bytes are replaced.
 - Require clean source, real signature/runtime/entitlements, correct version/build/hash,
   polished layout, inventory, ASCII/UTF-16 metadata scan and DMG integrity.
 

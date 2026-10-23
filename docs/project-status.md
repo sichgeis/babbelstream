@@ -21,7 +21,7 @@ Existing installed apps and local installer copies are unchanged.
 
 ## Active Work
 
-Finalizing the explicitly requested clean 0.5.3/build 10 public pilot release.
+Finalizing the explicitly requested clean 0.5.3/build 11 public pilot release.
 Run: `docs/runs/active/release-v0.5.3.md`; scrub evidence:
 `docs/runs/active/data-scrub.md`. No production installation or new live provider/
 microphone validation is included. Restoring the tap follows verified public assets.
