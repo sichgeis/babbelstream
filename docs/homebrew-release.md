@@ -1,11 +1,9 @@
 # Homebrew Pilot Release Operations
 
-**Installer withdrawal (2026-10-24):** The old 0.5.1/0.5.2 DMGs and checksum
-files have been removed from GitHub for the public-data scrub. Local copies and
-installed apps are unchanged. New Homebrew installs are paused until a clean
-replacement passes smoke testing and is published. No new installer is available.
-
-The first-publication steps below are historical and do not authorize restoring retired bytes.
+The 0.5.3 clean rebuild restores the public DMG/Homebrew channel. The older
+0.5.1/0.5.2 DMGs and checksums remain withdrawn; do not restore retired bytes.
+The first-publication steps below are historical. Use the subsequent-release
+procedure for current versions.
 
 Owner: the maintainer (`sichgeis`). Contract: [Homebrew distribution](features/homebrew-distribution/spec.md).
 This is the approved ad-hoc/non-notarized pilot, not the Developer ID channel.

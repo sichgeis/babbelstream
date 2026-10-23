@@ -21,18 +21,14 @@ Existing installed apps and local installer copies are unchanged.
 
 ## Active Work
 
-The public data scrub is pushed and verified in both repositories. A clean
-optimized 0.5.3/build 9 candidate is prepared from `92efa2b`; it is not installed,
-published or pinned by the tap. Current run/evidence:
-`docs/runs/active/data-scrub.md`; ref mapping: `docs/runs/active/data-scrub-refs.tsv`.
-The maintainer approved local migration/pruning on 2026-10-24; the owner checkout,
-both existing worktrees and installed tap now use rewritten history, and obsolete
-Git objects/reflogs were purged after backups. Public source and release notes are
-sanitized; older remote installer assets are now removed, while local copies and the installed application remain unchanged.
+Finalizing the explicitly requested clean 0.5.3/build 10 public pilot release.
+Run: `docs/runs/active/release-v0.5.3.md`; scrub evidence:
+`docs/runs/active/data-scrub.md`. No production installation or new live provider/
+microphone validation is included. Restoring the tap follows verified public assets.
 
 ## Known Limitations And Deferred Follow-Ups
 
-- Original 0.5.1/0.5.2 remote DMGs/checksums were removed under explicit owner authorization. Local copies retain their original source IDs. A replacement release and tap version advancement still require smoke approval.
+- Original 0.5.1/0.5.2 remote DMGs/checksums were removed under explicit owner authorization. Local copies retain their original source IDs. The explicit 0.5.3 release request authorizes the clean replacement and tap advancement; real workflow validation remains separately recorded.
 
 
 - At initial local installation, microphone was Not requested and Accessibility Not allowed. After the explicitly authorized targeted repair on 2026-10-23, native setup reports both Allowed and Codex insertion works. Ad-hoc future builds may require reapproval; no global TCC reset was used.
@@ -51,5 +47,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Obtain approval to install the verified 0.5.3 candidate for a real
-microphone/provider/Slack smoke test; see `docs/runs/active/data-scrub.md`.
+Complete exact-tag packaging, full-payload privacy checks and public-download
+verification for 0.5.3, then restore the tap.

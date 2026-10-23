@@ -132,7 +132,7 @@ under the subsequent explicit authorization recorded below.
 
 ## Next Action
 
-Obtain approval to install the verified 0.5.3 candidate for the maintainer’s real microphone/provider/Slack smoke test.
+Complete the explicitly requested 0.5.3 publication through `release-v0.5.3.md`.
 
 ## Residual Exposure And Owner Actions
 
@@ -191,3 +191,11 @@ build outputs/installers and private files were preserved, not scanned or delete
   date/custom-reason disable contract.
 - Existing release notes and current user docs now identify the withdrawals;
   clean replacement publication and tap advancement still await smoke approval.
+
+## Subsequent Release Instruction
+
+The maintainer subsequently explicitly requested “release 0.5.3”. Publication,
+main/tag and tap advancement are authorized under the exception recorded in
+`docs/release.md` and `release-v0.5.3.md`; this does not assert new real-provider/
+microphone validation. Internal validation status is excluded from release notes
+by the maintainer’s follow-up instruction. Production installation stays excluded.

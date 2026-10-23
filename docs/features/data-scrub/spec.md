@@ -25,9 +25,12 @@ messages; remove the recorded fixture from every historical ref; add a synthetic
 replacement afterward. Add public hygiene rules and validation. Preserve public
 handles, bundle/Keychain identifiers, saved settings and generic company wording.
 No new dependencies in the app, providers, permissions, retention or live calls.
-No new release publication, tap version change or production installation.
+No production installation or live provider/microphone use.
 On 2026-10-24 the maintainer explicitly authorized removing the old remote DMGs
 while retaining local copies, then approved a temporary remote cask-disable notice.
+The subsequent explicit “release 0.5.3” request authorizes final release publication
+and tap advancement with automated validation; real integration validation remains
+unperformed and is recorded in the run tracker.
 
 ## User Workflow And State Contract
 
@@ -69,6 +72,8 @@ The only runtime change removes hostname inference; no new app dependency.
 After separate installation authorization, verify saved provider/routing, tap/hold,
 German/English/mixed speech and unsent paste into Slack. Preserve recovery and
 permissions; never send automatically. Publishing a replacement release, updating
-the tap to a replacement version require a real-Mac smoke gate. The separate
+the tap to a replacement version normally require a real-Mac smoke gate. The
+explicit 0.5.3 release instruction above authorizes this publication without
+claiming a new smoke-test pass. The separate
 explicitly authorized withdrawal of old remote assets does not require installation. Cache cleanup by
 the hosting service and copies already downloaded remain outside Git rewriting.

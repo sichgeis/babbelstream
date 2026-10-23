@@ -282,3 +282,14 @@ as historical records; source archives are sanitized and are not app installers.
 The tap is temporarily disabled without changing its version/URL/checksum or any
 installed app. This owner-approved privacy withdrawal is separate from publishing
 0.5.3, which still requires candidate installation and real-Mac smoke approval.
+
+## 0.5.3 Release Authority
+
+On 2026-10-24 the maintainer explicitly requested “release 0.5.3” after the clean
+candidate and outstanding integration gate were explained. This authorizes main,
+final annotated tagging, public non-notarized pilot publication and tap advancement
+without claiming a new real-microphone/provider/Slack pass. The maintainer requested
+omitting internal validation status from the release notes; retain it in execution
+evidence. Production installation, permission changes and live provider calls are
+not included. Final bytes must pass exact-tag build, complete-payload privacy,
+signature, DMG integrity and independent public-download verification.

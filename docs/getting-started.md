@@ -1,20 +1,22 @@
 # Get Started With BabbelStream
 
-**Installer withdrawal (2026-10-24):** The old 0.5.1/0.5.2 DMGs and checksum
-files have been removed from GitHub for the public-data scrub. Local copies and
-installed apps are unchanged. New Homebrew installs are paused until a clean
-replacement passes smoke testing and is published. No new installer is available.
+Version 0.5.3 is the clean rebuild for the non-notarized Apple Silicon pilot.
+Older 0.5.1/0.5.2 downloads are withdrawn. See [current status](project-status.md)
+for evidence and remaining integration coverage.
 
-The earlier pilot installation/reinstall evidence remains historical. See
-[current status](project-status.md) before sharing installation instructions.
+## Install the Applications copy
 
-## Install the Applications copy (paused)
+Use `brew install --cask sichgeis/tap/babbelstream` or download the
+[0.5.3 DMG and checksum](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.3).
+Verify `shasum -a 256 -c BabbelStream-0.5.3.dmg.sha256` in their download folder.
+Quit the old app, open the image, drag BabbelStream onto Applications, eject the
+image and launch the Applications copy. Preserve local settings and Keychain.
+A manual app may conflict with Homebrew; preserve it before moving it aside.
+Source ZIP/tar archives are not installers.
 
-There is currently no public DMG or Homebrew installer. Preserve an existing
-Applications copy and local backups; do not uninstall it in expectation of a
-reinstall. The clean 0.5.3 candidate awaits installation/smoke approval. Source
-ZIP/tar archives are not installers. Setup and normal use of an existing installed
-copy remain unchanged.
+The app requires Apple Silicon and macOS 13.0 or later. It is ad-hoc signed and
+not notarized; use supported per-app approval, never bypass quarantine or OS
+protections. On managed Macs, ask IT if approval is unavailable.
 
 ## Use the setup dialog
 
