@@ -15,7 +15,7 @@ Implement the onboarding portion of `docs/features/onboarding-and-updates/spec.m
 
 1. Completed: setup persistence/policy, exact-target local paste session and coordinator exclusion; deterministic checks.
 2. Completed locally: native setup/repair window, menu/General entry points, activation refresh and isolated fixture preview. Human permission/native paste acceptance remains pending.
-3. In progress: durable specifications and full checks complete; clean candidate packaging and handoff next.
+3. Completed locally: durable specifications, canonical checks, native fixture evidence and clean candidate packaging. Installation and human acceptance remain separately gated.
 
 ## Decisions And Risks
 
@@ -30,13 +30,14 @@ None.
 
 ## Next Action
 
-Commit the validated implementation and package clean ad-hoc candidate build 4.
+Obtain authorization to install candidate build 4, then have the maintainer validate live permission onboarding and local sample receipt.
 
 ## Acceptance Remaining
 
 - [x] Canonical suite and focused race/failure checks.
 - [x] Native fixture review at both sizes/light/dark on this host; other-host 27.0.1 comparison remains manual.
-- Clean candidate packaging; human consent/local paste/real dictation smoke after separately authorized installation.
+- [x] Clean candidate packaging.
+- [ ] Human consent/local paste/real dictation smoke after separately authorized installation.
 
 ## Implementation And Validation Evidence
 
@@ -50,3 +51,12 @@ Commit the validated implementation and package clean ad-hoc candidate build 4.
 ## Remaining Human Acceptance
 
 Candidate installation requires separate authorization. Then verify real first-run/postpone/reopen, actual grant/activation refresh, local sample receipt, focus/close cancellation and an unsent real dictation. Existing build 3 smoke does not validate the new onboarding. macOS 27.0.1 and full OS accessibility-setting acceptance remain pending. Sparkle and colleague signing stay deferred.
+
+## Candidate And Handoff Evidence
+
+- Source: clean `3f6c3122b260f11ca4f0bb6725d5f5c08dba0ad2`, pushed on `codex/onboarding`. Later evidence-only documentation does not change the app payload.
+- Artifact: `dist/BabbelStream-0.4.5-candidate.4-3f6c312.dmg` (972 KiB). SHA-256 `29e16d67a0572b67e011ffefc20bfc3c4f84b46d59bea6c75f3a55585623a92c`; checksum verification PASS.
+- Packaging: explicit ad-hoc identities; clean release optimization; actual candidate signature/runtime/audio entitlement and embedded version 0.4.5/build 4/commit 3f6c312/mode candidate verified. DMG integrity verified by packaging. No private identity, installation, production launch, release tag or main change.
+- Native secondary minimum-size checks completed for Teach Correction, Dictionary and Archive after final metrics; all use the accepted canvas and fixed footer. Selected evidence preserved under ignored `dist/onboarding-evidence/`; full temporary screenshots remain under `/tmp/babbelstream-onboarding-screenshots/`. Fixture preview processes closed. No production app/store was used for visual checks.
+- Full `task check` and final diff whitespace checks PASS. Source behavior unchanged after those checks; final documentation records candidate evidence only. Existing build 3 remains installed/running; its repaired permissions were not reset.
+- Required next human action: authorize build 4 installation, then test real consent/activation refresh and the local sample field before the expanded unsent dictation matrix. Current fixture focus-guard evidence is not native paste-success evidence.
