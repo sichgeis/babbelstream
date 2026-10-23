@@ -127,7 +127,8 @@ outside the repositories and must not be published.
 
 None for the authorized source/history/local-Git scrub. Production installation,
 real microphone/provider/Slack validation, replacement release publication, tap
-version changes and retirement of older public binaries remain separately gated.
+version changes remain separately gated. Older remote binaries were withdrawn
+under the subsequent explicit authorization recorded below.
 
 ## Next Action
 
@@ -135,9 +136,9 @@ Obtain approval to install the verified 0.5.3 candidate for the maintainer’s r
 
 ## Residual Exposure And Owner Actions
 
-- Original 0.5.1/0.5.2 public DMGs still contain old compiled strings. Publish a
-  new clean version and advance the cask only after the real-Mac smoke gate;
-  choose whether to retire their old assets/releases separately.
+- Original 0.5.1/0.5.2 public DMGs and checksums have now been removed. Local
+  copies remain private. Publish a clean replacement and advance the cask only
+  after the real-Mac smoke gate.
 - Cached old SHA views may remain accessible. GitHub Support determines eligibility
   for a cache/GC removal request; provide both repository names, zero affected PRs,
   old root/changed commit IDs and the rewrite maps. Guide:
@@ -169,3 +170,24 @@ build outputs/installers and private files were preserved, not scanned or delete
   audio blob is absent too. Disconnected backups intentionally retain them.
 - Owner main and installed tap match their public rewritten mains; all three
   app worktrees remain present. Only these evidence documents changed afterward.
+
+## Remote Installer Withdrawal (2026-10-24)
+
+- The maintainer requested clearing the remote, specifically removing older DMGs
+  while retaining local copies. Removed exactly the 0.5.1 and 0.5.2 DMGs and their
+  paired portable checksum assets (four files total), after verifying every local
+  DMG hash/size against GitHub's asset digest and reconstructing each exact checksum.
+- Local DMGs/backups, installed app, release records and rewritten tags retained.
+  Both release asset lists were verified empty immediately after removal.
+- Automatic approval review initially rejected an additional persistent cask-disable
+  change as outside the asset-deletion request. Asset deletion proceeded alone.
+  After that rejection was explained, the maintainer replied “do it”; the explicitly
+  acknowledged follow-up authorizes the temporary remote cask-disable notice.
+- The tap change preserves version/URL/checksum and adds a disabled reason instead
+  of advertising a missing installer. Existing installed apps are untouched.
+- Tap all-history hygiene/fixture tests and Ruby syntax pass. Homebrew's `info`
+  rejects loading an untapped external cask path; no tap registration or installation
+  was performed merely for validation. Installed Homebrew DSL source confirms the
+  date/custom-reason disable contract.
+- Existing release notes and current user docs now identify the withdrawals;
+  clean replacement publication and tap advancement still await smoke approval.

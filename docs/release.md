@@ -272,3 +272,13 @@ label the mismatch in existing release notes, and never rebuild/replace the same
 version's uploaded bytes. Prepare 0.5.3/build 9 from a clean rewritten commit, run
 all-ref and optimized-binary hygiene checks, and stop for installation/smoke
 authorization before publishing, updating the tap or deleting older assets.
+
+## Authorized Remote Installer Withdrawal (2026-10-24)
+
+The maintainer explicitly authorized removal of the old remote DMGs while keeping
+local copies. Both 0.5.1/0.5.2 DMGs and portable checksums were hash-verified against
+GitHub asset digests before removal. Release notes and rewritten tags are retained
+as historical records; source archives are sanitized and are not app installers.
+The tap is temporarily disabled without changing its version/URL/checksum or any
+installed app. This owner-approved privacy withdrawal is separate from publishing
+0.5.3, which still requires candidate installation and real-Mac smoke approval.

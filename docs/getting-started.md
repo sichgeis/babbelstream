@@ -1,47 +1,20 @@
 # Get Started With BabbelStream
 
-BabbelStream 0.5.2 is published through its non-notarized GitHub/Homebrew colleague
-pilot. The [download/launch quality test](homebrew-pilot-smoke-test.md) has other-Mac
-results recorded, including the Keychain repair linked below. Public Homebrew
-installation and subsequent missing-bundle reinstall passed; the maintainer confirmed
-launch and dictation without a Keychain prompt afterward. A further restart of
-the Homebrew copy and upgrades to a future version remain separately untested.
-Check [current status](project-status.md) before sharing installation instructions.
+**Installer withdrawal (2026-10-24):** The old 0.5.1/0.5.2 DMGs and checksum
+files have been removed from GitHub for the public-data scrub. Local copies and
+installed apps are unchanged. New Homebrew installs are paused until a clean
+replacement passes smoke testing and is published. No new installer is available.
 
-## Install the Applications copy
+The earlier pilot installation/reinstall evidence remains historical. See
+[current status](project-status.md) before sharing installation instructions.
 
-The current build requires Apple Silicon. It declares macOS 13.0 as its minimum;
-native evidence is on 26.7.1, with pilot smoke also reported on 27.0.1.
+## Install the Applications copy (paused)
 
-Use `brew install --cask sichgeis/tap/babbelstream` for Homebrew, or follow the
-[illustrated DMG instructions](../README.md#install-with-the-illustrated-dmg).
-The public [0.5.2 release page](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.2)
-lists `BabbelStream-0.5.2.dmg` and its `.sha256` under Assets. It opens the
-illustrated drag-to-Applications window and is the same file Homebrew installs.
-It does not provide automatic in-app updates.
-
-From the download folder, verify both downloaded files before opening the image:
-
-```sh
-shasum -a 256 -c BabbelStream-0.5.2.dmg.sha256
-```
-
-Quit an existing copy, open the DMG, drag BabbelStream onto Applications, wait for
-the copy to finish, eject the image, and launch the Applications copy. Keep local
-settings/Keychain intact. If verifying an older/plain image instead, use the
-checksum file that matches its exact filename.
-
-For an existing manual installation, finish or cancel active work, quit normally,
-and preserve its app bundle before moving it aside. Keep Application Support and
-Keychain intact. The ordinary install command rejects an existing Applications
-bundle, even for the matching app version in our pilot. Move the quit manual app to
-a backup folder, then repeat the same command. Homebrew's optional identical-app
-adoption mode is not tested; do not force an overwrite or run two copies.
-
-This pilot is ad-hoc signed, not notarized by Apple. If launch is blocked, follow
-[Apple's Open Anyway instructions](https://support.apple.com/en-gb/102445) where
-allowed. On managed Macs, IT may need to approve installation. Do not disable
-Gatekeeper, remove quarantine or reset macOS permissions.
+There is currently no public DMG or Homebrew installer. Preserve an existing
+Applications copy and local backups; do not uninstall it in expectation of a
+reinstall. The clean 0.5.3 candidate awaits installation/smoke approval. Source
+ZIP/tar archives are not installers. Setup and normal use of an existing installed
+copy remain unchanged.
 
 ## Use the setup dialog
 

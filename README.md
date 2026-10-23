@@ -7,12 +7,18 @@ focused text fields. It supports German, English and mixed technical speech,
 with optional cleanup for punctuation and filler words. **It never presses Enter
 or sends your message.**
 
-## Try the pilot
+## Pilot downloads paused
+
+**Installer withdrawal (2026-10-24):** The old 0.5.1/0.5.2 DMGs and checksum
+files have been removed from GitHub for the public-data scrub. Local copies and
+installed apps are unchanged. New Homebrew installs are paused until a clean
+replacement passes smoke testing and is published. No new installer is available.
 
 **Version 0.5.2 · Apple Silicon · Non-notarized Homebrew pilot**
 
 The [0.5.2 release](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.2)
-is public and the tap is active. It adds the new blue app icon to the 0.5.1 app; the pilot evidence
+is retained as a historical record without installer assets. Its blue app icon
+was added to the 0.5.1 app; the pilot evidence
 below was gathered on 0.5.1. Public Homebrew installation passed on the
 macOS 27.0.1 pilot Mac after moving its manual app aside. After a missing-bundle
 reinstall, launch and dictation passed without a Keychain prompt. This remains a
@@ -27,10 +33,12 @@ limited colleague pilot; future-version upgrades are not yet validated.
 | Permissions | Microphone for recording; Accessibility for automatic paste |
 
 **Testing the pilot?** Follow the [download/launch checklist](docs/homebrew-pilot-smoke-test.md).
-Downloads are public and do not require GitHub sign-in. See
+The old installer downloads are withdrawn. See
 [project status](docs/project-status.md) for current evidence and remaining gates.
 
-### Install with Homebrew
+### Install with Homebrew (paused)
+
+These commands are reference instructions for after clean downloads resume.
 
 ```sh
 brew install --cask sichgeis/tap/babbelstream
@@ -44,44 +52,15 @@ see [installation guidance](docs/getting-started.md).
 
 ### Install with the illustrated DMG
 
-The installer is public on the
-[GitHub 0.5.2 release page](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.2).
-Under **Assets**, choose
-[BabbelStream-0.5.2.dmg](https://github.com/sichgeis/babbelstream/releases/download/v0.5.2/BabbelStream-0.5.2.dmg)
-for the illustrated window with the arrow. Download its
-[checksum file](https://github.com/sichgeis/babbelstream/releases/download/v0.5.2/BabbelStream-0.5.2.dmg.sha256)
-too. No GitHub sign-in is needed. The Source code ZIP/tar downloads are not installers.
+Installer downloads are temporarily unavailable. The historical release pages
+retain their notes and sanitized source archives, but those archives are not app
+installers. The clean 0.5.3 candidate is still local and awaiting smoke approval.
 
-1. Finish any dictation and quit an existing BabbelStream normally. Preserve a
-   backup of its app bundle if replacing it; keep settings and Keychain entries.
-2. Double-click **BabbelStream-0.5.2.dmg** in your download folder.
-   It opens a Finder window with BabbelStream on the left and Applications on the right.
-3. **Drag BabbelStream onto Applications.** If Finder asks to replace an existing
-   app, confirm only when you intend to replace that quit copy. Wait for copying
-   to finish.
-4. Eject **BabbelStream 0.5.2** in Finder.
-5. Open **Finder → Applications → BabbelStream**. Launch this installed copy,
-   rather than the app inside the disk image.
-6. Follow setup, confirm **0.5.2 / build 8** and the commit listed in the release
-   notes in Diagnostics, and verify microphone, Accessibility and the local paste
-   test before dictating.
-
-To verify the download, run this from the folder containing both downloaded files
-and expect `BabbelStream-0.5.2.dmg: OK`:
-
-```sh
-shasum -a 256 -c BabbelStream-0.5.2.dmg.sha256
-```
-
-Each release provides one illustrated DMG and its checksum; there are no separate
-Pretty or revision downloads. Homebrew installs this same DMG. Manually installed
-copies receive updates by replacing the app with a later DMG; this installer does not add an automatic updater.
-
-The app is **not Apple-notarized**. If macOS blocks first launch, follow
-[Apple's per-app approval instructions](https://support.apple.com/en-gb/102445)
-where device policy permits. If it remains blocked after **Open Anyway**, ask IT;
-a DMG does not bypass company policy. **Move to Trash** removes the app, rather
-than approving it.
+When a replacement is published, download its single versioned DMG and portable
+checksum, verify the checksum, quit the old app, drag the replacement into
+Applications, eject the image and launch the Applications copy. Preserve settings
+and Keychain entries. The ad-hoc pilot remains non-notarized; use only supported
+macOS per-app approval and never bypass quarantine or device policy.
 
 ## Set up once
 
@@ -113,6 +92,9 @@ failed attempt, and **Teach Correction…** to add vocabulary hints. Leave the
 language hint blank for mixed German-English dictation.
 
 ## Update when you're ready
+
+Updates/reinstalls are paused while the old installers are withdrawn. Keep your
+existing Applications copy; the steps below apply after clean publication resumes.
 
 Finish or cancel active work and quit BabbelStream
 normally before upgrading. Copy Last Draft is session-only and is lost on quit.
@@ -170,6 +152,9 @@ accepted it. Use manual paste for recovery and report that distinction. Do not
 repeat automatic paste blindly, which could duplicate text.
 
 ### Homebrew says installed, but the app is missing
+
+Reinstall is currently unavailable because the old downloads were withdrawn.
+Preserve existing local copies; the following is historical recovery guidance.
 
 Homebrew's installed record can remain when the Applications bundle is missing.
 Quit any remaining BabbelStream copy, then restore the app without deleting its
