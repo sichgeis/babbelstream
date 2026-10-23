@@ -25,7 +25,9 @@ def violations(data, denylist, allow_synthetic_path=False):
     for host in re.findall(r"\b[\w-]+(?:\.[\w-]+)*\.(?:local|fritz\.box)\b", text, re.I):
         if not re.search(r"(?:^|\.)example\.local$", host, re.I):
             findings["private hostname"] += 1
-    for email in re.findall(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text):
+    # Retina asset filenames are not mailbox addresses.
+    email_text = re.sub(r"\b[\w.-]+@(?:2|3)x\.(?:png|jpg|jpeg|webp)\b", "asset", text)
+    for email in re.findall(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", email_text):
         domain = email.rsplit("@", 1)[1].lower()
         if domain not in {"users.noreply.github.com", "noreply.github.com", "anthropic.com"} and not re.search(r"(?:^|\.)example\.(?:com|org|net|invalid)$", domain):
             findings["non-public email"] += 1

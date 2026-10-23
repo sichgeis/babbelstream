@@ -263,3 +263,12 @@ Finder layout needs an unlocked desktop with Finder automation access. The
 other-Mac downloaded/quarantined pilot test was not repeated for this icon-only
 release; record its outcome when performed. Evidence:
 `docs/runs/archive/release-v0.5.2.md`.
+
+## Public Data Scrub Provenance
+
+The authorized history scrub rewrites existing source/tag IDs without replacing
+old installer bytes. Preserve original source IDs/checksums in release evidence,
+label the mismatch in existing release notes, and never rebuild/replace the same
+version's uploaded bytes. Prepare 0.5.3/build 9 from a clean rewritten commit, run
+all-ref and optimized-binary hygiene checks, and stop for installation/smoke
+authorization before publishing, updating the tap or deleting older assets.

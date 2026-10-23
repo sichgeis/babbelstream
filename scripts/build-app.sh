@@ -90,6 +90,10 @@ if [[ ! -x "$EXECUTABLE" ]]; then
   exit 1
 fi
 
+if [[ "$BUILD_MODE" != development ]]; then
+  python3 "$ROOT_DIR/scripts/check-public-hygiene.py" --history --binary "$EXECUTABLE"
+fi
+
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 cp "$EXECUTABLE" "$MACOS_DIR/$APP_NAME"

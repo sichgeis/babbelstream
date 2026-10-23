@@ -42,12 +42,19 @@ release assets. Existing release-note text may be sanitized as part of the scrub
 
 ### 2. History Rewrite And Remote Verification
 
-- Status: Pending.
+- Status: In progress; both mirrors pass pre-push scans.
+- Fresh mirrors rewritten with git-filter-repo: 150 app commits and 10 tap commits;
+  all 20 app annotated tags use the public identity. Recorded audio removed from
+  every historical ref; only the new synthetic blob is restored after rewriting.
+- Tap all-ref scan and Ruby cask syntax: PASS. App scan initially flagged retina
+  image filenames as emails; the scanner now recognizes those filenames and a
+  regression fixture covers them. No additional private mailbox was found.
 - Use fresh mirrors and git-filter-repo, then audit every reachable ref before push.
 
 ### 3. Candidate And Handoff
 
-- Status: Pending.
+- Status: In progress; 0.5.3/build 9 committed before packaging.
+- Candidate/distribution builds now enforce all-ref and optimized-executable hygiene.
 - No installed app, permission grant, production setting or release asset changed.
 
 ## Validation Matrix
@@ -57,7 +64,7 @@ release assets. Existing release-note text may be sanitized as part of the scrub
 | Canonical checks | PASS | PASS after routing/source/fixture cleanup |
 | Hygiene fixtures | absent | PASS (4 disposable tests) |
 | Synthetic speech | recorded fixture | 7.08-second synthetic AAC; optional metadata removed |
-| All-ref scan | known exposure | Pending |
+| All-ref scan | known exposure | PASS for both repositories with local denylist |
 | Optimized candidate | not built | Pending |
 | Real microphone/provider/Slack | not run | Human gate |
 

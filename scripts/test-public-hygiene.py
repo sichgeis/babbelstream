@@ -18,7 +18,7 @@ class HygieneChecks(unittest.TestCase):
             self.assertTrue(HYGIENE.violations(value.encode(), []))
 
     def test_generic_examples(self):
-        data = b"fixture@example.invalid https://provider.example.local https://user@provider.example.com"
+        data = b"fixture@example.invalid https://provider.example.local https://user@provider.example.com icon_16x16@2x.png"
         self.assertFalse(HYGIENE.violations(data, []))
 
     def test_denylist_and_path_exception(self):

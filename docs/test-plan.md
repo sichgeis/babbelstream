@@ -14,8 +14,8 @@ This CLT-only environment can compile but cannot execute XCTest or Swift Testing
   former-default migration, unsupported-value normalization, and persistence of
   later explicit picker selections.
 - Standard and LiteLLM `openai/` model routing, effective primary/Mini IDs,
-  one-time company-proxy-host migration, and persistence of an explicit routing
-  choice independently of later base-URL edits.
+  host-independent defaults for absent/invalid routing, and persistence of an
+  explicit routing choice independently of later base-URL edits.
 - Cleanup prompt regression checks.
 - Settings defaults and migrations.
 - Personal OpenAI fallback defaults off, persists only after explicit Apply,

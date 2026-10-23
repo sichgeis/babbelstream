@@ -16,13 +16,16 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-Public data scrub in progress on `codex/data-scrub`, explicitly authorized with
+Public data scrub and a 0.5.3/build 9 candidate are in progress, explicitly authorized with
 history rewriting after backups/verification. Contract:
 `docs/features/data-scrub/spec.md`; evidence: `docs/runs/active/data-scrub.md`.
 No production installation or new public release is authorized by this run.
 Earlier permission-repair and Homebrew evidence remains in archived trackers.
 
 ## Known Limitations And Deferred Follow-Ups
+
+- Original 0.5.1/0.5.2 DMGs remain published with pre-scrub compiled strings and original source IDs. Their rewritten tags do not reproduce those bytes. Replacement publication/tap advancement and retiring those assets require smoke-test approval.
+
 
 - At initial local installation, microphone was Not requested and Accessibility Not allowed. After the explicitly authorized targeted repair on 2026-10-23, native setup reports both Allowed and Codex insertion works. Ad-hoc future builds may require reapproval; no global TCC reset was used.
 - The maintainer approved the successful build 5 smoke test and explicitly authorized finalization on 2026-10-23, deferring macOS 27.0.1 comparison to the other Mac. Local 26.7.1 fixture evidence exists at both documented sizes in light/dark appearance. The 0.5.1 patch has focused grant/deny and native button/refresh evidence. Full OS Increase Contrast and expanded native/accessibility/provider matrices are not claimed complete.
