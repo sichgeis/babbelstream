@@ -8,7 +8,14 @@ import BabbelStreamCore
 func runLayoutPreview() throws {
     let application = NSApplication.shared
     let incomplete = CommandLine.arguments.contains("--preview-incomplete")
-    let delegate = LayoutPreviewDelegate(fixture: try CoordinatorFixture(hasPrimaryKey: !incomplete, permissionsReady: !incomplete))
+    let fixture = try CoordinatorFixture(
+        hasPrimaryKey: !incomplete, permissionsReady: !incomplete,
+        microphonePermission: CommandLine.arguments.contains("--preview-not-requested") ? .notDetermined : nil
+    )
+    if CommandLine.arguments.contains("--preview-not-requested") {
+        fixture.recorder.permissionAfterRequest = .authorized // Fake consent only; no OS prompt.
+    }
+    let delegate = LayoutPreviewDelegate(fixture: fixture)
     application.delegate = delegate
     application.setActivationPolicy(.regular)
     application.run()

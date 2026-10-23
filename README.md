@@ -4,7 +4,7 @@ BabbelStream is a native macOS menu-bar hybrid dictation helper for Slack and ot
 
 Tap `Control + Option + Space` for hands-free recording or hold it for push-to-talk. BabbelStream transcribes through an OpenAI-compatible endpoint, optionally cleans the draft for Slack, and inserts it into the focused field. It never auto-sends messages.
 
-The latest local release is **0.5.0**, with first-run permission setup, a local
+The latest local release is **0.5.1**, with first-run permission setup, a local
 paste test, a cleaner adaptive Settings layout, clipboard-based insertion for
 every application, and provider/credential safeguards. the maintainer approved the
 local smoke test; macOS 27.0.1 visual comparison is deferred. The local artifact

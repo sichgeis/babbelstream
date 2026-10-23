@@ -137,7 +137,7 @@ private struct OnboardingView: View {
             AppFormSection("Microphone — \(appState.microphonePermissionStatus.displayName)") {
                 Text("Record only when you start dictation.")
                 if appState.microphonePermissionStatus != .authorized {
-                    if appState.microphonePermissionStatus == .unknown {
+                    if appState.microphonePermissionStatus == .notDetermined {
                         Button("Allow Microphone") { Task { await appState.requestMicrophonePermission(); model.refreshPermissions() } }
                             .disabled(!appState.canStart)
                     }

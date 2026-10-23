@@ -1,6 +1,6 @@
 # Internal Pilot Setup And Support
 
-Version 0.5.0 is an approved local release, following the maintainer’s successful smoke test and explicit finalization request on 2026-10-23. Its ad-hoc artifact is for the development Mac. Colleague distribution still requires the approved Developer ID/notarization path and company configuration/issuance inputs. The other-Mac visual check is deferred. Previous installed bundles are preserved under `dist/rollback/`; exact final installation evidence lives in the release tracker.
+Version 0.5.1 is the corrected approved local release (0.5.0 introduced the feature set), following the maintainer’s successful smoke test and explicit finalization request on 2026-10-23. Its ad-hoc artifact is for the development Mac. Colleague distribution still requires the approved Developer ID/notarization path and company configuration/issuance inputs. The other-Mac visual check is deferred. Previous installed bundles are preserved under `dist/rollback/`; exact final installation evidence lives in the release tracker.
 
 ## Install And Set Up
 

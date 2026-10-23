@@ -78,3 +78,5 @@ the maintainer also approved removing the gray Settings TabView bezel/header ban
 The approved Settings spacing cleanup uses 24-point horizontal margins, 20-point section gaps, 8-point heading/control gaps, 12-point section insets, 10-point independent rows, 6-point control/help groups and 8-point button gaps. Settings panes fill available width so scrollbars do not shift the left alignment between sections. Short Writing labels keep the common 168-point label column; Advanced pickers use that column too. Readiness actions are grouped after the status rows.
 
 Final local release authorization on 2026-10-23 supersedes the earlier main/tag/install stop gates above for v0.5.0 only. Human smoke is accepted; deferred native/distribution follow-ups remain explicit.
+
+The final 0.5.0 native check exposed a missing first-use microphone request button. Version 0.5.1 corrects the display condition to notDetermined (Not requested), with explicit grant/deny fixtures and native fake-consent evidence. This is a bounded correctness patch within the approved onboarding/release scope; v0.5.0 is not rewritten.

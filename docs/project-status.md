@@ -5,17 +5,17 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Current Release
 
-- Version: **0.5.0**, bundle build **6**; finalization in progress on `codex/onboarding` after the maintainer’s explicit 2026-10-23 smoke/release approval.
+- Version: **0.5.1**, bundle build **7**; focused patch finalization in progress on `codex/onboarding-microphone-first-use` after the maintainer’s explicit 2026-10-23 smoke/release approval.
 - Scope: clipboard paste for every application, provider/credential/parser/instance safeguards, private diagnostics/HUD fixes, guided provider setup, native first-run permission onboarding/local paste verification, and the unified subtle Settings/dialog layout.
 - Supported workflow: tap/hold Control + Option + Space into Slack and other focused macOS text fields; no auto-send.
 - Canonical validation: `task check`.
 - Final local artifact uses optimized clean candidate packaging with explicit ad-hoc signing. Developer ID/notarized colleague distribution and automatic updates remain deferred.
-- Installed baseline until final replacement: **0.4.5 build 5 / b3f7ff0** at `/Applications/BabbelStream.app`; its successful smoke test is accepted as the local release gate.
+- Installed baseline until patch replacement: **0.5.0 build 6 / a1a0227** at `/Applications/BabbelStream.app`. Build 5 smoke approval remains the broader release gate; the microphone patch has focused grant/deny fixture and native preview evidence.
 
 ## Active Work
 
-- Release finalization: `docs/runs/active/release-v0.5.0.md`.
-- Main can fast-forward from a9c5547 to the reviewed release branch; no history rewrite or merge commit is needed.
+- Patch release finalization: `docs/runs/active/release-v0.5.1.md`; immutable 0.5.0 source/artifact/install history is archived in `docs/runs/archive/release-v0.5.0.md`.
+- Version 0.5.0 was integrated and tagged at a1a0227. The final native check found a missing first-use microphone button; 0.5.1 corrects its state check. The published 0.5.0 tag is retained.
 - Implementation runs are closed under the user’s release approval:
   - `docs/runs/archive/clipboard-only-insertion.md`
   - `docs/runs/archive/pilot-readiness.md`
@@ -39,4 +39,4 @@ permissions, costs, signing-material access or updater network traffic.
 
 ## Next Action
 
-Complete final checks, main/tag publication and exact-source local packaging/installation for 0.5.0.
+Finalize the verified 0.5.1 patch, then package/install the exact tagged local release.

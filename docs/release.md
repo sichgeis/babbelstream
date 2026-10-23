@@ -183,3 +183,7 @@ BUILD_MODE=candidate CODESIGN_IDENTITY=- DMG_CODESIGN_IDENTITY=- DMG_NAME=Babbel
 ```
 
 The internal build-mode metadata stays `candidate` to describe the local ad-hoc verification class; semantic version 0.5.0, build 6, clean source commit and annotated v0.5.0 tag establish release provenance. Do not relabel this as Developer ID distribution or publish its binary as a notarized colleague installer. Verify the installed app with candidate-mode signature checks. A later docs-only evidence commit may follow the tagged app-source commit on main without moving the published tag or changing the installed payload.
+
+## 0.5.1 First-Use Correction
+
+The final 0.5.0 native check found that Allow Microphone checked unknown instead of notDetermined. Ship the correction as 0.5.1/build 7 with a new immutable tag, using the same explicit ad-hoc local pipeline and `DMG_NAME=BabbelStream-0.5.1.dmg`. Native fixture consent and grant/deny checks pass; real OS consent remains user-controlled. Preserve the original 0.5.0 tag and artifact history.

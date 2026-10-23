@@ -41,6 +41,18 @@ func runOnboardingChecks() async throws {
         check(model.launchPresentation == .permissionRepair && f.app.accessibilityPermissionStatus == .notTrusted, "Observed revocation must override stored successful setup.")
         check(f.secret.reads == 0 && f.transcription.requests.isEmpty && !f.recorder.isRecording, "Permission setup must not read secrets, record or contact providers.")
     }
+    for response in [MicrophonePermissionStatus.authorized, .denied] {
+        let f = try CoordinatorFixture(microphonePermission: .notDetermined)
+        defer { try? f.dispose() }
+        let model = OnboardingModel(appState: f.app, store: f.onboarding)
+        check(f.app.microphonePermissionStatus == .notDetermined && f.recorder.permissionRequests == 0, "Fresh onboarding must retain Not requested without prompting on launch.")
+        f.recorder.permissionAfterRequest = response
+        await f.app.requestMicrophonePermission()
+        model.refreshPermissions()
+        check(f.recorder.permissionRequests == 1 && f.app.microphonePermissionStatus == response, "Explicit microphone action must refresh the actual consent result.")
+        check(model.progress.microphoneWasAllowed == (response == .authorized), "Only granted microphone access can be recorded as previously allowed.")
+        check(!f.recorder.isRecording && f.transcription.requests.isEmpty && f.secret.reads == 0, "Requesting access must not start recording, read keys or contact a provider.")
+    }
     do {
         let suite = "BabbelStreamOnboardingChecks-\(UUID())"
         let defaults = UserDefaults(suiteName: suite)!

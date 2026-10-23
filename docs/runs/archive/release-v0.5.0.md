@@ -29,3 +29,12 @@ the maintainer explicitly approved release finalization on 2026-10-23, accepted 
 ## Next Action
 
 Run final canonical and release metadata checks before committing the release preparation.
+
+## 0.5.0 Final Verification And Superseding Patch
+
+- Main/tag: a1a02274fe690523feb9c4e402aa1ebcb93b737e; annotated tag object 3927880f0e4829d2c22e818fc1ef77c9716f319c. Both pushed atomically and independently verified through GitHub connector.
+- Artifact: dist/BabbelStream-0.5.0.dmg (973 KiB), SHA-256 1e12af24bf22163ca9e2b191287396604425adfcd0ec4059d14ff5b1b79c803c. Clean optimized build, actual signature/runtime/audio entitlement, checksum and DMG integrity verified.
+- Installed version 0.5.0 build 6 / a1a0227 and running Applications process verified. Executable hash 6f22660bfa06d43d417979ec140e229deef29fd8f406f8d3ab5cfcb02288624e matched payload. Build 5 backup retained under dist/rollback/BabbelStream-0.4.5-build5-b3f7ff0.app.
+- Final native setup check exposed an onboarding defect: fresh microphone access is notDetermined, while the Allow Microphone button checked unknown. General Settings could still request access, but the intended onboarding button was missing. User informed; correct as 0.5.1 without rewriting the published 0.5.0 tag.
+- At final 0.5.0 startup: Microphone Not requested, Accessibility Not allowed under the ad-hoc identity. No grant/reset/recording/provider action was automated. Permission reapproval remains a user action.
+- This run is closed with the local artifact released and the discovered defect explicitly superseded by the focused 0.5.1 patch. Latest release/install evidence belongs to docs/runs/active/release-v0.5.1.md until archived.

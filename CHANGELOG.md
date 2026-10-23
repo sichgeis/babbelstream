@@ -6,6 +6,10 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 No changes yet.
 
+## 0.5.1 - 2026-10-23
+
+- Show Allow Microphone in onboarding when access has not yet been requested; previously the button incorrectly checked the unknown state. Explicit consent refreshes readiness without starting a recording.
+
 ## 0.5.0 - 2026-10-23
 
 - Add postponable first-run setup, live permission repair and a local automatic-paste test that verifies sample receipt without recording or contacting a provider; cancel tests on focus loss and refresh permissions at completion.

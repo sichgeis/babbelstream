@@ -57,13 +57,19 @@ final class FixtureHotkey: HotkeyService {
 final class FixtureRecorder: AudioRecorder {
     let root: URL
     var permission: MicrophonePermissionStatus = .authorized
+    var permissionAfterRequest: MicrophonePermissionStatus?
+    var permissionRequests = 0
     var isRecording = false
     var currentLevel: Float { 0 }
     var failStopOwnership = false
     var audio: RecordedAudio?
     init(root: URL) { self.root = root }
     func microphonePermissionStatus() -> MicrophonePermissionStatus { permission }
-    func requestMicrophonePermission() async -> MicrophonePermissionStatus { permission }
+    func requestMicrophonePermission() async -> MicrophonePermissionStatus {
+        permissionRequests += 1
+        permission = permissionAfterRequest ?? permission
+        return permission
+    }
     func start(maxDuration: TimeInterval) async throws {
         let url = root.appendingPathComponent("\(UUID()).m4a")
         let bytes = Data("synthetic-audio-fixture".utf8)
@@ -148,13 +154,13 @@ final class CoordinatorFixture {
     let onboarding = MemoryOnboardingProgress()
     let settings: MemorySettings
 
-    init(cleanupEnabled: Bool = true, hasPrimaryKey: Bool = true, permissionsReady: Bool = true) throws {
+    init(cleanupEnabled: Bool = true, hasPrimaryKey: Bool = true, permissionsReady: Bool = true, microphonePermission: MicrophonePermissionStatus? = nil) throws {
         root = FileManager.default.temporaryDirectory.appendingPathComponent("BabbelStreamCoordinatorChecks-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         recorder = FixtureRecorder(root: root)
         keyPresence.hasSavedAPIKey = hasPrimaryKey
         personalKeyPresence.hasSavedAPIKey = hasPrimaryKey
-        recorder.permission = permissionsReady ? .authorized : .denied
+        recorder.permission = microphonePermission ?? (permissionsReady ? .authorized : .denied)
         insertion.permission = permissionsReady ? .trusted : .notTrusted
         var initial = AppSettings(cleanupEnabled: cleanupEnabled)
         initial.providerConfiguration.baseURL = URL(string: "https://primary.example.invalid")!
