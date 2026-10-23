@@ -1,6 +1,6 @@
 # Internal Pilot Setup And Support
 
-This branch is an unreleased candidate. Do not distribute or replace the daily app until the release/manual gates in `docs/release.md` are approved. the maintainer explicitly authorized installation/launch of the reviewed onboarding candidate on 2026-10-23. Build 5 / b3f7ff0 is installed in Applications and launched into first-use setup; the preceding build 3 bundle is preserved at `dist/rollback/BabbelStream-0.4.5-build3-4e6da0d.app`. Public pilot distribution remains gated.
+Version 0.5.0 is an approved local release, following the maintainer’s successful smoke test and explicit finalization request on 2026-10-23. Its ad-hoc artifact is for the development Mac. Colleague distribution still requires the approved Developer ID/notarization path and company configuration/issuance inputs. The other-Mac visual check is deferred. Previous installed bundles are preserved under `dist/rollback/`; exact final installation evidence lives in the release tracker.
 
 ## Install And Set Up
 

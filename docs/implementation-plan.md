@@ -43,7 +43,7 @@ start a tracker under `docs/runs/active/`.
 
 ### 5. Update Delivery
 
-- First-run onboarding is separately approved on `codex/onboarding`; see `docs/features/onboarding-and-updates/spec.md`. Its Sparkle/update proposal remains deferred and does not authorize updater dependencies or network traffic.
+- First-run onboarding is released in 0.5.0; see `docs/features/onboarding-and-updates/spec.md`. Its Sparkle/update proposal remains deferred and does not authorize updater dependencies or network traffic.
 
 - Goal: provide a predictable way to discover and install later releases.
 - Dependency: the public distribution path and an approved update/security model.
@@ -77,7 +77,7 @@ These remain unsequenced until the user selects them:
 
 ## Input Compatibility Candidates (2026-09-05)
 
-Clipboard-only insertion is approved active work; see `docs/features/clipboard-only-insertion/spec.md` and `docs/project-status.md` for execution state. Remaining unapproved candidates:
+Clipboard-only insertion is released in 0.5.0; see `docs/features/clipboard-only-insertion/spec.md` and `docs/project-status.md` for execution state. Remaining unapproved candidates:
 
 - Direct Accessibility insertion, including ChatGPT: postponed. A future feature must demonstrate a concrete clipboard-avoidance benefit, validate editor state beyond AX success, define application/field eligibility and duplicate-safe failure behavior, and preserve focus/clipboard/cancellation rules. No dormant direct-writing implementation or allowlist remains.
 - Content-free delivery diagnostics: permission, application match, clipboard ownership and event-posted outcome; never draft, clipboard or field text.
@@ -87,3 +87,14 @@ Clipboard-only insertion is approved active work; see `docs/features/clipboard-o
 ## Provider Lifecycle Dependency
 
 The approved pilot work records a separately gated model migration follow-up in `docs/provider-lifecycle.md`: inventory by 2026-11-13, spec/cost approval by 2026-12-04, cleanup validation by 2026-12-18 before the dated GPT-4o mini removal on 2027-01-14, and transcription/hedge validation by 2027-02-05 before 2027-02-26 removal. Company aliases require IT confirmation. This does not authorize a default/model/provider/cost change or create a recurring automation.
+
+## Post-0.5.0 Follow-Ups
+
+The local release was explicitly approved on 2026-10-23. Deferred work does not imply the following checks passed:
+
+- the maintainer’s macOS 27.0.1 comparison of Settings/onboarding at both documented sizes; full OS Increase Contrast review.
+- Broader permission repair, language/editor/gesture/recovery and personal-provider compatibility matrix.
+- Approved company connection profile, per-user key issuance and support/revocation owner.
+- Developer ID/notarized colleague installer, followed by the separately approved Sparkle/update plan.
+
+Keep these follow-ups in the existing candidate plan rather than reopening closed implementation runs. Provider lifecycle milestones remain in `docs/provider-lifecycle.md`.

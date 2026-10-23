@@ -2,7 +2,7 @@
 
 ## Status
 
-Onboarding approved by the maintainer on 2026-10-23: implement the proposed first-run flow, live permission checks and local paste test. Sparkle, distribution signing and all update delivery changes remain deferred. Local implementation, final quality review, canonical fixtures and candidate build 5 packaging/authorized local installation completed; the maintainer reported positive basic smoke feedback for installed build 5; detailed native and cross-version acceptance remain pending. No signing-key access, background network traffic or release approval is implied.
+Onboarding released locally in 0.5.0 (2026-10-23). the maintainer approved the build 5 smoke test and authorized release finalization, main integration, tagging and final local installation. The other-Mac macOS 27.0.1 comparison is explicitly deferred; detailed native coverage is not claimed complete. Sparkle, colleague signing/notarization and updater traffic remain deferred. No private signing-key access or public binary distribution is implied.
 
 ## Problem And Desired Outcome
 
@@ -76,3 +76,5 @@ the maintainer requested a nearly white Light Mode canvas because the native win
 the maintainer also approved removing the gray Settings TabView bezel/header bands. Keep the five native segments using a segmented Picker above the selected pane, on the same shared canvas. Preserve keyboard selection, staged settings, scrolling and fixed Apply footer; no custom tab widget or toolbar redesign.
 
 The approved Settings spacing cleanup uses 24-point horizontal margins, 20-point section gaps, 8-point heading/control gaps, 12-point section insets, 10-point independent rows, 6-point control/help groups and 8-point button gaps. Settings panes fill available width so scrollbars do not shift the left alignment between sections. Short Writing labels keep the common 168-point label column; Advanced pickers use that column too. Readiness actions are grouped after the status rows.
+
+Final local release authorization on 2026-10-23 supersedes the earlier main/tag/install stop gates above for v0.5.0 only. Human smoke is accepted; deferred native/distribution follow-ups remain explicit.

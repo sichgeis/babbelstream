@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Implemented on the feature branch; unreleased, full build and native smoke pending.
+- State: Released in 0.5.0 on 2026-10-23 after successful full checks and the maintainer’s smoke-test approval. Broader compatibility coverage remains a documented follow-up.
 - Owner: the maintainer.
 - Last approved: 2026-10-23 explicit request to remove direct writes and use clipboard paste exclusively.
 - Supersedes application routing in web-editor-paste-compatibility and signal-paste-compatibility.

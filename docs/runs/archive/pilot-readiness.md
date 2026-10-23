@@ -117,11 +117,11 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 - System Settings showed the BabbelStream toggle enabled while the running candidate remained untrusted. Removing/re-adding initially did not resolve it. Reset only `Accessibility` for bundle `com.sichgeis.babbelstream` using tccutil; the maintainer reauthorized the installed Applications copy. No other application permission was reset.
 - After a normal candidate restart, native General showed both Microphone Allowed and Accessibility Allowed. the maintainer then reported: “Now it works as expected.” This confirms his basic dictation/automatic-paste retest, without claiming the complete editor/language/gesture/recovery matrix or release approval. No automated recording/provider call or draft inspection was performed.
 
-## Current Blocker And Human Gates
+## Historical Human Gates At Implementation Handoff
 
 Implementation and local candidate preparation are delivered; full acceptance remains blocked. Current setup/metadata and shared dialogs passed fixture-only native review on 26.7.1 after unlock. No macOS 27.0.1 host is available in this chat. Authoritative company connection/key-issuance inputs and authorized Developer ID/notarization identity/profile are still pending. Candidate installation/launch was subsequently explicitly authorized and completed below. the maintainer confirmed the basic dictation/automatic-paste retest works after Accessibility repair; expanded language/editor/gesture/recovery matrix is not established by that report. Saved settings, keys and application data were preserved.
 
-## Next Action
+## Historical Next Action
 
 Obtain macOS 27.0.1 visual comparison of the current Settings and secondary dialogs at both documented sizes.
 
@@ -138,3 +138,11 @@ Obtain macOS 27.0.1 visual comparison of the current Settings and secondary dial
 - [x] Candidate build 3 local installation/launch explicitly authorized and verified.
 - [ ] Final release/main/tag/publication separately authorized and performed.
 - [ ] Tracker archived only after the required acceptance gates pass.
+
+## Release Closeout — 0.5.0 (2026-10-23)
+
+the maintainer explicitly approved the smoke test and requested release finalization, integration into main, tagging, cleanup and final local installation. The other-Mac macOS 27.0.1 check is deferred by the user and is not claimed as passed. Detailed native compatibility/accessibility/provider coverage remains recorded as a limitation, rather than invented test evidence. Colleague signing/notarization, company profile/issuance and Sparkle remain future work, not blockers for this approved local release.
+
+Implementation is integrated into the 0.5.0 release scope (build 6). Full canonical checks were restored and passed during pilot/onboarding work; clipboard insertion was exercised by the user after Accessibility repair. The successful build 5 smoke report is accepted as the human release gate. Final source/artifact/installation evidence is owned by `docs/runs/active/release-v0.5.0.md` until that tracker is archived at `docs/runs/archive/release-v0.5.0.md`.
+
+This implementation tracker is closed and archived. Earlier blocked/pending statements above are historical evidence superseded by this explicit release decision; outstanding follow-ups are retained in project-status/implementation-plan and the release tracker. Do not infer a new permission, provider, cost or publication authorization beyond the approved local release.

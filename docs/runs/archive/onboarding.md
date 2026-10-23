@@ -24,11 +24,11 @@ Implement the onboarding portion of `docs/features/onboarding-and-updates/spec.m
 - Postponed setup does not disable copy-only dictation. Live permissions always override remembered progress.
 - New ad-hoc candidates may need permission repair. Signing changes are deferred; do not reset TCC or use keys in automation.
 
-## Current Blocker
+## Historical Blocker At Implementation Handoff
 
 None.
 
-## Next Action
+## Historical Next Action
 
 Obtain macOS 27.0.1 visual acceptance of onboarding and Settings at both documented window sizes.
 
@@ -90,3 +90,11 @@ Candidate installation was explicitly authorized in the final-review request. Af
 ## Human Feedback (2026-10-23)
 
 the maintainer reported “This seems to be working” after build 5 installation and the onboarding/local-paste smoke handoff. Record this as a positive basic smoke result for 0.4.5 build 5 / b3f7ff0, without inventing individual test outcomes. The broader native compatibility matrix, macOS 27.0.1 evidence, colleague signing/updating and release/main/tag/publication remain separate gates. No code or installed payload changed in this documentation update.
+
+## Release Closeout — 0.5.0 (2026-10-23)
+
+the maintainer explicitly approved the smoke test and requested release finalization, integration into main, tagging, cleanup and final local installation. The other-Mac macOS 27.0.1 check is deferred by the user and is not claimed as passed. Detailed native compatibility/accessibility/provider coverage remains recorded as a limitation, rather than invented test evidence. Colleague signing/notarization, company profile/issuance and Sparkle remain future work, not blockers for this approved local release.
+
+Implementation is integrated into the 0.5.0 release scope (build 6). Full canonical checks were restored and passed during pilot/onboarding work; clipboard insertion was exercised by the user after Accessibility repair. The successful build 5 smoke report is accepted as the human release gate. Final source/artifact/installation evidence is owned by `docs/runs/active/release-v0.5.0.md` until that tracker is archived at `docs/runs/archive/release-v0.5.0.md`.
+
+This implementation tracker is closed and archived. Earlier blocked/pending statements above are historical evidence superseded by this explicit release decision; outstanding follow-ups are retained in project-status/implementation-plan and the release tracker. Do not infer a new permission, provider, cost or publication authorization beyond the approved local release.

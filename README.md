@@ -4,16 +4,19 @@ BabbelStream is a native macOS menu-bar hybrid dictation helper for Slack and ot
 
 Tap `Control + Option + Space` for hands-free recording or hold it for push-to-talk. BabbelStream transcribes through an OpenAI-compatible endpoint, optionally cleans the draft for Slack, and inserts it into the focused field. It never auto-sends messages.
 
-The latest released version is **0.4.5**, with Signal paste compatibility. The
-`codex/pilot-readiness` branch is unreleased work that preserves clipboard-only
-insertion and adds consistent Settings, destination/credential safeguards,
-guided per-user setup and release-path preparation. Cross-version visual and
-real microphone/provider/editor acceptance remain required before release.
+The latest local release is **0.5.0**, with first-run permission setup, a local
+paste test, a cleaner adaptive Settings layout, clipboard-based insertion for
+every application, and provider/credential safeguards. the maintainer approved the
+local smoke test; macOS 27.0.1 visual comparison is deferred. The local artifact
+is ad-hoc signed. Developer ID/notarized colleague distribution and automatic
+updates remain separate follow-ups.
 See [project status](docs/project-status.md) and [pilot setup/support](docs/pilot-support.md).
 
 ## Current MVP
 
 - Native macOS menu-bar app.
+- Postponable first-run setup with live microphone/Accessibility checks, permission repair, saved provider guidance and an explicit local sample-paste test.
+- Consistent Settings and secondary dialogs with a nearly white Light Mode canvas, native Dark Mode and fixed action footers.
 - Global hybrid hotkey: tap `Control + Option + Space` to record hands-free; hold it for at least 0.5 seconds for push-to-talk.
 - Compact non-activating status HUD for recording, processing, cancellation, and paste recovery.
 - Escape cancels only while a recording or provider operation is active; canceling a stopped recording's provider work preserves it under Failed Recordings.

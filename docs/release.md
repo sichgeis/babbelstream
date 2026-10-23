@@ -2,7 +2,7 @@
 
 ## Versioning And Build Provenance
 
-`VERSION` owns the semantic app/DMG version; `BUILD_NUMBER` owns the increasing integer `CFBundleVersion`. Increment BUILD_NUMBER before each newly distributed iteration, including a materially new candidate, and keep it committed. The previous fixed bundle build was 1; subsequent candidates increment the committed source BUILD_NUMBER. No semantic release/version/tag is created by this branch.
+`VERSION` owns the semantic app/DMG version; `BUILD_NUMBER` owns the increasing integer `CFBundleVersion`. Increment BUILD_NUMBER before each newly distributed iteration, including a materially new candidate, and keep it committed. The previous fixed bundle build was 1; subsequent candidates increment the committed source BUILD_NUMBER. The 0.5.0 local release uses build 6; release tags point to the final app-source commit on main.
 
 - Before 1.0, increment MINOR for substantial user-facing changes and PATCH for compatible fixes.
 - Keep VERSION, CHANGELOG, final main commit and annotated `v<version>` tag aligned after the human smoke gate.
@@ -170,4 +170,16 @@ After installing the candidate, verify version 0.4.5 and its source commit under
 
 For isolated visual inspection, run `scripts/swift-project.sh run BabbelStreamChecks --layout-preview --settings --settings-tab=general` (optionally `--minimum-window-size`). This constructs the real views with CoordinatorFixture stores and fake recording/provider/Keychain/insertion/hotkey/login/runtime adapters; it never starts the production app or accesses its stores. Quit the preview to remove its temporary fixture directory. The same preview supports `--teach-correction`, `--personal-dictionary`, and `--dictation-archive`. Do not launch a second production-store copy for screenshots.
 
-Shared sections use explicit 16-point gaps, 12-point section insets and 10-point row spacing inside one scroll owner. The footer stays outside the scroll view. Validate all five tabs at 700×560 and 760×640, long content, scrolling and secondary dialogs on macOS 26.7.1 and 27.0.1; evidence from one host cannot establish the other.
+Shared sections use explicit 20-point section gaps, 24-point horizontal canvas margins, 12-point section insets and 10-point row spacing inside one scroll owner. The footer stays outside the scroll view. Validate all five tabs at 700×560 and 760×640, long content, scrolling and secondary dialogs on macOS 26.7.1 and 27.0.1; evidence from one host cannot establish the other.
+
+## 0.5.0 Local Release Approval
+
+the maintainer approved release finalization on 2026-10-23 after successful build 5 smoke. The macOS 27.0.1 comparison is deferred to the other Mac, not marked passed. Full canonical fixture checks remain required. Developer ID signing/notarization and colleague update delivery remain separately gated.
+
+For this local release, use the clean optimized candidate pipeline with explicit ad-hoc identities and the stable final filename:
+
+```bash
+BUILD_MODE=candidate CODESIGN_IDENTITY=- DMG_CODESIGN_IDENTITY=- DMG_NAME=BabbelStream-0.5.0.dmg scripts/package-dmg.sh
+```
+
+The internal build-mode metadata stays `candidate` to describe the local ad-hoc verification class; semantic version 0.5.0, build 6, clean source commit and annotated v0.5.0 tag establish release provenance. Do not relabel this as Developer ID distribution or publish its binary as a notarized colleague installer. Verify the installed app with candidate-mode signature checks. A later docs-only evidence commit may follow the tagged app-source commit on main without moving the published tag or changing the installed payload.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved by the maintainer on 2026-10-23 through the explicit implementation request carried into this chat. Repository implementation and local candidate preparation delivered; local native setup review passed on 26.7.1; cross-version acceptance and release gates remain pending.
+Approved by the maintainer on 2026-10-23 through the explicit implementation request carried into this chat. Released locally in 0.5.0 after full checks, 26.7.1 visual evidence and the maintainer’s smoke-test approval on 2026-10-23. the maintainer explicitly deferred 27.0.1 comparison; company distribution/signing inputs remain future work.
 
 ## Problem And Desired Outcome
 
@@ -56,3 +56,5 @@ Authoritative company connection profile and credential issuance; authorized Dev
 the maintainer requested a color/background review against Apple HIG during implementation. Use semantic NSColor windowBackgroundColor, controlBackgroundColor and separatorColor instead of compounded gray opacity fills. Primary headings and native accent-colored actions carry hierarchy; status color always retains text. Honor system appearance without a new app theme setting. Preview light, dark and increased-contrast appearances without changing global settings. Keep five tabs, fixed Apply and resizable/scrolling behavior; defer a toolbar/navigation redesign.
 
 Sources: [Apple Color](https://developer.apple.com/design/human-interface-guidelines/color), [Materials](https://developer.apple.com/design/human-interface-guidelines/materials), [Settings](https://developer.apple.com/design/human-interface-guidelines/settings), reviewed 2026-10-23. Apple recommends semantic adaptive colors and native Settings conventions; the specific surface/spacing implementation is a project design decision, not a prescribed HIG palette.
+
+Release approval on 2026-10-23 supersedes earlier local-release gates in this implementation contract: main integration, annotated v0.5.0 tag, final local packaging and installation are authorized. Developer ID/notarization, public binary distribution and updater work remain deferred.

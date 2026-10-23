@@ -4,20 +4,23 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+No changes yet.
+
+## 0.5.0 - 2026-10-23
+
 - Add postponable first-run setup, live permission repair and a local automatic-paste test that verifies sample receipt without recording or contacting a provider; cancel tests on focus loss and refresh permissions at completion.
 - Soften shared Light Mode form backgrounds to nearly white while retaining native Dark Mode and increased-contrast separation.
-
 - Prepare distinct clean candidate and fail-closed Developer ID distribution modes, increasing bundle build numbers, hardened-runtime/audio entitlements, signature checks and an explicit notarization path.
-
 - Restore full build/check reproducibility with a project-local validated SDK selection.
 - Compact and align Settings/shared dialogs using semantic macOS surfaces, readable labels and one scrolling content area with fixed footers.
 - Enforce provider redirect and credential-origin boundaries; reject HTML/malformed transcription responses and prevent competing updated app copies from touching shared recording storage.
 - Preserve timed HUD feedback and export allowlisted diagnostics without private filesystem paths.
 - Guide per-user Keychain setup with explicit non-secret presets, Advanced controls and an optional disclosed synthetic transcription connection test.
-
 - Use clipboard plus Command+V for every application; remove direct Accessibility
   writes and application routing exceptions while preserving delivery guards and
   recovery. Direct insertion is deferred future work.
+
+Local release approved after the build 5 smoke test. Other-Mac macOS 27.0.1 visual validation is deferred; Developer ID/notarized colleague distribution and automatic updates remain separate follow-ups.
 
 ## 0.4.5 - 2026-09-05
 
