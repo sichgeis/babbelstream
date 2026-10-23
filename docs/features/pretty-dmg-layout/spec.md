@@ -31,3 +31,13 @@ visually confirm background/instructions/arrow and both icon positions, compare
 all app bundle bytes/signature/metadata to the original, validate DMG/checksum,
 and independently download the additional published assets. Original release
 asset IDs/digests, tag and Homebrew recipe must remain unchanged.
+
+## Bottom-spacing revision (2026-10-23)
+
+the maintainer reported clipped/cramped lower corners in the first pretty installer.
+Use a 440-point background in a 468-point outer window (28 points reserved for
+the title bar), add lower card padding and soften the border/shadow. Keep the
+icon positions/arrow and exact app payload. Preview/publish as a separately named
+`BabbelStream-0.5.1-pretty-r2.dmg`; preserve both existing DMGs/checksums and cask.
+The first pretty artifact's outer window was only 420 points, cropping its
+420-point background; correct this mismatch explicitly in the metadata.

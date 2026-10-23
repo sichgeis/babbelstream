@@ -223,3 +223,10 @@ Evidence: `docs/runs/archive/pretty-dmg-layout.md`. Repackaging an
 unchanged verified app does not increment its version/build or claim the current
 packaging-tool commit as app provenance. Newly compiled apps still follow normal
 clean-source/version/build gates.
+
+The spacing refinement is published separately as `BabbelStream-0.5.1-pretty-r2.dmg`
+and checksum, with a 440-point background and a 468-point outer Finder window.
+The outer height includes the 28-point title bar; do not reuse background height
+as outer-window height. Its card border/corners remain visible with extra lower
+padding and a softer shadow. Keep the original and first pretty assets intact.
+Evidence: `docs/runs/archive/dmg-bottom-spacing.md`.

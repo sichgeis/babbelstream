@@ -42,8 +42,8 @@ manual BabbelStream installation, quit it and preserve a backup before migrating
 see [installation guidance](docs/getting-started.md).
 
 For the illustrated drag-to-Applications window, download
-[BabbelStream-0.5.1-pretty.dmg](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty.dmg)
-and its [checksum](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty.dmg.sha256).
+[BabbelStream-0.5.1-pretty-r2.dmg](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty-r2.dmg)
+and its [checksum](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty-r2.dmg.sha256).
 It contains the same released app with the restored background and arrow. The
 original DMG and Homebrew download remain unchanged.
 The app is **not Apple-notarized**. If macOS blocks first launch, use
