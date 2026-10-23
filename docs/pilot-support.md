@@ -1,6 +1,6 @@
 # Internal Pilot Setup And Support
 
-This branch is an unreleased candidate. Do not distribute or replace the daily app until the release/manual gates in `docs/release.md` are approved. The installed 0.4.5 release remains separate.
+This branch is an unreleased candidate. Do not distribute or replace the daily app until the release/manual gates in `docs/release.md` are approved. the maintainer explicitly authorized local candidate build 3 installation/launch on 2026-10-23 for his smoke test. It now replaces the Applications copy; the prior bundle is preserved under `dist/rollback/`. Public pilot distribution remains gated.
 
 ## Install And Set Up
 

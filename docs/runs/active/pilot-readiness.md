@@ -12,7 +12,7 @@ Deliver the approved internal-pilot improvements in `docs/features/pilot-readine
 
 ## Authority And Gates
 
-the maintainer explicitly requested autonomous implementation on 2026-10-23, carried in the new-chat delegation. Feature commits/pushes and local candidate preparation authorized. No subagents, PR, main/tag/publication, production installation/launch, real data/keys/providers or signing-material access. No new providers/dependencies/permissions/retention/cost changes.
+the maintainer explicitly requested autonomous implementation on 2026-10-23, carried in the new-chat delegation. Feature commits/pushes and local candidate preparation authorized. Initial scope excluded subagents, PR, main/tag/publication, production installation/launch, real data/keys/providers or signing-material access. the maintainer subsequently explicitly authorized installation and launch of candidate build 3 for his own smoke test; this does not authorize automated recording/provider calls or release/publication. No new providers/dependencies/permissions/retention/cost changes.
 
 ## Stages
 
@@ -103,13 +103,21 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 - All resumed isolated previews closed normally. No daily app was stopped. Temporary screenshot/log resources remain available but may expire.
 - Safest rollback point: secured/pushed insertion baseline 162ddf3; use ordinary forward/revert work, never reset shared checkout or rewrite published history.
 
+## Authorized Local Installation (2026-10-23)
+
+- the maintainer requested install/launch of candidate build 3 for his UI review and smoke test. Verified the exact DMG SHA-256, mounted read-only, checked payload metadata/signature/runtime/entitlements, and staged the Applications replacement.
+- Asked the prior running Applications copy to quit normally through macOS. Preserved its actual installed bundle (`0.4.5`, build 1, `a9c5547`) at `dist/rollback/BabbelStream-0.4.5-a9c5547.app`; this supersedes older installed-version evidence. No settings, Keychain entries, recordings or archives were copied or changed manually.
+- Installed `/Applications/BabbelStream.app`, launched with `--settings`, and verified running process, version 0.4.5/build 3/commit 4e6da0d, strict candidate signature, and executable SHA-256 matching the prepared payload. Settings visible in General. DMG detached.
+- Native General reports Microphone Not requested and Accessibility Not allowed under the candidate identity. the maintainer must grant permissions for his smoke test; ad-hoc identity may require Accessibility reapproval. No permission buttons, provider tests or recording controls were activated by automation.
+- Release/main/tag/publication and full acceptance remain pending; local install authorization is not a smoke-test pass or release approval.
+
 ## Current Blocker And Human Gates
 
-Implementation and local candidate preparation are delivered; full acceptance remains blocked. Current setup/metadata and shared dialogs passed fixture-only native review on 26.7.1 after unlock. No macOS 27.0.1 host is available in this chat. Authoritative company connection/key-issuance inputs and authorized Developer ID/notarization identity/profile are still pending. Real microphone/provider/unsent-editor smoke and candidate installation require the separately defined human gates. No real data or daily application was modified.
+Implementation and local candidate preparation are delivered; full acceptance remains blocked. Current setup/metadata and shared dialogs passed fixture-only native review on 26.7.1 after unlock. No macOS 27.0.1 host is available in this chat. Authoritative company connection/key-issuance inputs and authorized Developer ID/notarization identity/profile are still pending. Candidate installation/launch was subsequently explicitly authorized and completed below. Real microphone/provider/unsent-editor smoke still requires the maintainer's report. Saved settings, keys and application data were preserved.
 
 ## Next Action
 
-Obtain macOS 27.0.1 visual comparison of the current fixture-only Settings and secondary dialogs at both documented sizes.
+the maintainer grants the candidate Microphone/Accessibility access and performs the real unsent dictation smoke test; report pass/fail before release decisions.
 
 ## Closeout
 
@@ -120,5 +128,6 @@ Obtain macOS 27.0.1 visual comparison of the current fixture-only Settings and s
 - [ ] Complete 27.0.1 visual acceptance.
 - [ ] Authoritative company profile/credential issuance and distribution prerequisites supplied.
 - [ ] Human real-workflow smoke approved; no waiver inferred.
-- [ ] Release/install/main/tag/publication separately authorized and performed.
+- [x] Candidate build 3 local installation/launch explicitly authorized and verified.
+- [ ] Final release/main/tag/publication separately authorized and performed.
 - [ ] Tracker archived only after the required acceptance gates pass.

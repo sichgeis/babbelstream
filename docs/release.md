@@ -2,7 +2,7 @@
 
 ## Versioning And Build Provenance
 
-`VERSION` owns the semantic app/DMG version; `BUILD_NUMBER` owns the increasing integer `CFBundleVersion`. Increment BUILD_NUMBER before each newly distributed iteration, including a materially new candidate, and keep it committed. The previous fixed bundle build was 1; this pilot preparation uses 2. No semantic release/version/tag is created by this branch.
+`VERSION` owns the semantic app/DMG version; `BUILD_NUMBER` owns the increasing integer `CFBundleVersion`. Increment BUILD_NUMBER before each newly distributed iteration, including a materially new candidate, and keep it committed. The previous fixed bundle build was 1; the current pilot candidate uses 3. No semantic release/version/tag is created by this branch.
 
 - Before 1.0, increment MINOR for substantial user-facing changes and PATCH for compatible fixes.
 - Keep VERSION, CHANGELOG, final main commit and annotated `v<version>` tag aligned after the human smoke gate.

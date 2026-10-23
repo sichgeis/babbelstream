@@ -15,12 +15,12 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Pilot readiness implementation/local preparation delivered; full acceptance pending: `docs/features/pilot-readiness/spec.md`, tracker `docs/runs/active/pilot-readiness.md`, branch `codex/pilot-readiness`. Approved autonomous implementation, unreleased; clean local candidate 0.4.5 build 3 / 4e6da0d prepared after native UI corrections without production installation.
+- Pilot readiness implementation/local preparation delivered; full acceptance pending: `docs/features/pilot-readiness/spec.md`, tracker `docs/runs/active/pilot-readiness.md`, branch `codex/pilot-readiness`. Approved autonomous implementation, unreleased; clean local candidate 0.4.5 build 3 / 4e6da0d prepared after native UI corrections; explicitly authorized local installation/launch completed for human smoke on 2026-10-23.
 - Preserved dependency: clipboard-only insertion implemented 2026-10-23; unreleased on `codex/clipboard-only-insertion`.
 - Contract: `docs/features/clipboard-only-insertion/spec.md`.
 - Tracker: `docs/runs/active/clipboard-only-insertion.md`.
 - Latest released compatibility feature remains Signal paste compatibility.
-- Installed/running final release: `0.4.5` / `069acc3`; version, signature, and executable verified.
+- Installed/running local candidate: `0.4.5`, build `3`, commit `4e6da0d` at `/Applications/BabbelStream.app`; version, signature, running executable and payload hash verified. Human smoke pending. Previous installed bundle `0.4.5` / `a9c5547` preserved under `dist/rollback/`.
 - Spec: `docs/features/signal-paste-compatibility/spec.md`.
 - Tracker: `docs/runs/archive/signal-paste-compatibility.md`.
 - Completed reliability evidence: `docs/runs/archive/recovery-delivery-reliability.md`.
@@ -64,4 +64,4 @@ recorded.
 
 ## Next Action
 
-Obtain macOS 27.0.1 visual comparison of the current fixture-only Settings and secondary dialogs at both documented sizes.
+the maintainer grants the candidate Microphone/Accessibility access and performs the real unsent dictation smoke test; report pass/fail before release decisions.
