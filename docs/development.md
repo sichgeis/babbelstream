@@ -62,3 +62,9 @@ Building or packaging does not authorize changing the daily installation, using
 private signing material, publishing a release or making a real provider request.
 The Homebrew pilot's approved envelope and human gate are in its
 [feature contract](features/homebrew-distribution/spec.md).
+
+Manual/user-facing DMGs default to the illustrated Finder layout. Candidate
+packaging stays plain for unattended checks; use `DMG_LAYOUT=plain` explicitly
+when a desktop/Finder is unavailable in other modes. For the existing released
+app, use the separately named `BabbelStream-0.5.1-pretty.dmg` rather than rebuilding
+over the original release artifact. See the [release guide](release.md).

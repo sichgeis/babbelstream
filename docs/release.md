@@ -71,7 +71,7 @@ task app:candidate
 
 This produces `dist/BabbelStream-<VERSION>-candidate.<BUILD_NUMBER>-<COMMIT>.dmg` from a clean commit without opening Finder, installing, launching the daily app or looking up a private signing identity. The ad-hoc candidate is not a distributable Developer ID artifact and does not pass the public Gatekeeper/notarization gate. An explicitly authorized stable signing identity can be supplied for later local permission QA; do not infer authorization from its availability.
 
-DMG packaging defaults to a plain, noninteractive drag-to-Applications image with an Applications symlink. `DMG_LAYOUT=finder` retains the optional decorative developer layout, which mounts the image and drives Finder; do not use it in unattended validation. Packaging alone never installs or launches an app.
+User-facing development/manual and distribution DMGs default to the decorative `finder` layout: background, arrow, app on the left and Applications on the right. This mounts a writable staging image and configures Finder; use an unlocked desktop with Finder access. Candidate mode defaults to noninteractive `plain`. Explicit `DMG_LAYOUT=plain` supports unattended packaging in any mode; `DMG_LAYOUT=finder` opts a candidate into the decorative layout. Packaging alone never installs or launches an app.
 
 ### Developer ID Distribution Artifact (Separate Authorization)
 
@@ -212,3 +212,14 @@ as Apple-verified or official Homebrew catalogue builds.
 - Homebrew/GitHub network activity is initiated outside BabbelStream; no Sparkle
   or in-app update request is introduced. Signing/notarization remains an optional
   separately authorized later transition.
+
+## Additional 0.5.1 Decorative Installer
+
+the maintainer authorized `BabbelStream-0.5.1-pretty.dmg` plus its portable SHA-256 as
+additional v0.5.1 release assets. This is a container/layout variant of the exact
+released 0.5.1/build 7/8f229fe app, not a new app build or notarized installer.
+Do not replace the original DMG/checksum, move v0.5.1 or change Homebrew's URL/hash.
+Evidence: `docs/runs/archive/pretty-dmg-layout.md`. Repackaging an
+unchanged verified app does not increment its version/build or claim the current
+packaging-tool commit as app provenance. Newly compiled apps still follow normal
+clean-source/version/build gates.

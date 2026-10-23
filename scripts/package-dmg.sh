@@ -13,7 +13,13 @@ if [[ "$BUILD_MODE" == candidate ]]; then
 else
   DMG_NAME="${DMG_NAME:-$APP_NAME-$VERSION.dmg}"
 fi
-DMG_LAYOUT="${DMG_LAYOUT:-plain}"
+# Human-facing installers retain the decorative Finder layout. Candidates stay
+# noninteractive unless a caller explicitly opts into Finder layout.
+if [[ "$BUILD_MODE" == candidate ]]; then
+  DMG_LAYOUT="${DMG_LAYOUT:-plain}"
+else
+  DMG_LAYOUT="${DMG_LAYOUT:-finder}"
+fi
 [[ "$DMG_LAYOUT" == plain || "$DMG_LAYOUT" == finder ]] || { echo "DMG_LAYOUT must be plain or finder." >&2; exit 1; }
 DMG_PATH="$DIST_DIR/$DMG_NAME"
 RW_DMG_PATH="$DIST_DIR/$APP_NAME-$VERSION-rw.dmg"
@@ -149,7 +155,7 @@ cp -R "$APP_DIR" "$STAGING_DIR/$APP_NAME.app"
 ln -s /Applications "$STAGING_DIR/Applications"
 
 if [[ "$DMG_LAYOUT" == finder ]]; then
-  # Optional interactive developer layout; plain packaging never opens Finder or mounts a volume.
+  # Decorative user-facing layout; plain packaging never opens Finder or mounts a volume.
   trap detach_mounted_dmg EXIT
   detach_existing_volume
   render_dmg_background

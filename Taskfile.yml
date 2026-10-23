@@ -24,7 +24,7 @@ tasks:
       - RESTART_ONLY=1 scripts/install-dev-app.sh
 
   app:package-dmg:
-    desc: Build the local app bundle and package a DMG
+    desc: Build the local app bundle and package an illustrated drag-to-Applications DMG
     cmds:
       - scripts/package-dmg.sh
 
@@ -53,7 +53,7 @@ tasks:
       - python3 benchmark.py {{.CLI_ARGS}}
 
   app:candidate:
-    desc: Package a clean optimized local candidate without installation or private signing-key lookup
+    desc: Package a plain clean optimized candidate without installation or private signing-key lookup
     cmds:
       - BUILD_MODE=candidate scripts/package-dmg.sh
 

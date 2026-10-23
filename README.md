@@ -41,7 +41,11 @@ Homebrew's official catalogue. Homebrew must already be installed. If you have a
 manual BabbelStream installation, quit it and preserve a backup before migrating;
 see [installation guidance](docs/getting-started.md).
 
-You can also use the versioned DMG and checksum from GitHub Releases.
+For the illustrated drag-to-Applications window, download
+[BabbelStream-0.5.1-pretty.dmg](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty.dmg)
+and its [checksum](https://github.com/sichgeis/babbelstream/releases/download/v0.5.1/BabbelStream-0.5.1-pretty.dmg.sha256).
+It contains the same released app with the restored background and arrow. The
+original DMG and Homebrew download remain unchanged.
 The app is **not Apple-notarized**. If macOS blocks first launch, use
 [Apple's per-app approval instructions](https://support.apple.com/en-gb/102445)
 where device policy permits. On a managed Mac, ask IT if approval is unavailable.
