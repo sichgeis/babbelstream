@@ -79,7 +79,7 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 | build/package | parent full build blocked | clean optimized arm64 candidate build 3 from 4e6da0d; actual signature/runtime/audio entitlement and DMG integrity/checksum verified |
 | Settings screenshots | installed 0.4.5 baseline in temporary parent resources | layout milestone 323d7ea: five tabs at both content sizes, shared dialogs at minimum, dark and scoped high contrast; current setup/metadata/Advanced/confirmation/permissions and shared minimum dialogs refreshed in resumed captures |
 | macOS 27.0.1 | unavailable on this host | human gate |
-| microphone/provider/Slack | not authorized in automation | human gate |
+| microphone/provider/editor | not authorized in automation | the maintainer reports dictation/automatic paste works after permission repair; expanded matrix remains pending |
 | privacy/diff | clean baseline | full baseline-to-HEAD whitespace/diff review; no direct insertion restored, clipboard source/spec/tracker unchanged; no live keys/providers/content or production stores touched |
 
 ## Candidate And Stage Evidence
@@ -111,13 +111,19 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 - Native General reports Microphone Not requested and Accessibility Not allowed under the candidate identity. the maintainer must grant permissions for his smoke test; ad-hoc identity may require Accessibility reapproval. No permission buttons, provider tests or recording controls were activated by automation.
 - Release/main/tag/publication and full acceptance remain pending; local install authorization is not a smoke-test pass or release approval.
 
+## Human Paste Retest (2026-10-23)
+
+- the maintainer reported dictation completed but only copied to the clipboard in ChatGPT and Slack. Native General showed Microphone Allowed, Accessibility Not allowed. The insertion service correctly uses its copy-only fallback when AXIsProcessTrusted is false.
+- System Settings showed the BabbelStream toggle enabled while the running candidate remained untrusted. Removing/re-adding initially did not resolve it. Reset only `Accessibility` for bundle `com.sichgeis.babbelstream` using tccutil; the maintainer reauthorized the installed Applications copy. No other application permission was reset.
+- After a normal candidate restart, native General showed both Microphone Allowed and Accessibility Allowed. the maintainer then reported: “Now it works as expected.” This confirms his basic dictation/automatic-paste retest, without claiming the complete editor/language/gesture/recovery matrix or release approval. No automated recording/provider call or draft inspection was performed.
+
 ## Current Blocker And Human Gates
 
-Implementation and local candidate preparation are delivered; full acceptance remains blocked. Current setup/metadata and shared dialogs passed fixture-only native review on 26.7.1 after unlock. No macOS 27.0.1 host is available in this chat. Authoritative company connection/key-issuance inputs and authorized Developer ID/notarization identity/profile are still pending. Candidate installation/launch was subsequently explicitly authorized and completed below. Real microphone/provider/unsent-editor smoke still requires the maintainer's report. Saved settings, keys and application data were preserved.
+Implementation and local candidate preparation are delivered; full acceptance remains blocked. Current setup/metadata and shared dialogs passed fixture-only native review on 26.7.1 after unlock. No macOS 27.0.1 host is available in this chat. Authoritative company connection/key-issuance inputs and authorized Developer ID/notarization identity/profile are still pending. Candidate installation/launch was subsequently explicitly authorized and completed below. the maintainer confirmed the basic dictation/automatic-paste retest works after Accessibility repair; expanded language/editor/gesture/recovery matrix is not established by that report. Saved settings, keys and application data were preserved.
 
 ## Next Action
 
-the maintainer grants the candidate Microphone/Accessibility access and performs the real unsent dictation smoke test; report pass/fail before release decisions.
+Obtain macOS 27.0.1 visual comparison of the current Settings and secondary dialogs at both documented sizes.
 
 ## Closeout
 
@@ -127,7 +133,8 @@ the maintainer grants the candidate Microphone/Accessibility access and performs
 - [x] Latest native setup and secondary-dialog visual review on 26.7.1.
 - [ ] Complete 27.0.1 visual acceptance.
 - [ ] Authoritative company profile/credential issuance and distribution prerequisites supplied.
-- [ ] Human real-workflow smoke approved; no waiver inferred.
+- [x] Human basic dictation/automatic-paste retest passed after permission repair.
+- [ ] Expanded real-workflow smoke matrix and final acceptance; no waiver inferred.
 - [x] Candidate build 3 local installation/launch explicitly authorized and verified.
 - [ ] Final release/main/tag/publication separately authorized and performed.
 - [ ] Tracker archived only after the required acceptance gates pass.

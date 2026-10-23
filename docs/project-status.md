@@ -20,7 +20,7 @@ by their dedicated specifications.
 - Contract: `docs/features/clipboard-only-insertion/spec.md`.
 - Tracker: `docs/runs/active/clipboard-only-insertion.md`.
 - Latest released compatibility feature remains Signal paste compatibility.
-- Installed/running local candidate: `0.4.5`, build `3`, commit `4e6da0d` at `/Applications/BabbelStream.app`; version, signature, running executable and payload hash verified. Human smoke pending. Previous installed bundle `0.4.5` / `a9c5547` preserved under `dist/rollback/`.
+- Installed/running local candidate: `0.4.5`, build `3`, commit `4e6da0d` at `/Applications/BabbelStream.app`; version, signature, running executable and payload hash verified. the maintainer confirmed dictation/automatic paste works after Accessibility repair; expanded smoke coverage remains pending. Previous installed bundle `0.4.5` / `a9c5547` preserved under `dist/rollback/`.
 - Spec: `docs/features/signal-paste-compatibility/spec.md`.
 - Tracker: `docs/runs/archive/signal-paste-compatibility.md`.
 - Completed reliability evidence: `docs/runs/archive/recovery-delivery-reliability.md`.
@@ -64,4 +64,4 @@ recorded.
 
 ## Next Action
 
-the maintainer grants the candidate Microphone/Accessibility access and performs the real unsent dictation smoke test; report pass/fail before release decisions.
+Obtain macOS 27.0.1 visual comparison of the current Settings and secondary dialogs at both documented sizes.
