@@ -56,13 +56,14 @@ final class FixtureHotkey: HotkeyService {
 @MainActor
 final class FixtureRecorder: AudioRecorder {
     let root: URL
+    var permission: MicrophonePermissionStatus = .authorized
     var isRecording = false
     var currentLevel: Float { 0 }
     var failStopOwnership = false
     var audio: RecordedAudio?
     init(root: URL) { self.root = root }
-    func microphonePermissionStatus() -> MicrophonePermissionStatus { .authorized }
-    func requestMicrophonePermission() async -> MicrophonePermissionStatus { .authorized }
+    func microphonePermissionStatus() -> MicrophonePermissionStatus { permission }
+    func requestMicrophonePermission() async -> MicrophonePermissionStatus { permission }
     func start(maxDuration: TimeInterval) async throws {
         let url = root.appendingPathComponent("\(UUID()).m4a")
         let bytes = Data("synthetic-audio-fixture".utf8)
@@ -108,11 +109,12 @@ final class FixtureCleanup: CleanupProvider {
 
 @MainActor
 final class FixtureInsertion: TextInsertionService {
+    var permission: AccessibilityPermissionStatus = .trusted
     var inserted: [String] = []
     var copied: [String] = []
     var failCopy = false
     var result = TextInsertionResult.pasteShortcutPosted
-    func accessibilityPermissionStatus() -> AccessibilityPermissionStatus { .trusted }
+    func accessibilityPermissionStatus() -> AccessibilityPermissionStatus { permission }
     func requestAccessibilityPermission() {}
     func captureTarget() -> TextInsertionTarget? { TextInsertionTarget(processIdentifier: 123, localizedName: "Fixture", bundleIdentifier: "example.fixture") }
     func insertText(_ text: String, target: TextInsertionTarget?) async throws -> TextInsertionResult { inserted.append(text); return result }
@@ -132,6 +134,7 @@ final class CoordinatorFixture {
     let mini = FixtureTranscriber()
     let cleanup = FixtureCleanup()
     let insertion = FixtureInsertion()
+    let personalKeyPresence = MemoryKeyPresence()
     let keyPresence = MemoryKeyPresence()
     let secret = FixtureSecret()
     let personalSecret = FixtureSecret()
@@ -139,10 +142,14 @@ final class CoordinatorFixture {
     let recovery: FileDictationRecoveryStore
     let settings: MemorySettings
 
-    init(cleanupEnabled: Bool = true) throws {
+    init(cleanupEnabled: Bool = true, hasPrimaryKey: Bool = true, permissionsReady: Bool = true) throws {
         root = FileManager.default.temporaryDirectory.appendingPathComponent("BabbelStreamCoordinatorChecks-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         recorder = FixtureRecorder(root: root)
+        keyPresence.hasSavedAPIKey = hasPrimaryKey
+        personalKeyPresence.hasSavedAPIKey = hasPrimaryKey
+        recorder.permission = permissionsReady ? .authorized : .denied
+        insertion.permission = permissionsReady ? .trusted : .notTrusted
         var initial = AppSettings(cleanupEnabled: cleanupEnabled)
         initial.providerConfiguration.baseURL = URL(string: "https://primary.example.invalid")!
         settings = MemorySettings(initial)
@@ -150,7 +157,7 @@ final class CoordinatorFixture {
         app = AppState(
             audioRecorder: recorder, settingsStore: settings, secretStore: secret,
             apiKeyPresenceStore: keyPresence, personalOpenAIFallbackSecretStore: personalSecret,
-            personalOpenAIFallbackAPIKeyPresenceStore: MemoryKeyPresence(),
+            personalOpenAIFallbackAPIKeyPresenceStore: personalKeyPresence,
             transcriptionProvider: transcription, fallbackTranscriptionProvider: mini, cleanupProvider: cleanup,
             textInsertionService: insertion, hotkeyService: hotkey, launchAtLoginService: FixtureLogin(),
             personalDictionaryStore: JSONPersonalDictionaryStore(fileURL: root.appendingPathComponent("dictionary.json")),

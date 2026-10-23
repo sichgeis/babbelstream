@@ -4,6 +4,12 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+- Restore full build/check reproducibility with a project-local validated SDK selection.
+- Compact and align Settings/shared dialogs using semantic macOS surfaces, readable labels and one scrolling content area with fixed footers.
+- Enforce provider redirect and credential-origin boundaries; reject HTML/malformed transcription responses and prevent competing updated app copies from touching shared recording storage.
+- Preserve timed HUD feedback and export allowlisted diagnostics without private filesystem paths.
+- Guide per-user Keychain setup with explicit non-secret presets, Advanced controls and an optional disclosed synthetic transcription connection test.
+
 - Use clipboard plus Command+V for every application; remove direct Accessibility
   writes and application routing exceptions while preserving delivery guards and
   recovery. Direct insertion is deferred future work.

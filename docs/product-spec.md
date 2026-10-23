@@ -218,3 +218,9 @@ The user may enable a local archive for work self-review and month-end reporting
 ## Internal Pilot Safety Refinements
 
 Provider origin changes require an explicitly supplied key for the new destination. Redirects cannot move audio or transcript text outside the original approved origin or downgrade transport. Startup permits one active updated copy per user before shared cleanup. HTML and malformed transcription responses never become drafts. Completion feedback retains its timed visibility despite repeated state notifications. Copy Diagnostics exports only reviewed content-free fields and no private paths. Detailed migration and failure contracts live in `docs/features/pilot-readiness/spec.md` and `docs/security-privacy.md`.
+
+## Guided Connection Setup
+
+Missing or origin-mismatched credentials open Settings on Provider at launch; existing usable configurations are preserved. General links to Provider setup and permission repair. Generic custom and explicit official OpenAI connection presets contain no keys and do not apply automatically or change models. Company profile/key issuance remain pending approved input. Endpoint paths, models, routing and timeouts are under Advanced. Keys are per-user and revocable; no bundled master credential.
+
+A saved key is unverified until an explicit synthetic transcription test returns the expected response contract. The confirmation names the saved primary destination/model, a 250 ms silent WAV and possible provider charges. The request is bounded to at most 30 seconds, has no retries, hedge, cleanup, personal fallback, microphone, dictionary or insertion. Valid empty text from silence may verify the connection contract; speech quality and full workflow remain untested. Evidence is memory-only, invalidated by Apply/deletion/relaunch, and never inferred from models listing. Incomplete, unverified, testing, verified and temporarily unavailable states are distinct.

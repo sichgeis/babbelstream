@@ -96,6 +96,8 @@ final class AppState: ObservableObject {
     @Published var transcriptionPromptText: String
     @Published var apiKeyInput = ""
     @Published var personalOpenAIFallbackAPIKeyInput = ""
+    @Published private(set) var connectionVerification: ConnectionVerificationState = .unverified
+    @Published private(set) var connectionTestFeedback = "Saving a key does not verify transcription. Testing is optional and sends only synthetic silence."
     @Published var settingsFeedbackMessage = ""
     @Published var settingsErrorMessage: String?
     @Published private(set) var transcriptionProgressDetail: String?
@@ -131,6 +133,8 @@ final class AppState: ObservableObject {
     private let runtime: any AppRuntime
     private var shouldStopDictationAfterStart = false
     private var dictationHotkeyPressedAt: ContinuousClock.Instant?
+    private var connectionTestTask: Task<String, Error>?
+    private var connectionTestID: UUID?
     private var retainedOperationKeys: [String: String] = [:]
     private var cachedAPIKey: String?
     private var cachedPersonalOpenAIFallbackAPIKey: String?
@@ -248,7 +252,7 @@ final class AppState: ObservableObject {
     }
 
     var canStart: Bool {
-        !isRecording && !isProcessing
+        !isRecording && !isProcessing && !isConnectionTesting
     }
 
     var canStop: Bool {
@@ -672,7 +676,87 @@ final class AppState: ObservableObject {
         notifyStateChanged()
     }
 
+    var hasPrimaryCredentialForSavedOrigin: Bool {
+        hasAPIKey && apiKeyPresenceStore.approvedOrigin == ProviderOrigin(appSettings.providerConfiguration.baseURL)?.description
+    }
+
+    var needsConnectionSetup: Bool {
+        isPersonalOpenAIDirectModeApplied ? !hasPersonalOpenAIFallbackAPIKey : !hasPrimaryCredentialForSavedOrigin
+    }
+
+    var isConnectionTesting: Bool { connectionTestID != nil }
+    var connectionReadinessSummary: String {
+        (hasPrimaryCredentialForSavedOrigin ? connectionVerification : .incomplete).rawValue
+    }
+    var canTestSavedConnection: Bool {
+        canStart && hasPrimaryCredentialForSavedOrigin && !hasUnsavedSettingsChanges
+    }
+    var connectionTestDisclosure: String {
+        "Send one 250 ms silent WAV (up to 30 seconds, no retries) to \(providerDestinationSummary) using the saved primary key and model \(appSettings.providerConfiguration.transcriptionModel). The provider may charge for this request. No microphone, transcript, dictionary, cleanup, hedge or personal fallback is used. A successful test verifies the transcription response contract, not speech quality, cleanup access or paste permissions."
+    }
+
+    func selectConnectionPreset(_ preset: ConnectionPreset) {
+        baseURLText = preset.baseURL
+        transcriptionPathText = "/v1/audio/transcriptions"
+        cleanupPathText = "/v1/chat/completions"
+        transcriptionModelRouting = .standardOpenAI
+        settingsFeedbackMessage = "Preset staged. Confirm your authorized destination and per-user key, review Advanced if needed, then Apply. Models are unchanged."
+    }
+
+    func cancelConnectionTest() {
+        connectionTestID = nil
+        connectionTestTask?.cancel()
+        connectionTestTask = nil
+        connectionVerification = .unverified
+        connectionTestFeedback = "Key and configuration are unverified. Run an explicit synthetic transcription test after Apply."
+    }
+
+    func testSavedConnection() async {
+        guard canTestSavedConnection else { return }
+        let testID = UUID()
+        connectionTestID = testID
+        connectionVerification = .testing
+        connectionTestFeedback = "Sending synthetic silence to the saved primary transcription destination."
+        // Snapshot only the connection contract. Never include user-supplied speech hints.
+        var snapshot = appSettings
+        snapshot.transcriptionPrompt = ""
+        snapshot.transcriptionLanguage = ""
+        snapshot.providerConfiguration.timeoutSeconds = min(snapshot.providerConfiguration.timeoutSeconds, 30)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("BabbelStreamConnectionTest-\(testID)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            let audioURL = directory.appendingPathComponent("synthetic-silence.wav")
+            try SyntheticConnectionAudio.wavData().write(to: audioURL)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: audioURL.path)
+            let key = try loadAPIKeyForDictation(settings: snapshot)
+            let provider = transcriptionProvider
+            let requestTask = Task {
+                try await provider.transcribe(TranscriptionRequest(audioURL: audioURL, settings: snapshot, apiKey: key, retryCount: 0))
+            }
+            connectionTestTask = requestTask
+            _ = try await requestTask.value // Never retain or display provider output from silence.
+            guard connectionTestID == testID else { return }
+            connectionVerification = .verified
+            connectionTestFeedback = "Transcription endpoint accepted the silent test and returned a valid transcript response. Speech quality, cleanup, permissions and insertion still need a real smoke test."
+        } catch {
+            guard connectionTestID == testID else { return }
+            if case ProviderError.emptyTranscript = error {
+                connectionVerification = .verified
+                connectionTestFeedback = "Transcription endpoint accepted the silent test with empty text, as silence may produce. Speech quality, cleanup, permissions and insertion remain untested."
+            } else {
+                connectionVerification = PersonalOpenAIFallbackPolicy.shouldFallback(after: error) ? .unavailable : .unverified
+                connectionTestFeedback = "Test not verified: \(ProviderFailureCategory.classify(error).displayName). Check destination, per-user key and model access, then retry explicitly. No fallback was contacted."
+            }
+        }
+        if connectionTestID == testID {
+            connectionTestID = nil
+            connectionTestTask = nil
+        }
+    }
+
     func saveSettings() {
+        cancelConnectionTest()
         do {
             let settings = try settingsFromDraft()
 
@@ -694,7 +778,7 @@ final class AppState: ObservableObject {
                 let priorOrigin = apiKeyPresenceStore.approvedOrigin
                 // Preserve the already-approved operation snapshot when Apply replaces
                 // a credential while recording or processing. Never reuse it for a new origin.
-                if !canStart, let priorOrigin, retainedOperationKeys[priorOrigin] == nil {
+                if (isRecording || isProcessing), let priorOrigin, retainedOperationKeys[priorOrigin] == nil {
                     retainedOperationKeys[priorOrigin] = try cachedAPIKey ?? secretStore.readAPIKey()
                 }
                 cachedAPIKey = nil
@@ -743,6 +827,7 @@ final class AppState: ObservableObject {
     }
 
     func deleteAPIKey() {
+        cancelConnectionTest()
         do {
             try secretStore.deleteAPIKey()
             cachedAPIKey = nil
@@ -1068,6 +1153,7 @@ final class AppState: ObservableObject {
     }
 
     func prepareForTermination() {
+        cancelConnectionTest()
         stopElapsedTimer()
         processingTask?.cancel()
         setCancelHotkeyEnabled(false)

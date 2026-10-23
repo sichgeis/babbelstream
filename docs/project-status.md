@@ -65,4 +65,4 @@ recorded.
 
 ## Next Action
 
-Implement guided per-user connection setup and an explicitly disclosed synthetic transcription test.
+Prepare fail-closed candidate/distribution tooling and reconcile provider lifecycle/support documentation.

@@ -14,7 +14,7 @@ public final class SingleInstanceLock {
     public init(directory: URL) throws {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         let path = directory.appendingPathComponent("instance.lock").path
-        descriptor = Darwin.open(path, O_CREAT | O_RDWR | O_NOFOLLOW, mode_t(0o600))
+        descriptor = Darwin.open(path, O_CREAT | O_RDWR | O_NOFOLLOW | O_CLOEXEC, mode_t(0o600))
         guard descriptor >= 0 else { throw SingleInstanceError.unavailable }
         guard flock(descriptor, LOCK_EX | LOCK_NB) == 0 else {
             let busy = errno == EWOULDBLOCK

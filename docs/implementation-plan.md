@@ -82,3 +82,7 @@ Clipboard-only insertion is approved active work; see `docs/features/clipboard-o
 - Content-free delivery diagnostics: permission, application match, clipboard ownership and event-posted outcome; never draft, clipboard or field text.
 - Broader native/manual coverage across rich/native editors, alternate layouts/IME, held modifiers, selection replacement and multiline input. Current paste uses ANSI-V keycode 9; measure before changing event strategy.
 - Explicit protected-field, terminal and remote-desktop policies. Current targeting identifies an application, not an original field. Stricter behavior needs a feature contract compatible with unstable rich-editor AX elements. Never blindly retry ambiguous delivery.
+
+## Provider Lifecycle Dependency
+
+The approved pilot work records a separately gated model migration follow-up in `docs/provider-lifecycle.md`: inventory by 2026-11-13, spec/cost approval by 2026-12-04, cleanup validation by 2026-12-18 before the dated GPT-4o mini removal on 2027-01-14, and transcription/hedge validation by 2027-02-05 before 2027-02-26 removal. Company aliases require IT confirmation. This does not authorize a default/model/provider/cost change or create a recurring automation.

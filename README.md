@@ -4,10 +4,12 @@ BabbelStream is a native macOS menu-bar hybrid dictation helper for Slack and ot
 
 Tap `Control + Option + Space` for hands-free recording or hold it for push-to-talk. BabbelStream transcribes through an OpenAI-compatible endpoint, optionally cleans the draft for Slack, and inserts it into the focused field. It never auto-sends messages.
 
-Version 0.4.4 strengthens failed-recording recovery and clipboard delivery.
-Stopped audio awaiting safe storage remains available in Failed Recordings, and
-clipboard contention offers **Copy Last Draft** without overwriting newer
-clipboard contents. The real-workflow smoke test passed on 2026-09-05.
+The latest released version is **0.4.5**, with Signal paste compatibility. The
+`codex/pilot-readiness` branch is unreleased work that preserves clipboard-only
+insertion and adds consistent Settings, destination/credential safeguards,
+guided per-user setup and release-path preparation. Cross-version visual and
+real microphone/provider/editor acceptance remain required before release.
+See [project status](docs/project-status.md) and [pilot setup/support](docs/pilot-support.md).
 
 ## Current MVP
 
@@ -32,7 +34,7 @@ clipboard contents. The real-workflow smoke test passed on 2026-09-05.
 - Local personal dictionary injects preferred vocabulary and correction hints into cleanup.
 - Local usage counters show dictations, recorded minutes, cleanup requests, and safe failure counts.
 - Optional local dictation archive writes daily JSONL text files and provides monthly word-count review/export.
-- Copyable diagnostics summarize state and provider settings without transcripts, audio paths, or API keys.
+- Copyable diagnostics summarize state and provider settings without transcripts, private filesystem paths, raw messages or API keys.
 - Clipboard plus `Cmd+V` for every application, with target/cancellation/clipboard ownership guards and Copy Last Draft recovery. Direct field writes are deferred.
 - Automatic insertion only while the originally captured app remains frontmost; the currently focused field in that app receives the draft, including in VS Code, Codex, and other reactive editors.
 - One trailing space after inserted dictation chunks so repeated dictations do not run together.

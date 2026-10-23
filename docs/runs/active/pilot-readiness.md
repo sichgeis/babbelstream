@@ -44,12 +44,16 @@ the maintainer explicitly requested autonomous implementation on 2026-10-23, car
 
 ### D. Guided setup and support
 
-- Status: In progress
+- Status: Blocked (external company input and locked-host visual acceptance; implementation/fixtures complete)
 - Plan: explicit generic presets, per-user credentials, disclosed synthetic test and honest connection status, Advanced settings; company inputs pending.
+
+- Evidence: full `task check` passes, including new ConnectionSetupChecks. Presets only stage URL/paths/routing and preserve models/fallback; per-user Keychain guidance, explicit silent-WAV confirmation, honest session-only readiness and Advanced controls implemented. No models-list proof, real keys or providers used. Test payload excludes speech hints, dictionary and transcript content; timeout ≤30 s and retry zero; results discarded and audio removed. Generation/cancel fixtures reject late results after Apply.
+- Native setup visual check attempted after fixture-only preview launch: CUA reports Mac locked and automatic unlock unavailable. User notified asynchronously; continue independent release preparation. Earlier layout evidence remains valid for shared surfaces but does not prove newly added setup controls.
+- Support/installation/upgrade/rollback/credentials guide: `docs/pilot-support.md`. Company values and issuance remain pending authoritative input; no company host guessed.
 
 ### E. Release preparation and final regression
 
-- Status: Pending
+- Status: In progress
 - Plan: dedicated fail-closed distribution tooling, support/rollback docs, verify official lifecycle notices, broad regression and clean candidate packaging if possible.
 
 ## Decisions And Risks
@@ -78,4 +82,4 @@ Canonical build restored. macOS 27.0.1 visual acceptance unavailable here; autho
 
 ## Next Action
 
-Implement guided per-user connection setup and an explicitly disclosed synthetic transcription test.
+Prepare fail-closed candidate/distribution tooling and reconcile provider lifecycle/support documentation.

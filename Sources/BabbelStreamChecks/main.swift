@@ -5,5 +5,6 @@ if CommandLine.arguments.contains("--layout-preview") {
 } else {
     try await runBehaviorChecks()
     try await runPilotReadinessChecks()
+    try await runConnectionSetupChecks()
 }
 print("BabbelStream behavior checks passed.")

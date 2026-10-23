@@ -7,7 +7,8 @@ import BabbelStreamCore
 @MainActor
 func runLayoutPreview() throws {
     let application = NSApplication.shared
-    let delegate = LayoutPreviewDelegate(fixture: try CoordinatorFixture())
+    let incomplete = CommandLine.arguments.contains("--preview-incomplete")
+    let delegate = LayoutPreviewDelegate(fixture: try CoordinatorFixture(hasPrimaryKey: !incomplete, permissionsReady: !incomplete))
     application.delegate = delegate
     application.setActivationPolicy(.regular)
     application.run()

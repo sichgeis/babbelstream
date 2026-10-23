@@ -23,7 +23,7 @@ struct SettingsView: View {
     var body: some View {
         VStack(spacing: 0) {
             TabView(selection: $selectedTab) {
-                SettingsGeneralPane()
+                SettingsGeneralPane(onShowSetup: { selectedTab = .provider })
                     .tabItem {
                         Label("General", systemImage: "gearshape")
                     }
@@ -60,6 +60,10 @@ struct SettingsView: View {
         }
         .onAppear {
             appState.refreshPermissionStatuses()
+            if appState.needsConnectionSetup,
+               !CommandLine.arguments.contains(where: { $0.hasPrefix("--settings-tab=") }) {
+                selectedTab = .provider
+            }
         }
         .frame(minWidth: 700, idealWidth: 760, minHeight: 560, idealHeight: 640)
     }
@@ -109,13 +113,15 @@ private struct SettingsPane<Content: View>: View {
 
 private struct SettingsGeneralPane: View {
     @EnvironmentObject private var appState: AppState
+    let onShowSetup: () -> Void
 
     var body: some View {
         SettingsPane {
             AppFormSection("Readiness") {
                 AppLabeledContent("Microphone", value: appState.microphonePermissionStatus.displayName)
                 AppLabeledContent("Accessibility", value: appState.accessibilityPermissionStatus.displayName)
-                AppLabeledContent("Primary API key", value: appState.hasAPIKey ? "Saved in Keychain" : "Missing")
+                AppLabeledContent("Primary connection", value: appState.connectionReadinessSummary)
+                Button("Review Provider Setup…", action: onShowSetup)
                 AppLabeledContent(
                     "Personal fallback",
                     value: appState.personalOpenAIFallbackReadinessSummary
@@ -129,15 +135,12 @@ private struct SettingsGeneralPane: View {
                     HStack {
                         if appState.microphonePermissionStatus != .authorized {
                             Button("Request Microphone") {
-                                Task {
-                                    await appState.requestMicrophonePermission()
-                                }
+                                Task { await appState.requestMicrophonePermission() }
                             }
+                            Button("Microphone Settings…") { appState.openMicrophonePrivacySettings() }
                         }
                         if appState.accessibilityPermissionStatus != .trusted {
-                            Button("Request Accessibility") {
-                                appState.requestAccessibilityPermission()
-                            }
+                            Button("Accessibility Settings…") { appState.openAccessibilityPrivacySettings() }
                         }
                         if appState.launchAtLoginRequiresApproval {
                             Button("Open Login Items") {
@@ -188,6 +191,8 @@ private struct SettingsGeneralPane: View {
 
 private struct SettingsProviderPane: View {
     @EnvironmentObject private var appState: AppState
+    @State private var showTestConfirmation = false
+    @State private var showAdvanced = false
 
     var body: some View {
         SettingsPane {
@@ -242,60 +247,87 @@ private struct SettingsProviderPane: View {
                     : "Leave this off for primary-first behavior with automatic personal fallback only after an eligible outage.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-            }
-
-            AppFormSection("Connection") {
-                AppFormTextField("Base URL", text: $appState.baseURLText)
-                AppFormTextField("Transcription path", text: $appState.transcriptionPathText)
-                AppFormTextField("Cleanup path", text: $appState.cleanupPathText)
-            }
-
-            AppFormSection("Models And Timeouts") {
-                Picker("Primary transcription model", selection: $appState.transcriptionModelText) {
-                    ForEach(ProjectDefaults.supportedTranscriptionModels, id: \.self) { model in
-                        Text(model).tag(model)
-                    }
+                if appState.personalOpenAIFallbackEnabled {
+                    Text("Work audio and text may be sent to https://api.openai.com with personal API charges. A separate per-user key is required; review the fallback details below before Apply.")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
-                .pickerStyle(.menu)
-                Text("GPT Transcribe is the default. Choose a GPT-4o model only when your provider requires it.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Picker("Model routing", selection: $appState.transcriptionModelRouting) {
-                    ForEach(TranscriptionModelRouting.allCases, id: \.rawValue) { routing in
-                        Text(routing.displayName).tag(routing)
-                    }
-                }
-                .pickerStyle(.menu)
-                Text(appState.transcriptionModelRouting.helpText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                AppLabeledContent("Effective primary model", value: appState.effectiveTranscriptionModel)
-                AppLabeledContent("Effective fallback model", value: appState.effectiveFallbackTranscriptionModel)
-                AppFormTextField("Cleanup model", text: $appState.cleanupModelText)
-                AppLabeledContent("Mini hedge delay", value: "\(Int(ProjectDefaults.transcriptionHedgeDelaySeconds))s")
-                AppLabeledContent("Overall transcription deadline", value: "\(Int(ProjectDefaults.transcriptionOverallTimeoutSeconds))s")
-                AppFormTextField("Cleanup timeout (seconds)", text: $appState.timeoutText)
-                AppLabeledContent("Connection watchdog", value: appState.providerConnectionTimeoutSummary)
-                AppLabeledContent("Transcription requests", value: "Primary + one bounded Mini hedge")
-                AppLabeledContent("Personal fallback limit", value: "One sequential request")
-                Text("If primary transcription is still pending after 10 seconds, BabbelStream may send the same safeguarded audio once to Mini. The first valid result wins and both requests share one 75-second deadline. This rare recovery path may incur two transcription charges. Authentication and configuration failures do not hedge.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
-            AppFormSection("API Key") {
+            AppFormSection("Connection Setup") {
+                AppLabeledContent("Primary connection", value: appState.connectionReadinessSummary)
+                Text("1. Confirm your authorized destination. 2. Enter your own revocable API key. 3. Apply, then test if desired.")
+                    .font(.callout)
+                Menu("Connection Preset") {
+                    Button("Custom compatible provider") { appState.selectConnectionPreset(.custom) }
+                    Button("Official OpenAI") { appState.selectConnectionPreset(.officialOpenAI) }
+                }
+                AppFormTextField("Provider base URL", text: $appState.baseURLText)
+                Text("Company profile and key issuance: awaiting approved details from IT. Existing applied settings are preserved; do not guess a development or production host. Presets contain no keys and leave models unchanged.")
+                    .font(.caption).foregroundStyle(.secondary)
                 AppFormSecureField(
-                    appState.hasAPIKey ? "API key saved in Keychain" : "Paste API key",
+                    appState.hasAPIKey ? "Saved in your Keychain; re-enter to replace or approve a new origin" : "Paste your per-user API key",
                     text: $appState.apiKeyInput
                 )
-                AppLabeledContent("Keychain", value: appState.hasAPIKey ? "Saved" : "Missing")
-
-                Button(role: .destructive) {
-                    appState.deleteAPIKey()
-                } label: {
-                    Label("Delete API Key", systemImage: "trash")
+                Text("Keys stay in your macOS Keychain. Changing origin requires explicit key entry for that destination; never distribute a shared master key.")
+                    .font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    Button("Test Saved Connection…") { showTestConfirmation = true }
+                        .disabled(!appState.canTestSavedConnection)
+                    if appState.isConnectionTesting {
+                        Button("Cancel Test") { appState.cancelConnectionTest() }
+                    }
+                    Button("Delete Primary Key", role: .destructive) { appState.deleteAPIKey() }
+                        .disabled(!appState.hasAPIKey)
                 }
-                .disabled(!appState.hasAPIKey)
+                Text(appState.connectionTestFeedback)
+                    .font(.caption).foregroundStyle(.secondary)
+                if appState.hasUnsavedSettingsChanges {
+                    Text("Apply edited settings and keys before testing. The test uses only the saved primary connection.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+
+            DisclosureGroup("Advanced: Endpoints, Models And Timeouts", isExpanded: $showAdvanced) {
+                VStack(alignment: .leading, spacing: 16) {
+                    AppFormSection("Endpoint Paths") {
+                        AppFormTextField("Transcription path", text: $appState.transcriptionPathText)
+                        AppFormTextField("Cleanup path", text: $appState.cleanupPathText)
+                    }
+                    AppFormSection("Models And Timeouts") {
+                        Picker("Primary transcription model", selection: $appState.transcriptionModelText) {
+                            ForEach(ProjectDefaults.supportedTranscriptionModels, id: \.self) { model in
+                                Text(model).tag(model)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        Text("GPT Transcribe is the default. Choose a GPT-4o model only when your provider requires it.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Picker("Model routing", selection: $appState.transcriptionModelRouting) {
+                            ForEach(TranscriptionModelRouting.allCases, id: \.rawValue) { routing in
+                                Text(routing.displayName).tag(routing)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        Text(appState.transcriptionModelRouting.helpText)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        AppLabeledContent("Effective primary model", value: appState.effectiveTranscriptionModel)
+                        AppLabeledContent("Effective fallback model", value: appState.effectiveFallbackTranscriptionModel)
+                        AppFormTextField("Cleanup model", text: $appState.cleanupModelText)
+                        AppLabeledContent("Mini hedge delay", value: "\(Int(ProjectDefaults.transcriptionHedgeDelaySeconds))s")
+                        AppLabeledContent("Overall transcription deadline", value: "\(Int(ProjectDefaults.transcriptionOverallTimeoutSeconds))s")
+                        AppFormTextField("Cleanup timeout (seconds)", text: $appState.timeoutText)
+                        AppLabeledContent("Connection watchdog", value: appState.providerConnectionTimeoutSummary)
+                        AppLabeledContent("Transcription requests", value: "Primary + one bounded Mini hedge")
+                        AppLabeledContent("Personal fallback limit", value: "One sequential request")
+                        Text("If primary transcription is still pending after 10 seconds, BabbelStream may send the same safeguarded audio once to Mini. The first valid result wins and both requests share one 75-second deadline. This rare recovery path may incur two transcription charges. Authentication and configuration failures do not hedge.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                }
+                .padding(.top, 12)
             }
 
             AppFormSection("Personal OpenAI Fallback") {
@@ -328,6 +360,12 @@ private struct SettingsProviderPane: View {
                 }
                 .disabled(!appState.hasPersonalOpenAIFallbackAPIKey)
             }
+        }
+        .alert("Test saved transcription connection?", isPresented: $showTestConfirmation) {
+            Button("Send Synthetic Test") { Task { await appState.testSavedConnection() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(appState.connectionTestDisclosure)
         }
     }
 }

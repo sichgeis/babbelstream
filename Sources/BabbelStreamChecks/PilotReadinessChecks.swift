@@ -62,6 +62,17 @@ func runPilotReadinessChecks() async throws {
     } catch ProviderError.requestFailed(statusCode: 307, message: _) {}
     check(redirector.count == 2 && receiver.count == 0, "Actual transport must never deliver audio/text to an unapproved redirect origin.")
 
+    let sameOrigin = try LoopbackHTTPFixture { request in
+        if String(decoding: request.prefix(100), as: UTF8.self).contains(" /completed ") {
+            return (200, ["Content-Type": "application/json"], Data(#"{"text":"same origin fixture"}"#.utf8))
+        }
+        return (307, ["Location": "/completed"], Data())
+    }
+    defer { sameOrigin.stop() }
+    redirectSettings.providerConfiguration.baseURL = sameOrigin.baseURL
+    let sameOriginResult = try await OpenAICompatibleTranscriptionProvider(urlSession: session).transcribe(TranscriptionRequest(audioURL: audioURL, settings: redirectSettings, apiKey: "fixture-not-a-real-key"))
+    check(sameOriginResult == "same origin fixture" && sameOrigin.count == 2, "Real transport must preserve supported same-origin redirects.")
+
     var visibility = DictationHUDVisibilityPolicy()
     check(visibility.update(isActive: false, needsAttention: false) == .hide, "Startup must not show a completion.")
     check(visibility.update(isActive: true, needsAttention: false) == .showActive, "Active operation must show HUD.")

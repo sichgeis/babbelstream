@@ -17,6 +17,7 @@ func runCoordinatorWorkflowChecks() async throws {
         await f.app.stopActiveRecording()
         check(f.transcription.requests.count == 1 && f.mini.requests.isEmpty, "Normal workflow must make one primary request.")
         check(f.transcription.requests.first?.settings.providerConfiguration.baseURL.host == "primary.example.invalid", "Recording must retain its original provider snapshot after Apply.")
+        check(f.transcription.requests.first?.apiKey == "synthetic-key-not-a-credential", "An active operation must retain the previously approved origin's key during replacement.")
         check(f.cleanup.requests.first?.settings.providerConfiguration.baseURL.host == "primary.example.invalid", "Cleanup must use the same operation settings snapshot.")
         check(f.insertion.inserted == ["clean fixture "], "Normal workflow must deliver a separated unsent draft once.")
         let snapshot = try f.recovery.loadSnapshot()

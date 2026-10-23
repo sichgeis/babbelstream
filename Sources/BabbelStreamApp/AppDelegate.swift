@@ -63,7 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .failedRecordings:
             dictationRecoveryWindowController.show()
         case nil:
-            break
+            if appState.needsConnectionSetup { settingsWindowController.show() }
         }
     }
 
@@ -71,11 +71,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appState.prepareForTermination()
     }
 
+    @objc private func showSettings() { settingsWindowController?.show() }
+
     private func installMainMenu() {
         let mainMenu = NSMenu()
 
         let appMenuItem = NSMenuItem()
         let appMenu = NSMenu(title: ProjectDefaults.appName)
+        let settingsItem = appMenu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        appMenu.addItem(.separator())
         appMenu.addItem(
             withTitle: "Quit \(ProjectDefaults.appName)",
             action: #selector(NSApplication.terminate(_:)),

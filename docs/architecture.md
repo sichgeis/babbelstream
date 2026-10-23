@@ -230,3 +230,7 @@ Settings and secondary dialogs use AppGroupedForm as the only scroll owner, with
 `SingleInstanceLock` holds an advisory user-scoped lock before AppDelegate construction and shared cleanup; bootstrap first checks existing production bundle processes. Fixtures acquire locks only in disposable directories. The lock file is never unlinked while live.
 
 `DictationHUDVisibilityPolicy` owns active-to-completion transitions. Repeated idle notifications retain the existing 1.5-second success or 6-second attention deadline; a late warning may extend once. A new active operation cancels the prior dismissal. Expiry cannot be resurrected by idle notifications. HUD size and nonactivation stay unchanged.
+
+## Guided Setup And Verification
+
+AppState exposes connection readiness independently of key presence. Presets stage only non-secret connection URL/paths/routing; existing models and saved/effective settings remain unchanged until Apply. Startup shows Provider when credentials are incomplete, and General exposes permission/setup actions. `SyntheticConnectionAudio` generates a fixed silent PCM WAV locally. Explicit confirmation starts one primary TranscriptionProvider request without hints/retry/hedge/fallback/cleanup. A generation id owns the session verification state; Apply/deletion cancel the task and prevent stale completion. Results are discarded, fixtures prove content separation, and real speech/paste still require manual validation.
