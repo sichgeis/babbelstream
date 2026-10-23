@@ -16,11 +16,13 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-Public data scrub and a 0.5.3/build 9 candidate are in progress, explicitly authorized with
-history rewriting after backups/verification. Contract:
-`docs/features/data-scrub/spec.md`; evidence: `docs/runs/active/data-scrub.md`.
-No production installation or new public release is authorized by this run.
-Earlier permission-repair and Homebrew evidence remains in archived trackers.
+The public data scrub is pushed and verified in both repositories. A clean
+optimized 0.5.3/build 9 candidate is prepared from `92efa2b`; it is not installed,
+published or pinned by the tap. Current run/evidence:
+`docs/runs/active/data-scrub.md`; ref mapping: `docs/runs/active/data-scrub-refs.tsv`.
+Local checkout/worktree migration and old-object pruning await explicit approval
+after automatic approval review rejected that broader local destruction. The
+public source and release notes are sanitized; original downloads remain unchanged.
 
 ## Known Limitations And Deferred Follow-Ups
 
@@ -43,5 +45,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Complete the backed-up all-ref rewrite and verification recorded in
-`docs/runs/active/data-scrub.md`.
+Resolve the local migration/object-pruning approval recorded in
+`docs/runs/active/data-scrub.md` before installing the verified candidate for smoke testing.
