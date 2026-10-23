@@ -15,7 +15,7 @@ by their dedicated specifications.
 
 ## Active Work
 
-- Onboarding implementation/local preparation delivered on `codex/onboarding`; approved contract `docs/features/onboarding-and-updates/spec.md`, tracker `docs/runs/active/onboarding.md`. First-run/repair permissions, local sample verification and accepted nearly white shared canvas; Sparkle/signing deferred. Clean candidate 0.4.5 build 4 / 3f6c312 packaged and verified; installed candidate build 3 remains unchanged. Human onboarding/paste acceptance pending.
+- Onboarding implementation/local preparation delivered on `codex/onboarding`; approved contract `docs/features/onboarding-and-updates/spec.md`, tracker `docs/runs/active/onboarding.md`. First-run/repair permissions, local sample verification and accepted nearly white shared canvas; Sparkle/signing deferred. Final quality review adds focus-loss cancellation and post-test permission refresh; candidate build 5 packaging/local installation is authorized and in progress. Installed build 3 remains until replacement. Human onboarding/paste acceptance pending.
 
 - Pilot readiness implementation/local preparation delivered; full acceptance pending: `docs/features/pilot-readiness/spec.md`, tracker `docs/runs/active/pilot-readiness.md`, branch `codex/pilot-readiness`. Approved autonomous implementation, unreleased; clean local candidate 0.4.5 build 3 / 4e6da0d prepared after native UI corrections; explicitly authorized local installation/launch completed for human smoke on 2026-10-23.
 - Preserved dependency: clipboard-only insertion implemented 2026-10-23; unreleased on `codex/clipboard-only-insertion`.
@@ -66,4 +66,4 @@ recorded.
 
 ## Next Action
 
-Authorize candidate build 4 installation, then validate live permission onboarding and local paste sample receipt before release decisions.
+Package and install the quality-reviewed candidate build 5, then hand off live permission onboarding and local sample receipt validation.

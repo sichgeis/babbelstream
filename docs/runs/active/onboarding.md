@@ -30,7 +30,7 @@ None.
 
 ## Next Action
 
-Obtain authorization to install candidate build 4, then have the maintainer validate live permission onboarding and local sample receipt.
+Package and install the latest quality-reviewed candidate under the explicit local installation authorization.
 
 ## Acceptance Remaining
 
@@ -50,7 +50,7 @@ Obtain authorization to install candidate build 4, then have the maintainer vali
 
 ## Remaining Human Acceptance
 
-Candidate installation requires separate authorization. Then verify real first-run/postpone/reopen, actual grant/activation refresh, local sample receipt, focus/close cancellation and an unsent real dictation. Existing build 3 smoke does not validate the new onboarding. macOS 27.0.1 and full OS accessibility-setting acceptance remain pending. Sparkle and colleague signing stay deferred.
+Candidate installation was explicitly authorized in the final-review request. After installation, verify real first-run/postpone/reopen, actual grant/activation refresh, local sample receipt, focus/close cancellation and an unsent real dictation. Existing build 3 smoke does not validate the new onboarding. macOS 27.0.1 and full OS accessibility-setting acceptance remain pending. Sparkle and colleague signing stay deferred.
 
 ## Candidate And Handoff Evidence
 
@@ -59,7 +59,7 @@ Candidate installation requires separate authorization. Then verify real first-r
 - Packaging: explicit ad-hoc identities; clean release optimization; actual candidate signature/runtime/audio entitlement and embedded version 0.4.5/build 4/commit 3f6c312/mode candidate verified. DMG integrity verified by packaging. No private identity, installation, production launch, release tag or main change.
 - Native secondary minimum-size checks completed for Teach Correction, Dictionary and Archive after final metrics; all use the accepted canvas and fixed footer. Selected evidence preserved under ignored `dist/onboarding-evidence/`; full temporary screenshots remain under `/tmp/babbelstream-onboarding-screenshots/`. Fixture preview processes closed. No production app/store was used for visual checks.
 - Full `task check` and final diff whitespace checks PASS. Source behavior unchanged after those checks; final documentation records candidate evidence only. Existing build 3 remains installed/running; its repaired permissions were not reset.
-- Required next human action: authorize build 4 installation, then test real consent/activation refresh and the local sample field before the expanded unsent dictation matrix. Current fixture focus-guard evidence is not native paste-success evidence.
+- Build 4 evidence above is historical; final-review installation is now authorized and a corrected build 5 supersedes it. After installation, the maintainer must test real consent/activation refresh and the local sample field before the expanded unsent dictation matrix. Current fixture focus-guard evidence is not native paste-success evidence.
 
 ## Final Review And Installation Pass (2026-10-23)
 
@@ -67,3 +67,11 @@ Candidate installation requires separate authorization. Then verify real first-r
 - Review scope: all onboarding code, integration, shared Settings styling, core paste delta, fixtures, privacy and release documentation. Use gm-refactor guidance for visible control flow and focused improvements.
 - Follow-up findings to resolve: cancel on app/window focus-loss notifications so a rapid leave/return cannot resume an old test; refresh actual permissions after test completion so revoked access is visible immediately. Preserve the stricter editor guard and clipboard/cancellation preflight.
 - Proceed through normal-cache canonical checks, coherent pushed fixes, clean latest candidate and local installation/launch with rollback bundle. No permission reset, actual recording/provider test or private signing key use.
+
+## Final Review Findings Resolved
+
+- Added window-key-loss and app-deactivation cancellation to the existing close/navigation checks. A focus-loss/return regression fixture proves the canceled attempt cannot post even when focus is restored before preparation ends.
+- Local-test completion now re-queries permissions before releasing coordinator ownership. A revocation fixture proves General/onboarding no longer retain stale Allowed status after a denied test.
+- Tightened busy-state wording and released fixture closure captures after tests. No added production abstraction, dependency, provider, permission or secret use.
+- Reviewed setup/persistence, native field ownership, menu/Settings integration, AppState operation exclusion, clipboard origin/focus/cancellation preflight, preview isolation, specs and release gates. No additional blocking code issue found in this change. Real OS consent/event delivery still requires human smoke.
+- Full canonical task check PASS after fixes: `/tmp/babbelstream-onboarding-review-check.log`; existing capture/toolchain warnings unchanged. Build incremented to 5 for the corrected iteration. Final source/diff/privacy review completed; clean packaging and authorized installation follow.

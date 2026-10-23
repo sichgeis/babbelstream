@@ -255,7 +255,7 @@ Canonical checks include disposable Git fixtures for missing/ad-hoc distribution
 
 ## First-Run Onboarding
 
-`task check` runs OnboardingChecks: first-use/deferred/revoked-grant presentation, isolated preference persistence, live adapter refresh, absence of provider/key/recording effects, known-sample receipt versus posting-only, focus loss, clipboard replacement, permission revocation during preparation, cancellation (including delayed success), posting/write errors, duplicate starts, recording/connection-test exclusion and existing Last Draft delivery exclusion.
+`task check` runs OnboardingChecks: first-use/deferred/revoked-grant presentation, isolated preference persistence, live adapter refresh, absence of provider/key/recording effects, known-sample receipt versus posting-only, focus loss, clipboard replacement, permission revocation during preparation, cancellation (including rapid focus loss/return and delayed success), post-test live permission refresh, posting/write errors, duplicate starts, recording/connection-test exclusion and existing Last Draft delivery exclusion.
 
 Use `scripts/preview-layout.sh --onboarding` with `--preview-incomplete`, `--preview-dark`, `--preview-high-contrast`, `--preview-repair` and `--minimum-window-size` for isolated native review. Preview uses fake permissions and insertion; it cannot prove real Accessibility consent or native event acceptance. All five steps must remain readable at 640×580/default and 600×500/minimum content size, with scrollable content and a fixed footer. Verify the nearly white canvas across Settings and secondary dialogs, native Dark Mode and Increase Contrast separation.
 

@@ -51,7 +51,7 @@ The deferred updater must never replace/relaunch while recording, provider proce
 
 ## Approval Gate And Open Inputs
 
-Onboarding implementation, checks, feature commits/pushes and candidate packaging are authorized. Stop before main/tag/publication, new production installation, real provider/microphone validation or private signing-material use. Sparkle/hosting/network/signing work remains separately gated. Confirm company provider/key-issuance guidance, Developer ID owner, approved release/feed hosting and audience access, updater maintenance owner, and whether IT-managed deployment is preferred. Do not access signing material, publish or distribute based on this document alone.
+Onboarding implementation, checks, feature commits/pushes and candidate packaging are authorized. Follow-up authorization on 2026-10-23 includes latest local candidate installation/launch after final quality review. Stop before main/tag/publication, real provider/microphone validation or private signing-material use. Sparkle/hosting/network/signing work remains separately gated. Confirm company provider/key-issuance guidance, Developer ID owner, approved release/feed hosting and audience access, updater maintenance owner, and whether IT-managed deployment is preferred. Do not access signing material, publish or distribute based on this document alone.
 
 ## Sources
 
@@ -66,7 +66,7 @@ Reviewed 2026-10-23:
 
 - Setup dismissal is stored as non-secret local preferences, together with whether each permission was ever observed allowed. Postponing suppresses the full introduction on later launches; a previously allowed permission now missing opens repair at the next normal launch. Menu/General can always reopen setup.
 - Returning from System Settings refreshes actual permissions; no popup steals focus during an active dictation. Explicit window-launch modes bypass automatic setup presentation.
-- Local paste test reserves the coordinator until its task ends, checks the exact test editor/window before clipboard preparation and posting, and cancels on window close or navigation. Sample receipt is required within one second after posting; posting alone never passes. No field content or sample result is persisted or logged. The sample replaces the clipboard only on explicit test action; previous clipboard content is never read/restored.
+- Local paste test reserves the coordinator until its task ends, checks the exact test editor/window before clipboard preparation and posting, and cancels on window close, navigation, window key loss or app deactivation; quickly returning focus cannot resume that attempt. Completion refreshes actual permissions. Sample receipt is required within one second after posting; posting alone never passes. No field content or sample result is persisted or logged. The sample replaces the clipboard only on explicit test action; previous clipboard content is never read/restored.
 - Default content size 640×580, minimum 600×500; one scroll owner and fixed footer. Provider editing reuses existing Settings/Apply/confirmation behavior. Launch-at-login remains unchanged.
 
 ## Approved Surface Refinement (2026-10-23)

@@ -34,7 +34,7 @@ final class LocalPasteTestSession: ObservableObject {
     func start(field: any LocalPasteTestField, insertion: (any TextInsertionService)? = nil) {
         guard !isTesting else { return }
         guard appState.beginLocalPasteTest() else {
-            result = .failed("Finish the current recording, processing or connection test first.")
+            result = .failed("Finish the current operation before testing automatic paste.")
             return
         }
         appState.refreshPermissionStatuses()
@@ -55,6 +55,7 @@ final class LocalPasteTestSession: ObservableObject {
             defer {
                 isTesting = false
                 task = nil
+                appState.refreshPermissionStatuses()
                 appState.endLocalPasteTest()
             }
             do {

@@ -4,7 +4,7 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
-- Add postponable first-run setup, live permission repair and a local automatic-paste test that verifies sample receipt without recording or contacting a provider.
+- Add postponable first-run setup, live permission repair and a local automatic-paste test that verifies sample receipt without recording or contacting a provider; cancel tests on focus loss and refresh permissions at completion.
 - Soften shared Light Mode form backgrounds to nearly white while retaining native Dark Mode and increased-contrast separation.
 
 - Prepare distinct clean candidate and fail-closed Developer ID distribution modes, increasing bundle build numbers, hardened-runtime/audio entitlements, signature checks and an explicit notarization path.

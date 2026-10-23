@@ -61,11 +61,12 @@ func runOnboardingChecks() async throws {
         check(field.preparations == 0 && environment.clipboardWrites == 0 && environment.posts == 0 && !f.app.isLocalPasteTesting, "Denied paste test must not focus a field or modify clipboard/events.")
         check(session.result != .passed, "Denied test cannot pass.")
     }
-    for scenario in ["received", "no-receipt", "focus-lost", "clipboard", "revoked", "cancel", "post-failure", "write-failure"] {
+    for scenario in ["received", "no-receipt", "focus-lost", "clipboard", "revoked", "cancel", "focus-return", "post-failure", "write-failure"] {
         let f = try CoordinatorFixture()
         defer { try? f.dispose() }
         let field = FixturePasteTestField()
         let environment = FakeInsertionEnvironment()
+        defer { environment.beforePaste = nil; environment.onPost = nil }
         let service = ClipboardTextInsertionService(environment: environment, additionalTargetCheck: { field.isFocused })
         let session = LocalPasteTestSession(appState: f.app)
         environment.postSucceeds = scenario != "post-failure"
@@ -74,7 +75,14 @@ func runOnboardingChecks() async throws {
             switch scenario {
             case "focus-lost": field.isFocused = false
             case "clipboard": environment.clipboard = "newer fixture"; environment.clipboardChangeCount += 1
-            case "revoked": environment.trusted = false
+            case "revoked":
+                environment.trusted = false
+                f.insertion.permission = .notTrusted
+            case "focus-return":
+                field.isFocused = false
+                session.cancel() // Window/app focus-loss notification.
+                field.isFocused = true
+                try Task.checkCancellation()
             case "cancel": session.cancel(); try Task.checkCancellation()
             default: break
             }
@@ -90,8 +98,11 @@ func runOnboardingChecks() async throws {
         check(!f.app.isLocalPasteTesting && f.app.canStart, "All local test exits must release the coordinator.")
         check((session.result == .passed) == (scenario == "received"), "Only actual receipt of the known sample may pass: \(scenario).")
         check(environment.posts <= 1 && environment.clipboardWrites <= 1 && field.preparations == 1, "No duplicate paste or second clipboard write is allowed.")
-        if ["focus-lost", "clipboard", "revoked", "cancel", "write-failure"].contains(scenario) {
+        if ["focus-lost", "clipboard", "revoked", "cancel", "focus-return", "write-failure"].contains(scenario) {
             check(environment.posts == 0, "Focus/contention/permission/cancel/write failure must block event posting: \(scenario).")
+        }
+        if scenario == "revoked" {
+            check(f.app.accessibilityPermissionStatus == .notTrusted, "Test completion must refresh live permission state after revocation.")
         }
         if scenario == "clipboard" { check(environment.clipboard == "newer fixture", "Contention must preserve the newer clipboard.") }
         check(f.secret.reads == 0 && f.personalSecret.reads == 0 && f.transcription.requests.isEmpty && f.mini.requests.isEmpty && f.cleanup.requests.isEmpty && f.app.latestFinalDraftSummary == "None", "Local test must never read keys, contact providers or replace Last Draft.")
@@ -114,6 +125,7 @@ func runOnboardingChecks() async throws {
         await f.app.stopActiveRecording()
         let session = LocalPasteTestSession(appState: f.app)
         let field = FixturePasteTestField()
+        defer { f.insertion.action = nil }
         f.insertion.action = { _ in
             session.start(field: field, insertion: f.insertion)
             check(!session.isTesting && field.preparations == 0, "Local test must not overlap an existing Last Draft delivery.")

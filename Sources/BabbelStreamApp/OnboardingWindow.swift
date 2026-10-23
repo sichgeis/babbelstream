@@ -44,6 +44,10 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    func windowDidResignKey(_ notification: Notification) {
+        pasteTest.cancel()
+    }
+
     func windowWillClose(_ notification: Notification) {
         pasteTest.cancel()
         model.dismiss()
@@ -93,6 +97,9 @@ private struct OnboardingView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refreshPermissions()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+            pasteTest.cancel()
         }
         .onDisappear { pasteTest.cancel() }
     }
