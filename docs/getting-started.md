@@ -73,12 +73,12 @@ See [pilot support](pilot-support.md) for connection-state and credential detail
 
 | Symptom | What to do |
 | --- | --- |
-| Draft copied but not pasted | Check Accessibility in setup and keep the original app frontmost; see the [clipboard-only repair](../README.md#dictation-copies-the-draft-but-does-not-paste-into-codex-or-another-app) if the system switch is on but the app says Not allowed |
+| Draft copied but not pasted | Check Accessibility in setup and keep the original app frontmost; see the [clipboard-only repair](troubleshooting.md#dictation-copies-the-draft-but-does-not-paste-into-codex-or-another-app) if the system switch is on but the app says Not allowed |
 | Clipboard changed during delivery | Use Copy Last Draft; BabbelStream preserves the newer clipboard |
 | Processing failed | Open Failed Recordings… to retry and copy, export audio, or explicitly delete it |
 | OS toggle says allowed but paste still fails | Recheck setup's actual trust; follow its repair guidance for the exact Applications copy |
 | Permission or key access changes after an update | Reapprove through macOS/Keychain when appropriate; preserve app data and keys |
-| Keychain password requested after every restart despite Always Allow | Follow the [targeted Keychain access repair](../README.md#keychain-asks-for-your-password-after-every-restart); add the current Applications copy without deleting the key or allowing all apps |
+| Keychain password requested after every restart despite Always Allow | Follow the [targeted Keychain access repair](troubleshooting.md#keychain-asks-for-your-password-after-every-restart); add the current Applications copy without deleting the key or allowing all apps |
 | Need to report a problem | Share version/commit, macOS version and harmless reproduction steps; omit keys, work text, clipboard, audio and archives |
 
 Retrying a failed recording copies the recovered draft; it does not paste into a

@@ -23,6 +23,12 @@ instructions; commit and push a feature branch, then hand off the native test.
 
 ## Decisions And Risks
 
+- README editorial follow-up: maintainer requested a clearer, shorter landing
+  page with Wonder assistance. Reviewed the external editorial draft and applied
+  a final concise edit: 2,001 to 1,056 words. Kept the bootstrap byte-for-byte,
+  preserved externally linked headings, and moved complete repair procedures to
+  `docs/troubleshooting.md`. No behavior or installation contract changed.
+
 - Only a staged verified copy loses quarantine after exact interactive consent.
 - Helper downloads the exact pinned GitHub release; update uses the current
   README helper, not an unverified dynamic latest-release manifest.
@@ -54,6 +60,7 @@ instructions; commit and push a feature branch, then hand off the native test.
 | Published README bootstrap | Immutable GitHub helper download and DMG download/mount/app verification passed end to end with `--verify-only --download` |
 | Native attribute primitive | Synthetic temporary bundle: nested quarantine removed; unrelated attribute preserved; fixture discarded |
 | Native installation/launch | Pending |
+| README cleanup | Bootstrap identity/shell syntax, local file links, legacy heading anchors and public hygiene passed; canonical checks rerun |
 
 ## Release Evidence
 

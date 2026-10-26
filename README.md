@@ -1,141 +1,126 @@
 # BabbelStream
 
-Speak a draft. Keep your own words. Send it when you're ready.
+**Speak a draft. Keep your own words. Send it when you’re ready.**
 
-BabbelStream is a native macOS menu-bar app for dictating into Slack and other
-focused text fields. It supports German, English and mixed technical speech,
-with optional cleanup for punctuation and filler words. **It never presses Enter
-or sends your message.**
+A native macOS menu-bar app for dictating into Slack and other text fields.
+German, English, and mixed technical speech, with optional cleanup for punctuation
+and filler words. **BabbelStream never presses Enter or sends your message.**
 
-## Try the pilot
+## Install
 
-**Version 0.5.3 · Apple Silicon · Non-notarized Homebrew pilot**
+**0.5.3 · Apple Silicon · macOS 13+ · Non-notarized pilot**
 
-[Download 0.5.3](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.3) or use
-the Homebrew commands below. This clean rebuild preserves saved provider settings
-and dictation behavior. A direct upgrade from a version without saved routing to
-a LiteLLM namespace requires selecting LiteLLM once in Settings. Older 0.5.1/0.5.2
-installer downloads are withdrawn.
+You’ll need an approved OpenAI-compatible provider and your own API key; provider
+charges may apply. Microphone access enables recording; Accessibility enables
+automatic paste.
 
-| Requirement | What to expect |
-| --- | --- |
-| Mac | Apple Silicon; Intel is not supported by this build |
-| macOS | Declared minimum 13.0; native evidence on 26.7.1 and pilot smoke on 27.0.1; other versions pending |
-| Installation | Ad-hoc signed, not notarized by Apple; macOS may require explicit approval |
-| Dictation provider | Your own approved OpenAI-compatible endpoint and API key; provider charges may apply |
-| Permissions | Microphone for recording; Accessibility for automatic paste |
+This pilot is ad-hoc signed, not notarized by Apple. Use **Privacy & Security →
+Open Anyway** where permitted. Managed Macs may require IT approval.
+[Tested versions and pilot status →](docs/project-status.md)
 
-**Testing the pilot?** Follow the [download/launch checklist](docs/homebrew-pilot-smoke-test.md).
-See
-[project status](docs/project-status.md) for current evidence and remaining gates.
-
-### Install with Homebrew
+### Homebrew
 
 ```sh
 brew install --cask sichgeis/tap/babbelstream
 open /Applications/BabbelStream.app
 ```
 
-This uses [our own tap](https://github.com/sichgeis/homebrew-tap), independently of
-Homebrew's official catalogue. Homebrew must already be installed. If you have a
-manual BabbelStream installation, quit it and preserve a backup before migrating;
-see [installation guidance](docs/getting-started.md).
+Uses [our own tap](https://github.com/sichgeis/homebrew-tap); Homebrew must already
+be installed. Switching from a manual installation? Quit the app and preserve a
+backup first. [Installation guidance →](docs/getting-started.md)
 
-### Install with the illustrated DMG
+### DMG
 
-Download [BabbelStream-0.5.3.dmg](https://github.com/sichgeis/babbelstream/releases/download/v0.5.3/BabbelStream-0.5.3.dmg)
-and its [portable checksum](https://github.com/sichgeis/babbelstream/releases/download/v0.5.3/BabbelStream-0.5.3.dmg.sha256).
-From their download folder, verify:
+Download the [DMG](https://github.com/sichgeis/babbelstream/releases/download/v0.5.3/BabbelStream-0.5.3.dmg)
+and [checksum](https://github.com/sichgeis/babbelstream/releases/download/v0.5.3/BabbelStream-0.5.3.dmg.sha256).
+In their download folder, verify:
 
 ```sh
 shasum -a 256 -c BabbelStream-0.5.3.dmg.sha256
 ```
 
-Quit the old app, open the DMG, drag BabbelStream into Applications, eject the
-image and launch the Applications copy. Preserve settings and Keychain entries.
-The ad-hoc pilot is not notarized; use supported macOS per-app approval where
-available. The optional manual helper below is a separate, explicit quarantine
-exception; ordinary DMG/Homebrew installation preserves quarantine. Always follow
-device policy. Source ZIP/tar archives are not installers.
+Quit the old app, open the DMG, drag BabbelStream into Applications, and launch
+that copy. Eject the image afterward. Source ZIP/tar archives are not installers.
 
 ### Optional manual installation helper (pilot)
 
-**Disclaimer:** BabbelStream is not notarized by Apple. This optional helper
-deliberately removes the quarantine attribute from a verified temporary app copy,
-bypassing the quarantine-based first-open check. It does not establish Apple
-verification or malware safety, and company security controls may still block it.
-Use it only where your device policy permits; contact IT if the helper or app is
-blocked. A checksum and ad-hoc signature verify the expected artifact, not a
-trusted publisher. Trust in this repository and GitHub remains necessary.
+**Notice:** This helper removes quarantine from a verified temporary app copy
+only after your consent, bypassing its quarantine-based first-open check. It
+provides no Apple or malware verification. Follow device policy; if blocked,
+contact IT.
 
-Review [the pinned helper source](https://github.com/sichgeis/babbelstream/blob/cff15fe7202a95463fd44047e603d0645d036e13/scripts/prepare-downloaded-install.sh)
-before running it. It requires no Homebrew, Python, compiler or developer account.
-Copy this command into Terminal. It saves the helper from an immutable source
-commit, runs it interactively, and deletes the downloaded helper on exit:
+[Review the pinned helper](https://github.com/sichgeis/babbelstream/blob/cff15fe7202a95463fd44047e603d0645d036e13/scripts/prepare-downloaded-install.sh),
+then copy this command into Terminal. No developer tools or Homebrew are needed.
 
 ```sh
 /bin/bash -c 'set -e; babbelstream_helper="$(/usr/bin/mktemp -t babbelstream-helper)"; cleanup() { /bin/rm -f "$babbelstream_helper"; }; trap cleanup EXIT; /usr/bin/curl --fail --location --proto "=https" --proto-redir "=https" --tlsv1.2 --connect-timeout 20 --max-time 60 --output "$babbelstream_helper" https://raw.githubusercontent.com/sichgeis/babbelstream/cff15fe7202a95463fd44047e603d0645d036e13/scripts/prepare-downloaded-install.sh; /bin/bash "$babbelstream_helper" "$@"' babbelstream --download
 ```
 
-It downloads **0.5.3/build 11** over HTTPS, verifies the DMG and app, and asks you
-to type **PREPARE** before changing attributes. Finder then reveals the prepared
-app. Preserve your previous app as a rollback copy and drag the prepared app into
-Applications. Launch that copy yourself and check Diagnostics for
-**0.5.3 / build 11 / b9c0641**. Delete the temporary folder after copying.
+1. Wait for the **0.5.3/build 11** download and verification.
+2. Read the notice and type **PREPARE**, or press Return to cancel.
+3. Finder reveals the prepared app. Preserve your previous app as a rollback
+   copy, then drag the new one into Applications and launch it yourself.
+4. Check Diagnostics for **0.5.3 / build 11 / b9c0641**. Delete the temporary
+   folder after copying.
 
-To prepare a manual update, quit BabbelStream and run the current README command
-above with its final `--download` changed to `--update`. It checks the installed version, skips an exact current
-release, refuses downgrades and prepares an older installation's replacement for
-Finder. This is user-initiated, release-pinned preparation, not an automatic
-updater: future releases must update the helper and this README command.
-Homebrew-managed installations are refused rather than silently taken over.
+The helper refuses Homebrew-managed installations. Ordinary Homebrew and DMG
+installation preserve quarantine.
 
-From a repository checkout, the equivalent commands are
-`bash scripts/prepare-downloaded-install.sh --download` and
-`bash scripts/prepare-downloaded-install.sh --update`.
-For a DMG already downloaded, pass its file path instead of `--download`. Add
-`--verify-only` before either mode when running the helper directly to verify
-without changing quarantine or opening Finder. The script itself may also be
-blocked by device policy; it does not remove its own metadata. No installed app,
-provider settings, Keychain items, microphone
-or Accessibility grants are changed automatically. Global security settings and
-other metadata remain intact. The original DMG is never modified.
+<details>
+<summary>Helper options and verification</summary>
 
-[Detailed contract and pilot validation](docs/features/manual-install-helper/spec.md)
+The command downloads a helper from an immutable commit and deletes that helper
+on exit. It verifies the DMG and app before asking for consent. These checks
+confirm the expected artifact, not a trusted publisher.
+
+To prepare an update, quit the app and change the command’s final `--download`
+to `--update`. It skips an exact installed release and refuses downgrades. It is
+pinned to 0.5.3; use the current README command for future releases.
+
+From a checkout, run `bash scripts/prepare-downloaded-install.sh --download` or
+`bash scripts/prepare-downloaded-install.sh --update`. Pass a downloaded DMG’s
+path instead of `--download` to use a local file. Add `--verify-only` before the
+mode to verify without changing quarantine or opening Finder.
+
+Only quarantine on the prepared app copy changes. The original DMG, installed
+app, other metadata, global security settings, permissions, Keychain, and provider
+settings stay untouched. Device policy may also block the script itself.
+
+[Helper contract and validation →](docs/features/manual-install-helper/spec.md)
+
+</details>
 
 ## Set up once
 
-1. Open BabbelStream from Applications. Its setup dialog can be postponed and
-   reopened through **Set Up BabbelStream…**.
-2. Deliberately allow Microphone and Accessibility access. Without Accessibility,
-   completed drafts can still be copied for manual paste.
-3. Confirm your approved provider destination, enter your own key, and choose
-   **Apply Settings**. No provider key is bundled with the app.
-4. Try the optional local paste test, then dictate a harmless sample into an
-   unsent draft. The local test uses no microphone or provider, and replaces the
-   clipboard with its sample.
+1. Open **Set Up BabbelStream…** from the app’s menu.
+2. Allow **Microphone** and **Accessibility**. Without Accessibility, copy the
+   completed draft and paste it manually.
+3. Enter your approved provider URL and personal API key, then click **Apply
+   Settings**. No key is bundled.
+4. Try the local paste test, then dictate harmless sample text into an unsent
+   draft. The paste test replaces the clipboard; it uses no microphone or provider.
 
-[Setup and troubleshooting →](docs/getting-started.md)
+Leave the language hint empty for mixed German-English speech. For a LiteLLM
+proxy using `openai/*`, select **LiteLLM (openai/ model prefix)** in Provider settings.
+[Full setup guide →](docs/getting-started.md)
 
 ## Dictate where you write
 
 | Action | Result |
 | --- | --- |
-| Tap `Control + Option + Space` | Start hands-free recording; tap again to stop and process |
-| Hold the shortcut for at least 0.5 seconds | Record while held; release to process |
+| Tap `Control + Option + Space` | Start hands-free; tap again to stop |
+| Hold the shortcut for at least 0.5 seconds | Push-to-talk; release to stop |
 | Press Escape while active | Cancel recording or processing |
-| Switch to another app before delivery | Keep the draft available for copying instead of pasting into that app |
+| Switch to another app | Keep the draft available for copying instead of pasting there |
 
-Automatic delivery puts the draft on the clipboard and posts `Command + V` to the
-currently focused field in the original app. Review the result before sending.
-Use **Copy Last Draft** for manual recovery, **Failed Recordings…** to recover a
-failed attempt, and **Teach Correction…** to add vocabulary hints. Leave the
-language hint blank for mixed German-English dictation.
+Delivery copies the draft to the clipboard and posts `Command + V` in the original
+app. Review it before sending. **Copy Last Draft** recovers the session’s draft;
+**Failed Recordings…** handles failed attempts; **Teach Correction…** adds vocabulary.
 
-## Update when you're ready
+## Update
 
-Finish or cancel active work and quit BabbelStream
-normally before upgrading. Copy Last Draft is session-only and is lost on quit.
+Finish active work and quit normally first. **Copy Last Draft** is session-only
+and is lost on quit.
 
 ```sh
 brew update
@@ -143,126 +128,48 @@ brew upgrade --cask sichgeis/tap/babbelstream
 open /Applications/BabbelStream.app
 ```
 
-Confirm the version/commit in Diagnostics. macOS or Keychain may request approval
-again after an update. Settings, dictionary and retained recordings should remain;
-the first real Homebrew upgrade is still awaiting pilot validation. There is no
-in-app updater or automatic background update check.
-
-[Upgrade and rollback guidance →](docs/homebrew-release.md#bad-release-and-rollback)
+For manual installations, use a newer DMG or the current helper’s `--update` mode.
+Check Diagnostics afterward. macOS or Keychain may require approval again.
+Settings, dictionary, and retained recordings should remain; genuine Homebrew
+upgrade validation is still pending. There is no automatic background updater.
+[Upgrade and rollback →](docs/homebrew-release.md#bad-release-and-rollback)
 
 ## Troubleshooting
 
 ### Dictation copies the draft but does not paste into Codex or another app
 
-First open **Set Up BabbelStream…** and check **Automatic paste**, or check
-**Accessibility** in General Settings. Microphone permission lets recording work;
-Accessibility is separately required to post the paste shortcut.
-
-If BabbelStream says **Not allowed** while System Settings shows its switch on,
-the enabled row may refer to an older app identity. We observed this exact
-mismatch with the installed 0.5.1 build. Removing and re-adding the current
-Applications copy restored its live **Allowed** status, and the local sample-paste
-test then passed. the maintainer also confirmed direct insertion into the Codex input
-afterward. To repair this mismatch:
-
-1. Finish active work and quit BabbelStream normally.
-2. Open **System Settings → Privacy & Security → Accessibility**. Select only
-   **BabbelStream** and remove its entry with the minus button. Authenticate in
-   the macOS dialog yourself if requested.
-3. Add `/Applications/BabbelStream.app` with the plus button and enable its switch.
-   Leave other applications' permissions unchanged.
-4. Reopen the Applications copy. In setup, choose **Check Again** and confirm
-   **Automatic paste — Allowed**. The running app's result matters more than an
-   enabled System Settings row.
-5. Run the optional local paste test (it replaces the clipboard with a harmless
-   sample), then focus the Codex input and try harmless dictation while keeping
-   Codex frontmost. Confirm the draft appears once and remains unsent.
-
-This repairs an OS permission entry; it does not require a new app build, a paid
-Apple membership, Keychain changes or a permission reset for every application.
-Ad-hoc rebuilds may require reapproval again. The exact reason an old grant stops
-matching is not established by the toggle alone.
-
-If Accessibility is **Allowed** but insertion still fails, check the app's result:
-**active application changed** means it deliberately avoided pasting into another
-app; **paste shortcut sent** means it posted Command-V but cannot prove the editor
-accepted it. Use manual paste for recovery and report that distinction. Do not
-repeat automatic paste blindly, which could duplicate text.
+Check Accessibility and keep the original app focused.
+[Paste and permission repair →](docs/troubleshooting.md#dictation-copies-the-draft-but-does-not-paste-into-codex-or-another-app)
 
 ### Homebrew says installed, but the app is missing
 
-Homebrew's installed record can remain when the Applications bundle is missing.
-Quit any remaining BabbelStream copy, then restore the app without deleting its
-settings or keys:
-
-```sh
-brew reinstall --cask sichgeis/tap/babbelstream
-```
-
-Open **Finder → Applications → BabbelStream**. If macOS displays the
-non-notarized-app warning, choose **Done**, then use **Privacy & Security → Open
-Anyway** where device policy permits. **Move to Trash** removes the app bundle;
-it is not the approval action. The pilot encountered a missing bundle despite a
-Homebrew installed record; its disappearance cause was not established. Reinstall
-restored the verified 0.5.1 bundle successfully.
+[Restore the app without deleting settings or keys →](docs/troubleshooting.md#homebrew-says-installed-but-the-app-is-missing)
 
 ### Keychain asks for your password after every restart
 
-**Symptom:** dictation works, but the first transcription after quitting and
-reopening BabbelStream asks for your login Keychain password again, even after
-choosing **Always Allow**.
-
-This occurred on macOS 27.0.1 when upgrading a manual 0.4.5 installation to the
-ad-hoc-signed 0.5.1 pilot. The saved key remained, but repeated approval did not
-resolve access. A signing/trust mismatch is suspected; the root cause is not
-confirmed. The following per-item repair resolved the reported restart test:
-
-1. Open **Keychain Access** (choose it rather than Passwords if macOS offers both).
-2. Select the **login** keychain and search for `com.sichgeis.babbelstream`.
-3. Open the application-password item with account **provider-api-key**, then
-   select **Access Control**. Leave **Show password** unchecked.
-4. Keep **Confirm before allowing access** selected. Under **Always allow access
-   by these applications**, click **+** and add `/Applications/BabbelStream.app`.
-   Existing BabbelStream entries may refer to older builds; in the reported case,
-   adding the current Applications copy worked without removing those entries.
-5. Choose **Save Changes** and authenticate in the macOS dialog if requested.
-6. Quit and reopen BabbelStream, then dictate harmless text into an unsent draft.
-   Confirm the text appears once without a Keychain prompt; repeat the restart
-   test to check that access persists.
-
-Do not enable **Allow all applications to access this item**, reveal/share the
-key, or delete the Keychain item as a repair. If saving is blocked or the prompt
-returns, report the macOS version, BabbelStream version/commit and reproduction
-steps without including passwords or private dictation.
-
-This repair was confirmed for the installed 0.5.1 build; it does not establish
-that trust survives a future Homebrew upgrade. Ad-hoc builds can change identity
-between versions. See [Apple's Keychain access guidance](https://support.apple.com/en-gb/guide/mac-help/kychn002/mac).
+[Repair access for the current app →](docs/troubleshooting.md#keychain-asks-for-your-password-after-every-restart)
 
 ## Privacy by default
 
-- Recording starts only when you request it. Audio goes to the configured provider;
-  optional cleanup sends transcript text and dictionary hints to that provider.
-- Successful audio is deleted. Failed or interrupted stopped recordings stay
-  locally in **Failed Recordings** until recovery succeeds or you delete them.
-- Draft text stays in session memory and the clipboard unless you explicitly enable
-  the local archive. Other apps and clipboard managers may read clipboard text.
-- API keys stay in macOS Keychain. Personal OpenAI fallback is off by default and
-  requires separate consent, a separate key and possible personal charges.
-- No telemetry, cloud sync, Slack API integration or auto-send.
+- Recording starts only when requested. Audio goes to your configured provider;
+  optional cleanup sends transcript text and dictionary hints there too.
+- Successful audio is deleted. Failed or interrupted stopped recordings remain
+  locally until recovery succeeds or you delete them.
+- Drafts stay in session memory and the clipboard unless you enable the local
+  archive. Other apps and clipboard managers may read clipboard text.
+- Keys stay in macOS Keychain. Personal OpenAI fallback is off by default and
+  requires separate consent, a key, and possible personal charges.
+- No telemetry, cloud sync, Slack API integration, or auto-send.
 
-For work dictation, use only content and provider destinations your company
-allows. [Privacy contract →](docs/security-privacy.md)
+Use only content and provider destinations your organization permits.
+[Privacy contract →](docs/security-privacy.md)
 
-## Remove the app
+## Uninstall
 
-For a Homebrew-managed installation, disable launch at login if enabled, quit the
-app, then run `brew uninstall --cask sichgeis/tap/babbelstream`. For a manual
-installation, remove the Applications bundle after quitting.
-
-Removing the app retains keys, settings, dictionary, failed recordings and any
-optional archive. Complete data removal is a separate deliberate choice; see
-[removal and local data](docs/getting-started.md#remove-local-data-deliberately).
+Disable launch at login if enabled, then quit. For Homebrew installations, run
+`brew uninstall --cask sichgeis/tap/babbelstream`; otherwise remove the Applications
+bundle. Keys, settings, dictionary, failed recordings, and optional archives remain.
+[Remove local data deliberately →](docs/getting-started.md#remove-local-data-deliberately)
 
 ## Build or contribute
 
@@ -271,9 +178,9 @@ task check
 scripts/build-app.sh
 ```
 
-Swift, SwiftUI and AppKit; no third-party runtime dependencies. The canonical
-checks use executable fixtures rather than an unavailable XCTest runner in this
-Command Line Tools environment. [Development guide →](docs/development.md)
+Swift, SwiftUI, and AppKit; no third-party runtime dependencies. Checks use
+executable fixtures because this Command Line Tools environment cannot run XCTest.
+[Development guide →](docs/development.md)
 
 [Documentation](docs/README.md) · [Changelog](CHANGELOG.md) ·
-[Release operations](docs/homebrew-release.md) · [Project status](docs/project-status.md)
+[Project status](docs/project-status.md) · [Pilot checklist](docs/homebrew-pilot-smoke-test.md)

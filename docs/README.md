@@ -1,16 +1,15 @@
 # BabbelStream Documentation
 
-Start with the [app README](../README.md) for a short introduction. Version 0.5.2
-is publicly available through the non-notarized own-tap pilot; its initial
-installation and dictation validation is complete. Deferred lifecycle checks
-remain in the implementation plan. [Project status](project-status.md) owns the current
-state and the single next action.
+Start with the [app README](../README.md) for installation and everyday use.
+[Project status](project-status.md) owns the current release, validation evidence,
+and next action; remaining candidate work lives in the implementation plan.
 
 ## Use the app
 
 | Guide | Use it for |
 | --- | --- |
 | [Get started](getting-started.md) | Installation, onboarding, providers, dictation, recovery and removal |
+| [Troubleshooting](troubleshooting.md) | Detailed Accessibility, missing-app and Keychain repairs |
 | [Pilot support](pilot-support.md) | Company setup, connection states, credentials and support reports |
 | [Download/launch checklist](homebrew-pilot-smoke-test.md) | The required other-Mac test before public rollout |
 | [Changelog](../CHANGELOG.md) | User-visible changes by version |
