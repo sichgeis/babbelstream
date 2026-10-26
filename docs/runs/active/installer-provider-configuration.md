@@ -39,15 +39,19 @@ must be recorded truthfully. Native settings/launch pilot remains human work.
 | Focused fixtures | 25 passed, including merge-aware and first-install rollback |
 | Native preferences fixture | Actual rollback function passed in a unique synthetic domain; import merge semantics explicitly handled; fixture removed |
 | Full task check | Passed with normal developer-cache access; existing compiler warnings only |
-| Public hygiene/history | Working files passed; history scan required before push |
+| Public hygiene/history | Working files and history passed before main push |
 | Public artifact verification | New flags with --verify-only --download passed against actual release; no settings/provider access |
-| Internal page command | Pending publication, preserve all other current content |
+| Internal page command | Updated after helper publication; readback exactly equals the prior shortened page with only its command replaced |
+| Published stable helper | Generic provider flags with verification-only passed against public helper and DMG; no real settings/provider access |
 | Native user pilot | Pending; no real configuration/provider test claimed |
 
 ## Release Evidence
 
 No app binary change, VERSION bump, DMG replacement, new tag or release assets.
 No real settings/key/microphone/provider access performed by automated checks.
+Implementation commit `9416faabef3269da626a7a1a273d2c0e1fbd346c` was pushed
+to main, together with the previous consent/stable-command follow-ups. The
+internal command supplies the private profile; public source stays generic.
 
 ## Current Blocker
 
@@ -55,11 +59,11 @@ None for implementation; human pilot remains unproven.
 
 ## Next Action
 
-Publish the validated main helper, then replace only the internal guide command
-and hand off the native user settings/key-entry pilot.
+On a consenting pilot Mac, run the internal command and verify the combined
+summary, configured Settings, required personal-key entry and installer/launch.
 
 ## Closeout
 
-- [ ] Validation and commit/publication evidence complete.
-- [ ] Internal command-only update verified.
+- [x] Validation and commit/publication evidence complete.
+- [x] Internal command-only update verified.
 - [ ] Human settings/provider/installation pilot recorded or explicitly deferred.

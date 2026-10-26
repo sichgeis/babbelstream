@@ -131,9 +131,10 @@ install using Finder, launch manually and confirm 0.5.3/build 11/b9c0641 in
 Diagnostics. Record any endpoint-policy rejection honestly. Microphone/provider
 smoke remains a separate human action using harmless unsent content.
 
-Implementation, checks, feature-branch commit/push and preparation for the user
-test are authorized. Main integration, publication of a new release and native
-success claims await their own evidence/authorization. No signing-material access.
+Implementation and main integration, including the subsequent consent and
+stable-command follow-ups, are explicitly authorized by the maintainer. Main
+now carries the helper; this does not claim a native pilot pass. New app tags
+or release assets and signing-material access remain separately gated.
 
 ## Open Questions
 

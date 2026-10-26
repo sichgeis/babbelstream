@@ -25,7 +25,7 @@ displayed non-secret profile and installation; API keys remain an app/Keychain
 step. Organization-specific values are excluded from this public repository.
 
 The approved optional manual download/install/update helper is implemented and
-approved for integration into main. Contract: `docs/features/manual-install-helper/spec.md`;
+integrated on main. Contract: `docs/features/manual-install-helper/spec.md`;
 tracker: `docs/runs/active/manual-install-helper.md`. It reuses 0.5.3 unchanged,
 requires exact consent before removing quarantine from a verified staged app,
 and opens the illustrated installer for manual Finder installation. The maintainer
