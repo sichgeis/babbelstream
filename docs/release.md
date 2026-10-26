@@ -8,7 +8,9 @@ verification and exact interactive consent, only quarantine on a staged app may
 be removed. This is the sole exception to quarantine-preservation language here;
 Homebrew and ordinary DMG flows retain their existing contract. Never represent
 this as Developer ID verification, notarization or a managed-device acceptance
-guarantee. Finder installation and manual launch remain user actions.
+guarantee. The helper retains a private image/shadow mount for the illustrated installer
+window; the user ejects it before deleting its temporary backing folder. Finder
+installation and manual launch remain user actions.
 
 For future supported releases, update and independently verify the helper's
 version/build/source, DMG SHA-256, CDHash and release URL; run fixture checks and a

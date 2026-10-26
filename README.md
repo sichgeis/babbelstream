@@ -58,10 +58,11 @@ then copy this command into Terminal. No developer tools or Homebrew are needed.
 
 1. Wait for the **0.5.3/build 11** download and verification.
 2. Read the notice and type **PREPARE**, or press Return to cancel.
-3. Finder reveals the prepared app. Preserve your previous app as a rollback
-   copy, then drag the new one into Applications and launch it yourself.
-4. Check Diagnostics for **0.5.3 / build 11 / b9c0641**. Delete the temporary
-   folder after copying.
+3. The illustrated installer window opens. Preserve your previous app as a
+   rollback copy, then drag BabbelStream onto its Applications folder. Launch
+   the installed copy yourself.
+4. Check Diagnostics for **0.5.3 / build 11 / b9c0641**. Eject the installer
+   with Command-E, then delete the temporary folder printed in Terminal.
 
 The helper refuses Homebrew-managed installations. Ordinary Homebrew and DMG
 installation preserve quarantine.

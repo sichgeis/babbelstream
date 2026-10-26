@@ -23,6 +23,15 @@ instructions; commit and push a feature branch, then hand off the native test.
 
 ## Decisions And Risks
 
+- Installer-window follow-up approved: open the actual illustrated installer
+  using a private image/shadow view. Reverify before changing only its app
+  quarantine; preserve released artwork/Applications shortcut. Keep backing
+  files mounted for Finder; user ejects before deleting the temporary folder.
+  Native release-shadow validation passed: layout/background hashes and shortcut
+  preserved, app signature valid, synthetic attribute write/removal works, base
+  DMG unchanged, clean ejection. Helper tests and full checks passed; new
+  immutable README pin and user visual/Finder copy test remain to finish.
+
 - README editorial follow-up: maintainer requested a clearer, shorter landing
   page with Wonder assistance. Reviewed the external editorial draft and applied
   a final concise edit: 2,001 to 1,056 words. Kept the bootstrap byte-for-byte,

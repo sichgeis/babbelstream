@@ -74,7 +74,7 @@ keep=false
 cleanup() {
   local result=$?
   trap - EXIT
-  if $mounted; then
+  if $mounted && ! $keep; then
     if ! hdiutil detach "$mount_dir" >/dev/null 2>&1; then
       # Failed/interrupted attach may never have mounted anything. If the
       # mountpoint is a different filesystem, preserve it for manual ejection.
@@ -138,8 +138,8 @@ fi
 cat <<'NOTICE'
 
 BabbelStream is NOT notarized by Apple.
-This helper will copy the verified app into a private temporary folder and
-remove ONLY com.apple.quarantine from that copy and its contents. This bypasses
+This helper will open a private writable view of the verified installer and
+remove ONLY com.apple.quarantine from its app copy and contents. This bypasses
 the quarantine-based first-open check; it does not make the app Apple-verified.
 Continue only if your device policy permits this installation. Company endpoint
 controls may still block it. If they do, contact IT; do not attempt more bypasses.
@@ -150,9 +150,18 @@ printf '\nType PREPARE to consent, or press Return to cancel: '
 IFS= read -r consent || exit 0
 [[ "$consent" == PREPARE ]] || { echo 'Cancelled. Nothing prepared.'; exit 0; }
 
-prepared="$workspace/BabbelStream.app"
-ditto "$app" "$prepared"
+# A private shadow keeps the release DMG bytes intact while allowing the app's
+# quarantine attribute to change. The original Finder artwork/layout and the
+# Applications shortcut remain exactly where the released image put them.
+hdiutil detach "$mount_dir" >/dev/null 2>&1 || fail 'Could not eject the verification image.'
+# Keep cleanup armed while the new attach is in flight.
+hdiutil attach -shadow "$workspace/install.shadow" -nobrowse -noautoopen \
+  -mountpoint "$mount_dir" "$workspace/release.dmg" >/dev/null 2>&1 \
+  || fail 'Could not open a private writable installer view.'
+prepared="$mount_dir/BabbelStream.app"
 verify_app "$prepared"
+[[ -L "$mount_dir/Applications" && "$(readlink "$mount_dir/Applications")" == /Applications ]] \
+  || fail 'Installer Applications shortcut is missing or unexpected.'
 # Scope is only the verified copy owned by this invocation; never a user path.
 attributes="$(xattr -r "$prepared")" || fail 'Could not inspect prepared-copy attributes.'
 if [[ "$attributes" == *com.apple.quarantine* ]]; then
@@ -163,18 +172,19 @@ if [[ "$attributes" == *com.apple.quarantine* ]]; then
   fail 'Quarantine remains. Contact IT rather than attempting another bypass.'
 fi
 verify_app "$prepared"
-hdiutil detach "$mount_dir" >/dev/null 2>&1 || fail 'Could not eject the temporary image.'
-mounted=false
-rm -f "$workspace/release.dmg" "$workspace/entitlements.plist"
-rmdir "$mount_dir"
+rm -f "$workspace/entitlements.plist"
+# Finder needs the mounted installer after the helper exits. Keep its private
+# backing image/shadow until the user ejects it and discards the temporary folder.
 keep=true
-printf '\nPrepared app: %s\n' "$prepared"
+printf '\nInstaller window: %s\nTemporary installer files: %s\n' "$mount_dir" "$workspace"
 cat <<'NEXT'
 In Finder, preserve your previous app as a rollback copy before replacing it.
-Drag the prepared app into Applications; Finder handles any authorization prompt.
+In the installer window, drag BabbelStream onto the Applications folder.
+Finder handles any authorization prompt. The app is not installed automatically.
 Then launch the Applications copy yourself and check its version in Diagnostics.
 If launch is blocked, contact IT. Microphone and Accessibility require normal consent.
-After installation, move the temporary folder containing this prepared app to Trash.
+After copying, eject the installer window with Command-E, then move the
+temporary installer folder printed above to Trash.
 Temporary folders may also be removed by macOS; rerun the helper if needed.
 NEXT
-open -R "$prepared" || echo 'Could not reveal the app. Open the printed location in Finder.' >&2
+open "$mount_dir" || echo 'Could not open the installer window. Open the printed location in Finder.' >&2

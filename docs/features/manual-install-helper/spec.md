@@ -53,13 +53,16 @@ it does not guarantee acceptance by macOS or managed endpoint policy.
 6. Explain the non-notarized status, security-check bypass, company-policy limits,
    mutation scope, and no automatic installation. Require exact `PREPARE` input;
    Return, EOF or any other input cancels without mutation.
-7. Copy into the private workspace; verify again. Inspect attributes, remove only
+7. Remount the private verified image snapshot with a private writable shadow;
+   verify its app again and validate the Applications shortcut. The original
+   artwork and Finder layout are retained. Inspect attributes, remove only
    `com.apple.quarantine` recursively within that copy, confirm removal and
    reverify signature integrity. Preserve all other attributes and the original DMG.
-8. Eject the image, discard the temporary image snapshot and reveal the prepared
-   app in Finder. User preserves a rollback bundle and drags into Applications.
+8. Open the mounted installer root in Finder, preserving its illustrated
+   drag-to-Applications layout. Retain the private image/shadow and mount after
+   helper exit. User preserves a rollback bundle and drags onto Applications.
    Finder owns any authorization prompt. User launches manually and checks Diagnostics.
-9. Remove the prepared temporary folder after copying. macOS may clear temporary
+9. Eject the installer in Finder, then remove its temporary backing folder after copying. macOS may clear temporary
    storage; the helper can be rerun. Updates use the current README helper command
    with `--update`, after normally quitting the app.
 
@@ -72,7 +75,7 @@ it does not guarantee acceptance by macOS or managed endpoint policy.
 | Cancel, EOF, SIGINT or SIGTERM | Eject temporary image and discard staging where possible |
 | Copy or attribute inspection/removal failure | Abort without revealing a prepared app; discard staging |
 | Eject failure | Report manual ejection required; retain workspace rather than remove a mounted directory |
-| Success | User owns prepared temporary app until copied/deleted; original DMG and installed app unchanged |
+| Success | User owns mounted private installer and backing folder until ejected/deleted; original DMG and installed app unchanged |
 | Native launch rejection | Contact IT; no escalation to global protection changes |
 
 ## Data, Privacy, Security And Permissions
@@ -109,7 +112,8 @@ commands; Python is used only by fixture checks, not the shipped helper.
 ## Manual Smoke Test And Approval Gate
 
 On a consenting pilot Mac: run the README bootstrap using an actual downloaded
-release; cancel once, then consent. Verify the original download still has its
+release; cancel once, then consent. Confirm the actual illustrated installer window opens with the
+Applications shortcut. Verify the original download still has its
 attributes and only the staged copy loses quarantine. Preserve the previous app,
 install using Finder, launch manually and confirm 0.5.3/build 11/b9c0641 in
 Diagnostics. Record any endpoint-policy rejection honestly. Microphone/provider

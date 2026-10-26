@@ -30,15 +30,27 @@ case "$name" in
       verify) [[ "${FAULT:-}" != image ]] ;;
       attach)
         [[ "${FAULT:-}" != attach ]] || exit 1
-        /usr/bin/ditto "$FIXTURE_ROOT/source.app" "$5/BabbelStream.app" ;;
-      detach) /bin/rm -rf "$2/BabbelStream.app" ;;
+        shadow=false
+        for arg in "$@"; do [[ "$arg" != -shadow ]] || shadow=true; done
+        if $shadow; then
+          [[ "${FAULT:-}" != shadow ]] || exit 1
+          /usr/bin/touch "$FIXTURE_ROOT/shadow-mounted"
+        fi
+        while [[ "$1" != -mountpoint ]]; do shift; done
+        /usr/bin/ditto "$FIXTURE_ROOT/source.app" "$2/BabbelStream.app"
+        /usr/bin/touch "$2/.DS_Store"
+        /bin/mkdir -p "$2/.background"
+        /usr/bin/touch "$2/.background/installer-background.png"
+        if [[ "${FAULT:-}" != shortcut ]]; then /bin/ln -s /Applications "$2/Applications"; fi
+        /usr/bin/touch "$FIXTURE_ROOT/quarantine" ;;
+      detach) /bin/rm -rf "$2/BabbelStream.app" "$2/Applications" "$2/.DS_Store" "$2/.background" ;;
     esac ;;
   lipo) if [[ "${FAULT:-}" == arch ]]; then echo x86_64; else echo arm64; fi ;;
   codesign)
     case "$*" in
       *--verify*)
         [[ "${FAULT:-}" != signature ]] || exit 1
-        if [[ "${FAULT:-}" == copied && "$*" != *mounted* ]]; then exit 1; fi ;;
+        if [[ "${FAULT:-}" == copied && -e "$FIXTURE_ROOT/shadow-mounted" ]]; then exit 1; fi ;;
       *--entitlements*) /bin/cat "$FIXTURE_ROOT/entitlements.plist" ;;
       *)
         echo 'CDHash=8ae6266b8ce2389dd4b6f356fc8a66c120b7c85c' >&2
@@ -49,7 +61,7 @@ case "$name" in
   xattr)
     [[ "${FAULT:-}" != attributes ]] || exit 1
     if [[ "$1" == -dr ]]; then
-      [[ "$2" == com.apple.quarantine && "$3" == "$TMPDIR"/babbelstream-install.*/BabbelStream.app ]] || exit 9
+      [[ "$2" == com.apple.quarantine && "$3" == "$TMPDIR"/babbelstream-install.*/mounted/BabbelStream.app ]] || exit 9
       [[ "${FAULT:-}" != remove ]] || exit 1
       /bin/rm -f "$FIXTURE_ROOT/quarantine"
     else
@@ -143,7 +155,7 @@ class DownloadedInstallTests(unittest.TestCase):
     def assert_untouched(self):
         self.assertEqual(hashlib.sha256(self.dmg.read_bytes()).hexdigest(), self.digest)
         self.assertNotIn("xattr -dr", self.events())
-        self.assertNotIn("open -R", self.events())
+        self.assertNotIn("\nopen ", self.events())
         self.assertEqual(list(self.staging.iterdir()), [])
 
     def test_verify_only_has_no_mutation(self):
@@ -169,10 +181,19 @@ class DownloadedInstallTests(unittest.TestCase):
         self.assertIn("NOT notarized", output)
         self.assertEqual(hashlib.sha256(self.dmg.read_bytes()).hexdigest(), self.digest)
         self.assertEqual(self.events().count("xattr -dr com.apple.quarantine"), 1)
-        self.assertIn("open -R", self.events())
+        self.assertIn("\nopen ", self.events())
+        self.assertNotIn("open -R", self.events())
+        self.assertIn("hdiutil attach -shadow", self.events())
         directories = list(self.staging.iterdir())
         self.assertEqual(len(directories), 1)
-        self.assertEqual([p.name for p in directories[0].iterdir()], ["BabbelStream.app"])
+        mounted = directories[0] / "mounted"
+        self.assertTrue((mounted / "BabbelStream.app").is_dir())
+        self.assertEqual(os.readlink(mounted / "Applications"), "/Applications")
+        self.assertTrue((mounted / ".DS_Store").exists())
+        self.assertTrue((mounted / ".background/installer-background.png").exists())
+        self.assertTrue((directories[0] / "release.dmg").exists())
+        # Only the verification mount was detached; Finder retains the shadow view.
+        self.assertEqual(self.events().count("hdiutil detach"), 1)
 
     def test_corrupt_download_stops_before_mount(self):
         self.dmg.write_bytes(b"corrupt")
@@ -194,12 +215,13 @@ class DownloadedInstallTests(unittest.TestCase):
                 self.info[key] = original
 
     def test_failures_never_reveal_or_leave_unverified_app(self):
-        for fault in ("image", "attach", "arch", "signature", "copied", "attributes", "remove", "running"):
+        for fault in ("image", "attach", "shadow", "shortcut", "arch", "signature", "copied", "attributes", "remove", "running"):
             with self.subTest(fault=fault):
                 (self.root / "events").write_text("")
+                (self.root / "shadow-mounted").unlink(missing_ok=True)
                 code, output = self.run_helper(interactive=True, consent="PREPARE", fault=fault)
                 self.assertNotEqual(code, 0, output)
-                self.assertNotIn("open -R", self.events())
+                self.assertNotIn("\nopen ", self.events())
                 self.assertEqual(list(self.staging.iterdir()), [])
                 self.assertEqual(hashlib.sha256(self.dmg.read_bytes()).hexdigest(), self.digest)
 
@@ -261,7 +283,7 @@ class DownloadedInstallTests(unittest.TestCase):
         self.assertEqual(code, 0, output)
         info = plistlib.loads((self.root / "Installed.app/Contents/Info.plist").read_bytes())
         self.assertEqual(info["CFBundleShortVersionString"], "0.5.1")
-        self.assertIn("open -R", self.events())
+        self.assertIn("\nopen ", self.events())
 
 
 if __name__ == "__main__":

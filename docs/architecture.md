@@ -3,7 +3,8 @@
 The optional standalone manual installation helper is release tooling outside the
 application. It downloads or snapshots a release-pinned DMG, verifies its hash and
 the app's identity/signature, obtains interactive consent, and removes only
-quarantine on a verified staged app before revealing it in Finder. Explicit update
+quarantine on its verified app in a private shadow-mounted installer. Opening
+the mounted root retains the released artwork and Applications shortcut. Explicit update
 mode guards against Homebrew ownership conflicts and downgrades; Finder still
 owns installation. No app runtime component, background updater, dependency or
 provider destination is added. See `features/manual-install-helper/spec.md`.
