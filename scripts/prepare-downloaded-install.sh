@@ -146,9 +146,9 @@ controls may still block it. If they do, contact IT; do not attempt more bypasse
 The downloaded DMG, global security settings, permissions, Keychain and app data
 will remain unchanged. No app will be installed or launched automatically.
 NOTICE
-printf '\nType PREPARE to consent, or press Return to cancel: '
+printf '\nType PREPARE to consent (any letter case), or press Return to cancel: '
 IFS= read -r consent || exit 0
-[[ "$consent" == PREPARE ]] || { echo 'Cancelled. Nothing prepared.'; exit 0; }
+[[ "$consent" == [Pp][Rr][Ee][Pp][Aa][Rr][Ee] ]] || { echo 'Cancelled. Nothing prepared.'; exit 0; }
 
 # A private shadow keeps the release DMG bytes intact while allowing the app's
 # quarantine attribute to change. The original Finder artwork/layout and the

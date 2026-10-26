@@ -51,7 +51,9 @@ it does not guarantee acceptance by macOS or managed endpoint policy.
    strict deep signature integrity, exact ad-hoc/runtime CDHash, audio entitlement
    and absence of debugger entitlement. Verification mode then exits and cleans up.
 6. Explain the non-notarized status, security-check bypass, company-policy limits,
-   mutation scope, and no automatic installation. Require exact `PREPARE` input;
+   mutation scope, and no automatic installation. Require the word `PREPARE`,
+   case-insensitively (`prepare` and mixed case are accepted; extra characters or
+   whitespace are rejected);
    Return, EOF or any other input cancels without mutation.
 7. Remount the private verified image snapshot with a private writable shadow;
    verify its app again and validate the Applications shortcut. The original

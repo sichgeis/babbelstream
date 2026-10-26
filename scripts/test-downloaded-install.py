@@ -176,7 +176,24 @@ class DownloadedInstallTests(unittest.TestCase):
         self.assert_untouched()
 
     def test_prepare_scopes_mutation_and_retains_app(self):
-        code, output = self.run_helper(interactive=True, consent="PREPARE")
+        self.assert_prepared("PREPARE")
+
+    def test_lowercase_prepare_is_accepted(self):
+        self.assert_prepared("prepare")
+
+    def test_mixed_case_prepare_is_accepted(self):
+        self.assert_prepared("pRePaRe")
+
+    def test_other_consent_is_rejected(self):
+        for consent in ("yes", "prepar", "prepare!", " prepare", "prepare "):
+            with self.subTest(consent=consent):
+                code, output = self.run_helper(interactive=True, consent=consent)
+                self.assertEqual(code, 0, output)
+                self.assertIn("Cancelled", output)
+                self.assert_untouched()
+
+    def assert_prepared(self, consent):
+        code, output = self.run_helper(interactive=True, consent=consent)
         self.assertEqual(code, 0, output)
         self.assertIn("NOT notarized", output)
         self.assertEqual(hashlib.sha256(self.dmg.read_bytes()).hexdigest(), self.digest)

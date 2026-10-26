@@ -26,6 +26,10 @@ instructions; commit and push a feature branch, then hand off the native test.
 
 ## Decisions And Risks
 
+- Consent usability follow-up approved: accept the word PREPARE in any letter
+  case, while continuing to cancel for empty input, other words, extra characters
+  or surrounding whitespace. No broader security or installation change.
+
 - Installer-window follow-up approved: open the actual illustrated installer
   using a private image/shadow view. Reverify before changing only its app
   quarantine; preserve released artwork/Applications shortcut. Keep backing
