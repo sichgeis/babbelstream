@@ -29,8 +29,8 @@ instructions; commit and push a feature branch, then hand off the native test.
   files mounted for Finder; user ejects before deleting the temporary folder.
   Native release-shadow validation passed: layout/background hashes and shortcut
   preserved, app signature valid, synthetic attribute write/removal works, base
-  DMG unchanged, clean ejection. Helper tests and full checks passed; new
-  immutable README pin and user visual/Finder copy test remain to finish.
+  DMG unchanged, clean ejection. Helper tests and full checks passed; README now pins helper commit `1f57159be85f8281563e6ef5995df50070c72b23`;
+  user visual/Finder copy test remains pending.
 
 - README editorial follow-up: maintainer requested a clearer, shorter landing
   page with Wonder assistance. Reviewed the external editorial draft and applied
