@@ -7,6 +7,7 @@ import plistlib
 import pty
 import select
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -25,6 +26,7 @@ case "$name" in
     while [[ "$1" != --output ]]; do shift; done
     /bin/cp "$FIXTURE_ROOT/synthetic download \$(never execute); example.dmg" "$2" ;;
   pgrep) [[ "${FAULT:-}" == running ]] ;;
+  defaults) "$FIXTURE_PYTHON" "$FIXTURE_ROOT/defaults.py" "$@" ;;
   hdiutil)
     case "$1" in
       verify) [[ "${FAULT:-}" != image ]] ;;
@@ -72,6 +74,44 @@ case "$name" in
 esac
 '''
 
+DEFAULTS_MOCK = '''import os, pathlib, plistlib, sys
+root=pathlib.Path(os.environ["FIXTURE_ROOT"])
+store=root/"preferences.plist"
+fault=os.environ.get("FAULT", "")
+op=sys.argv[1]
+if op=="domains":
+    print("com.sichgeis.babbelstream" if store.exists() else "")
+elif op=="export":
+    if not store.exists() or fault=="export": sys.exit(1)
+    pathlib.Path(sys.argv[3]).write_bytes(store.read_bytes())
+elif op=="import":
+    current=plistlib.loads(store.read_bytes()) if store.exists() else {}
+    incoming=plistlib.loads(pathlib.Path(sys.argv[3]).read_bytes())
+    if fault=="rollback" or (fault=="import" and not (root/"import-failed").exists()):
+        (root/"import-failed").touch()
+        current["provider.transcriptionModel"]="partial-fixture"
+        store.write_bytes(plistlib.dumps(current))
+        sys.exit(1)
+    current.update(incoming)
+    store.write_bytes(plistlib.dumps(current))
+elif op=="delete":
+    current=plistlib.loads(store.read_bytes())
+    current.pop(sys.argv[3],None)
+    store.write_bytes(plistlib.dumps(current))
+elif op=="read":
+    current=plistlib.loads(store.read_bytes())
+    if sys.argv[3] not in current: sys.exit(1)
+    value=current[sys.argv[3]]
+    if fault=="read": print("wrong-value")
+    elif isinstance(value,bool): print(int(value))
+    else: print(value)
+else: sys.exit(2)
+'''
+
+CONFIG_ARGS = ["--provider-url", "https://proxy.example.invalid", "--model-routing",
+               "litellm-openai-namespace", "--transcription-model", "gpt-transcribe",
+               "--cleanup-model", "openai/gpt-4o-mini"]
+
 
 class DownloadedInstallTests(unittest.TestCase):
     def setUp(self):
@@ -97,7 +137,7 @@ class DownloadedInstallTests(unittest.TestCase):
         mock = self.bin / "mock"
         mock.write_text(MOCK)
         mock.chmod(0o755)
-        for name in ("uname", "sw_vers", "curl", "pgrep", "hdiutil", "lipo", "codesign", "ditto", "xattr", "open"):
+        for name in ("uname", "sw_vers", "curl", "pgrep", "defaults", "hdiutil", "lipo", "codesign", "ditto", "xattr", "open"):
             (self.bin / name).symlink_to(mock)
         source = (ROOT / "scripts/prepare-downloaded-install.sh").read_text()
         source = source.replace("export PATH=/usr/bin:/bin:/usr/sbin:/sbin",
@@ -109,13 +149,15 @@ class DownloadedInstallTests(unittest.TestCase):
         source = source.replace("/Applications/BabbelStream.app", str(self.root / "Installed.app"))
         self.helper = self.root / "helper.sh"
         self.helper.write_text(source)
-        self.env = dict(os.environ, FIXTURE_ROOT=str(self.root), TMPDIR=str(self.staging), FAULT="")
+        (self.root / "defaults.py").write_text(DEFAULTS_MOCK)
+        self.env = dict(os.environ, FIXTURE_ROOT=str(self.root), FIXTURE_PYTHON=sys.executable,
+                        TMPDIR=str(self.staging), FAULT="")
 
     def write_info(self):
         (self.app / "Contents/Info.plist").write_bytes(plistlib.dumps(self.info))
 
-    def run_helper(self, *, interactive=False, consent="", fault="", verify=False, mode=None):
-        command = ["/bin/bash", str(self.helper)] + (["--verify-only"] if verify else []) + ([mode] if mode else [str(self.dmg)])
+    def run_helper(self, *, interactive=False, consent="", fault="", verify=False, mode=None, extra_args=()):
+        command = ["/bin/bash", str(self.helper)] + (["--verify-only"] if verify else []) + ([mode] if mode else [str(self.dmg)]) + list(extra_args)
         env = dict(self.env, FAULT=fault)
         if not interactive:
             result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=15)
@@ -156,6 +198,7 @@ class DownloadedInstallTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(self.dmg.read_bytes()).hexdigest(), self.digest)
         self.assertNotIn("xattr -dr", self.events())
         self.assertNotIn("\nopen ", self.events())
+        self.assertNotIn("defaults import", self.events())
         self.assertEqual(list(self.staging.iterdir()), [])
 
     def test_verify_only_has_no_mutation(self):
@@ -301,6 +344,99 @@ class DownloadedInstallTests(unittest.TestCase):
         info = plistlib.loads((self.root / "Installed.app/Contents/Info.plist").read_bytes())
         self.assertEqual(info["CFBundleShortVersionString"], "0.5.1")
         self.assertIn("\nopen ", self.events())
+
+    def saved_preferences(self):
+        return plistlib.loads((self.root / "preferences.plist").read_bytes())
+
+    def test_configuration_has_one_consent_and_preserves_unrelated_preferences(self):
+        before={"custom.preference": "preserve", "provider.apiKey.saved": True,
+                "provider.baseURL": "https://old.example.invalid", "provider.personalOpenAIFallback.enabled": True}
+        (self.root / "preferences.plist").write_bytes(plistlib.dumps(before))
+        code, output=self.run_helper(interactive=True, consent="prepare", mode="--download", extra_args=CONFIG_ARGS)
+        self.assertEqual(code,0,output)
+        self.assertEqual(output.count("Type PREPARE"),1)
+        self.assertIn("https://proxy.example.invalid", output)
+        saved=self.saved_preferences()
+        self.assertEqual(saved["custom.preference"],"preserve")
+        self.assertTrue(saved["provider.apiKey.saved"])
+        self.assertEqual(saved["provider.apiKey.saved.approvedOrigin"],"unassociated")
+        self.assertEqual(saved["provider.baseURL"],"https://proxy.example.invalid")
+        self.assertEqual(saved["provider.transcriptionModelRouting"],"litellm-openai-namespace")
+        self.assertEqual(saved["provider.cleanupModel"],"openai/gpt-4o-mini")
+        self.assertEqual(saved["provider.transcriptionModelPickerMigrationVersion"],1)
+        self.assertFalse(saved["provider.personalOpenAIFallback.enabled"])
+        self.assertFalse(saved["provider.personalOpenAIFallback.directModeEnabled"])
+        self.assertIn("\nopen ",self.events())
+
+    def test_configuration_first_install_without_existing_preferences(self):
+        code,output=self.run_helper(interactive=True,consent="prepare",extra_args=CONFIG_ARGS)
+        self.assertEqual(code,0,output)
+        self.assertEqual(self.saved_preferences()["provider.transcriptionEndpointPath"],"/v1/audio/transcriptions")
+        self.assertEqual(self.saved_preferences()["provider.cleanupEndpointPath"],"/v1/chat/completions")
+
+    def test_configuration_on_current_install_skips_download_and_quarantine(self):
+        self.install_fixture("0.5.3","11")
+        code,output=self.run_helper(interactive=True,consent="prepare",mode="--update",extra_args=CONFIG_ARGS)
+        self.assertEqual(code,0,output)
+        self.assertNotIn("curl ",self.events())
+        self.assertNotIn("xattr ",self.events())
+        self.assertNotIn("\nopen ",self.events())
+        self.assertEqual(list(self.staging.iterdir()),[])
+        self.assertEqual(self.saved_preferences()["provider.transcriptionModel"],"gpt-transcribe")
+
+    def test_configuration_cancel_and_verify_only_never_write(self):
+        code,output=self.run_helper(interactive=True,extra_args=CONFIG_ARGS)
+        self.assertEqual(code,0,output)
+        self.assert_untouched()
+        self.assertFalse((self.root/"preferences.plist").exists())
+        code,output=self.run_helper(verify=True,extra_args=CONFIG_ARGS)
+        self.assertEqual(code,0,output)
+        self.assert_untouched()
+
+    def test_incomplete_and_invalid_configuration_is_rejected_before_download(self):
+        invalid=[CONFIG_ARGS[:2], CONFIG_ARGS+["--api-key","synthetic-secret-never-echo"],
+                 CONFIG_ARGS+["--provider-url","https://duplicate.example.invalid"]]
+        for bad in ("http://proxy.example.invalid", "https://user:pass@proxy.example.invalid", "https://proxy.example.invalid/path",
+                    "https://proxy.example.invalid?query", "https://proxy.example.invalid#fragment", "https://proxy.example.invalid:99999",
+                    "https://proxy.example.invalid\nextra"):
+            args=list(CONFIG_ARGS); args[1]=bad; invalid.append(args)
+        for args in invalid:
+            with self.subTest(args=args):
+                code,output=self.run_helper(verify=True,mode="--download",extra_args=args)
+                self.assertNotEqual(code,0)
+                self.assertNotIn("synthetic-secret-never-echo",output)
+                self.assertNotIn("curl ",self.events())
+                self.assert_untouched()
+
+    def test_settings_failure_restores_original_preferences(self):
+        before={"custom.preference":"keep","provider.baseURL":"https://old.example.invalid"}
+        for fault in ("import","read","export"):
+            with self.subTest(fault=fault):
+                (self.root/"preferences.plist").write_bytes(plistlib.dumps(before))
+                (self.root/"events").write_text("")
+                code,output=self.run_helper(interactive=True,consent="prepare",fault=fault,extra_args=CONFIG_ARGS)
+                self.assertNotEqual(code,0,output)
+                self.assertEqual(self.saved_preferences(),before)
+                self.assertNotIn("\nopen ",self.events())
+                self.assertEqual(list(self.staging.iterdir()),[])
+
+    def test_failed_rollback_retains_private_recovery_snapshot(self):
+        before={"custom.preference":"keep"}
+        (self.root/"preferences.plist").write_bytes(plistlib.dumps(before))
+        code,output=self.run_helper(interactive=True,consent="prepare",fault="rollback",extra_args=CONFIG_ARGS)
+        self.assertNotEqual(code,0)
+        self.assertIn("Could not restore",output)
+        self.assertNotIn("\nopen ",self.events())
+        backup=list(self.staging.glob("*/preferences-before.plist"))
+        self.assertEqual(len(backup),1)
+        self.assertEqual(plistlib.loads(backup[0].read_bytes()),before)
+
+    def test_first_install_failed_import_removes_introduced_fields(self):
+        code,output=self.run_helper(interactive=True,consent="prepare",fault="import",extra_args=CONFIG_ARGS)
+        self.assertNotEqual(code,0,output)
+        self.assertEqual(self.saved_preferences(),{})
+        self.assertNotIn("\nopen ",self.events())
+        self.assertEqual(list(self.staging.iterdir()),[])
 
 
 if __name__ == "__main__":

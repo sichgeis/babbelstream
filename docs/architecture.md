@@ -9,6 +9,14 @@ mode guards against Homebrew ownership conflicts and downgrades; Finder still
 owns installation. No app runtime component, background updater, dependency or
 provider destination is added. See `features/manual-install-helper/spec.md`.
 
+Optional generic provider arguments are a separately approved exception: the
+helper previews them, merges non-secret settings while the app is closed, disables
+personal routing and invalidates key-origin approval without accessing Keychain.
+Failed import/readback restores previous target values and removes only added
+target keys; defaults import alone merges and cannot fully restore missing keys.
+No app-runtime code or dependencies change. Contract:
+`features/installer-provider-configuration/spec.md`.
+
 ## Recommended Architecture
 
 BabbelStream is a native macOS menu-bar app with an AppKit status item, SwiftUI settings, and a small core layer for testable logic. The MVP uses native macOS APIs before adding dependencies: AVFoundation for audio recording, Carbon for the global hotkey, URLSession for provider calls, Security/Keychain for secrets, Accessibility permission for synthetic paste, and NSPasteboard plus Cmd+V for all insertion.

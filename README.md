@@ -87,9 +87,16 @@ From a checkout, run `bash scripts/prepare-downloaded-install.sh --download` or
 path instead of `--download` to use a local file. Add `--verify-only` before the
 mode to verify without changing quarantine or opening Finder.
 
-Only quarantine on the prepared app copy changes. The original DMG, installed
+Without provider options, only quarantine on the prepared app copy changes. The original DMG, installed
 app, other metadata, global security settings, permissions, Keychain, and provider
 settings stay untouched. Device policy may also block the script itself.
+
+For a prefilled connection, append all four options to the command:
+`--provider-url HTTPS_ORIGIN --model-routing ROUTING --transcription-model MODEL --cleanup-model MODEL`.
+Routing is `standard-openai` or `litellm-openai-namespace`. The helper previews the
+settings before the same consent prompt, disables personal fallback/direct mode,
+and requires your own API key in the app afterward. Existing connection fields
+are replaced only when these options are supplied. No API keys in shell commands.
 
 [Helper contract and validation →](docs/features/manual-install-helper/spec.md)
 

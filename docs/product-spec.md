@@ -28,6 +28,12 @@ or an explicit update. It cannot guarantee managed-device acceptance; it adds no
 in-app updater or permission/provider changes. Contract:
 `features/manual-install-helper/spec.md`.
 
+The helper can also accept four generic, non-secret provider arguments and show
+them in the same installation consent. It saves those fields with personal
+fallback/direct modes off, preserves unrelated preferences, and requires key
+entry in the app. No organization profile is bundled publicly. Contract:
+`features/installer-provider-configuration/spec.md`.
+
 - No Slack bot, Slack app, Slack API integration, or browser extension for MVP.
 - No iOS app.
 - No Electron.

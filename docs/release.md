@@ -21,6 +21,13 @@ the supported public release before advertising an update. Keep exactly two uplo
 never replace existing release bytes, and record real downloaded pilot evidence.
 No dynamic latest-release manifest or automatic update mechanism is introduced.
 
+Optional provider-configuration arguments are documented in
+`features/installer-provider-configuration/spec.md`. Test normal installation,
+configuration on an already-current app, one combined consent, native preference
+merge/rollback and key-origin invalidation. Public examples must use generic
+origins; internal profiles/commands stay in internal documentation. The existing
+DMG and app need no rebuild for this helper-only feature.
+
 ## Versioning And Build Provenance
 
 `VERSION` owns the semantic app/DMG version; `BUILD_NUMBER` owns the increasing integer `CFBundleVersion`. Increment BUILD_NUMBER before each newly distributed iteration, including a materially new candidate, and keep it committed. The previous fixed bundle build was 1; subsequent candidates increment the committed source BUILD_NUMBER. The 0.5.0 local release used build 6; the corrected 0.5.1 release uses build 7; release tags point to the final app-source commit on main.

@@ -19,7 +19,14 @@ ordinary quarantine-preserving DMG/Homebrew flow. It verifies a pinned release
 snapshot and staged app, then removes only `com.apple.quarantine` from that copy
 after exact interactive consent. It does not establish Apple verification or
 override company policy. No global protection, other metadata, installed app,
-Keychain, provider configuration or OS permissions are changed. Downloads disclose
+Keychain or OS permissions are changed. The separately approved generic provider
+arguments may replace the explicitly displayed non-secret connection settings
+after the same confirmation; personal fallback/direct modes are disabled and
+existing-key origin approval is invalidated. Actual keys are neither read nor
+deleted; users enter an approved personal key in the app. Other preferences are
+preserved. Private temporary preference backups are removed on success/rollback;
+failed rollback explicitly retains a private recovery snapshot. See
+`features/installer-provider-configuration/spec.md`. Downloads disclose
 ordinary connection metadata to GitHub only. See
 `features/manual-install-helper/spec.md`; endpoint rejection requires IT follow-up.
 

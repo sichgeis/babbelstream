@@ -17,6 +17,13 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
+Optional generic installer provider configuration is implemented directly
+on main by explicit maintainer request; canonical checks and 25 helper fixtures pass. Contract:
+`docs/features/installer-provider-configuration/spec.md`; execution evidence:
+`docs/runs/active/installer-provider-configuration.md`. One consent covers the
+displayed non-secret profile and installation; API keys remain an app/Keychain
+step. Organization-specific values are excluded from this public repository.
+
 The approved optional manual download/install/update helper is implemented and
 approved for integration into main. Contract: `docs/features/manual-install-helper/spec.md`;
 tracker: `docs/runs/active/manual-install-helper.md`. It reuses 0.5.3 unchanged,
@@ -47,5 +54,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Run the explicit downloaded-helper pilot from the main README with the user and
-record the real installer appearance, Finder copy and managed-Mac launch outcome.
+Run the combined internal command on a consenting pilot Mac and verify the
+installer, prefilled Provider settings and explicit personal-key entry flow.

@@ -12,6 +12,13 @@ mutates actual app attributes. The approved manual-helper exception is defined i
 Actual browser-download quarantine removal, Finder install, launch and managed
 endpoint acceptance need a consenting pilot; a fixture pass proves none of those.
 
+Provider-argument fixtures also cover one combined consent, all-or-none input
+validation, no API-key argument/echo, first and already-current installation,
+preservation of unrelated preferences, legacy key-origin invalidation, personal
+mode disabling, import/readback failures, merge-aware rollback and retained
+recovery snapshot on failed restore. Native preferences validation uses a unique
+synthetic domain which is deleted afterward, not the production app domain.
+
 Run `task check`. It builds the app and executes `BabbelStreamChecks`, including settings validation, provider lifecycle/transient-failure checks through a local `URLProtocol`, zero-byte connection-stall recovery, provider cancellation without a second attempt, prompt/dictionary behavior, archive round trips and damaged-line recovery, diagnostics redaction, temp-file helpers, insertion policy, settings persistence, version metadata, and usage counters.
 
 This CLT-only environment can compile but cannot execute XCTest or Swift Testing through SwiftPM. The empty test target was removed so `swift test` now fails honestly with `no tests found` instead of returning a false green. The debug executable suite imports `BabbelStreamApplication` with `@testable` and exercises actual AppState workflows through isolated adapters. Real AppKit, Accessibility, Keychain, microphone, Carbon, and process-termination integration remains in the manual matrix below.

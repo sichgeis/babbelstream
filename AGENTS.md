@@ -128,6 +128,14 @@ policy. No cask hooks, global Gatekeeper changes, TCC resets, other metadata
 removal, automatic installed-app replacement or new release assets are authorized.
 Explicit update mode prepares a verified replacement for manual Finder installation.
 
+The separately approved `docs/features/installer-provider-configuration/spec.md`
+allows optional generic non-secret provider arguments. One displayed confirmation
+covers installation and configuration. Only supplied connection fields and the
+documented personal-mode/key-origin markers may change; keys remain in Keychain
+and must be entered in the app. Private organization profiles belong exclusively
+in internal instructions, never this repository. Retain verified preference
+rollback and the app-closed checks.
+
 Once the user approves a feature spec and authorizes implementation, proceed autonomously through implementation, checks, feature-branch commits, and release-candidate packaging unless blocked.
 
 Stop and request direction when work would materially change:

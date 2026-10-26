@@ -25,6 +25,11 @@ it does not guarantee acceptance by macOS or managed endpoint policy.
 
 ## Accepted Scope And Non-Goals
 
+Subsequent approved extension: `../installer-provider-configuration/spec.md`
+allows optional non-secret provider arguments in the same confirmation. It
+supersedes configuration-preservation language here only when those arguments
+are supplied; ordinary runs still leave provider settings untouched.
+
 - Standalone Bash helper, macOS 13+ on Apple Silicon, using system tools only.
 - Version 0.5.3/build 11/source b9c0641; pinned DMG SHA-256 and app CDHash.
 - Local file, `--download`, `--update`, and mutation-free `--verify-only` modes.

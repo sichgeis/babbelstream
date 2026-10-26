@@ -26,6 +26,11 @@ instructions; commit and push a feature branch, then hand off the native test.
 
 ## Decisions And Risks
 
+- Generic provider-configuration extension is now tracked separately in
+  `installer-provider-configuration.md`. User authorized direct main work. That
+  run also carries the consent/stable-command follow-up integration and internal
+  command update; previous pending-main notes below are historical evidence.
+
 - Stable command follow-up approved: fetch the current main helper on every
   invocation and use --update for both first install and updates. Release
   maintainers refresh the verified pins on main; users keep the same command.
