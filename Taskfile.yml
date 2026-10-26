@@ -7,6 +7,7 @@ tasks:
       - scripts/swift-project.sh build --product BabbelStream
       - scripts/swift-project.sh run BabbelStreamChecks
       - scripts/check-release-tooling.sh
+      - python3 scripts/test-downloaded-install.py
       - python3 scripts/check-public-hygiene.py
       - python3 scripts/test-public-hygiene.py
 

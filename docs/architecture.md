@@ -1,5 +1,13 @@
 # Architecture
 
+The optional standalone manual installation helper is release tooling outside the
+application. It downloads or snapshots a release-pinned DMG, verifies its hash and
+the app's identity/signature, obtains interactive consent, and removes only
+quarantine on a verified staged app before revealing it in Finder. Explicit update
+mode guards against Homebrew ownership conflicts and downgrades; Finder still
+owns installation. No app runtime component, background updater, dependency or
+provider destination is added. See `features/manual-install-helper/spec.md`.
+
 ## Recommended Architecture
 
 BabbelStream is a native macOS menu-bar app with an AppKit status item, SwiftUI settings, and a small core layer for testable logic. The MVP uses native macOS APIs before adding dependencies: AVFoundation for audio recording, Carbon for the global hotkey, URLSession for provider calls, Security/Keychain for secrets, Accessibility permission for synthetic paste, and NSPasteboard plus Cmd+V for all insertion.

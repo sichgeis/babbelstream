@@ -117,6 +117,17 @@ Do not allow these artifacts to contradict each other. A feature spec may refine
 
 ## Autonomy And Approval Gates
 
+### Approved Manual Helper Exception (2026-10-26)
+
+The maintainer explicitly approved `docs/features/manual-install-helper/spec.md`:
+the standalone manual helper may download the pinned release, verify a private
+snapshot and staged app, and remove only `com.apple.quarantine` within that staged
+app after exact interactive consent. This narrow exception supersedes the
+quarantine-preservation rule above only for this helper. Users must follow device
+policy. No cask hooks, global Gatekeeper changes, TCC resets, other metadata
+removal, automatic installed-app replacement or new release assets are authorized.
+Explicit update mode prepares a verified replacement for manual Finder installation.
+
 Once the user approves a feature spec and authorizes implementation, proceed autonomously through implementation, checks, feature-branch commits, and release-candidate packaging unless blocked.
 
 Stop and request direction when work would materially change:

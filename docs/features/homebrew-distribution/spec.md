@@ -1,5 +1,14 @@
 # Homebrew Distribution And Updates
 
+## Subsequent Manual Helper Exception (2026-10-26)
+
+The maintainer separately approved `../manual-install-helper/spec.md`. Its
+standalone, explicit-consent preparation may remove only quarantine on a verified
+staged app. This supersedes quarantine-preservation/no-bypass language in this
+document only for that manual helper. The cask, ordinary DMG instructions and
+Homebrew acceptance criteria still preserve quarantine with no executable hooks.
+Managed-device acceptance is not guaranteed; endpoint blocks require IT follow-up.
+
 ## Status
 
 - State: Shipped; initial pilot closed on 2026-10-23. Upgrade, uninstall retention and rollback validation remain deferred.

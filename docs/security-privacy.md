@@ -14,6 +14,15 @@
 
 ## Storage And Lifetime
 
+The separately approved manual installation helper is a narrow exception to the
+ordinary quarantine-preserving DMG/Homebrew flow. It verifies a pinned release
+snapshot and staged app, then removes only `com.apple.quarantine` from that copy
+after exact interactive consent. It does not establish Apple verification or
+override company policy. No global protection, other metadata, installed app,
+Keychain, provider configuration or OS permissions are changed. Downloads disclose
+ordinary connection metadata to GitHub only. See
+`features/manual-install-helper/spec.md`; endpoint rejection requires IT follow-up.
+
 - Audio: temporary while recording, then safeguarded under Application Support before provider processing. Delete immediately after transcription and any enabled cleanup succeed. Preserve failed, canceled-after-stop, or interrupted processing until retry succeeds or the user explicitly deletes it.
 - Transcript text: memory only by default, plus last transcript in memory for retry/paste-last during the running app session.
 - Cleaned text: session memory and the system clipboard for every delivery attempt that successfully copies the draft.

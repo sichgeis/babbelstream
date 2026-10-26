@@ -21,6 +21,13 @@ The primary user is a technical Mac user who writes many Slack messages during t
 
 ## Non-Goals
 
+Installation has a separately approved optional manual helper for the pinned
+non-notarized release. It verifies download/app integrity, asks for explicit
+quarantine-removal consent on a staged copy, and prepares manual Finder installation
+or an explicit update. It cannot guarantee managed-device acceptance; it adds no
+in-app updater or permission/provider changes. Contract:
+`features/manual-install-helper/spec.md`.
+
 - No Slack bot, Slack app, Slack API integration, or browser extension for MVP.
 - No iOS app.
 - No Electron.

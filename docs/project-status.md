@@ -17,10 +17,12 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-No active implementation or release work. The public-data scrub, authorized local
-migration/pruning, old remote installer withdrawal and clean replacement release
-are complete. Evidence: `docs/runs/archive/data-scrub.md`, its ref map, and
-`docs/runs/archive/release-v0.5.3.md`. Existing worktrees and private stores were preserved.
+The approved optional manual download/install/update helper is being implemented
+on `codex/manual-install-helper`. Contract: `docs/features/manual-install-helper/spec.md`;
+tracker: `docs/runs/active/manual-install-helper.md`. It reuses 0.5.3 unchanged,
+requires exact consent before removing quarantine from a verified staged app,
+and leaves Finder installation to the user. Managed-device behavior is unproven.
+Earlier scrub/release work remains closed in its archived runs.
 
 ## Known Limitations And Deferred Follow-Ups
 
@@ -43,4 +45,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-On the pilot Mac, optionally upgrade to 0.5.3 with `brew upgrade --cask sichgeis/tap/babbelstream` and record the real old-to-new upgrade and permission/Keychain behavior using `docs/implementation-plan.md`.
+Complete helper validation and push the feature branch, then run the explicit
+downloaded-helper pilot with the user and record its real outcome.

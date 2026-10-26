@@ -1,5 +1,22 @@
 # Release Guide
 
+## Optional Manual Helper Pilot (2026-10-26)
+
+The approved `features/manual-install-helper/spec.md` permits a separate manual
+download/preparation/update helper for 0.5.3/build 11. After pinned DMG/app
+verification and exact interactive consent, only quarantine on a staged app may
+be removed. This is the sole exception to quarantine-preservation language here;
+Homebrew and ordinary DMG flows retain their existing contract. Never represent
+this as Developer ID verification, notarization or a managed-device acceptance
+guarantee. Finder installation and manual launch remain user actions.
+
+For future supported releases, update and independently verify the helper's
+version/build/source, DMG SHA-256, CDHash and release URL; run fixture checks and a
+real `--verify-only --download`. Commit the helper, then point the README bootstrap
+to that immutable source commit. Keep exactly two uploaded assets (DMG/checksum),
+never replace existing release bytes, and record real downloaded pilot evidence.
+No dynamic latest-release manifest or automatic update mechanism is introduced.
+
 ## Versioning And Build Provenance
 
 `VERSION` owns the semantic app/DMG version; `BUILD_NUMBER` owns the increasing integer `CFBundleVersion`. Increment BUILD_NUMBER before each newly distributed iteration, including a materially new candidate, and keep it committed. The previous fixed bundle build was 1; subsequent candidates increment the committed source BUILD_NUMBER. The 0.5.0 local release used build 6; the corrected 0.5.1 release uses build 7; release tags point to the final app-source commit on main.

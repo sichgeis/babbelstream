@@ -2,6 +2,16 @@
 
 ## Automated Check Runner
 
+`task check` also runs `scripts/test-downloaded-install.py` with synthetic app
+bundles and fake system commands. It exercises verification-only, consent/cancel,
+wrong hashes/metadata/architecture/signatures, image/copy/attribute failures,
+Homebrew/running-app conflicts, HTTPS download failure, update no-op/downgrade and
+older-version preparation without replacement. It never reads private stores or
+mutates actual app attributes. The approved manual-helper exception is defined in
+`features/manual-install-helper/spec.md`; it does not alter the Homebrew matrix.
+Actual browser-download quarantine removal, Finder install, launch and managed
+endpoint acceptance need a consenting pilot; a fixture pass proves none of those.
+
 Run `task check`. It builds the app and executes `BabbelStreamChecks`, including settings validation, provider lifecycle/transient-failure checks through a local `URLProtocol`, zero-byte connection-stall recovery, provider cancellation without a second attempt, prompt/dictionary behavior, archive round trips and damaged-line recovery, diagnostics redaction, temp-file helpers, insertion policy, settings persistence, version metadata, and usage counters.
 
 This CLT-only environment can compile but cannot execute XCTest or Swift Testing through SwiftPM. The empty test target was removed so `swift test` now fails honestly with `no tests found` instead of returning a false green. The debug executable suite imports `BabbelStreamApplication` with `@testable` and exercises actual AppState workflows through isolated adapters. Real AppKit, Accessibility, Keychain, microphone, Carbon, and process-termination integration remains in the manual matrix below.

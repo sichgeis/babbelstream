@@ -53,8 +53,54 @@ shasum -a 256 -c BabbelStream-0.5.3.dmg.sha256
 
 Quit the old app, open the DMG, drag BabbelStream into Applications, eject the
 image and launch the Applications copy. Preserve settings and Keychain entries.
-The ad-hoc pilot is not notarized; use supported macOS per-app approval and never
-bypass quarantine or device policy. Source ZIP/tar archives are not installers.
+The ad-hoc pilot is not notarized; use supported macOS per-app approval where
+available. The optional manual helper below is a separate, explicit quarantine
+exception; ordinary DMG/Homebrew installation preserves quarantine. Always follow
+device policy. Source ZIP/tar archives are not installers.
+
+### Optional manual installation helper (pilot)
+
+**Disclaimer:** BabbelStream is not notarized by Apple. This optional helper
+deliberately removes the quarantine attribute from a verified temporary app copy,
+bypassing the quarantine-based first-open check. It does not establish Apple
+verification or malware safety, and company security controls may still block it.
+Use it only where your device policy permits; contact IT if the helper or app is
+blocked. A checksum and ad-hoc signature verify the expected artifact, not a
+trusted publisher. Trust in this repository and GitHub remains necessary.
+
+Review [the helper source](scripts/prepare-downloaded-install.sh) before running
+it. It requires no Homebrew, Python, compiler or developer account. The reviewed
+bootstrap command will be pinned to the helper's immutable source commit after
+the feature commit. From an existing checkout you can already run:
+
+```sh
+bash scripts/prepare-downloaded-install.sh --download
+```
+
+It downloads **0.5.3/build 11** over HTTPS, verifies the DMG and app, and asks you
+to type **PREPARE** before changing attributes. Finder then reveals the prepared
+app. Preserve your previous app as a rollback copy and drag the prepared app into
+Applications. Launch that copy yourself and check Diagnostics for
+**0.5.3 / build 11 / b9c0641**. Delete the temporary folder after copying.
+
+To prepare a manual update, quit BabbelStream and use the current README's
+helper with `--update`. It checks the installed version, skips an exact current
+release, refuses downgrades and prepares an older installation's replacement for
+Finder. This is user-initiated, release-pinned preparation, not an automatic
+updater: future releases must update the helper and this README command.
+Homebrew-managed installations are refused rather than silently taken over.
+
+```sh
+bash scripts/prepare-downloaded-install.sh --update
+```
+
+For a DMG already downloaded, pass its file path instead of `--download`. Add
+`--verify-only` before either mode to verify without changing quarantine or
+opening Finder. No installed app, provider settings, Keychain items, microphone
+or Accessibility grants are changed automatically. Global security settings and
+other metadata remain intact. The original DMG is never modified.
+
+[Detailed contract and pilot validation](docs/features/manual-install-helper/spec.md)
 
 ## Set up once
 
