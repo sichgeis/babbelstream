@@ -37,8 +37,9 @@ instructions; commit and push a feature branch, then hand off the native test.
 1. Baseline/checks: completed. Initial sandbox cache denial resolved by running
    `task check` with normal developer-cache access; baseline passes with existing warnings.
 2. Helper and docs: completed; fixture-only local/download/update coverage added.
-3. Final validation: full checks and public download verification passed. Coherent
-   commits, immutable README bootstrap and feature push in progress.
+3. Final validation: full checks and public download verification passed. Helper
+   commit: `cff15fe7202a95463fd44047e603d0645d036e13`. README bootstrap pins that
+   immutable source. Documentation commit and feature push in progress.
 4. Native downloaded pilot: pending user execution/consent; do not fabricate success.
 
 ## Validation Matrix
@@ -63,7 +64,8 @@ None for implementation. Managed-Mac behavior remains unproven.
 
 ## Next Action
 
-Complete final validation and push the feature branch for the user pilot.
+Run the feature-branch README bootstrap interactively on the pilot Mac, then
+record the actual Finder installation/launch outcome before integration.
 
 ## Closeout
 

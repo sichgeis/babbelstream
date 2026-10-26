@@ -68,13 +68,13 @@ Use it only where your device policy permits; contact IT if the helper or app is
 blocked. A checksum and ad-hoc signature verify the expected artifact, not a
 trusted publisher. Trust in this repository and GitHub remains necessary.
 
-Review [the helper source](scripts/prepare-downloaded-install.sh) before running
-it. It requires no Homebrew, Python, compiler or developer account. The reviewed
-bootstrap command will be pinned to the helper's immutable source commit after
-the feature commit. From an existing checkout you can already run:
+Review [the pinned helper source](https://github.com/sichgeis/babbelstream/blob/cff15fe7202a95463fd44047e603d0645d036e13/scripts/prepare-downloaded-install.sh)
+before running it. It requires no Homebrew, Python, compiler or developer account.
+Copy this command into Terminal. It saves the helper from an immutable source
+commit, runs it interactively, and deletes the downloaded helper on exit:
 
 ```sh
-bash scripts/prepare-downloaded-install.sh --download
+/bin/bash -c 'set -e; babbelstream_helper="$(/usr/bin/mktemp -t babbelstream-helper)"; cleanup() { /bin/rm -f "$babbelstream_helper"; }; trap cleanup EXIT; /usr/bin/curl --fail --location --proto "=https" --proto-redir "=https" --tlsv1.2 --connect-timeout 20 --max-time 60 --output "$babbelstream_helper" https://raw.githubusercontent.com/sichgeis/babbelstream/cff15fe7202a95463fd44047e603d0645d036e13/scripts/prepare-downloaded-install.sh; /bin/bash "$babbelstream_helper" "$@"' babbelstream --download
 ```
 
 It downloads **0.5.3/build 11** over HTTPS, verifies the DMG and app, and asks you
@@ -83,20 +83,21 @@ app. Preserve your previous app as a rollback copy and drag the prepared app int
 Applications. Launch that copy yourself and check Diagnostics for
 **0.5.3 / build 11 / b9c0641**. Delete the temporary folder after copying.
 
-To prepare a manual update, quit BabbelStream and use the current README's
-helper with `--update`. It checks the installed version, skips an exact current
+To prepare a manual update, quit BabbelStream and run the current README command
+above with its final `--download` changed to `--update`. It checks the installed version, skips an exact current
 release, refuses downgrades and prepares an older installation's replacement for
 Finder. This is user-initiated, release-pinned preparation, not an automatic
 updater: future releases must update the helper and this README command.
 Homebrew-managed installations are refused rather than silently taken over.
 
-```sh
-bash scripts/prepare-downloaded-install.sh --update
-```
-
+From a repository checkout, the equivalent commands are
+`bash scripts/prepare-downloaded-install.sh --download` and
+`bash scripts/prepare-downloaded-install.sh --update`.
 For a DMG already downloaded, pass its file path instead of `--download`. Add
-`--verify-only` before either mode to verify without changing quarantine or
-opening Finder. No installed app, provider settings, Keychain items, microphone
+`--verify-only` before either mode when running the helper directly to verify
+without changing quarantine or opening Finder. The script itself may also be
+blocked by device policy; it does not remove its own metadata. No installed app,
+provider settings, Keychain items, microphone
 or Accessibility grants are changed automatically. Global security settings and
 other metadata remain intact. The original DMG is never modified.
 

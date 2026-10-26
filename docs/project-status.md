@@ -17,7 +17,7 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-The approved optional manual download/install/update helper is being implemented
+The approved optional manual download/install/update helper is implemented
 on `codex/manual-install-helper`. Contract: `docs/features/manual-install-helper/spec.md`;
 tracker: `docs/runs/active/manual-install-helper.md`. It reuses 0.5.3 unchanged,
 requires exact consent before removing quarantine from a verified staged app,
@@ -45,5 +45,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Complete helper validation and push the feature branch, then run the explicit
-downloaded-helper pilot with the user and record its real outcome.
+Run the explicit downloaded-helper pilot from the feature-branch README with the
+user and record its real installation/launch outcome before integration.
