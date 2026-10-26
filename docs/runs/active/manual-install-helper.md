@@ -19,7 +19,10 @@ instructions; commit and push a feature branch, then hand off the native test.
 - Authorized: implementation, tests, feature commit/push, explicit download/update
   helper and README bootstrap; stage a user test.
 - Human gate: real managed-Mac installation/launch; no claimed microphone/provider smoke.
-- Main/tag/release publication remain outside this implementation.
+- Follow-up authority on 2026-10-26: maintainer explicitly requested merging the
+  helper into main while preserving the current README writing. This authorizes
+  main integration/push before the remaining human pilot, not a claim that the
+  pilot passed. New tags/release assets remain outside this implementation.
 
 ## Decisions And Risks
 
@@ -82,11 +85,15 @@ None for implementation. Managed-Mac behavior remains unproven.
 
 ## Next Action
 
-Run the feature-branch README bootstrap interactively on the pilot Mac, then
-record the actual Finder installation/launch outcome before integration.
+Run the main README bootstrap interactively on the pilot Mac, then record actual
+installer appearance, Finder installation and managed-device launch outcomes.
 
 ## Closeout
 
 - [x] Final checks and commit/push evidence recorded.
 - [ ] User native pilot result recorded.
 - [ ] Integration direction resolved and tracker archived when complete.
+
+Main integration direction is resolved by the explicit request above. This run
+stays active solely for the remaining human pilot evidence; do not fabricate a
+smoke result or rebuild/relabel the unchanged app release.

@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Approved; implementation awaiting native pilot validation.
+- State: Implemented; main integration approved, native pilot validation pending.
 - Owner: Maintainer.
 - Approval: 2026-10-26 conversation: implement the proposed manual helper, README disclaimer, commit and push; then extend it with explicit download/update commands.
 

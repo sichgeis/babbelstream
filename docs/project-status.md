@@ -17,11 +17,13 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-The approved optional manual download/install/update helper is implemented
-on `codex/manual-install-helper`. Contract: `docs/features/manual-install-helper/spec.md`;
+The approved optional manual download/install/update helper is implemented and
+approved for integration into main. Contract: `docs/features/manual-install-helper/spec.md`;
 tracker: `docs/runs/active/manual-install-helper.md`. It reuses 0.5.3 unchanged,
 requires exact consent before removing quarantine from a verified staged app,
-and leaves Finder installation to the user. Managed-device behavior is unproven.
+and opens the illustrated installer for manual Finder installation. The maintainer
+explicitly authorized main integration before the remaining visual/managed-Mac
+pilot. Managed-device installation and launch remain unproven.
 Earlier scrub/release work remains closed in its archived runs.
 
 ## Known Limitations And Deferred Follow-Ups
@@ -45,5 +47,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Run the explicit downloaded-helper pilot from the feature-branch README with the
-user and record its real installation/launch outcome before integration.
+Run the explicit downloaded-helper pilot from the main README with the user and
+record the real installer appearance, Finder copy and managed-Mac launch outcome.
