@@ -49,19 +49,21 @@ only after your consent, bypassing its quarantine-based first-open check. It
 provides no Apple or malware verification. Follow device policy; if blocked,
 contact IT.
 
-[Review the pinned helper](https://github.com/sichgeis/babbelstream/blob/1aa5053a767c0c2ac3538f38e8aee63cc6812822/scripts/prepare-downloaded-install.sh),
-then copy this command into Terminal. No developer tools or Homebrew are needed.
+[Review the helper](https://github.com/sichgeis/babbelstream/blob/main/scripts/prepare-downloaded-install.sh),
+then copy this command into Terminal. Use the same command for installation and
+future updates. Quit BabbelStream first; no developer tools or Homebrew are needed.
 
 ```sh
-/bin/bash -c 'set -e; babbelstream_helper="$(/usr/bin/mktemp -t babbelstream-helper)"; cleanup() { /bin/rm -f "$babbelstream_helper"; }; trap cleanup EXIT; /usr/bin/curl --fail --location --proto "=https" --proto-redir "=https" --tlsv1.2 --connect-timeout 20 --max-time 60 --output "$babbelstream_helper" https://raw.githubusercontent.com/sichgeis/babbelstream/1aa5053a767c0c2ac3538f38e8aee63cc6812822/scripts/prepare-downloaded-install.sh; /bin/bash "$babbelstream_helper" "$@"' babbelstream --download
+/bin/bash -c 'set -e; babbelstream_helper="$(/usr/bin/mktemp -t babbelstream-helper)"; cleanup() { /bin/rm -f "$babbelstream_helper"; }; trap cleanup EXIT; /usr/bin/curl --fail --location --proto "=https" --proto-redir "=https" --tlsv1.2 --connect-timeout 20 --max-time 60 --output "$babbelstream_helper" https://raw.githubusercontent.com/sichgeis/babbelstream/main/scripts/prepare-downloaded-install.sh; /bin/bash "$babbelstream_helper" "$@"' babbelstream --update
 ```
 
-1. Wait for the **0.5.3/build 11** download and verification.
+1. The helper checks your installed version, then downloads and verifies its
+   current supported release. If that exact release is installed, it stops there.
 2. Read the notice and type **prepare** (any letter case), or press Return to cancel.
 3. The illustrated installer window opens. Preserve your previous app as a
    rollback copy, then drag BabbelStream onto its Applications folder. Launch
    the installed copy yourself.
-4. Check Diagnostics for **0.5.3 / build 11 / b9c0641**. Eject the installer
+4. Check Diagnostics against the version/build/source printed in Terminal. Eject the installer
    with Command-E, then delete the temporary folder printed in Terminal.
 
 The helper refuses Homebrew-managed installations. Ordinary Homebrew and DMG
@@ -70,13 +72,15 @@ installation preserve quarantine.
 <details>
 <summary>Helper options and verification</summary>
 
-The command downloads a helper from an immutable commit and deletes that helper
-on exit. It verifies the DMG and app before asking for consent. These checks
-confirm the expected artifact, not a trusted publisher.
+Each run downloads the current helper from `main` and deletes it on exit. You
+are trusting the current code in this repository. The helper carries the expected
+release version, checksum and app signature, and verifies them before asking for
+consent. These checks confirm the expected artifact, not a trusted publisher.
 
-To prepare an update, quit the app and change the command’s final `--download`
-to `--update`. It skips an exact installed release and refuses downgrades. It is
-pinned to 0.5.3; use the current README command for future releases.
+The same command handles first installation and updates, and refuses downgrades.
+Release maintainers refresh the helper’s release pins for each supported version;
+your saved command stays the same. It does not run in the background or replace
+the installed app automatically: you still consent and drag it in Finder.
 
 From a checkout, run `bash scripts/prepare-downloaded-install.sh --download` or
 `bash scripts/prepare-downloaded-install.sh --update`. Pass a downloaded DMG’s

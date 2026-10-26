@@ -14,8 +14,10 @@ installation and manual launch remain user actions.
 
 For future supported releases, update and independently verify the helper's
 version/build/source, DMG SHA-256, CDHash and release URL; run fixture checks and a
-real `--verify-only --download`. Commit the helper, then point the README bootstrap
-to that immutable source commit. Keep exactly two uploaded assets (DMG/checksum),
+real `--verify-only --download`. Publish the release assets before advancing the
+helper pins on main. The stable README command fetches that current helper with
+`--update`; never change its URL per release. Verify the remote helper pins match
+the supported public release before advertising an update. Keep exactly two uploaded assets (DMG/checksum),
 never replace existing release bytes, and record real downloaded pilot evidence.
 No dynamic latest-release manifest or automatic update mechanism is introduced.
 

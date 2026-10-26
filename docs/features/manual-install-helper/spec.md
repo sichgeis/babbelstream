@@ -29,9 +29,14 @@ it does not guarantee acceptance by macOS or managed endpoint policy.
 - Version 0.5.3/build 11/source b9c0641; pinned DMG SHA-256 and app CDHash.
 - Local file, `--download`, `--update`, and mutation-free `--verify-only` modes.
 - Download via HTTPS GitHub Releases, bounded connection/transfer timeouts and HTTPS-only redirects.
-- The README bootstrap downloads the helper to a temporary file from an immutable source commit and executes it explicitly; never pipe network bytes into a shell.
+- Approved stable-command follow-up: the README bootstrap downloads the current
+  helper from `main` to a temporary file and executes it explicitly with
+  `--update`; never pipe network bytes into a shell. The same command handles
+  first installation and later user-initiated updates. It trusts current main code.
 - No background updates or dynamically trusted latest-release manifests. Refresh
-  the helper's pins and README bootstrap for each future supported release.
+  the helper's pins on main for each future supported release; the bootstrap
+  stays unchanged. This selects the maintainer-supported release, not arbitrary
+  newer assets discovered via GitHub's latest-release API.
 - No global Gatekeeper change, TCC reset, broad xattr clearing, re-signing,
   credentials, telemetry, provider calls, process killing or automatic app launch.
 - No automatic replacement of installed bundles or Homebrew ownership takeover.

@@ -26,6 +26,13 @@ instructions; commit and push a feature branch, then hand off the native test.
 
 ## Decisions And Risks
 
+- Stable command follow-up approved: fetch the current main helper on every
+  invocation and use --update for both first install and updates. Release
+  maintainers refresh the verified pins on main; users keep the same command.
+  No background updater, unverified latest-release manifest or automatic Finder
+  replacement. Main integration of the consent/stable-command follow-ups remains
+  pending. README style retained with only targeted installation wording edits.
+
 - Consent usability follow-up approved: accept the word PREPARE in any letter
   case, while continuing to cancel for empty input, other words, extra characters
   or surrounding whitespace. No broader security or installation change.
