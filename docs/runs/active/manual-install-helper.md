@@ -29,6 +29,9 @@ instructions; commit and push a feature branch, then hand off the native test.
 - Consent usability follow-up approved: accept the word PREPARE in any letter
   case, while continuing to cancel for empty input, other words, extra characters
   or surrounding whitespace. No broader security or installation change.
+  Implemented on `codex/installer-consent` from clean main `123f749`; 17 helper
+  tests and `task check` pass. README pins helper commit `1aa5053`.
+  Main integration of this small follow-up is not yet authorized.
 
 - Installer-window follow-up approved: open the actual illustrated installer
   using a private image/shadow view. Reverify before changing only its app

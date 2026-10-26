@@ -49,15 +49,15 @@ only after your consent, bypassing its quarantine-based first-open check. It
 provides no Apple or malware verification. Follow device policy; if blocked,
 contact IT.
 
-[Review the pinned helper](https://github.com/sichgeis/babbelstream/blob/1f57159be85f8281563e6ef5995df50070c72b23/scripts/prepare-downloaded-install.sh),
+[Review the pinned helper](https://github.com/sichgeis/babbelstream/blob/1aa5053a767c0c2ac3538f38e8aee63cc6812822/scripts/prepare-downloaded-install.sh),
 then copy this command into Terminal. No developer tools or Homebrew are needed.
 
 ```sh
-/bin/bash -c 'set -e; babbelstream_helper="$(/usr/bin/mktemp -t babbelstream-helper)"; cleanup() { /bin/rm -f "$babbelstream_helper"; }; trap cleanup EXIT; /usr/bin/curl --fail --location --proto "=https" --proto-redir "=https" --tlsv1.2 --connect-timeout 20 --max-time 60 --output "$babbelstream_helper" https://raw.githubusercontent.com/sichgeis/babbelstream/1f57159be85f8281563e6ef5995df50070c72b23/scripts/prepare-downloaded-install.sh; /bin/bash "$babbelstream_helper" "$@"' babbelstream --download
+/bin/bash -c 'set -e; babbelstream_helper="$(/usr/bin/mktemp -t babbelstream-helper)"; cleanup() { /bin/rm -f "$babbelstream_helper"; }; trap cleanup EXIT; /usr/bin/curl --fail --location --proto "=https" --proto-redir "=https" --tlsv1.2 --connect-timeout 20 --max-time 60 --output "$babbelstream_helper" https://raw.githubusercontent.com/sichgeis/babbelstream/1aa5053a767c0c2ac3538f38e8aee63cc6812822/scripts/prepare-downloaded-install.sh; /bin/bash "$babbelstream_helper" "$@"' babbelstream --download
 ```
 
 1. Wait for the **0.5.3/build 11** download and verification.
-2. Read the notice and type **PREPARE**, or press Return to cancel.
+2. Read the notice and type **prepare** (any letter case), or press Return to cancel.
 3. The illustrated installer window opens. Preserve your previous app as a
    rollback copy, then drag BabbelStream onto its Applications folder. Launch
    the installed copy yourself.
