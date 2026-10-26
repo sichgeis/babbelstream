@@ -37,9 +37,9 @@ instructions; commit and push a feature branch, then hand off the native test.
 1. Baseline/checks: completed. Initial sandbox cache denial resolved by running
    `task check` with normal developer-cache access; baseline passes with existing warnings.
 2. Helper and docs: completed; fixture-only local/download/update coverage added.
-3. Final validation: full checks and public download verification passed. Helper
-   commit: `cff15fe7202a95463fd44047e603d0645d036e13`. README bootstrap pins that
-   immutable source. Documentation commit and feature push in progress.
+3. Final validation and feature push: completed. Helper commit:
+   `cff15fe7202a95463fd44047e603d0645d036e13`; pinned README bootstrap commit:
+   `0367134`. Both pushed to `origin/codex/manual-install-helper`.
 4. Native downloaded pilot: pending user execution/consent; do not fabricate success.
 
 ## Validation Matrix
@@ -50,7 +50,9 @@ instructions; commit and push a feature branch, then hand off the native test.
 | Helper fixtures | 14 tests passed, including local/download/update and negative paths |
 | Final `task check` | Passed with normal cache access; existing warnings only |
 | Real public DMG verification | `bash scripts/prepare-downloaded-install.sh --verify-only --download` passed with normal disk-image access; no quarantine mutation/install/launch |
-| Public history scan | Pending before push |
+| Public history scan | Passed before feature push |
+| Published README bootstrap | Immutable GitHub helper download and DMG download/mount/app verification passed end to end with `--verify-only --download` |
+| Native attribute primitive | Synthetic temporary bundle: nested quarantine removed; unrelated attribute preserved; fixture discarded |
 | Native installation/launch | Pending |
 
 ## Release Evidence
@@ -69,6 +71,6 @@ record the actual Finder installation/launch outcome before integration.
 
 ## Closeout
 
-- [ ] Final checks and commit/push evidence recorded.
+- [x] Final checks and commit/push evidence recorded.
 - [ ] User native pilot result recorded.
 - [ ] Integration direction resolved and tracker archived when complete.
