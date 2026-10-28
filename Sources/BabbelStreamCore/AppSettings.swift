@@ -1,6 +1,9 @@
 import Foundation
 
 public struct AppSettings: Equatable, Sendable {
+    public var transcriptionBackend: TranscriptionBackend
+    public var localModel: LocalModelID
+    public var effectiveCleanupEnabled: Bool { transcriptionBackend == .remote && cleanupEnabled }
     public var providerConfiguration: ProviderConfiguration
     public var personalOpenAIFallbackEnabled: Bool
     public var personalOpenAIDirectModeEnabled: Bool
@@ -14,6 +17,8 @@ public struct AppSettings: Equatable, Sendable {
 
     public init(
         providerConfiguration: ProviderConfiguration = ProviderConfiguration(),
+        transcriptionBackend: TranscriptionBackend = .remote,
+        localModel: LocalModelID = .parakeetUltra,
         personalOpenAIFallbackEnabled: Bool = false,
         personalOpenAIDirectModeEnabled: Bool = false,
         cleanupEnabled: Bool = ProjectDefaults.cleanupEnabledByDefault,
@@ -24,6 +29,8 @@ public struct AppSettings: Equatable, Sendable {
         dictationArchiveEnabled: Bool = ProjectDefaults.dictationArchiveEnabledByDefault,
         archiveRawTranscriptEnabled: Bool = ProjectDefaults.archiveRawTranscriptEnabledByDefault
     ) {
+        self.transcriptionBackend = transcriptionBackend
+        self.localModel = localModel
         self.providerConfiguration = providerConfiguration
         self.personalOpenAIFallbackEnabled = personalOpenAIFallbackEnabled
         self.personalOpenAIDirectModeEnabled = personalOpenAIFallbackEnabled
@@ -90,6 +97,14 @@ public enum SettingsValidationError: Error, Equatable, LocalizedError, Sendable 
 
 public enum AppSettingsValidator {
     public static func validate(_ settings: AppSettings) throws {
+        guard settings.maxAudioDurationSeconds >= ProjectDefaults.minConfigurableAudioDurationSeconds,
+              settings.maxAudioDurationSeconds <= ProjectDefaults.maxConfigurableAudioDurationSeconds else {
+            throw SettingsValidationError.invalidMaxAudioDuration
+        }
+        guard TranscriptionLanguageNormalizer.isValidForSettings(settings.transcriptionLanguage) else {
+            throw SettingsValidationError.invalidTranscriptionLanguage
+        }
+        if settings.transcriptionBackend == .local { return }
         let configuration = settings.providerConfiguration
         let scheme = configuration.baseURL.scheme?.lowercased()
 
@@ -205,6 +220,8 @@ public protocol SettingsStore: AnyObject {
 
 public final class UserDefaultsSettingsStore: SettingsStore {
     private enum Key {
+        static let transcriptionBackend = "transcription.backend"
+        static let localModel = "transcription.localModel"
         static let baseURL = "provider.baseURL"
         static let transcriptionEndpointPath = "provider.transcriptionEndpointPath"
         static let cleanupEndpointPath = "provider.cleanupEndpointPath"
@@ -285,6 +302,10 @@ public final class UserDefaultsSettingsStore: SettingsStore {
 
         return AppSettings(
             providerConfiguration: configuration,
+            transcriptionBackend: userDefaults.string(forKey: Key.transcriptionBackend).map {
+                TranscriptionBackend(rawValue: $0) ?? .local
+            } ?? .remote,
+            localModel: userDefaults.string(forKey: Key.localModel).map { LocalModelID(rawValue: $0) ?? .unavailable } ?? .parakeetUltra,
             personalOpenAIFallbackEnabled: personalOpenAIFallbackEnabled,
             personalOpenAIDirectModeEnabled: personalOpenAIFallbackEnabled
                 && (userDefaults.object(forKey: Key.personalOpenAIDirectModeEnabled) as? Bool
@@ -307,6 +328,8 @@ public final class UserDefaultsSettingsStore: SettingsStore {
     public func save(_ settings: AppSettings) throws {
         try AppSettingsValidator.validate(settings)
 
+        userDefaults.set(settings.transcriptionBackend.rawValue, forKey: Key.transcriptionBackend)
+        userDefaults.set(settings.localModel.rawValue, forKey: Key.localModel)
         let configuration = settings.providerConfiguration
         userDefaults.set(configuration.baseURL.absoluteString, forKey: Key.baseURL)
         userDefaults.set(configuration.transcriptionEndpointPath, forKey: Key.transcriptionEndpointPath)

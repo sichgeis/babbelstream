@@ -80,7 +80,7 @@ public enum DictationHUDPresentation {
 
         if isProcessing || canCancel {
             switch status {
-            case "Transcribing", "Max reached; transcribing":
+            case "Transcribing", "Transcribing on this Mac", "Max reached; transcribing":
                 return .transcribing
             case "Trying Mini transcription":
                 return .tryingMini

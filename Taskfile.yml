@@ -6,6 +6,7 @@ tasks:
     cmds:
       - scripts/swift-project.sh build --product BabbelStream
       - scripts/swift-project.sh run BabbelStreamChecks
+      - CONFIGURATION=debug scripts/build-local-speech.sh
       - scripts/check-release-tooling.sh
       - python3 scripts/test-downloaded-install.py
       - python3 scripts/check-public-hygiene.py

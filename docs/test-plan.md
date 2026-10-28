@@ -317,3 +317,23 @@ Release privacy QA checks raw executable bytes, UTF-16 and `strings -a`, mounted
 Finder metadata and file attributes in ASCII/UTF-16. Native optimized packaging
 strips debug maps before signing and uses a neutral backing-image path. The
 0.5.3 pre-publication negative control exposed both paths; final bytes must pass.
+
+## Local Transcription Pilot
+
+`task check` includes pinned catalog validation, synthetic model installation,
+same-length corruption detection, path-traversal rejection, canceled staging,
+backend persistence, inactive remote configuration, actual coordinator no-key/
+no-cloud routing, settings snapshots, local recovery, Last Draft and late-result
+cancellation. The separate Parakeet helper builds with disabled optional traits.
+The ordinary suite never downloads weights or invokes real inference.
+
+An explicit `BabbelStreamChecks --local-model-smoke` accepts a disposable model
+root under /tmp, a native helper and synthetic audio. It downloads/verifies and
+prepares the pinned model if needed, invokes network-denied inference, optionally
+checks a known fixture word, and discards text. It uses no microphone, production
+store, key or clipboard. Synthetic English and German speech passed on 2026-10-28;
+this proves integration only, not real speech quality or mixed-language behavior.
+Minimum-size Provider layout and canceled download confirmation were inspected in
+an isolated native preview. Qwen selection showed its disabled download and
+runtime guidance. Human microphone/Slack, offline relaunch, 10-minute memory,
+mixed-language quality and other-host coverage remain pending.

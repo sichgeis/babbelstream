@@ -100,6 +100,30 @@ if [[ "$BUILD_MODE" != development ]]; then
   strip -S "$MACOS_DIR/$APP_NAME"
   python3 "$ROOT_DIR/scripts/check-public-hygiene.py" --history --binary "$MACOS_DIR/$APP_NAME"
 fi
+# Local inference is optional on Apple Silicon/macOS 14+, independently built
+# so the main application's existing deployment target remains unchanged.
+if [[ "$(uname -m)" == arm64 ]]; then
+  "$ROOT_DIR/scripts/build-local-speech.sh"
+  LOCAL_BIN_PATH="$("$ROOT_DIR/scripts/swift-project.sh" build --package-path "$ROOT_DIR/NativeSpeech" -c "$CONFIGURATION" --show-bin-path)"
+  mkdir -p "$CONTENTS_DIR/Helpers"
+  cp "$LOCAL_BIN_PATH/BabbelStreamLocalSpeech" "$CONTENTS_DIR/Helpers/"
+  if [[ "${BABBELSTREAM_MLX:-0}" == 1 ]]; then
+    printf '["parakeetUltra","qwen3ASR","graniteSpeech"]\n' > "$RESOURCES_DIR/LocalSpeechCapabilities.json"
+    # SwiftPM runtime bundles must be beside the helper. Inspect every payload
+    # during release QA; no development lookup path is a shipping dependency.
+    for LOCAL_RESOURCE in "$LOCAL_BIN_PATH"/*.bundle; do
+      [[ -d "$LOCAL_RESOURCE" ]] || continue
+      cp -R "$LOCAL_RESOURCE" "$CONTENTS_DIR/Helpers/"
+    done
+  else
+    printf '["parakeetUltra"]\n' > "$RESOURCES_DIR/LocalSpeechCapabilities.json"
+  fi
+  if [[ "$BUILD_MODE" != development ]]; then
+    strip -S "$CONTENTS_DIR/Helpers/BabbelStreamLocalSpeech"
+    python3 "$ROOT_DIR/scripts/check-public-hygiene.py" --binary "$CONTENTS_DIR/Helpers/BabbelStreamLocalSpeech"
+  fi
+fi
+cp "$ROOT_DIR/NativeSpeech/THIRD-PARTY-NOTICES.md" "$ROOT_DIR/NativeSpeech/FluidAudio-LICENSE.txt" "$RESOURCES_DIR/"
 make_app_icon
 
 if command -v codesign >/dev/null 2>&1; then
@@ -180,6 +204,12 @@ if command -v codesign >/dev/null 2>&1; then
     SIGNING_ARGUMENTS+=(--timestamp)
   else
     SIGNING_ARGUMENTS+=(--timestamp=none)
+  fi
+  if [[ -x "$CONTENTS_DIR/Helpers/BabbelStreamLocalSpeech" ]]; then
+    # Helper has no microphone or other app entitlements.
+    HELPER_SIGNING_ARGUMENTS=(--force --sign "$CODESIGN_IDENTITY" --options runtime)
+    if [[ "$BUILD_MODE" == distribution ]]; then HELPER_SIGNING_ARGUMENTS+=(--timestamp); else HELPER_SIGNING_ARGUMENTS+=(--timestamp=none); fi
+    codesign "${HELPER_SIGNING_ARGUMENTS[@]}" "$CONTENTS_DIR/Helpers/BabbelStreamLocalSpeech" >/dev/null
   fi
   codesign "${SIGNING_ARGUMENTS[@]}" "$APP_DIR" >/dev/null
   "$ROOT_DIR/scripts/verify-app.sh" "$APP_DIR" "$BUILD_MODE"

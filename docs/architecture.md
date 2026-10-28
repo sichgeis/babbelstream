@@ -26,7 +26,7 @@ BabbelStream is a native macOS menu-bar app with an AppKit status item, SwiftUI 
 - Slack bot/app: rejected for MVP because the desired UX is dictating into the focused composer, not talking to a bot or routing through Slack APIs.
 - Browser extension: rejected because Slack desktop and other apps should work.
 - Electron: rejected because the app is small, permission-heavy, and should feel native.
-- Local Whisper first: deferred because packaging, performance, and model management would dominate the MVP.
+- Local inference was deferred in the MVP; the 0.6.0 candidate adds the explicit Parakeet backend described below.
 - KeyboardShortcuts package: deferred until shortcut customization needs a polished recorder UI.
 
 ## Component Diagram
@@ -275,3 +275,17 @@ updater, new app dependency, appcast, network request or provider change is adde
 The app bundle ID/data locations remain unchanged; OS/Keychain trust can require
 repair after replacement. Candidate mode remains ad-hoc; Developer ID mode remains
 strict. Publication/test ordering lives in `docs/homebrew-release.md`.
+
+## Optional Local Speech Runtime
+
+The macOS 13 main app routes local operations before secret/provider work. A
+separate pinned macOS 14 native helper runs Parakeet through FluidAudio's exact
+local-directory loader, with all optional traits disabled. The main app owns
+verified model downloads and recording/recovery; the helper owns only one model
+load/inference. A bounded pipe returns the result, upstream console output is
+suppressed, and an OS sandbox denies network. Cancellation kills the helper.
+No resident server, local HTTP endpoint, new permission or silent cloud route
+is introduced. Local cleanup is always off; inactive remote choices persist.
+Default packaging on Apple Silicon advertises Parakeet only. The MLX build is
+deferred, requires the Metal compiler and needs independent artifact validation.
+Contract: `features/local-transcription/spec.md`.

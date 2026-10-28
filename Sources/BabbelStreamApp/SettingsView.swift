@@ -86,7 +86,7 @@ struct SettingsView: View {
                 Label("Apply Settings", systemImage: "checkmark")
             }
             .keyboardShortcut(.defaultAction)
-            .disabled(!appState.hasUnsavedSettingsChanges)
+            .disabled(!appState.hasUnsavedSettingsChanges || appState.localModels.isBusy)
         }
     }
 }
@@ -153,10 +153,11 @@ private struct SettingsGeneralPane: View {
                 Toggle(
                     "Cleanup enabled",
                     isOn: Binding(
-                        get: { appState.cleanupEnabled },
+                        get: { !appState.isLocalTranscriptionApplied && appState.cleanupEnabled },
                         set: { appState.setCleanupEnabled($0) }
                     )
                 )
+                .disabled(appState.isLocalTranscriptionApplied)
                 Toggle(
                     "Launch at login",
                     isOn: Binding(
@@ -205,7 +206,7 @@ private struct SettingsProviderPane: View {
                 }
                 AppLabeledContent(
                     "Applied provider mode",
-                    value: appState.isPersonalOpenAIDirectModeApplied
+                    value: appState.isLocalTranscriptionApplied ? "On this Mac" : appState.isPersonalOpenAIDirectModeApplied
                         ? "Personal OpenAI now"
                         : "Primary first"
                 )
@@ -224,6 +225,20 @@ private struct SettingsProviderPane: View {
                 }
             }
 
+            AppFormSection("Transcription") {
+                Picker("Run transcription", selection: $appState.transcriptionBackend) {
+                    Text("Remote provider").tag(TranscriptionBackend.remote)
+                    Text("On this Mac").tag(.local as TranscriptionBackend)
+                }
+                .pickerStyle(.segmented)
+                Text("Selection takes effect after Apply Settings. Local dictation uses no key, cloud fallback or cleanup.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if appState.transcriptionBackend == .local {
+                LocalModelsPane(controller: appState.localModels, selected: $appState.localModel,
+                                canManage: appState.canStart)
+            } else {
             AppFormSection("Provider Mode") {
                 Toggle(
                     "Enable personal OpenAI fallback",
@@ -383,6 +398,7 @@ private struct SettingsProviderPane: View {
                 }
                 .disabled(!appState.hasPersonalOpenAIFallbackAPIKey)
             }
+            }
         }
         .alert("Test saved transcription connection?", isPresented: $showTestConfirmation) {
             Button("Send Synthetic Test") { Task { await appState.testSavedConnection() } }
@@ -408,7 +424,7 @@ private struct SettingsWritingPane: View {
                 AppFormFieldGroup {
                     AppFormTextField("Transcription prompt", text: $appState.transcriptionPromptText, axis: .vertical)
                         .lineLimit(2...4)
-                    Text("Optional context to help transcription, such as technical terms.")
+                    Text(appState.isLocalTranscriptionApplied ? "Remote-only hint. Local vocabulary integration is not enabled in this pilot." : "Optional context to help transcription, such as technical terms.")
                         .font(.caption).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }

@@ -28,12 +28,13 @@ start a tracker under `docs/runs/active/`.
 - Dependency: a feature contract covering conflicts, persistence, migration, and
   whether any implementation path changes the Input Monitoring requirement.
 
-### 3. Local Transcription Backend
+### 3. Additional Local Transcription Backends
 
-- Goal: offer an explicit local alternative to the configured OpenAI-compatible
-  transcription endpoint.
-- Dependency: approved model packaging, performance, storage, update, and privacy
-  behavior; no backend may be selected silently.
+The approved Parakeet candidate is tracked in `docs/project-status.md` and
+`docs/features/local-transcription/spec.md`. Remaining work: Qwen/Granite native
+builds with Metal tooling, pinned offline-load/cancellation/resource/license QA,
+real multilingual quality and desktop memory/latency measurements. The maintainer
+explicitly deferred these builds while the Parakeet pilot is prepared.
 
 ### 4. Public macOS Distribution
 

@@ -100,7 +100,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             action: #selector(toggleCleanup),
             enabled: true
         )
-        cleanupItem.state = appState.cleanupEnabled ? .on : .off
+        cleanupItem.state = !appState.isLocalTranscriptionApplied && appState.cleanupEnabled ? .on : .off
+        cleanupItem.isEnabled = !appState.isLocalTranscriptionApplied
 
         addAction(
             "Start Hands-Free Dictation",

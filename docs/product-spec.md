@@ -40,7 +40,7 @@ entry in the app. No organization profile is bundled publicly. Contract:
 - No auto-send in MVP, including no "press enter" voice command.
 - No transcript history by default; no analytics, telemetry, cloud database, or subscription service.
 - No automatic transcript-history learning. Any local dictation archive must be explicit, opt-in, local-only, and user-visible.
-- No local Whisper backend in MVP, though the architecture should allow one later.
+- Optional Parakeet Ultra local dictation is added in the 0.6.0 candidate; see `features/local-transcription/spec.md`.
 
 ## MVP Scope
 
@@ -117,7 +117,7 @@ If the clipboard changes during automatic paste preparation, the HUD says Copy L
   A future feature must justify clipboard avoidance, define explicit application/
   field eligibility, prove editor-state correctness and guard against duplicates.
 
-- Local Whisper or `whisper.cpp` backend.
+- Additional local backends: Qwen3-ASR and Granite remain deferred until native build and pilot validation.
 - More advanced correction dictionary for names, acronyms, projects, and ticket prefixes.
 - Optional deterministic local correction pass when exact replacement guarantees become more important than cleanup-only behavior.
 - Optional preview/editor mode.
@@ -246,3 +246,14 @@ A short native setup window introduces deliberate microphone/Accessibility conse
 The explicit local test replaces the clipboard with a fixed harmless sample and posts Cmd+V only while its dedicated app-owned editor remains focused. Only receipt of that sample verifies the local test; event posting alone is insufficient. It uses no microphone/provider, does not inspect external fields, and does not alter Last Draft or archive/history. Recording, processing, connection testing and draft delivery cannot overlap the test. Closing setup or navigating cancels it. Skipping or denying access keeps copy-only dictation available and readiness honest. No onboarding action starts a live dictation automatically.
 
 Shared form canvases use a nearly white adaptive Light Mode surface with white sections, native Dark Mode surfaces and stronger native separation under Increase Contrast. This applies to Settings, setup and secondary form dialogs. Settings keeps five native segments on this same canvas without a separate TabView bezel; section/control/help spacing and label columns are consistent across all sections. Sparkle and colleague signing remain deferred.
+
+## Local Transcription (0.6.0 Candidate)
+
+Provider settings offer explicit Remote / On this Mac selection. On Apple
+Silicon/macOS 14+, users may confirm a verified Parakeet Ultra download, prepare
+it and Apply local mode without any key. Existing remote settings stay intact.
+Local dictation performs no cloud cleanup, hedge or fallback; audio remains on
+the Mac and existing successful deletion/Failed Recordings rules apply. Download
+hosts receive ordinary connection metadata only during explicit setup. Qwen and
+Granite catalog entries are deferred and cannot download in the Parakeet pilot.
+No model operation sends a message. Real quality/latency acceptance is pending.

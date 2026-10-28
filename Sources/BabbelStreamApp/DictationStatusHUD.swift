@@ -178,7 +178,7 @@ private struct DictationStatusHUDView: View {
         .contentShape(Capsule())
         .accessibilityElement(children: .contain)
         .accessibilityLabel(
-            "BabbelStream \(compactStatus)\(appState.isPersonalOpenAIHUDActive ? ", personal OpenAI active" : "")"
+            "BabbelStream \(compactStatus)\(appState.isPersonalOpenAIHUDActive ? ", personal OpenAI active" : "")\(appState.isLocalSpeechHUDActive ? ", processing on this Mac" : "")"
         )
     }
 
@@ -202,6 +202,9 @@ private struct DictationStatusHUDView: View {
             .accessibilityLabel("Stop recording and process dictation")
 
             HStack(spacing: 4) {
+                if appState.isLocalSpeechHUDActive {
+                    Image(systemName: "desktopcomputer").font(.system(size: 9)).accessibilityLabel("On this Mac")
+                }
                 if appState.isPersonalOpenAIHUDActive {
                     Image(systemName: "person.crop.circle.fill")
                         .font(.system(size: 9, weight: .semibold))
@@ -233,6 +236,9 @@ private struct DictationStatusHUDView: View {
         HStack(spacing: 9) {
             statusIndicator
 
+            if appState.isLocalSpeechHUDActive {
+                Image(systemName: "desktopcomputer").font(.system(size: 12)).accessibilityLabel("On this Mac")
+            }
             if appState.isPersonalOpenAIHUDActive {
                 Image(systemName: "person.crop.circle.fill")
                     .font(.system(size: 12, weight: .semibold))

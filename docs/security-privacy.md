@@ -188,3 +188,22 @@ publisher authentication. GitHub/Homebrew see ordinary user-initiated connection
 metadata; BabbelStream adds no updater requests or telemetry. Artifacts include no
 provider keys or company configuration. Ordinary cask removal preserves local data;
 no zap deletion is supplied. Public rollout requires the documented pilot evidence.
+
+## Explicit Local Model Setup And Inference
+
+The approved local feature permits user-confirmed downloads of pinned model
+assets from Hugging Face and its HTTPS CDN. Show source, size and license before
+retrieval; use no credentials/cookies, reject downgrade/credential-bearing
+redirects, verify length/SHA-256 and prepare in private staging before activation.
+Only a successful prepared model can be applied. The next explicit setup cleans
+owned incomplete staging directories after an interrupted app exit; removal
+never touches recordings, dictionary, archive, keys or other data.
+
+Applied local mode bypasses Keychain reads, cloud transcription, Mini hedging,
+cleanup and personal fallback. A bundled native helper loads exact local files
+under OS-enforced network denial; library output is discarded, results remain
+in the private bounded pipe, and failure messages are reviewed categories only.
+Cancellation discards late output and retains stopped audio under the existing
+Failed Recordings policy. Model assets persist until removal; successful audio
+and default transcript retention remain unchanged. No telemetry or permission is
+added. The first pilot enables only Parakeet; other runtime builds are deferred.

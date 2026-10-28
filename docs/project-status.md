@@ -17,6 +17,16 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
+Local transcription is approved and implemented on `codex/local-transcription`
+for a 0.6.0/build 12 Parakeet pilot candidate. Contract:
+`docs/features/local-transcription/spec.md`; evidence:
+`docs/runs/active/local-transcription.md`. The pinned native helper and network-
+denied synthetic English/German inference pass. Qwen/Granite builds are explicitly
+deferred because Metal build tooling is absent; their downloads stay disabled.
+No production installation, microphone/Slack acceptance, main integration or
+release publication is claimed. Candidate packaging/final evidence is in progress.
+
+
 Optional generic installer provider configuration is implemented directly
 on main by explicit maintainer request; canonical checks and 25 helper fixtures pass. Contract:
 `docs/features/installer-provider-configuration/spec.md`; execution evidence:
@@ -44,7 +54,7 @@ Earlier scrub/release work remains closed in its archived runs.
 - Ad-hoc rebuilds may require permission reapproval; onboarding reports actual running-process trust. Stable Developer ID signing/notarization and signed updates remain future work.
 - On macOS 27.0.1, upgrading manual 0.4.5 to ad-hoc 0.5.1 caused a Keychain password prompt after every restart despite Always Allow. Adding the installed Applications copy to the saved item's restricted Access Control list resolved the user retest. See README Troubleshooting; root cause and future upgrade trust remain unproven. This does not complete the separate visual layout matrix.
 - Project commands select installed SDK 26.5 because the CLT default SDK 27 lacks required SwiftUI macros. Full app/executable checks work; preexisting capture/framework-search warnings remain. This CLT environment does not expose runnable XCTest/Swift Testing.
-- The global shortcut is fixed. Local transcription and automatic updates remain deferred. Provider lifecycle milestones remain in `docs/provider-lifecycle.md`.
+- The global shortcut is fixed. Local Parakeet transcription is in candidate validation; other local backends and automatic updates remain deferred. Provider lifecycle milestones remain in `docs/provider-lifecycle.md`.
 
 ## Candidate Work
 
@@ -54,5 +64,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Run the combined internal command on a consenting pilot Mac and verify the
-installer, prefilled Provider settings and explicit personal-key entry flow.
+Finish checks and clean packaging of the Parakeet candidate, then obtain the
+maintainer’s real microphone/Slack smoke result before release.

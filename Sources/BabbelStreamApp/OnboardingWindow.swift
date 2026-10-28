@@ -165,9 +165,9 @@ private struct OnboardingView: View {
             Text(appState.needsConnectionSetup ? "Provider setup is incomplete." : "Saved configuration retained.")
             Text(appState.isPersonalOpenAIDirectModeApplied ? appState.personalOpenAIFallbackReadinessSummary : appState.connectionReadinessSummary)
             Text(appState.activeProviderDestinationSummary).textSelection(.enabled)
-            Text("Use your own approved, revocable key. Ask IT for the company URL and key; BabbelStream does not include a shared key.")
+            Text("Choose On this Mac and download a model, or use your own approved remote URL and revocable API key.")
             Button("Open Provider Settings…", action: showProvider)
-            Text("Review and Apply changes there, then return here. Saving a key is not a connection test. The optional silent-audio test asks separately before sending and may incur a provider charge.")
+            Text("Review and Apply changes there, then return here. Local model downloads ask separately; remote connection tests send only synthetic silence after confirmation.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -194,7 +194,7 @@ private struct OnboardingView: View {
             AppFormSection("Current readiness") {
                 Text("Microphone: \(appState.microphonePermissionStatus.displayName)")
                 Text("Automatic paste: \(appState.accessibilityPermissionStatus.displayName)")
-                Text(appState.needsConnectionSetup ? "Provider: setup needed" : "Provider: saved configuration; review verification in Settings")
+                Text(appState.needsConnectionSetup ? "Provider: setup needed" : "Provider: \(appState.activeProviderDestinationSummary)")
                 Text(pasteTest.result == .passed ? "Local paste test passed in this session." : "Local paste test not verified in this session.")
                 if appState.microphonePermissionStatus != .authorized || appState.needsConnectionSetup {
                     Text("Finish the missing setup before dictating.")
@@ -204,7 +204,7 @@ private struct OnboardingView: View {
             }
             AppFormSection("Try your first draft") {
                 Text("Focus an unsent TextEdit or Slack draft. Press Control–Option–Space: tap to start and tap again to stop, or hold for push-to-talk. Keep that app focused until processing finishes.")
-                Text("Review the draft before sending. Starting dictation records audio and sends it to your configured provider. Setup does not start recording or send audio.")
+                Text(appState.isLocalTranscriptionApplied ? "Review the draft before sending. Dictation runs on this Mac; no cloud cleanup or fallback is used. Setup does not start recording." : "Review the draft before sending. Starting dictation records audio and sends it to your configured provider. Setup does not start recording or send audio.")
             }
         }
     }

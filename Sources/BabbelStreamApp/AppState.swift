@@ -50,6 +50,14 @@ final class AppState: ObservableObject {
         let personalOpenAIWasAutomaticFallback: Bool
     }
 
+    @Published var transcriptionBackend: TranscriptionBackend
+    @Published var localModel: LocalModelID
+    let localModels: LocalModelController
+    var isLocalSpeechHUDActive: Bool {
+        (isRecording || isProcessing || canCancel) ? usesLocalSpeechForCurrentOperation : isLocalTranscriptionApplied
+    }
+    var isLocalTranscriptionApplied: Bool { appSettings.transcriptionBackend == .local }
+
     @Published var status = "Ready"
     @Published var microphonePermissionStatus: MicrophonePermissionStatus = .unknown
     @Published var accessibilityPermissionStatus: AccessibilityPermissionStatus = .notTrusted
@@ -70,6 +78,7 @@ final class AppState: ObservableObject {
     @Published var personalOpenAIFallbackEnabled: Bool
     @Published var personalOpenAIDirectModeEnabled: Bool
     @Published private(set) var usesPersonalOpenAIForCurrentOperation = false
+    @Published private(set) var usesLocalSpeechForCurrentOperation = false
     @Published var launchAtLoginEnabled = false
     @Published private(set) var launchAtLoginStatusSummary = "Unknown"
     @Published private(set) var launchAtLoginRequiresApproval = false
@@ -171,8 +180,10 @@ final class AppState: ObservableObject {
         usageTracker: UsageTracker = UserDefaultsUsageTracker(),
         dictationArchiveStore: DictationArchiveStore = JSONLDictationArchiveStore(),
         dictationRecoveryStore: DictationRecoveryStore = FileDictationRecoveryStore(),
+        localModels: LocalModelController = LocalModelController(),
         runtime: any AppRuntime = MacOSAppRuntime()
     ) {
+        self.localModels = localModels
         self.runtime = runtime
         self.audioRecorder = audioRecorder
         self.settingsStore = settingsStore
@@ -194,6 +205,8 @@ final class AppState: ObservableObject {
         let loadedSettings = settingsStore.load()
         let loadedUsageSnapshot = usageTracker.load()
         let currentArchiveMonth = DictationArchiveMonth.current()
+        self.transcriptionBackend = loadedSettings.transcriptionBackend
+        self.localModel = loadedSettings.localModel
         self.appSettings = loadedSettings
         self.usageSnapshot = loadedUsageSnapshot
         self.cleanupEnabled = loadedSettings.cleanupEnabled
@@ -241,6 +254,9 @@ final class AppState: ObservableObject {
         cleanupStaleTemporaryAudio()
         loadRecoveryRecordings(markProcessingAsInterrupted: true)
         configureHotkey()
+        localModels.onChange = { [weak self] in self?.notifyStateChanged() }
+        // No model files or stores are created by readiness discovery.
+        if !localModels.runtime.supportedModels.isEmpty { Task { await localModels.refresh() } }
     }
 
     var menuBarSystemImage: String {
@@ -254,7 +270,7 @@ final class AppState: ObservableObject {
     }
 
     var canStart: Bool {
-        !isRecording && !isProcessing && !isConnectionTesting && !isLocalPasteTesting && !isDeliveringDraft
+        !isRecording && !isProcessing && !localModels.isBusy && !isConnectionTesting && !isLocalPasteTesting && !isDeliveringDraft
     }
 
     func beginLocalPasteTest() -> Bool {
@@ -330,14 +346,16 @@ final class AppState: ObservableObject {
     }
 
     var providerDestinationSummary: String {
-        effectiveDestination(
+        if isLocalTranscriptionApplied { return "On this Mac · \(appSettings.localModel.displayName)" }
+        return effectiveDestination(
             baseURL: appSettings.providerConfiguration.baseURL,
             path: appSettings.providerConfiguration.transcriptionEndpointPath
         )
     }
 
     var cleanupDestinationSummary: String {
-        effectiveDestination(
+        if isLocalTranscriptionApplied { return "Off — text stays on this Mac" }
+        return effectiveDestination(
             baseURL: appSettings.providerConfiguration.baseURL,
             path: appSettings.providerConfiguration.cleanupEndpointPath
         )
@@ -360,7 +378,7 @@ final class AppState: ObservableObject {
     }
 
     var personalOpenAIFallbackReadinessSummary: String {
-        guard appSettings.personalOpenAIFallbackEnabled else {
+        guard !isLocalTranscriptionApplied, appSettings.personalOpenAIFallbackEnabled else {
             return "Off"
         }
         if appSettings.personalOpenAIDirectModeEnabled {
@@ -370,7 +388,7 @@ final class AppState: ObservableObject {
     }
 
     var isPersonalOpenAIFallbackApplied: Bool {
-        appSettings.personalOpenAIFallbackEnabled
+        !isLocalTranscriptionApplied && appSettings.personalOpenAIFallbackEnabled
     }
 
     var isPersonalOpenAIDirectModeApplied: Bool {
@@ -381,7 +399,7 @@ final class AppState: ObservableObject {
         if isRecording || isProcessing || canCancel {
             return usesPersonalOpenAIForCurrentOperation
         }
-        return appSettings.personalOpenAIDirectModeEnabled
+        return !isLocalTranscriptionApplied && appSettings.personalOpenAIDirectModeEnabled
     }
 
     var activeProviderDestinationSummary: String {
@@ -403,11 +421,13 @@ final class AppState: ObservableObject {
     }
 
     var editedProviderDestinationSummary: String {
-        "\(baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(transcriptionPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
+        if transcriptionBackend == .local { return "On this Mac · \(localModel.displayName)" }
+        return "\(baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(transcriptionPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
     }
 
     var editedCleanupDestinationSummary: String {
-        "\(baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(cleanupPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
+        if transcriptionBackend == .local { return "Off — text stays on this Mac" }
+        return "\(baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(cleanupPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
     }
 
     var hasUnsavedSettingsChanges: Bool {
@@ -491,8 +511,9 @@ final class AppState: ObservableObject {
             let activeProviderSettings = PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settings)
                 ? PersonalOpenAIFallbackPolicy.settings(derivedFrom: settings)
                 : settings
-            let provider = activeProviderSettings.providerConfiguration.baseURL.host
-                ?? activeProviderSettings.providerConfiguration.baseURL.absoluteString
+            let provider = settings.transcriptionBackend == .local ? "On this Mac"
+                : (activeProviderSettings.providerConfiguration.baseURL.host
+                    ?? activeProviderSettings.providerConfiguration.baseURL.absoluteString)
             let stopGuidance = isHandsFreeRecording
                 ? "press \(ProjectDefaults.fixedHotkeyDescription) or click Stop to transcribe"
                 : "release to transcribe"
@@ -686,6 +707,7 @@ final class AppState: ObservableObject {
 
         isProcessing = false
         usesPersonalOpenAIForCurrentOperation = false
+        usesLocalSpeechForCurrentOperation = false
         setCancelHotkeyEnabled(false)
         notifyStateChanged()
     }
@@ -695,15 +717,20 @@ final class AppState: ObservableObject {
     }
 
     var needsConnectionSetup: Bool {
-        isPersonalOpenAIDirectModeApplied ? !hasPersonalOpenAIFallbackAPIKey : !hasPrimaryCredentialForSavedOrigin
+        if isLocalTranscriptionApplied {
+            return !localModels.installed.contains(appSettings.localModel)
+                || !localModels.runtime.supportedModels.contains(appSettings.localModel)
+        }
+        return isPersonalOpenAIDirectModeApplied ? !hasPersonalOpenAIFallbackAPIKey : !hasPrimaryCredentialForSavedOrigin
     }
 
     var isConnectionTesting: Bool { connectionTestID != nil }
     var connectionReadinessSummary: String {
-        (hasPrimaryCredentialForSavedOrigin ? connectionVerification : .incomplete).rawValue
+        if isLocalTranscriptionApplied { return needsConnectionSetup ? "Local model not ready" : "Local model ready" }
+        return (hasPrimaryCredentialForSavedOrigin ? connectionVerification : .incomplete).rawValue
     }
     var canTestSavedConnection: Bool {
-        canStart && hasPrimaryCredentialForSavedOrigin && !hasUnsavedSettingsChanges
+        !isLocalTranscriptionApplied && canStart && hasPrimaryCredentialForSavedOrigin && !hasUnsavedSettingsChanges
     }
     var connectionTestDisclosure: String {
         "Send one 250 ms silent WAV (up to 30 seconds, no retries) to \(providerDestinationSummary) using the saved primary key and model \(appSettings.providerConfiguration.transcriptionModel). The provider may charge for this request. No microphone, transcript, dictionary, cleanup, hedge or personal fallback is used. A successful test verifies the transcription response contract, not speech quality, cleanup access or paste permissions."
@@ -773,10 +800,15 @@ final class AppState: ObservableObject {
         cancelConnectionTest()
         do {
             let settings = try settingsFromDraft()
+            if settings.transcriptionBackend == .local {
+                guard !localModels.isBusy else { throw LocalModelError.busy }
+                guard localModels.runtime.supportedModels.contains(settings.localModel) else { throw LocalModelError.runtimeUnavailable }
+                guard localModels.installed.contains(settings.localModel) else { throw LocalModelError.notInstalled }
+            }
 
             let trimmedPersonalKey = personalOpenAIFallbackAPIKeyInput
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !settings.personalOpenAIFallbackEnabled
+            guard settings.transcriptionBackend == .local || !settings.personalOpenAIFallbackEnabled
                 || hasPersonalOpenAIFallbackAPIKey
                 || !trimmedPersonalKey.isEmpty
             else {
@@ -784,11 +816,11 @@ final class AppState: ObservableObject {
             }
 
             let trimmedKey = apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines)
-            if ProviderOrigin(settings.providerConfiguration.baseURL) != ProviderOrigin(appSettings.providerConfiguration.baseURL),
+            if settings.transcriptionBackend == .remote, ProviderOrigin(settings.providerConfiguration.baseURL) != ProviderOrigin(appSettings.providerConfiguration.baseURL),
                (hasAPIKey || cachedAPIKey != nil), trimmedKey.isEmpty {
                 throw SettingsValidationError.providerOriginRequiresKey
             }
-            if !trimmedKey.isEmpty {
+            if settings.transcriptionBackend == .remote, !trimmedKey.isEmpty {
                 let priorOrigin = apiKeyPresenceStore.approvedOrigin
                 // Preserve the already-approved operation snapshot when Apply replaces
                 // a credential while recording or processing. Never reuse it for a new origin.
@@ -808,7 +840,7 @@ final class AppState: ObservableObject {
                 apiKeyInput = ""
                 apiKeyPresenceStore.hasSavedAPIKey = true
             }
-            if !trimmedPersonalKey.isEmpty {
+            if settings.transcriptionBackend == .remote, !trimmedPersonalKey.isEmpty {
                 try personalOpenAIFallbackSecretStore.saveAPIKey(trimmedPersonalKey)
                 cachedPersonalOpenAIFallbackAPIKey = trimmedPersonalKey
                 personalOpenAIFallbackAPIKeyInput = ""
@@ -818,6 +850,8 @@ final class AppState: ObservableObject {
             try settingsStore.save(settings)
 
             appSettings = settings
+            transcriptionBackend = settings.transcriptionBackend
+            localModel = settings.localModel
             personalOpenAIFallbackEnabled = settings.personalOpenAIFallbackEnabled
             personalOpenAIDirectModeEnabled = settings.personalOpenAIDirectModeEnabled
             dictationArchiveEnabled = settings.dictationArchiveEnabled
@@ -900,6 +934,7 @@ final class AppState: ObservableObject {
     }
 
     func setCleanupEnabled(_ isEnabled: Bool) {
+        guard !isLocalTranscriptionApplied else { return }
         cleanupEnabled = isEnabled
         var updatedSettings = appSettings
         updatedSettings.cleanupEnabled = isEnabled
@@ -1167,6 +1202,7 @@ final class AppState: ObservableObject {
     }
 
     func prepareForTermination() {
+        localModels.cancel()
         cancelConnectionTest()
         stopElapsedTimer()
         processingTask?.cancel()
@@ -1211,6 +1247,8 @@ final class AppState: ObservableObject {
             ("build mode", BuildMetadata.buildMode),
             ("recording", String(isRecording)),
             ("processing", String(isProcessing)),
+            ("transcription backend", appSettings.transcriptionBackend.rawValue),
+            ("local model", appSettings.localModel.rawValue),
             ("primary origin", ProviderOrigin(configuration.baseURL)?.description ?? "invalid"),
             ("primary model", configuration.transcriptionModel),
             ("routing", configuration.transcriptionModelRouting.rawValue),
@@ -1237,6 +1275,19 @@ final class AppState: ObservableObject {
     }
 
     private func settingsFromDraft() throws -> AppSettings {
+        if transcriptionBackend == .local {
+            var settings = appSettings // Preserve all inactive remote choices.
+            settings.transcriptionBackend = .local
+            settings.localModel = localModel
+            guard let minutes = TimeInterval(maxAudioDurationMinutesText) else { throw SettingsValidationError.invalidMaxAudioDuration }
+            settings.maxAudioDurationSeconds = minutes * 60
+            let language = transcriptionLanguageText.trimmingCharacters(in: .whitespacesAndNewlines)
+            settings.transcriptionLanguage = TranscriptionLanguageNormalizer.apiValue(from: language) ?? language
+            settings.dictationArchiveEnabled = dictationArchiveEnabled
+            settings.archiveRawTranscriptEnabled = dictationArchiveEnabled && archiveRawTranscriptEnabled
+            try AppSettingsValidator.validate(settings)
+            return settings
+        }
         guard let baseURL = URL(string: baseURLText.trimmingCharacters(in: .whitespacesAndNewlines)) else {
             throw SettingsValidationError.invalidBaseURL
         }
@@ -1262,6 +1313,8 @@ final class AppState: ObservableObject {
         )
         let settings = AppSettings(
             providerConfiguration: configuration,
+            transcriptionBackend: transcriptionBackend,
+            localModel: localModel,
             personalOpenAIFallbackEnabled: personalOpenAIFallbackEnabled,
             personalOpenAIDirectModeEnabled: personalOpenAIFallbackEnabled
                 && personalOpenAIDirectModeEnabled,
@@ -1302,6 +1355,10 @@ final class AppState: ObservableObject {
     private func validateSettingsBeforeDictation() -> Bool {
         do {
             try AppSettingsValidator.validate(appSettings)
+            if isLocalTranscriptionApplied {
+                guard localModels.runtime.supportedModels.contains(appSettings.localModel) else { throw LocalModelError.runtimeUnavailable }
+                guard localModels.installed.contains(appSettings.localModel) else { throw LocalModelError.notInstalled }
+            }
             return true
         } catch {
             status = "Settings invalid"
@@ -1519,6 +1576,7 @@ final class AppState: ObservableObject {
         }
 
         let settingsSnapshot = appSettings
+        usesLocalSpeechForCurrentOperation = mode == .dictation && settingsSnapshot.transcriptionBackend == .local
         usesPersonalOpenAIForCurrentOperation = mode == .dictation
             && PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settingsSnapshot)
 
@@ -1540,6 +1598,7 @@ final class AppState: ObservableObject {
             errorMessage = microphoneGuidance(for: newStatus)
             isProcessing = false
             usesPersonalOpenAIForCurrentOperation = false
+            usesLocalSpeechForCurrentOperation = false
             recordDiagnostic("recording not started: microphone \(newStatus.displayName)")
             completeDiagnosticOperation()
             return
@@ -1569,6 +1628,7 @@ final class AppState: ObservableObject {
             errorMessage = error.localizedDescription
             recordDiagnostic("recording start failed: \(diagnosticErrorCategory(error))")
             usesPersonalOpenAIForCurrentOperation = false
+            usesLocalSpeechForCurrentOperation = false
             completeDiagnosticOperation()
         }
 
@@ -1664,6 +1724,7 @@ final class AppState: ObservableObject {
 
         isProcessing = false
         usesPersonalOpenAIForCurrentOperation = false
+        usesLocalSpeechForCurrentOperation = false
         setCancelHotkeyEnabled(false)
         activeRecoveryRecording = nil
         completeDiagnosticOperation()
@@ -1748,11 +1809,14 @@ final class AppState: ObservableObject {
         usageSnapshot.recordDictation(duration: recording.duration)
         saveUsageSnapshot()
 
+        usesLocalSpeechForCurrentOperation = settings.transcriptionBackend == .local
         status = autoStopped ? "Max reached; transcribing" : "Transcribing"
         let activeTranscriptionSettings = PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settings)
             ? PersonalOpenAIFallbackPolicy.settings(derivedFrom: settings)
             : settings
-        lastResult = "Sending audio to \(activeTranscriptionSettings.providerConfiguration.baseURL.host ?? activeTranscriptionSettings.providerConfiguration.baseURL.absoluteString)."
+        lastResult = settings.transcriptionBackend == .local
+            ? "Processing audio on this Mac with \(settings.localModel.displayName)."
+            : "Sending audio to \(activeTranscriptionSettings.providerConfiguration.baseURL.host ?? activeTranscriptionSettings.providerConfiguration.baseURL.absoluteString)."
         transcriptionProgressDetail = nil
         recordDiagnostic("transcription started")
 
@@ -1787,6 +1851,21 @@ final class AppState: ObservableObject {
         at audioURL: URL,
         settings: AppSettings
     ) async throws -> PreparedDraft {
+        if settings.transcriptionBackend == .local {
+            status = "Transcribing on this Mac"
+            let transcript: String
+            do {
+                transcript = try await localModels.transcribe(model: settings.localModel, audio: audioURL,
+                                                              language: settings.transcriptionLanguage)
+            } catch {
+                if !ProviderRetryPolicy.isCancellation(error) { usageSnapshot.recordTranscriptionFailure(); saveUsageSnapshot() }
+                throw error
+            }
+            try Task.checkCancellation()
+            return PreparedDraft(rawTranscript: transcript, finalDraft: transcript,
+                cleanupWasEnabled: false, cleanupFallbackUsed: false,
+                transcriptionSettings: settings, cleanupSettings: nil)
+        }
         if PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settings) {
             do {
                 let transcription = try await transcribeWithPersonalOpenAI(
@@ -1994,7 +2073,7 @@ final class AppState: ObservableObject {
         primarySettings: AppSettings
     ) async throws -> PreparedDraft {
         let rawTranscript = transcription.transcript
-        guard primarySettings.cleanupEnabled else {
+        guard primarySettings.effectiveCleanupEnabled else {
             recordDiagnostic("cleanup skipped")
             return PreparedDraft(
                 rawTranscript: rawTranscript,
@@ -2278,6 +2357,7 @@ final class AppState: ObservableObject {
 
     private func performRecoveryRetry(_ recording: DictationRecoveryRecording) async {
         isProcessing = true
+        usesLocalSpeechForCurrentOperation = appSettings.transcriptionBackend == .local
         usesPersonalOpenAIForCurrentOperation = PersonalOpenAIFallbackPolicy
             .shouldUsePersonalOpenAIDirectly(appSettings)
         activeRecoveryRecording = recording
@@ -2349,6 +2429,7 @@ final class AppState: ObservableObject {
         activeRecoveryRecording = nil
         isProcessing = false
         usesPersonalOpenAIForCurrentOperation = false
+        usesLocalSpeechForCurrentOperation = false
         completeDiagnosticOperation()
         notifyStateChanged()
     }
@@ -2413,6 +2494,7 @@ final class AppState: ObservableObject {
     }
 
     private func providerLabel(model: String, settings: AppSettings) -> String {
+        if settings.transcriptionBackend == .local { return "On this Mac / \(settings.localModel.displayName)" }
         let configuration = settings.providerConfiguration
         let host = configuration.baseURL.host ?? configuration.baseURL.absoluteString
         return "\(host) / \(model)"

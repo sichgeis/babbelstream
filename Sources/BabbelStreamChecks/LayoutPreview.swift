@@ -10,11 +10,13 @@ func runLayoutPreview() throws {
     let incomplete = CommandLine.arguments.contains("--preview-incomplete")
     let fixture = try CoordinatorFixture(
         hasPrimaryKey: !incomplete, permissionsReady: !incomplete,
-        microphonePermission: CommandLine.arguments.contains("--preview-not-requested") ? .notDetermined : nil
+        microphonePermission: CommandLine.arguments.contains("--preview-not-requested") ? .notDetermined : nil,
+        localRuntime: CommandLine.arguments.contains("--preview-local") ? FixtureLocalSpeechRuntime() : nil
     )
     if CommandLine.arguments.contains("--preview-not-requested") {
         fixture.recorder.permissionAfterRequest = .authorized // Fake consent only; no OS prompt.
     }
+    if CommandLine.arguments.contains("--preview-local") { fixture.app.transcriptionBackend = .local }
     let delegate = LayoutPreviewDelegate(fixture: fixture)
     application.delegate = delegate
     application.setActivationPolicy(.regular)

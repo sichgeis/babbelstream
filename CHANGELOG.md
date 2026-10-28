@@ -4,7 +4,15 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
-No changes yet.
+### 0.6.0 candidate (not released)
+
+- Add optional on-device Parakeet Ultra dictation on Apple Silicon/macOS 14+,
+  with an explicit verified model download, preparation, cancellation and removal.
+- Local mode needs no API key and makes no cloud transcription, cleanup or
+  fallback request; existing remote provider settings are preserved.
+- Show local readiness in setup/Settings and an on-device badge in the HUD.
+- List Qwen3-ASR and experimental Granite Speech as deferred model choices;
+  their downloads remain unavailable in this Parakeet-only pilot build.
 
 ## 0.5.3 - 2026-10-24
 

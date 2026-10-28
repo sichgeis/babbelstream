@@ -4,7 +4,7 @@ public enum PersonalOpenAIFallbackPolicy {
     public static let displayName = "Personal OpenAI"
 
     public static func shouldUsePersonalOpenAIDirectly(_ settings: AppSettings) -> Bool {
-        settings.personalOpenAIFallbackEnabled && settings.personalOpenAIDirectModeEnabled
+        settings.transcriptionBackend == .remote && settings.personalOpenAIFallbackEnabled && settings.personalOpenAIDirectModeEnabled
     }
 
     public static func settings(derivedFrom primary: AppSettings) -> AppSettings {

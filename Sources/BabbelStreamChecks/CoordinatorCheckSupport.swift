@@ -154,7 +154,7 @@ final class CoordinatorFixture {
     let onboarding = MemoryOnboardingProgress()
     let settings: MemorySettings
 
-    init(cleanupEnabled: Bool = true, hasPrimaryKey: Bool = true, permissionsReady: Bool = true, microphonePermission: MicrophonePermissionStatus? = nil) throws {
+    init(cleanupEnabled: Bool = true, hasPrimaryKey: Bool = true, permissionsReady: Bool = true, microphonePermission: MicrophonePermissionStatus? = nil, localRuntime: (any LocalSpeechRuntime)? = nil, localManifests: [LocalModelManifest] = LocalModelCatalog.manifests) throws {
         root = FileManager.default.temporaryDirectory.appendingPathComponent("BabbelStreamCoordinatorChecks-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         recorder = FixtureRecorder(root: root)
@@ -174,7 +174,10 @@ final class CoordinatorFixture {
             textInsertionService: insertion, hotkeyService: hotkey, launchAtLoginService: FixtureLogin(),
             personalDictionaryStore: JSONPersonalDictionaryStore(fileURL: root.appendingPathComponent("dictionary.json")),
             usageTracker: MemoryUsage(), dictationArchiveStore: JSONLDictationArchiveStore(archiveDirectoryURL: root.appendingPathComponent("Archive")),
-            dictationRecoveryStore: recovery, runtime: FixtureRuntime(root: root)
+            dictationRecoveryStore: recovery,
+            localModels: LocalModelController(runtime: localRuntime ?? BundledLocalSpeechRuntime(),
+                store: LocalModelStore(root: root.appendingPathComponent("Models"), downloader: FixtureModelDownloader()),
+                manifests: localManifests), runtime: FixtureRuntime(root: root)
         )
     }
 
