@@ -44,7 +44,7 @@ Human microphone/Slack smoke remains the next release gate.
 2. Backend settings/coordinator — complete; fixture routing/snapshot/recovery/cancel checks pass.
 3. Verified model management/native inference — complete for Parakeet; real synthetic integration passes.
 4. Settings/onboarding/HUD/docs — complete; native minimum-size preview inspected.
-5. First clean candidate packaged; final logging/process-boundary follow-up validation in progress.
+5. Final canonical checks, feature pushes and clean candidate packaging — complete.
 6. Human microphone/Slack acceptance and final release — pending, separately gated.
 
 ## Validation Evidence
@@ -62,7 +62,7 @@ Human microphone/Slack smoke remains the next release gate.
 | Public hygiene | Source and optimized helper scans pass; no model weights/audio in repository |
 | Native UI | Minimum-size local Provider pane, download confirmation/cancel and disabled Qwen download inspected through CUA in fixture-only preview; preview closed |
 | Full canonical final check | Pass after final code changes; app, executable checks, native helper and all tooling fixtures pass |
-| Candidate package | Pending clean implementation commit |
+| Candidate package | Pass from clean eb6720b: app/helper signatures, version/build/source, DMG integrity and portable checksum |
 | Real microphone / Slack | Not run; human gate |
 
 Synthetic voices are not real speech-quality acceptance. Mixed-language technical
@@ -72,12 +72,26 @@ changed or inspected; the daily installation is untouched.
 
 ## Release Evidence
 
-Candidate target: 0.6.0/build 12. Final release/tag/main publication: none.
-Initial implementation `0967c60` is pushed. Its clean candidate packaged and
-passed signature/DMG integrity checks. Final review added explicit upstream
-Unified Logging suppression and early-helper-exit/process-cancellation checks;
-full canonical checks and a focused final native-helper rebuild pass; these
-changes will be committed and repackaged before handoff.
+- Candidate: **0.6.0 / build 12**, clean source
+  `eb6720bc7bd1e7696041e01d65b3c76bf90aff33`.
+- Artifact: `dist/BabbelStream-0.6.0-candidate.12-eb6720b.dmg` (about 2.8 MB).
+- SHA-256: `c7d875a2ea8f89181d97efc980a9ad36c1a8f020bd6dec2939c152ef30b2a73d`.
+- Portable companion checksum uses only the basename and verifies successfully.
+- Both signed app/helper verify; embedded version 0.6.0/build 12/eb6720b.
+  Runtime capabilities contain only parakeetUltra.
+- Exact packaged, optimized, signed helper passes synthetic English and German
+  expected-word tests under network denial; outputs discarded.
+- Mounted read-only payload and metadata scan: eight files, zero private matches;
+  model weights and speech fixtures are absent. DMG detached after inspection.
+- Full canonical suite and focused final native rebuild pass. Initial sandbox
+  cache denial and absent Metal tooling are accurately separated from failures.
+- Implementation and logging/process follow-up commits are pushed on the feature
+  branch. This final documentation-only handoff commit does not change the
+  candidate's recorded source or bytes.
+- Obsolete first candidate removed from dist to avoid selecting its pre-review
+  helper. No user artifact, installed app or production store was removed.
+- No installation, real microphone/Slack test, main integration, tag or public
+  release. Tracker remains active for the human gate.
 
 ## Current Blocker
 
@@ -86,4 +100,6 @@ and separate native/resource/license/performance validation.
 
 ## Next Action
 
-Commit/push the final logging/process follow-up and rebuild the clean candidate.
+Have the maintainer install the recorded candidate, select Provider → On this
+Mac → Parakeet Ultra, confirm Download and Prepare, Apply, then report real
+English/German/mixed unsent Slack dictation and cancellation/recovery results.

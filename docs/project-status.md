@@ -24,7 +24,11 @@ for a 0.6.0/build 12 Parakeet pilot candidate. Contract:
 denied synthetic English/German inference pass. Qwen/Granite builds are explicitly
 deferred because Metal build tooling is absent; their downloads stay disabled.
 No production installation, microphone/Slack acceptance, main integration or
-release publication is claimed. Candidate packaging/final evidence is in progress.
+release publication is claimed. The clean 0.6.0/build 12 candidate is ready at
+`dist/BabbelStream-0.6.0-candidate.12-eb6720b.dmg`, source `eb6720b`.
+App/helper signatures, DMG checksum/integrity, complete payload privacy and exact
+packaged-helper synthetic English/German tests pass. The run tracker records
+its checksum; no real microphone acceptance is inferred.
 
 
 Optional generic installer provider configuration is implemented directly
@@ -64,5 +68,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Finish checks and clean packaging of the Parakeet candidate, then obtain the
-maintainer’s real microphone/Slack smoke result before release.
+Have the maintainer install the Parakeet candidate and report real English,
+German and mixed technical unsent Slack dictation plus cancellation/recovery.
