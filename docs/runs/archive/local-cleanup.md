@@ -83,6 +83,6 @@ Prepare the final 0.6.0 release metadata and incremented build from the accepted
 
 Implementation and human local smoke are accepted. The maintainer explicitly
 authorized local 0.6.0 finalization on 2026-10-28; remaining main/tag/build/install
-execution is owned by `../active/release-v0.6.0.md`. Public installer and Homebrew
+execution is owned by `release-v0.6.0.md`. Public installer and Homebrew
 publication remain gated by the second-Mac test. This implementation run is closed;
 historical pending-release statements above describe their original checkpoints.

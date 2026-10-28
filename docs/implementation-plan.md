@@ -1,7 +1,7 @@
 # Implementation Plan
 
-Local Parakeet and Qwen3.5-4B cleanup are accepted for 0.6.0. Local release
-finalization is tracked in `runs/active/release-v0.6.0.md`; public installer and
+Local Parakeet and Qwen3.5-4B cleanup are accepted for 0.6.0. Completed local release
+finalization is recorded in `runs/archive/release-v0.6.0.md`; public installer and
 Homebrew publication await the second-Mac test.
 
 This plan contains only remaining candidate work and delivery dependencies.

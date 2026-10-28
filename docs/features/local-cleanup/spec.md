@@ -1,9 +1,9 @@
 # Local Cleanup Specification
 
 ## Status
-Approved for autonomous implementation and local candidate installation on 2026-10-28.
-The maintainer selected Qwen3.5-4B with a downloadable model. Final main/tag/public
-publication remain gated by a human smoke test and release direction.
+Released locally as 0.6.0/build 14, annotated v0.6.0, on 2026-10-28 after
+accepted fully local smoke. The maintainer selected Qwen3.5-4B with a downloadable
+model. Public installer/Homebrew publication awaits the second-Mac test.
 
 Implemented in 0.6.0/build 13 candidate (`ad06130`); the maintainer accepted
 fully local German technical dictation with Parakeet and Qwen cleanup on 2026-10-28.
@@ -77,4 +77,4 @@ are protected. This addresses small-model failure to copy preferred spelling.
 The maintainer accepted the fully local Parakeet/Qwen smoke and explicitly
 authorized main integration, annotated v0.6.0, final build and local installation.
 Public GitHub release/assets and Homebrew updates await the second-Mac test.
-Release evidence: `../../runs/active/release-v0.6.0.md`.
+Release evidence: `../../runs/archive/release-v0.6.0.md`.
