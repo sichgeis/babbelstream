@@ -5,7 +5,9 @@ Approved for autonomous implementation and local candidate installation on 2026-
 The maintainer selected Qwen3.5-4B with a downloadable model. Final main/tag/public
 publication remain gated by a human smoke test and release direction.
 
-Implemented in 0.6.0/build 13 candidate (`ad06130`); human cleanup smoke pending.
+Implemented in 0.6.0/build 13 candidate (`ad06130`); the maintainer accepted
+fully local German technical dictation with Parakeet and Qwen cleanup on 2026-10-28.
+Final release preparation remains.
 
 ## Problem And Outcome
 Local speech currently produces raw text. Offer optional light cleanup on this

@@ -18,7 +18,7 @@ Work paused on request before changes, resumed explicitly on 2026-10-28.
 2. Settings, UI, coordinator and fixture checks: completed.
 3. Synthetic native quality/memory, full checks and privacy review: completed.
 4. Clean candidate, feature push, installation verification: completed.
-5. Human smoke: pending.
+5. Human smoke: accepted by the maintainer on 2026-10-28 for fully local German technical dictation.
 
 ## Decisions
 One embedded text-only GGUF, no separate daemon. Sequential native helper lifetime.
@@ -65,10 +65,16 @@ microphone content or user stores used for automated validation.
   are left visible; no grants, TCC resets or quarantine changes were performed.
 - Temporary installer QA initially stopped before replacement because this Python
   lacks xattr bindings; native xattr inspection then passed and installation completed.
-- Main/tag/public publication remain untouched. The human cleanup smoke is pending.
+- On 2026-10-28 the maintainer reported a successful real German technical
+  dictation using Parakeet Ultra transcription and Qwen3.5-4B cleanup entirely
+  on this Mac, and declared the smoke test complete. Only the outcome is retained;
+  no dictated content is copied into evidence. This supersedes the earlier
+  install-time remote selection; no expanded editor/long-form matrix is inferred.
+- The maintainer requested the remaining steps to finalize an actual release on
+  main. Main/tag/public publication have not yet been performed.
 
 ## Blocker
-No implementation blocker. Human permission reapproval and cleanup smoke remain.
+No implementation blocker. The maintainer accepted the local smoke; release preparation remains.
 
 ## Next Action
-Obtain the maintainer's English/German/mixed cleanup smoke result after permission reapproval.
+Prepare the final 0.6.0 release metadata and incremented build from the accepted feature branch.

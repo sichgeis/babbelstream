@@ -25,12 +25,14 @@ recovery and cancellation fixture checks pass. Synthetic multilingual preservati
 passes after strengthening the local prompt and enforcing explicit dictionary
 spellings. Clean 0.6.0/build 13/source `ad06130` is installed and running from
 Applications, with the verified 2.74 GB cleanup model prepared and local cleanup
-enabled through Settings. Existing remote transcription remains selected. The
+enabled through Settings. Remote speech was selected at installation; the maintainer
+subsequently selected Parakeet and reported a successful fully local German
+technical dictation with Qwen cleanup on 2026-10-28. The
 exact packaged cleanup/Parakeet helpers, mounted payload privacy, signatures,
-portable checksum and byte identity pass. Human cleanup smoke and final
-main/tag/public release remain pending. macOS reports microphone Not requested
-and Accessibility Not allowed for this rebuilt app; native grant/paste acceptance
-is a human gate. General Settings is open at the permission controls.
+portable checksum and byte identity pass. The maintainer declared the fully local
+smoke complete. Final release preparation, main/tag/publication remain pending.
+Install-time permission warnings are historical; no broader permission/editor
+matrix result is inferred from the reported dictation success.
 
 Local transcription is approved and implemented on `codex/local-transcription`
 for a 0.6.0/build 12 Parakeet pilot candidate. Contract:
@@ -86,5 +88,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Obtain the maintainer's English/German/mixed local-cleanup smoke result after
-permission reapproval, before main/tag/public release finalization.
+Prepare final 0.6.0 release metadata and a new clean release build after the accepted fully local smoke.
