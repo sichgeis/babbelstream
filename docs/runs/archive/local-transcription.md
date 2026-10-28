@@ -119,3 +119,11 @@ and separate native/resource/license/performance validation.
 
 Obtain maintainer direction for main/tag/public release finalization, retaining
 the recorded English/German acceptance and the explicitly unverified wider matrix.
+
+## Implementation Closeout
+
+Implementation and human local smoke are accepted. The maintainer explicitly
+authorized local 0.6.0 finalization on 2026-10-28; remaining main/tag/build/install
+execution is owned by `../active/release-v0.6.0.md`. Public installer and Homebrew
+publication remain gated by the second-Mac test. This implementation run is closed;
+historical pending-release statements above describe their original checkpoints.

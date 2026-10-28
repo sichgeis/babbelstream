@@ -17,39 +17,13 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-Optional Qwen3.5-4B cleanup is approved and implemented on `codex/local-cleanup`,
-stacked on the local speech pilot. Contract: `docs/features/local-cleanup/spec.md`;
-execution: `docs/runs/active/local-cleanup.md`. Verified native Metal inference
-works without Xcode/Ollama. Settings, download management, no-cloud cleanup,
-recovery and cancellation fixture checks pass. Synthetic multilingual preservation
-passes after strengthening the local prompt and enforcing explicit dictionary
-spellings. Clean 0.6.0/build 13/source `ad06130` is installed and running from
-Applications, with the verified 2.74 GB cleanup model prepared and local cleanup
-enabled through Settings. Remote speech was selected at installation; the maintainer
-subsequently selected Parakeet and reported a successful fully local German
-technical dictation with Qwen cleanup on 2026-10-28. The
-exact packaged cleanup/Parakeet helpers, mounted payload privacy, signatures,
-portable checksum and byte identity pass. The maintainer declared the fully local
-smoke complete. Final release preparation, main/tag/publication remain pending.
-Install-time permission warnings are historical; no broader permission/editor
-matrix result is inferred from the reported dictation success.
-
-Local transcription is approved and implemented on `codex/local-transcription`
-for a 0.6.0/build 12 Parakeet pilot candidate. Contract:
-`docs/features/local-transcription/spec.md`; evidence:
-`docs/runs/active/local-transcription.md`. The pinned native helper and network-
-denied synthetic English/German inference pass. Qwen/Granite builds are explicitly
-deferred because Metal build tooling is absent; their downloads stay disabled.
-The maintainer explicitly requested local installation: the verified candidate
-is installed and running from Applications. On 2026-10-28 the maintainer reported
-successful English and German smoke tests. The wider editor/recovery matrix,
-main integration and release publication remain pending. The clean 0.6.0/build 12 candidate is ready at
-`dist/BabbelStream-0.6.0-candidate.12-eb6720b.dmg`, source `eb6720b`.
-App/helper signatures, DMG checksum/integrity, complete payload privacy and exact
-packaged-helper synthetic English/German tests pass. The run tracker records
-its checksum and the maintainer-reported language acceptance; no additional
-manual matrix result is inferred.
-
+Local 0.6.0 finalization is explicitly authorized after the maintainer's successful
+fully local Parakeet/Qwen German technical dictation smoke. Target: build 14,
+annotated v0.6.0 on main, clean final installer and local installation. Execution:
+`docs/runs/active/release-v0.6.0.md`. Implementations are complete and archived:
+`docs/runs/archive/local-transcription.md` and `docs/runs/archive/local-cleanup.md`.
+Public GitHub installer publication and Homebrew advancement are explicitly
+withheld until the second-Mac test. Qwen-ASR and Granite builds remain deferred.
 
 Optional generic installer provider configuration is implemented directly
 on main by explicit maintainer request; canonical checks and 25 helper fixtures pass. Contract:
@@ -88,4 +62,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Prepare final 0.6.0 release metadata and a new clean release build after the accepted fully local smoke.
+Complete authorized local 0.6.0 main/tag/build/install finalization and verify exact installed provenance.

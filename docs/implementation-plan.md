@@ -1,9 +1,8 @@
 # Implementation Plan
 
-Approved local Qwen3.5-4B cleanup is active under `features/local-cleanup/spec.md`
-and `runs/active/local-cleanup.md`; candidate installation and human quality smoke
-precede integration/public release. This is implementation work, not an unapproved
-provider proposal.
+Local Parakeet and Qwen3.5-4B cleanup are accepted for 0.6.0. Local release
+finalization is tracked in `runs/active/release-v0.6.0.md`; public installer and
+Homebrew publication await the second-Mac test.
 
 This plan contains only remaining candidate work and delivery dependencies.
 Current release state and the single next action live in `docs/project-status.md`.
@@ -72,13 +71,12 @@ These remain unsequenced until the user selects them:
 
 - Per-app cleanup style defaults.
 - Optional local price inputs and estimated cleanup tokens.
-- Deterministic local dictionary replacements.
+- A standalone deterministic correction mode beyond the implemented local-cleanup spelling pass.
 - Preview/editor and email-specific cleanup modes.
 
 ## Maintenance And UX Path
 
-- Keep the dependency policy intentionally native-first. The current package has
-  no third-party dependencies, so maintenance should review the Swift tools
+- Keep the dependency policy intentionally native-first. Optional local helpers pin FluidAudio and llama.cpp; maintenance should review the Swift tools
   version, deployment target, deprecated Apple APIs, and release tooling rather
   than adding an updater merely to have one.
 - Re-run the dependency/platform audit before each planned release or after a

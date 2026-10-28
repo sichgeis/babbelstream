@@ -7,7 +7,8 @@ publication remain gated by a human smoke test and release direction.
 
 Implemented in 0.6.0/build 13 candidate (`ad06130`); the maintainer accepted
 fully local German technical dictation with Parakeet and Qwen cleanup on 2026-10-28.
-Final release preparation remains.
+The maintainer authorized main/tag/final build/local installation of 0.6.0 on
+2026-10-28. Public installer publication and Homebrew await the second-Mac test.
 
 ## Problem And Outcome
 Local speech currently produces raw text. Offer optional light cleanup on this
@@ -70,3 +71,10 @@ Local cleanup also enforces explicitly taught dictionary spellings after inferen
 Only entries admitted by the existing prompt budget participate. Literal whole-phrase
 matching is case-insensitive, longest-first and non-cascading; URL/path/email tokens
 are protected. This addresses small-model failure to copy preferred spelling.
+
+## Local Release Authority (2026-10-28)
+
+The maintainer accepted the fully local Parakeet/Qwen smoke and explicitly
+authorized main integration, annotated v0.6.0, final build and local installation.
+Public GitHub release/assets and Homebrew updates await the second-Mac test.
+Release evidence: `../../runs/active/release-v0.6.0.md`.

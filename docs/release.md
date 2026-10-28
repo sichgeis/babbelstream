@@ -336,3 +336,19 @@ only the pinned source, embeds Metal source, suppresses native logs and bundles 
 MIT notice. Scan and sign both native helpers, then test the exact packaged helper
 with verified synthetic inputs under network denial. Weights are downloaded
 separately and never included in the DMG.
+
+## 0.6.0 Local Release Authority
+
+After accepting fully local Parakeet/Qwen dictation on 2026-10-28, the maintainer
+explicitly authorized main, annotated v0.6.0, final build 14 and local installation.
+Public GitHub installer publication and Homebrew changes are withheld until the
+second-Mac test. Use the existing ad-hoc optimized pipeline from the exact tag:
+
+```sh
+BUILD_MODE=candidate DMG_LAYOUT=finder CODESIGN_IDENTITY=- DMG_CODESIGN_IDENTITY=- DMG_NAME=BabbelStream-0.6.0.dmg scripts/package-dmg.sh
+```
+
+The internal candidate build-mode label accurately describes ad-hoc signing; the
+clean main commit, final version/build and annotated tag establish local release
+provenance. Keep the canonical DMG/checksum local, preserve rollback and all user
+stores, launch the Applications copy and verify exact source metadata.

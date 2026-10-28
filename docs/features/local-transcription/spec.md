@@ -2,12 +2,12 @@
 
 ## Status
 
-- State: Approved; Parakeet pilot implementation in progress, human smoke pending.
+- State: Implemented and accepted for local release 0.6.0; public rollout pending.
 - Owner: maintainer.
 - Approved: 2026-10-28 conversation, autonomous implementation through candidate.
 - Follow-up: maintainer selected Parakeet first and explicitly deferred Qwen/Granite
   builds because this CLT installation lacks the Metal compiler.
-- Tracker: ../../runs/active/local-transcription.md.
+- Tracker: ../../runs/archive/local-transcription.md.
 
 ## Problem And Desired Outcome
 
@@ -169,3 +169,10 @@ Authorized: implementation, dependency/model preparation with synthetic inputs,
 checks, feature commits/pushes and clean candidate packaging. The maintainer
 explicitly deferred Qwen/Granite builds. Stop before production installation,
 real microphone/Slack testing, main integration, final tag and public release.
+
+## Local Release Authority (2026-10-28)
+
+The maintainer accepted the fully local Parakeet/Qwen smoke and explicitly
+authorized main integration, annotated v0.6.0, final build and local installation.
+Public GitHub release/assets and Homebrew updates await the second-Mac test.
+Release evidence: `../../runs/active/release-v0.6.0.md`.

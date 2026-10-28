@@ -198,7 +198,7 @@ executable fixtures because this Command Line Tools environment cannot run XCTes
 [Documentation](docs/README.md) · [Changelog](CHANGELOG.md) ·
 [Project status](docs/project-status.md) · [Pilot checklist](docs/homebrew-pilot-smoke-test.md)
 
-### Local dictation pilot (0.6.0 candidate)
+### Local dictation (0.6.0)
 
 On Apple Silicon with macOS 14 or later, choose **Provider → On this Mac**,
 select **Parakeet Ultra**, confirm **Download Model**, then **Apply Settings**
@@ -211,7 +211,8 @@ failure returns raw text with a warning and preserves audio for retry.
 Remote settings remain available when switching back. Remove Model deletes only
 that model; Failed Recordings and other app data are preserved.
 
-This is a candidate awaiting real microphone/Slack acceptance. Qwen and Granite
+The local 0.6.0 release includes accepted on-device dictation and cleanup. Public
+installer publication and Homebrew advancement await the second-Mac test. Qwen-ASR and Granite
 are listed as deferred choices with downloads disabled in this pilot. Building
 the default helper requires Swift 6.2+; building deferred MLX support additionally
 requires Xcode's Metal toolchain and separate validation.

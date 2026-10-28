@@ -40,7 +40,7 @@ entry in the app. No organization profile is bundled publicly. Contract:
 - No auto-send in MVP, including no "press enter" voice command.
 - No transcript history by default; no analytics, telemetry, cloud database, or subscription service.
 - No automatic transcript-history learning. Any local dictation archive must be explicit, opt-in, local-only, and user-visible.
-- Optional Parakeet Ultra local dictation is added in the 0.6.0 candidate; see `features/local-transcription/spec.md`.
+- Optional Parakeet Ultra local dictation is included in 0.6.0; see `features/local-transcription/spec.md`.
 
 ## MVP Scope
 
