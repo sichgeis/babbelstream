@@ -23,8 +23,9 @@ for a 0.6.0/build 12 Parakeet pilot candidate. Contract:
 `docs/runs/active/local-transcription.md`. The pinned native helper and network-
 denied synthetic English/German inference pass. Qwen/Granite builds are explicitly
 deferred because Metal build tooling is absent; their downloads stay disabled.
-No production installation, microphone/Slack acceptance, main integration or
-release publication is claimed. The clean 0.6.0/build 12 candidate is ready at
+The maintainer explicitly requested local installation: the verified candidate
+is installed and running from Applications. Microphone/Slack acceptance, main
+integration and release publication remain pending. The clean 0.6.0/build 12 candidate is ready at
 `dist/BabbelStream-0.6.0-candidate.12-eb6720b.dmg`, source `eb6720b`.
 App/helper signatures, DMG checksum/integrity, complete payload privacy and exact
 packaged-helper synthetic English/German tests pass. The run tracker records
@@ -68,5 +69,6 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Have the maintainer install the Parakeet candidate and report real English,
-German and mixed technical unsent Slack dictation plus cancellation/recovery.
+Have the maintainer select/download/apply Parakeet in the running candidate and
+report real English, German and mixed technical unsent Slack dictation plus
+cancellation/recovery.

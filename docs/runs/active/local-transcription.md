@@ -15,8 +15,10 @@ Maintainer approved the three-model direction and autonomous implementation on
 2026-10-28. Later they explicitly chose: prepare Parakeet first; defer Qwen and
 Granite builds. Authorized: pinned dependencies/model metadata, synthetic model
 preparation, code/docs/checks, feature commits/pushes and candidate packaging.
-No private content, API credential, microphone, system clipboard, production
-installation, main/tag or release publication is authorized/claimed here.
+No private content, API credential, microphone, system clipboard, main/tag or
+release publication is authorized/claimed here. On 2026-10-28 the maintainer
+subsequently explicitly requested local candidate installation and launch; that
+installation gate is now authorized and complete.
 Human microphone/Slack smoke remains the next release gate.
 
 ## Decisions
@@ -67,8 +69,9 @@ Human microphone/Slack smoke remains the next release gate.
 
 Synthetic voices are not real speech-quality acceptance. Mixed-language technical
 accuracy, long-form peak memory, latency with other apps open, other-host layout
-and real permission/editor behavior remain unproven. No installed-app version was
-changed or inspected; the daily installation is untouched.
+and real permission/editor behavior remain unproven. Candidate preparation left
+the daily installation untouched; the subsequently requested installation is
+recorded below.
 
 ## Release Evidence
 
@@ -90,8 +93,15 @@ changed or inspected; the daily installation is untouched.
   candidate's recorded source or bytes.
 - Obsolete first candidate removed from dist to avoid selecting its pre-review
   helper. No user artifact, installed app or production store was removed.
-- No installation, real microphone/Slack test, main integration, tag or public
-  release. Tracker remains active for the human gate.
+- Follow-up installation explicitly requested by the maintainer on 2026-10-28:
+  replaced installed 0.5.3/b9c0641 with verified **0.6.0/build 12/eb6720b** in
+  Applications, launched it and verified the exact running executable (PID 43636),
+  embedded metadata, app/helper signatures and Parakeet-only capabilities.
+- Old app retained at `dist/rollback/BabbelStream-0.5.3-2bc2752a.app`. No settings,
+  Keychain entries, recordings, dictionary or archive were changed by installation.
+  No quarantine removal, permission reset or signing change was performed.
+- Real microphone/Slack test, main integration, tag and public release remain
+  pending. Tracker remains active for the human gate.
 
 ## Current Blocker
 
@@ -100,6 +110,6 @@ and separate native/resource/license/performance validation.
 
 ## Next Action
 
-Have the maintainer install the recorded candidate, select Provider → On this
-Mac → Parakeet Ultra, confirm Download and Prepare, Apply, then report real
+Have the maintainer select Provider → On this Mac → Parakeet Ultra in the
+running installed candidate, confirm Download and Prepare, Apply, then report real
 English/German/mixed unsent Slack dictation and cancellation/recovery results.
