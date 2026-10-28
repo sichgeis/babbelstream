@@ -285,7 +285,16 @@ verified model downloads and recording/recovery; the helper owns only one model
 load/inference. A bounded pipe returns the result, upstream console output is
 suppressed, and an OS sandbox denies network. Cancellation kills the helper.
 No resident server, local HTTP endpoint, new permission or silent cloud route
-is introduced. Local cleanup is always off; inactive remote choices persist.
+is introduced. Local cleanup is optional under `features/local-cleanup/spec.md`; inactive remote choices persist.
 Default packaging on Apple Silicon advertises Parakeet only. The MLX build is
 deferred, requires the Metal compiler and needs independent artifact validation.
 Contract: `features/local-transcription/spec.md`.
+
+## Optional Local Cleanup
+
+`LocalCleanupRuntime` shares verified model management and bounded network-denied process transport with speech. A separate pinned static llama.cpp helper embeds Metal sources for runtime compilation; no standalone compiler or server is needed. Speech exits before cleanup starts. Private stdin carries the bounded prompt, stdout carries only a completed draft, native logs are suppressed. Context/output/time limits fail closed to existing raw recovery. The immutable settings snapshot selects local cleanup independently of transcription.
+
+Local cleanup also enforces explicitly taught dictionary spellings after inference.
+Only entries admitted by the existing prompt budget participate. Literal whole-phrase
+matching is case-insensitive, longest-first and non-cascading; URL/path/email tokens
+are protected. This addresses small-model failure to copy preferred spelling.

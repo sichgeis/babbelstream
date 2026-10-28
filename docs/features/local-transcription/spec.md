@@ -38,6 +38,9 @@ Primary references:
 - https://huggingface.co/ibm-granite/granite-speech-5.0-2b
 - https://github.com/Blaizzy/mlx-audio-swift
 
+Optional local cleanup is now separately approved in `../local-cleanup/spec.md`.
+That contract refines the original raw-text pilot below.
+
 ## Accepted Scope
 
 - Explicit Remote / On this Mac selection. Existing installs remain Remote.
@@ -54,7 +57,7 @@ Primary references:
 ## Non-Goals
 
 TTS/cloning, installing Python/Homebrew/Ollama/LM Studio/Xcode, cloud cleanup in
-local mode, local cleanup LLMs, vocabulary hint integration in the first pilot,
+local mode, vocabulary hint integration in the first speech pilot,
 background model updates/downloads, telemetry, new permissions or retention.
 
 ## User Workflow
@@ -143,7 +146,7 @@ retry copies on success. Last Draft survives later failures.
 ## Acceptance Criteria And Automated Validation
 
 - No key is required/read for local dictation or retry.
-- Zero cloud/hedge/cleanup requests; no late insertion after cancellation.
+- Zero cloud/hedge/cloud-cleanup requests; no late insertion after cancellation.
 - Original backend snapshot survives settings Apply during recording.
 - Corruption, traversal and canceled setup cannot activate assets.
 - Exact native Parakeet load/inference passes on synthetic audio with network denied.

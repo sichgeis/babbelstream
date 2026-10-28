@@ -200,10 +200,14 @@ owned incomplete staging directories after an interrupted app exit; removal
 never touches recordings, dictionary, archive, keys or other data.
 
 Applied local mode bypasses Keychain reads, cloud transcription, Mini hedging,
-cleanup and personal fallback. A bundled native helper loads exact local files
+cloud cleanup and personal fallback. Optional local cleanup follows its separate contract. A bundled native helper loads exact local files
 under OS-enforced network denial; library output is discarded, results remain
 in the private bounded pipe, and failure messages are reviewed categories only.
 Cancellation discards late output and retains stopped audio under the existing
 Failed Recordings policy. Model assets persist until removal; successful audio
 and default transcript retention remain unchanged. No telemetry or permission is
 added. The first pilot enables only Parakeet; other runtime builds are deferred.
+
+## Optional Local Cleanup
+
+Local cleanup receives transcript and capped personal dictionary through private stdin. It has OS network denial, no API key, no retained prompt/transcript/cache history and no content logging. Model setup only contacts the disclosed Hugging Face HTTPS source/CDN. Weights remain in the private managed model directory until removal. Cancellation kills its owned child; failure retains raw text and stopped audio under existing recovery rules. No permissions or retention defaults change.

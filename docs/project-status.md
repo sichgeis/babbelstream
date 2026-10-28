@@ -17,6 +17,14 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
+Optional Qwen3.5-4B cleanup is approved and implemented on `codex/local-cleanup`,
+stacked on the local speech pilot. Contract: `docs/features/local-cleanup/spec.md`;
+execution: `docs/runs/active/local-cleanup.md`. Verified native Metal inference
+works without Xcode/Ollama. Settings, download management, no-cloud cleanup,
+recovery and cancellation fixture checks pass. Synthetic multilingual preservation
+passes after strengthening the local prompt. Candidate installation is in progress;
+human cleanup smoke and final main/tag/public release remain pending.
+
 Local transcription is approved and implemented on `codex/local-transcription`
 for a 0.6.0/build 12 Parakeet pilot candidate. Contract:
 `docs/features/local-transcription/spec.md`; evidence:
@@ -71,5 +79,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Obtain maintainer direction for main/tag/public release finalization after the
-reported English/German smoke acceptance; retain the unverified wider matrix.
+Finish local cleanup candidate installation and obtain the maintainer's cleanup
+smoke result before main/tag/public release finalization.

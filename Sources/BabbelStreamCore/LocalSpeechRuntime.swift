@@ -1,9 +1,12 @@
 import Foundation
 import Darwin
 
-public protocol LocalSpeechRuntime: Sendable {
+public protocol LocalModelRuntime: Sendable {
     var supportedModels: Set<LocalModelID> { get }
     func prepare(model: LocalModelID, directory: URL) async throws
+}
+
+public protocol LocalSpeechRuntime: LocalModelRuntime {
     func transcribe(model: LocalModelID, directory: URL, audio: URL, language: String) async throws -> String
 }
 
@@ -59,15 +62,17 @@ private struct LocalSpeechProcessResponse: Decodable { let text: String?; let er
 /// Blocking pipe IO lives on a utility queue, never on the main actor. Process
 /// lifetime bounds memory, cancellation and all library console output. The OS
 /// sandbox denies network even if a future SDK loader regresses.
-private final class LocalSpeechInvocation: @unchecked Sendable {
+final class LocalSpeechInvocation: @unchecked Sendable {
     private let lock = NSLock()
     private var canceled = false
     private let process = Process()
+    private let timeout: TimeInterval
     private let request: Data
-    init(executable: URL, request: Data) {
+    init(executable: URL, request: Data, arguments: [String] = [], timeout: TimeInterval = 600) {
+        self.timeout = timeout
         self.request = request
         process.executableURL = URL(fileURLWithPath: "/usr/bin/sandbox-exec")
-        process.arguments = ["-p", "(version 1)(allow default)(deny network*)", executable.path]
+        process.arguments = ["-p", "(version 1)(allow default)(deny network*)", executable.path] + arguments
         process.environment = ["PATH": "/usr/bin:/bin", "OS_ACTIVITY_MODE": "disable"]
         process.standardError = FileHandle.nullDevice
     }
@@ -97,7 +102,7 @@ private final class LocalSpeechInvocation: @unchecked Sendable {
                         lock.unlock(); throw LocalModelError.runtimeUnavailable
                     }
                     lock.unlock()
-                    DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 600) { [weak self] in self?.cancel() }
+                    DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + timeout) { [weak self] in self?.cancel() }
                     try input.fileHandleForWriting.write(contentsOf: request)
                     try input.fileHandleForWriting.close()
                     var result = Data()

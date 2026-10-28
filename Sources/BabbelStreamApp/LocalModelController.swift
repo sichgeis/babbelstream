@@ -9,15 +9,16 @@ final class LocalModelController: ObservableObject {
     @Published private(set) var isBusy = false
     @Published private(set) var progress: Double = 0
     @Published private(set) var message = "Download a model to dictate on this Mac without an API key."
-    let runtime: any LocalSpeechRuntime
+    let runtime: any LocalModelRuntime
     let store: LocalModelStore
     var onChange: (() -> Void)?
     private var task: Task<Void, Never>?
     private let manifests: [LocalModelManifest]
-    init(runtime: any LocalSpeechRuntime = BundledLocalSpeechRuntime(),
+    init(runtime: any LocalModelRuntime = BundledLocalSpeechRuntime(),
          store: LocalModelStore = LocalModelStore(root: LocalModelStore.defaultRoot),
          manifests: [LocalModelManifest] = LocalModelCatalog.manifests) {
         self.runtime = runtime; self.store = store; self.manifests = manifests
+        if manifests.contains(where: { $0.id == .qwenCleanup }) { message = "Download the cleanup model to format transcripts on this Mac." }
     }
     private func manifest(_ id: LocalModelID) throws -> LocalModelManifest {
         guard let manifest = manifests.first(where: { $0.id == id }) else { throw LocalModelError.invalidManifest }
@@ -77,6 +78,19 @@ final class LocalModelController: ObservableObject {
         let directory = await store.directory(manifest)
         try await store.verify(manifest, at: directory)
         try Task.checkCancellation()
-        return try await runtime.transcribe(model: model, directory: directory, audio: audio, language: language)
+        guard let speech = runtime as? any LocalSpeechRuntime else { throw LocalModelError.runtimeUnavailable }
+        return try await speech.transcribe(model: model, directory: directory, audio: audio, language: language)
     }
+    func cleanup(transcript: String, dictionary: PersonalDictionary) async throws -> String {
+        guard !isBusy, let cleaner = runtime as? any LocalCleanupRuntime else { throw LocalModelError.busy }
+        isBusy = true; onChange?()
+        defer { isBusy = false; onChange?() }
+        let manifest = try manifest(.qwenCleanup)
+        guard await store.isInstalled(manifest) else { throw LocalModelError.notInstalled }
+        let directory = await store.directory(manifest)
+        try await store.verify(manifest, at: directory)
+        try Task.checkCancellation()
+        return try await cleaner.cleanup(directory: directory, transcript: transcript, dictionary: dictionary)
+    }
+
 }

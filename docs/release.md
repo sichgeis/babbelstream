@@ -326,3 +326,13 @@ Release images strip N_OSO debug maps before signing and use a neutral temporary
 backing-image path for Finder aliases. The executable scan combines raw bytes, UTF-16 and `strings -a`; native
 Mach-O-aware strings alone can omit debug-map symbol bytes. Mounted-payload QA also scans binary/UTF-16 metadata and
 attributes; a section-only executable scan is insufficient.
+
+## Local Cleanup Candidate Build
+
+Apple Silicon candidates also build the pinned static llama.cpp cleanup helper.
+Install CMake 3.20+ as a developer prerequisite (or set `CMAKE` to its executable);
+no runtime CMake, Xcode, Python or server is required by the app. The script fetches
+only the pinned source, embeds Metal source, suppresses native logs and bundles its
+MIT notice. Scan and sign both native helpers, then test the exact packaged helper
+with verified synthetic inputs under network denial. Weights are downloaded
+separately and never included in the DMG.

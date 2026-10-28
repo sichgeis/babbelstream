@@ -190,7 +190,8 @@ task check
 scripts/build-app.sh
 ```
 
-Swift, SwiftUI, and AppKit; no third-party runtime dependencies. Checks use
+Swift, SwiftUI, and AppKit, with pinned FluidAudio and llama.cpp native helpers
+for optional local inference. Checks use
 executable fixtures because this Command Line Tools environment cannot run XCTest.
 [Development guide →](docs/development.md)
 
@@ -203,6 +204,10 @@ On Apple Silicon with macOS 14 or later, choose **Provider → On this Mac**,
 select **Parakeet Ultra**, confirm **Download Model**, then **Apply Settings**
 after preparation. The approximately 632 MB download is separate from the app.
 Subsequent dictation runs locally without an API key, cloud cleanup or fallback.
+Optional Qwen3.5-4B cleanup is available in Provider Settings: download its 2.74 GB
+model, enable local cleanup, and Apply. It runs on Apple Silicon/macOS 14+ without
+Ollama or Xcode and uses your personal dictionary. Local cleanup defaults off;
+failure returns raw text with a warning and preserves audio for retry.
 Remote settings remain available when switching back. Remove Model deletes only
 that model; Failed Recordings and other app data are preserved.
 

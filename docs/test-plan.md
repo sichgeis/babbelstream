@@ -339,3 +339,7 @@ runtime guidance. On 2026-10-28 the maintainer reported successful English and
 German smoke tests on installed 0.6.0/build 12/eb6720b. No dictated content is
 stored as evidence. Individual editor/paste/recovery cases, offline relaunch,
 10-minute memory, mixed-language quality and other-host coverage remain pending.
+
+## Optional Local Cleanup
+
+Fixture checks cover default-off settings/migration, separate model role, blocked activation without weights, local cleanup after both speech backends, immutable settings, no cloud cleaner/key in the fully local flow, raw fallback and recovery copy, cancellation and late results. Explicit synthetic native inference checks English/German/mixed speech, negation/numbers, dictated requests and identifiers without microphone or production stores. Human quality, long-form memory and other-host layout remain separate smoke gates.

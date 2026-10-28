@@ -3,7 +3,8 @@ import Foundation
 public struct AppSettings: Equatable, Sendable {
     public var transcriptionBackend: TranscriptionBackend
     public var localModel: LocalModelID
-    public var effectiveCleanupEnabled: Bool { transcriptionBackend == .remote && cleanupEnabled }
+    public var localCleanupEnabled: Bool
+    public var effectiveCleanupEnabled: Bool { localCleanupEnabled || (transcriptionBackend == .remote && cleanupEnabled) }
     public var providerConfiguration: ProviderConfiguration
     public var personalOpenAIFallbackEnabled: Bool
     public var personalOpenAIDirectModeEnabled: Bool
@@ -19,6 +20,7 @@ public struct AppSettings: Equatable, Sendable {
         providerConfiguration: ProviderConfiguration = ProviderConfiguration(),
         transcriptionBackend: TranscriptionBackend = .remote,
         localModel: LocalModelID = .parakeetUltra,
+        localCleanupEnabled: Bool = false,
         personalOpenAIFallbackEnabled: Bool = false,
         personalOpenAIDirectModeEnabled: Bool = false,
         cleanupEnabled: Bool = ProjectDefaults.cleanupEnabledByDefault,
@@ -31,6 +33,7 @@ public struct AppSettings: Equatable, Sendable {
     ) {
         self.transcriptionBackend = transcriptionBackend
         self.localModel = localModel
+        self.localCleanupEnabled = localCleanupEnabled
         self.providerConfiguration = providerConfiguration
         self.personalOpenAIFallbackEnabled = personalOpenAIFallbackEnabled
         self.personalOpenAIDirectModeEnabled = personalOpenAIFallbackEnabled
@@ -221,6 +224,7 @@ public protocol SettingsStore: AnyObject {
 public final class UserDefaultsSettingsStore: SettingsStore {
     private enum Key {
         static let transcriptionBackend = "transcription.backend"
+        static let localCleanupEnabled = "cleanup.localEnabled"
         static let localModel = "transcription.localModel"
         static let baseURL = "provider.baseURL"
         static let transcriptionEndpointPath = "provider.transcriptionEndpointPath"
@@ -306,6 +310,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
                 TranscriptionBackend(rawValue: $0) ?? .local
             } ?? .remote,
             localModel: userDefaults.string(forKey: Key.localModel).map { LocalModelID(rawValue: $0) ?? .unavailable } ?? .parakeetUltra,
+            localCleanupEnabled: userDefaults.object(forKey: Key.localCleanupEnabled) as? Bool ?? false,
             personalOpenAIFallbackEnabled: personalOpenAIFallbackEnabled,
             personalOpenAIDirectModeEnabled: personalOpenAIFallbackEnabled
                 && (userDefaults.object(forKey: Key.personalOpenAIDirectModeEnabled) as? Bool
@@ -330,6 +335,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
 
         userDefaults.set(settings.transcriptionBackend.rawValue, forKey: Key.transcriptionBackend)
         userDefaults.set(settings.localModel.rawValue, forKey: Key.localModel)
+        userDefaults.set(settings.localCleanupEnabled, forKey: Key.localCleanupEnabled)
         let configuration = settings.providerConfiguration
         userDefaults.set(configuration.baseURL.absoluteString, forKey: Key.baseURL)
         userDefaults.set(configuration.transcriptionEndpointPath, forKey: Key.transcriptionEndpointPath)

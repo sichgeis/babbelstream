@@ -257,3 +257,7 @@ the Mac and existing successful deletion/Failed Recordings rules apply. Download
 hosts receive ordinary connection metadata only during explicit setup. Qwen and
 Granite catalog entries are deferred and cannot download in the Parakeet pilot.
 No model operation sends a message. Real quality/latency acceptance is pending.
+
+## Optional Local Cleanup
+
+Qwen3.5-4B can optionally clean local or remote speech on this Mac. It defaults off until explicitly downloaded, prepared, enabled and applied. Local cleanup replaces cloud cleanup for that operation and uses the personal dictionary. Failures deliver raw text with a warning and retain stopped audio for retry. Contract: `features/local-cleanup/spec.md`.

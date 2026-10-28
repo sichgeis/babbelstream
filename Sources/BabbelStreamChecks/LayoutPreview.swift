@@ -11,7 +11,8 @@ func runLayoutPreview() throws {
     let fixture = try CoordinatorFixture(
         hasPrimaryKey: !incomplete, permissionsReady: !incomplete,
         microphonePermission: CommandLine.arguments.contains("--preview-not-requested") ? .notDetermined : nil,
-        localRuntime: CommandLine.arguments.contains("--preview-local") ? FixtureLocalSpeechRuntime() : nil
+        localRuntime: CommandLine.arguments.contains("--preview-local") ? FixtureLocalSpeechRuntime() : nil,
+        cleanupRuntime: FixtureLocalCleanupRuntime()
     )
     if CommandLine.arguments.contains("--preview-not-requested") {
         fixture.recorder.permissionAfterRequest = .authorized // Fake consent only; no OS prompt.

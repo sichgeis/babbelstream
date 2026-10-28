@@ -4,13 +4,14 @@ import CryptoKit
 public enum TranscriptionBackend: String, CaseIterable, Sendable { case remote, local }
 
 public enum LocalModelID: String, CaseIterable, Codable, Sendable {
-    case parakeetUltra, qwen3ASR, graniteSpeech, unavailable
+    case parakeetUltra, qwen3ASR, graniteSpeech, qwenCleanup, unavailable
     public static let allCases: [LocalModelID] = [.parakeetUltra, .qwen3ASR, .graniteSpeech]
     public var displayName: String {
         switch self {
         case .parakeetUltra: "Parakeet Ultra — Fast"
         case .qwen3ASR: "Qwen3-ASR 1.7B — Multilingual"
         case .graniteSpeech: "Granite Speech 5.0 — Experimental"
+        case .qwenCleanup: "Qwen3.5-4B — Local Cleanup"
         case .unavailable: "Saved model unavailable"
         }
     }

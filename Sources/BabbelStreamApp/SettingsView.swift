@@ -86,7 +86,7 @@ struct SettingsView: View {
                 Label("Apply Settings", systemImage: "checkmark")
             }
             .keyboardShortcut(.defaultAction)
-            .disabled(!appState.hasUnsavedSettingsChanges || appState.localModels.isBusy)
+            .disabled(!appState.hasUnsavedSettingsChanges || (appState.localModels.isBusy || appState.cleanupModels.isBusy))
         }
     }
 }
@@ -153,11 +153,11 @@ private struct SettingsGeneralPane: View {
                 Toggle(
                     "Cleanup enabled",
                     isOn: Binding(
-                        get: { !appState.isLocalTranscriptionApplied && appState.cleanupEnabled },
+                        get: { appState.effectiveCleanupEnabled },
                         set: { appState.setCleanupEnabled($0) }
                     )
                 )
-                .disabled(appState.isLocalTranscriptionApplied)
+                .disabled(appState.isLocalTranscriptionApplied || appState.isLocalCleanupApplied)
                 Toggle(
                     "Launch at login",
                     isOn: Binding(
@@ -231,10 +231,17 @@ private struct SettingsProviderPane: View {
                     Text("On this Mac").tag(.local as TranscriptionBackend)
                 }
                 .pickerStyle(.segmented)
-                Text("Selection takes effect after Apply Settings. Local dictation uses no key, cloud fallback or cleanup.")
+                Text("Selection takes effect after Apply Settings. Local dictation uses no key or cloud fallback. Local cleanup is optional below.")
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            AppFormSection("Cleanup on this Mac") {
+                Toggle("Use Qwen3.5-4B for local cleanup", isOn: $appState.localCleanupEnabled)
+                Text("After Apply, this replaces cloud cleanup with local processing. With local transcription, the complete dictation stays on this Mac. Download and prepare the cleanup model below first.")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            LocalModelsPane(controller: appState.cleanupModels, selected: .constant(.qwenCleanup),
+                            canManage: appState.canStart, isCleanup: true)
             if appState.transcriptionBackend == .local {
                 LocalModelsPane(controller: appState.localModels, selected: $appState.localModel,
                                 canManage: appState.canStart)

@@ -6,6 +6,7 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ### 0.6.0 candidate (not released)
 
+- Add optional Qwen3.5-4B cleanup with a verified 2.74 GB download, local dictionary hints and network-denied native inference. Failed cleanup preserves raw text and recovery audio.
 - Add optional on-device Parakeet Ultra dictation on Apple Silicon/macOS 14+,
   with an explicit verified model download, preparation, cancellation and removal.
 - Local mode needs no API key and makes no cloud transcription, cleanup or

@@ -103,9 +103,13 @@ fi
 # Local inference is optional on Apple Silicon/macOS 14+, independently built
 # so the main application's existing deployment target remains unchanged.
 if [[ "$(uname -m)" == arm64 ]]; then
+  "$ROOT_DIR/scripts/build-local-cleanup.sh"
   "$ROOT_DIR/scripts/build-local-speech.sh"
   LOCAL_BIN_PATH="$("$ROOT_DIR/scripts/swift-project.sh" build --package-path "$ROOT_DIR/NativeSpeech" -c "$CONFIGURATION" --show-bin-path)"
   mkdir -p "$CONTENTS_DIR/Helpers"
+  cp "$ROOT_DIR/.build/local-cleanup/BabbelStreamLocalCleanup" "$CONTENTS_DIR/Helpers/"
+  strip -S "$CONTENTS_DIR/Helpers/BabbelStreamLocalCleanup"
+  python3 "$ROOT_DIR/scripts/check-public-hygiene.py" --binary "$CONTENTS_DIR/Helpers/BabbelStreamLocalCleanup"
   cp "$LOCAL_BIN_PATH/BabbelStreamLocalSpeech" "$CONTENTS_DIR/Helpers/"
   if [[ "${BABBELSTREAM_MLX:-0}" == 1 ]]; then
     printf '["parakeetUltra","qwen3ASR","graniteSpeech"]\n' > "$RESOURCES_DIR/LocalSpeechCapabilities.json"
@@ -124,6 +128,8 @@ if [[ "$(uname -m)" == arm64 ]]; then
   fi
 fi
 cp "$ROOT_DIR/NativeSpeech/THIRD-PARTY-NOTICES.md" "$ROOT_DIR/NativeSpeech/FluidAudio-LICENSE.txt" "$RESOURCES_DIR/"
+cp "$ROOT_DIR/NativeCleanup/THIRD-PARTY-NOTICES.md" "$RESOURCES_DIR/LocalCleanup-NOTICES.md"
+cp "$ROOT_DIR/NativeCleanup/llama-LICENSE.txt" "$RESOURCES_DIR/"
 make_app_icon
 
 if command -v codesign >/dev/null 2>&1; then
@@ -210,6 +216,7 @@ if command -v codesign >/dev/null 2>&1; then
     HELPER_SIGNING_ARGUMENTS=(--force --sign "$CODESIGN_IDENTITY" --options runtime)
     if [[ "$BUILD_MODE" == distribution ]]; then HELPER_SIGNING_ARGUMENTS+=(--timestamp); else HELPER_SIGNING_ARGUMENTS+=(--timestamp=none); fi
     codesign "${HELPER_SIGNING_ARGUMENTS[@]}" "$CONTENTS_DIR/Helpers/BabbelStreamLocalSpeech" >/dev/null
+    codesign "${HELPER_SIGNING_ARGUMENTS[@]}" "$CONTENTS_DIR/Helpers/BabbelStreamLocalCleanup" >/dev/null
   fi
   codesign "${SIGNING_ARGUMENTS[@]}" "$APP_DIR" >/dev/null
   "$ROOT_DIR/scripts/verify-app.sh" "$APP_DIR" "$BUILD_MODE"

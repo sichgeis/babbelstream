@@ -53,6 +53,7 @@ final class AppState: ObservableObject {
     @Published var transcriptionBackend: TranscriptionBackend
     @Published var localModel: LocalModelID
     let localModels: LocalModelController
+    let cleanupModels: LocalModelController
     var isLocalSpeechHUDActive: Bool {
         (isRecording || isProcessing || canCancel) ? usesLocalSpeechForCurrentOperation : isLocalTranscriptionApplied
     }
@@ -68,6 +69,7 @@ final class AppState: ObservableObject {
     @Published private var isDeliveringDraft = false
     @Published var recordingMode: RecordingMode = .none
     @Published private(set) var dictationControlStyle: DictationControlStyle = .none
+    @Published var localCleanupEnabled: Bool
     @Published var cleanupEnabled: Bool
     @Published var lastResult = "No dictation yet."
     @Published var warningMessage: String?
@@ -181,9 +183,11 @@ final class AppState: ObservableObject {
         dictationArchiveStore: DictationArchiveStore = JSONLDictationArchiveStore(),
         dictationRecoveryStore: DictationRecoveryStore = FileDictationRecoveryStore(),
         localModels: LocalModelController = LocalModelController(),
+        cleanupModels: LocalModelController = LocalModelController(runtime: BundledLocalCleanupRuntime(), manifests: [LocalCleanupCatalog.manifest]),
         runtime: any AppRuntime = MacOSAppRuntime()
     ) {
         self.localModels = localModels
+        self.cleanupModels = cleanupModels
         self.runtime = runtime
         self.audioRecorder = audioRecorder
         self.settingsStore = settingsStore
@@ -210,6 +214,7 @@ final class AppState: ObservableObject {
         self.appSettings = loadedSettings
         self.usageSnapshot = loadedUsageSnapshot
         self.cleanupEnabled = loadedSettings.cleanupEnabled
+        self.localCleanupEnabled = loadedSettings.localCleanupEnabled
         self.personalOpenAIFallbackEnabled = loadedSettings.personalOpenAIFallbackEnabled
         self.personalOpenAIDirectModeEnabled = loadedSettings.personalOpenAIDirectModeEnabled
         self.dictationArchiveEnabled = loadedSettings.dictationArchiveEnabled
@@ -254,6 +259,8 @@ final class AppState: ObservableObject {
         cleanupStaleTemporaryAudio()
         loadRecoveryRecordings(markProcessingAsInterrupted: true)
         configureHotkey()
+        cleanupModels.onChange = { [weak self] in self?.notifyStateChanged() }
+        if !cleanupModels.runtime.supportedModels.isEmpty { Task { await cleanupModels.refresh() } }
         localModels.onChange = { [weak self] in self?.notifyStateChanged() }
         // No model files or stores are created by readiness discovery.
         if !localModels.runtime.supportedModels.isEmpty { Task { await localModels.refresh() } }
@@ -270,7 +277,7 @@ final class AppState: ObservableObject {
     }
 
     var canStart: Bool {
-        !isRecording && !isProcessing && !localModels.isBusy && !isConnectionTesting && !isLocalPasteTesting && !isDeliveringDraft
+        !isRecording && !isProcessing && !cleanupModels.isBusy && !localModels.isBusy && !isConnectionTesting && !isLocalPasteTesting && !isDeliveringDraft
     }
 
     func beginLocalPasteTest() -> Bool {
@@ -353,7 +360,11 @@ final class AppState: ObservableObject {
         )
     }
 
+    var effectiveCleanupEnabled: Bool { appSettings.effectiveCleanupEnabled }
+    var isLocalCleanupApplied: Bool { appSettings.localCleanupEnabled }
+
     var cleanupDestinationSummary: String {
+        if appSettings.localCleanupEnabled { return "On this Mac · Qwen3.5-4B" }
         if isLocalTranscriptionApplied { return "Off — text stays on this Mac" }
         return effectiveDestination(
             baseURL: appSettings.providerConfiguration.baseURL,
@@ -426,6 +437,7 @@ final class AppState: ObservableObject {
     }
 
     var editedCleanupDestinationSummary: String {
+        if localCleanupEnabled { return "On this Mac · Qwen3.5-4B" }
         if transcriptionBackend == .local { return "Off — text stays on this Mac" }
         return "\(baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(cleanupPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
     }
@@ -717,6 +729,7 @@ final class AppState: ObservableObject {
     }
 
     var needsConnectionSetup: Bool {
+        if appSettings.localCleanupEnabled && (!cleanupModels.installed.contains(.qwenCleanup) || !cleanupModels.runtime.supportedModels.contains(.qwenCleanup)) { return true }
         if isLocalTranscriptionApplied {
             return !localModels.installed.contains(appSettings.localModel)
                 || !localModels.runtime.supportedModels.contains(appSettings.localModel)
@@ -800,6 +813,7 @@ final class AppState: ObservableObject {
         cancelConnectionTest()
         do {
             let settings = try settingsFromDraft()
+            if settings.localCleanupEnabled { try validateLocalCleanupReady() }
             if settings.transcriptionBackend == .local {
                 guard !localModels.isBusy else { throw LocalModelError.busy }
                 guard localModels.runtime.supportedModels.contains(settings.localModel) else { throw LocalModelError.runtimeUnavailable }
@@ -934,7 +948,7 @@ final class AppState: ObservableObject {
     }
 
     func setCleanupEnabled(_ isEnabled: Bool) {
-        guard !isLocalTranscriptionApplied else { return }
+        guard !isLocalTranscriptionApplied, !appSettings.localCleanupEnabled else { return }
         cleanupEnabled = isEnabled
         var updatedSettings = appSettings
         updatedSettings.cleanupEnabled = isEnabled
@@ -1202,6 +1216,7 @@ final class AppState: ObservableObject {
     }
 
     func prepareForTermination() {
+        cleanupModels.cancel()
         localModels.cancel()
         cancelConnectionTest()
         stopElapsedTimer()
@@ -1279,6 +1294,7 @@ final class AppState: ObservableObject {
             var settings = appSettings // Preserve all inactive remote choices.
             settings.transcriptionBackend = .local
             settings.localModel = localModel
+            settings.localCleanupEnabled = localCleanupEnabled
             guard let minutes = TimeInterval(maxAudioDurationMinutesText) else { throw SettingsValidationError.invalidMaxAudioDuration }
             settings.maxAudioDurationSeconds = minutes * 60
             let language = transcriptionLanguageText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1315,6 +1331,7 @@ final class AppState: ObservableObject {
             providerConfiguration: configuration,
             transcriptionBackend: transcriptionBackend,
             localModel: localModel,
+            localCleanupEnabled: localCleanupEnabled,
             personalOpenAIFallbackEnabled: personalOpenAIFallbackEnabled,
             personalOpenAIDirectModeEnabled: personalOpenAIFallbackEnabled
                 && personalOpenAIDirectModeEnabled,
@@ -1355,6 +1372,7 @@ final class AppState: ObservableObject {
     private func validateSettingsBeforeDictation() -> Bool {
         do {
             try AppSettingsValidator.validate(appSettings)
+            if appSettings.localCleanupEnabled { try validateLocalCleanupReady() }
             if isLocalTranscriptionApplied {
                 guard localModels.runtime.supportedModels.contains(appSettings.localModel) else { throw LocalModelError.runtimeUnavailable }
                 guard localModels.installed.contains(appSettings.localModel) else { throw LocalModelError.notInstalled }
@@ -1862,6 +1880,9 @@ final class AppState: ObservableObject {
                 throw error
             }
             try Task.checkCancellation()
+            if settings.localCleanupEnabled {
+                return try await prepareLocalCleanup(transcript: transcript, settings: settings)
+            }
             return PreparedDraft(rawTranscript: transcript, finalDraft: transcript,
                 cleanupWasEnabled: false, cleanupFallbackUsed: false,
                 transcriptionSettings: settings, cleanupSettings: nil)
@@ -2068,11 +2089,44 @@ final class AppState: ObservableObject {
         )
     }
 
+    private func validateLocalCleanupReady() throws {
+        guard !cleanupModels.isBusy else { throw LocalModelError.busy }
+        guard cleanupModels.runtime.supportedModels.contains(.qwenCleanup) else { throw LocalModelError.runtimeUnavailable }
+        guard cleanupModels.installed.contains(.qwenCleanup) else { throw LocalModelError.notInstalled }
+    }
+
+    private func prepareLocalCleanup(transcript: String, settings: AppSettings) async throws -> PreparedDraft {
+        var settings = settings
+        settings.localCleanupEnabled = true
+        status = "Cleaning up on this Mac"
+        usageSnapshot.recordCleanupRequest(); saveUsageSnapshot()
+        let dictionary = loadPersonalDictionaryForCleanup()
+        do {
+            let finalDraft = try await cleanupModels.cleanup(transcript: transcript, dictionary: dictionary)
+            try Task.checkCancellation()
+            return PreparedDraft(rawTranscript: transcript, finalDraft: finalDraft,
+                cleanupWasEnabled: true, cleanupFallbackUsed: false,
+                transcriptionSettings: settings, cleanupSettings: settings)
+        } catch {
+            if ProviderRetryPolicy.isCancellation(error) { throw CancellationError() }
+            warningMessage = combinedWarning(warningMessage, "Local cleanup failed; using raw transcript. The recording remains available for retry.")
+            usageSnapshot.recordCleanupFallback(); saveUsageSnapshot()
+            lastFailureCategory = "local cleanup failed"
+            recordDiagnostic("local cleanup failed; using raw transcript")
+            return PreparedDraft(rawTranscript: transcript, finalDraft: transcript,
+                cleanupWasEnabled: true, cleanupFallbackUsed: true,
+                transcriptionSettings: settings, cleanupSettings: nil)
+        }
+    }
+
     private func prepareDraft(
         from transcription: TranscriptionOutcome,
         primarySettings: AppSettings
     ) async throws -> PreparedDraft {
         let rawTranscript = transcription.transcript
+        if primarySettings.localCleanupEnabled {
+            return try await prepareLocalCleanup(transcript: rawTranscript, settings: transcription.settings)
+        }
         guard primarySettings.effectiveCleanupEnabled else {
             recordDiagnostic("cleanup skipped")
             return PreparedDraft(
@@ -2467,7 +2521,7 @@ final class AppState: ObservableObject {
                 settings: transcriptionSettings
             ),
             cleanupProviderLabel: cleanupSettings.map {
-                providerLabel(model: $0.providerConfiguration.cleanupModel, settings: $0)
+                $0.localCleanupEnabled ? "On this Mac / Qwen3.5-4B" : providerLabel(model: $0.providerConfiguration.cleanupModel, settings: $0)
             },
             transcriptionLanguage: TranscriptionLanguageNormalizer.apiValue(from: settings.transcriptionLanguage),
             rawWordCount: DictationWordCounter.count(in: rawTranscript),

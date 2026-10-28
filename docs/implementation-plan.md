@@ -1,5 +1,10 @@
 # Implementation Plan
 
+Approved local Qwen3.5-4B cleanup is active under `features/local-cleanup/spec.md`
+and `runs/active/local-cleanup.md`; candidate installation and human quality smoke
+precede integration/public release. This is implementation work, not an unapproved
+provider proposal.
+
 This plan contains only remaining candidate work and delivery dependencies.
 Current release state and the single next action live in `docs/project-status.md`.
 Completed milestone history is retained in

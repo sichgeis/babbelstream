@@ -196,7 +196,10 @@ if [[ -n "$DMG_CODESIGN_IDENTITY" ]]; then
   codesign --verify --verbose=2 "$DMG_PATH"
 fi
 
-shasum -a 256 "$DMG_PATH" > "$DMG_PATH.sha256"
+(
+  cd "$(dirname "$DMG_PATH")"
+  shasum -a 256 "$(basename "$DMG_PATH")" > "$(basename "$DMG_PATH").sha256"
+)
 
 echo "Built $DMG_PATH"
 echo "Checksum $DMG_PATH.sha256"
