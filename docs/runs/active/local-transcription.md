@@ -30,8 +30,8 @@ Human microphone/Slack smoke remains the next release gate.
   claimed built or shippable; default capabilities/downloads enable only Parakeet.
 - Model catalog pins immutable public revisions, exact lengths and SHA-256.
   No runtime catalog query or silent update. No weight files enter Git/DMG.
-- Native loading uses exact local-directory APIs under OS network denial.
-  Upstream console output is suppressed; bounded private result pipe; process
+- Native loading uses exact local-directory APIs under OS network denial. The saved language hint is passed explicitly; blank retains automatic multilingual decoding.
+  Upstream console output and all used Unified Logging levels are suppressed; bounded private result pipe; process
   kill on cancellation. One cold helper invocation per request; no background daemon.
 - Local mode bypasses keys, cloud cleanup, Mini hedge and personal fallback.
   Remote settings persist. Unknown saved choices fail closed rather than redirect.
@@ -44,7 +44,7 @@ Human microphone/Slack smoke remains the next release gate.
 2. Backend settings/coordinator — complete; fixture routing/snapshot/recovery/cancel checks pass.
 3. Verified model management/native inference — complete for Parakeet; real synthetic integration passes.
 4. Settings/onboarding/HUD/docs — complete; native minimum-size preview inspected.
-5. Final canonical checks/feature push/candidate packaging — in progress.
+5. First clean candidate packaged; final logging/process-boundary follow-up validation in progress.
 6. Human microphone/Slack acceptance and final release — pending, separately gated.
 
 ## Validation Evidence
@@ -73,8 +73,11 @@ changed or inspected; the daily installation is untouched.
 ## Release Evidence
 
 Candidate target: 0.6.0/build 12. Final release/tag/main publication: none.
-Candidate source commit, checksum and package validation will be recorded after
-packaging from the clean implementation commit.
+Initial implementation `0967c60` is pushed. Its clean candidate packaged and
+passed signature/DMG integrity checks. Final review added explicit upstream
+Unified Logging suppression and early-helper-exit/process-cancellation checks;
+full canonical checks and a focused final native-helper rebuild pass; these
+changes will be committed and repackaged before handoff.
 
 ## Current Blocker
 
@@ -83,4 +86,4 @@ and separate native/resource/license/performance validation.
 
 ## Next Action
 
-Commit/push the validated implementation and package the clean candidate.
+Commit/push the final logging/process follow-up and rebuild the clean candidate.

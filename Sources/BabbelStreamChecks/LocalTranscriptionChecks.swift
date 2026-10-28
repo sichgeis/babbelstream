@@ -47,6 +47,22 @@ func runLocalTranscriptionChecks() async throws {
     for value in ["http://cdn.example.com/file", "https://user:password@cdn.example.com/file", "file:///tmp/model"] {
         localCheck(!LocalModelDownloadPolicy.permits(URL(string: value)!), "Insecure or credential-bearing model downloads are rejected.")
     }
+    let processRoot = FileManager.default.temporaryDirectory.appendingPathComponent("LocalProcessChecks-\(UUID())")
+    try FileManager.default.createDirectory(at: processRoot, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: processRoot) }
+    let helper = processRoot.appendingPathComponent("synthetic-helper")
+    try Data("#!/bin/sh\nexit 1\n".utf8).write(to: helper)
+    try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: helper.path)
+    let fixtureRuntime = BundledLocalSpeechRuntime(executable: helper, supportedModels: [.parakeetUltra])
+    do { try await fixtureRuntime.prepare(model: .parakeetUltra, directory: processRoot); fatalError("Early helper exit accepted.") }
+    catch LocalModelError.inferenceFailed {}
+    try Data("#!/bin/sh\nexec /bin/sleep 30\n".utf8).write(to: helper)
+    let process = Task { try await fixtureRuntime.prepare(model: .parakeetUltra, directory: processRoot) }
+    try await Task.sleep(nanoseconds: 100_000_000)
+    let cancelStarted = Date()
+    process.cancel()
+    do { try await process.value; fatalError("Native process cancellation must throw.") } catch is CancellationError {}
+    localCheck(Date().timeIntervalSince(cancelStarted) < 3, "Cancellation must reap the native helper promptly.")
     let model = fixtureModelManifest()
     let root = FileManager.default.temporaryDirectory.appendingPathComponent("LocalModelChecks-\(UUID())")
     defer { try? FileManager.default.removeItem(at: root) }

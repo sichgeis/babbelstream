@@ -85,6 +85,11 @@ private final class LocalSpeechInvocation: @unchecked Sendable {
             DispatchQueue.global(qos: .utility).async { [self] in
                 do {
                     let input = Pipe(), output = Pipe()
+                    // A helper may reject launch before reading stdin. Avoid a
+                    // process-wide SIGPIPE when writing its small request pipe.
+                    guard fcntl(input.fileHandleForWriting.fileDescriptor, F_SETNOSIGPIPE, 1) != -1 else {
+                        throw LocalModelError.inferenceFailed
+                    }
                     process.standardInput = input; process.standardOutput = output
                     lock.lock()
                     if canceled { lock.unlock(); throw CancellationError() }

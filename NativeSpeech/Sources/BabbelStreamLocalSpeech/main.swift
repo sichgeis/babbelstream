@@ -19,6 +19,10 @@ struct Response: Encodable { let text: String?; let error: String? }
 @main
 struct LocalSpeechMain {
     static func main() async {
+        // Redirecting stderr alone does not suppress Unified Logging. This pinned
+        // dependency has no fault-level call sites; drop every used log level.
+        AppLogger.minimumLevel = .fault
+        AppLogger.mirrorsToConsole = false
         let resultFD = dup(STDOUT_FILENO)
         let sink = open("/dev/null", O_WRONLY)
         dup2(sink, STDOUT_FILENO)
@@ -41,7 +45,8 @@ struct LocalSpeechMain {
                     let manager = AsrManager(config: .default)
                     try await manager.loadModels(models)
                     var decoder = try TdtDecoderState()
-                    text = try await manager.transcribe(URL(fileURLWithPath: audio), decoderState: &decoder).text
+                    text = try await manager.transcribe(URL(fileURLWithPath: audio), decoderState: &decoder,
+                        language: Language(rawValue: request.language)).text
                 } else { text = "" }
             #if BABBELSTREAM_MLX
             case "qwen3ASR":
