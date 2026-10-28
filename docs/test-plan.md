@@ -335,5 +335,7 @@ store, key or clipboard. Synthetic English and German speech passed on 2026-10-2
 this proves integration only, not real speech quality or mixed-language behavior.
 Minimum-size Provider layout and canceled download confirmation were inspected in
 an isolated native preview. Qwen selection showed its disabled download and
-runtime guidance. Human microphone/Slack, offline relaunch, 10-minute memory,
-mixed-language quality and other-host coverage remain pending.
+runtime guidance. On 2026-10-28 the maintainer reported successful English and
+German smoke tests on installed 0.6.0/build 12/eb6720b. No dictated content is
+stored as evidence. Individual editor/paste/recovery cases, offline relaunch,
+10-minute memory, mixed-language quality and other-host coverage remain pending.

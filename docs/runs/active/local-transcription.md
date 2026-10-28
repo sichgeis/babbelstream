@@ -19,7 +19,9 @@ No private content, API credential, microphone, system clipboard, main/tag or
 release publication is authorized/claimed here. On 2026-10-28 the maintainer
 subsequently explicitly requested local candidate installation and launch; that
 installation gate is now authorized and complete.
-Human microphone/Slack smoke remains the next release gate.
+On 2026-10-28 the maintainer reported successful English and German smoke
+tests on the installed candidate. No transcript is retained here. Main/tag and
+public release remain outside the currently authorized implementation envelope.
 
 ## Decisions
 
@@ -47,7 +49,7 @@ Human microphone/Slack smoke remains the next release gate.
 3. Verified model management/native inference — complete for Parakeet; real synthetic integration passes.
 4. Settings/onboarding/HUD/docs — complete; native minimum-size preview inspected.
 5. Final canonical checks, feature pushes and clean candidate packaging — complete.
-6. Human microphone/Slack acceptance and final release — pending, separately gated.
+6. Maintainer-reported English/German smoke acceptance — passed 2026-10-28; broader matrix and final release pending.
 
 ## Validation Evidence
 
@@ -65,11 +67,13 @@ Human microphone/Slack smoke remains the next release gate.
 | Native UI | Minimum-size local Provider pane, download confirmation/cancel and disabled Qwen download inspected through CUA in fixture-only preview; preview closed |
 | Full canonical final check | Pass after final code changes; app, executable checks, native helper and all tooling fixtures pass |
 | Candidate package | Pass from clean eb6720b: app/helper signatures, version/build/source, DMG integrity and portable checksum |
-| Real microphone / Slack | Not run; human gate |
+| Human English/German smoke | Maintainer reported both successful on 2026-10-28; editor and individual paste/recovery cases were not specified |
 
 Synthetic voices are not real speech-quality acceptance. Mixed-language technical
 accuracy, long-form peak memory, latency with other apps open, other-host layout
-and real permission/editor behavior remain unproven. Candidate preparation left
+and the wider permission/editor/recovery matrix remain unproven. The maintainer
+reported successful English and German dictation; this does not establish every
+manual matrix case. Candidate preparation left
 the daily installation untouched; the subsequently requested installation is
 recorded below.
 
@@ -100,8 +104,11 @@ recorded below.
 - Old app retained at `dist/rollback/BabbelStream-0.5.3-2bc2752a.app`. No settings,
   Keychain entries, recordings, dictionary or archive were changed by installation.
   No quarantine removal, permission reset or signing change was performed.
-- Real microphone/Slack test, main integration, tag and public release remain
-  pending. Tracker remains active for the human gate.
+- Maintainer-reported English and German smoke tests passed on 2026-10-28.
+  No dictated text/audio was saved to the repository. Mixed-language, explicit
+  offline relaunch, long-form memory and manual cancellation/recovery remain
+  unverified. Main integration, tag and public release remain pending; the
+  tracker stays active for release finalization.
 
 ## Current Blocker
 
@@ -110,6 +117,5 @@ and separate native/resource/license/performance validation.
 
 ## Next Action
 
-Have the maintainer select Provider → On this Mac → Parakeet Ultra in the
-running installed candidate, confirm Download and Prepare, Apply, then report real
-English/German/mixed unsent Slack dictation and cancellation/recovery results.
+Obtain maintainer direction for main/tag/public release finalization, retaining
+the recorded English/German acceptance and the explicitly unverified wider matrix.
