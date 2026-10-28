@@ -17,7 +17,7 @@ Work paused on request before changes, resumed explicitly on 2026-10-28.
 1. Runtime/model verification: completed.
 2. Settings, UI, coordinator and fixture checks: completed.
 3. Synthetic native quality/memory, full checks and privacy review: completed.
-4. Clean candidate, feature push, installation verification: pending.
+4. Clean candidate, feature push, installation verification: completed.
 5. Human smoke: pending.
 
 ## Decisions
@@ -43,8 +43,32 @@ the existing prompt context budget and tested against cascades/partial words/pat
 Source and unstripped optimized native helper privacy scans passed. No real
 microphone content or user stores used for automated validation.
 
+## Release Evidence
+- Clean app source: `ad061304b44f8ede3044dd1fd8dd5b7b628cd36f`, pushed on the feature branch.
+- Candidate: `dist/BabbelStream-0.6.0-candidate.13-ad06130.dmg` plus portable checksum.
+- SHA-256: `00d02842d7e32a32f101592c32b995c04a32cdf8252cd8332aa8876d7127c4f7`.
+- Installed/running: Applications, version 0.6.0, build 13, source `ad06130`, candidate/ad-hoc.
+- Exact signed packaged cleanup helper passes all six synthetic checks; packaged
+  Parakeet passes synthetic German again. All 11 mounted app payload files,
+  attributes, source/history and both stripped native binaries pass privacy scans.
+- DMG integrity/checksum, app and helper signatures, installed/source byte equality pass.
+- Previous build 12 app preserved under ignored `dist/rollback/` before replacement.
+- Verified weights copied into private managed storage with exact hash/size,
+  preparation under network denial and ready marker; only the new model directory added.
+- Installed UI reports Prepared; enabled local cleanup and explicitly Applied.
+  Active cleanup destination is On this Mac / Qwen3.5-4B. Existing remote speech
+  stays selected. No real provider request, microphone capture or paste was made.
+- Prior human English/German speech outcomes are retained, but the currently
+  selected remote backend means they do not independently prove local ASR quality.
+- Installed Diagnostics confirms exact version/commit. General reports microphone
+  Not requested and Accessibility Not allowed for this rebuild. Permission controls
+  are left visible; no grants, TCC resets or quarantine changes were performed.
+- Temporary installer QA initially stopped before replacement because this Python
+  lacks xattr bindings; native xattr inspection then passed and installation completed.
+- Main/tag/public publication remain untouched. The human cleanup smoke is pending.
+
 ## Blocker
-None.
+No implementation blocker. Human permission reapproval and cleanup smoke remain.
 
 ## Next Action
-Commit and push the clean candidate source, then package and verify build 13.
+Obtain the maintainer's English/German/mixed cleanup smoke result after permission reapproval.

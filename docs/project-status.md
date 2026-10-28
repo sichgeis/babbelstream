@@ -11,7 +11,7 @@ validation and release procedure remain in their dedicated specifications.
 - Privacy evidence: source/history scans and complete mounted-payload/attribute scans find zero known private matches. Debug maps are stripped before signing; Finder metadata uses a neutral backing-image path.
 - Release/cask evidence: `docs/runs/archive/release-v0.5.3.md`. This is the explicitly approved optimized ad-hoc, non-notarized pilot. Developer ID/notarization remains a separate channel.
 - Older 0.5.1/0.5.2 installers and checksum assets remain withdrawn; their sanitized notes/tags remain historical. Local copies and backup mirrors are unchanged.
-- No app installation or upgrade was performed for this release. Last reported installed copy remains the previously verified 0.5.1; no new native workflow validation is claimed here.
+- No app installation or upgrade was performed for the 0.5.3 release. The current authorized candidate installation is recorded under Active Work below.
 - Supported workflow remains tap/hold Control + Option + Space into Slack and other focused macOS text fields; no auto-send. Saved routing choices persist; direct pre-routing LiteLLM upgrades require one explicit routing selection.
 - Canonical `task check`, full-payload privacy/signature/integrity checks, independent public-download verification and Homebrew recipe style/strict audit pass.
 
@@ -22,8 +22,15 @@ stacked on the local speech pilot. Contract: `docs/features/local-cleanup/spec.m
 execution: `docs/runs/active/local-cleanup.md`. Verified native Metal inference
 works without Xcode/Ollama. Settings, download management, no-cloud cleanup,
 recovery and cancellation fixture checks pass. Synthetic multilingual preservation
-passes after strengthening the local prompt. Candidate installation is in progress;
-human cleanup smoke and final main/tag/public release remain pending.
+passes after strengthening the local prompt and enforcing explicit dictionary
+spellings. Clean 0.6.0/build 13/source `ad06130` is installed and running from
+Applications, with the verified 2.74 GB cleanup model prepared and local cleanup
+enabled through Settings. Existing remote transcription remains selected. The
+exact packaged cleanup/Parakeet helpers, mounted payload privacy, signatures,
+portable checksum and byte identity pass. Human cleanup smoke and final
+main/tag/public release remain pending. macOS reports microphone Not requested
+and Accessibility Not allowed for this rebuilt app; native grant/paste acceptance
+is a human gate. General Settings is open at the permission controls.
 
 Local transcription is approved and implemented on `codex/local-transcription`
 for a 0.6.0/build 12 Parakeet pilot candidate. Contract:
@@ -79,5 +86,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Finish local cleanup candidate installation and obtain the maintainer's cleanup
-smoke result before main/tag/public release finalization.
+Obtain the maintainer's English/German/mixed local-cleanup smoke result after
+permission reapproval, before main/tag/public release finalization.
