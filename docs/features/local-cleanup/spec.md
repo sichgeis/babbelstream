@@ -1,14 +1,14 @@
 # Local Cleanup Specification
 
 ## Status
-Released locally as 0.6.0/build 14, annotated v0.6.0, on 2026-10-28 after
+Released as 0.6.0/build 14, annotated v0.6.0, on 2026-10-28 after
 accepted fully local smoke. The maintainer selected Qwen3.5-4B with a downloadable
-model. Public installer/Homebrew publication awaits the second-Mac test.
+model. Public installer/Homebrew publication was authorized on 2026-10-29.
 
 Implemented in 0.6.0/build 13 candidate (`ad06130`); the maintainer accepted
 fully local German technical dictation with Parakeet and Qwen cleanup on 2026-10-28.
 The maintainer authorized main/tag/final build/local installation of 0.6.0 on
-2026-10-28. Public installer publication and Homebrew await the second-Mac test.
+2026-10-28; public installer publication and Homebrew were authorized on 2026-10-29.
 
 ## Problem And Outcome
 Local speech currently produces raw text. Offer optional light cleanup on this
@@ -76,5 +76,7 @@ are protected. This addresses small-model failure to copy preferred spelling.
 
 The maintainer accepted the fully local Parakeet/Qwen smoke and explicitly
 authorized main integration, annotated v0.6.0, final build and local installation.
-Public GitHub release/assets and Homebrew updates await the second-Mac test.
+Public GitHub release/assets and Homebrew updates were subsequently authorized
+on 2026-10-29; publication and second-Mac upgrade evidence is in
+`../../runs/archive/homebrew-v0.6.0.md`. Real second-Mac dictation remains unclaimed.
 Release evidence: `../../runs/archive/release-v0.6.0.md`.

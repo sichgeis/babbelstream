@@ -341,8 +341,9 @@ separately and never included in the DMG.
 
 After accepting fully local Parakeet/Qwen dictation on 2026-10-28, the maintainer
 explicitly authorized main, annotated v0.6.0, final build 14 and local installation.
-Public GitHub installer publication and Homebrew changes are withheld until the
-second-Mac test. Use the existing ad-hoc optimized pipeline from the exact tag:
+Public GitHub installer publication and Homebrew changes were initially withheld
+until the second-Mac test; the subsequent 2026-10-29 authority below supersedes
+that deferral. Use the existing ad-hoc optimized pipeline from the exact tag:
 
 ```sh
 BUILD_MODE=candidate DMG_LAYOUT=finder CODESIGN_IDENTITY=- DMG_CODESIGN_IDENTITY=- DMG_NAME=BabbelStream-0.6.0.dmg scripts/package-dmg.sh
@@ -352,3 +353,17 @@ The internal candidate build-mode label accurately describes ad-hoc signing; the
 clean main commit, final version/build and annotated tag establish local release
 provenance. Keep the canonical DMG/checksum local, preserve rollback and all user
 stores, launch the Applications copy and verify exact source metadata.
+
+
+## 0.6.0 Homebrew Publication Authority (2026-10-29)
+
+The maintainer explicitly requested releasing the existing 0.6.0 tag through the
+tap and installation on the second Mac. This supersedes the earlier publication
+deferral without claiming a new microphone/provider quality result. The exact
+clean tag was rebuilt with the approved polished ad-hoc pipeline. The first public
+0.6.0 DMG/checksum are immutable; the earlier local-only artifact is historical.
+Canonical checks, complete payload/privacy/signature checks, draft and anonymous
+public downloads, cask style/strict audit and the 0.5.3-to-0.6.0 Homebrew upgrade
+passed. Normal launch and installed provenance pass with quarantine intact.
+Permission/Keychain continuity and real dictation remain user validation.
+Evidence: `runs/archive/homebrew-v0.6.0.md`.

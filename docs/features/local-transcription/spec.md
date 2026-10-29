@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Released locally in 0.6.0/build 14; public rollout awaits the second-Mac test.
+- State: Released in 0.6.0/build 14; public DMG/tap publication authorized on 2026-10-29.
 - Owner: maintainer.
 - Approved: 2026-10-28 conversation, autonomous implementation through candidate.
 - Follow-up: maintainer selected Parakeet first and explicitly deferred Qwen/Granite
@@ -174,5 +174,7 @@ real microphone/Slack testing, main integration, final tag and public release.
 
 The maintainer accepted the fully local Parakeet/Qwen smoke and explicitly
 authorized main integration, annotated v0.6.0, final build and local installation.
-Public GitHub release/assets and Homebrew updates await the second-Mac test.
+Public GitHub release/assets and Homebrew updates were subsequently authorized
+on 2026-10-29; publication and second-Mac upgrade evidence is in
+`../../runs/archive/homebrew-v0.6.0.md`. Real second-Mac dictation remains unclaimed.
 Release evidence: `../../runs/archive/release-v0.6.0.md`.

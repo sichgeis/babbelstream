@@ -222,3 +222,15 @@ main documentation integration and pilot closeout. Initial public install/reinst
 and user dictation passed. Untested genuine upgrade, uninstall retention and rollback
 cases remain in docs/implementation-plan.md; closeout does not mark them passed.
 Archived execution evidence: `docs/runs/archive/homebrew-distribution.md`.
+
+
+## First Real Upgrade (2026-10-29)
+
+The maintainer explicitly authorized public 0.6.0 publication and Homebrew
+installation on the second Mac. Full checks and independently downloaded exact
+release bytes were verified before tap advancement. Homebrew 7.0.11 upgraded
+0.5.3 to 0.6.0 on arm64/macOS 27.0.1 after normal quit; installed bytes, source,
+signature, preserved quarantine and normal process launch passed. Existing app
+and interrupted local tap work were backed up. Real permission/Keychain behavior,
+local microphone quality, uninstall retention and rollback execution remain
+unclaimed. Evidence: `../../runs/archive/homebrew-v0.6.0.md`.

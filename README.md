@@ -8,11 +8,11 @@ and filler words. **BabbelStream never presses Enter or sends your message.**
 
 ## Install
 
-**0.5.3 · Apple Silicon · macOS 13+ · Non-notarized pilot**
+**0.6.0 · Apple Silicon · macOS 13+ · Non-notarized pilot**
 
-You’ll need an approved OpenAI-compatible provider and your own API key; provider
-charges may apply. Microphone access enables recording; Accessibility enables
-automatic paste.
+Remote dictation needs an approved OpenAI-compatible provider and your own API
+key; provider charges may apply. Optional local models need macOS 14+ and no API
+key. Microphone access enables recording; Accessibility enables automatic paste.
 
 This pilot is ad-hoc signed, not notarized by Apple. Use **Privacy & Security →
 Open Anyway** where permitted. Managed Macs may require IT approval.
@@ -31,18 +31,20 @@ backup first. [Installation guidance →](docs/getting-started.md)
 
 ### DMG
 
-Download the [DMG](https://github.com/sichgeis/babbelstream/releases/download/v0.5.3/BabbelStream-0.5.3.dmg)
-and [checksum](https://github.com/sichgeis/babbelstream/releases/download/v0.5.3/BabbelStream-0.5.3.dmg.sha256).
+Download the [DMG](https://github.com/sichgeis/babbelstream/releases/download/v0.6.0/BabbelStream-0.6.0.dmg)
+and [checksum](https://github.com/sichgeis/babbelstream/releases/download/v0.6.0/BabbelStream-0.6.0.dmg.sha256).
 In their download folder, verify:
 
 ```sh
-shasum -a 256 -c BabbelStream-0.5.3.dmg.sha256
+shasum -a 256 -c BabbelStream-0.6.0.dmg.sha256
 ```
 
 Quit the old app, open the DMG, drag BabbelStream into Applications, and launch
 that copy. Eject the image afterward. Source ZIP/tar archives are not installers.
 
 ### Optional manual installation helper (pilot)
+
+The helper currently targets 0.5.3. Use Homebrew or the DMG above for 0.6.0.
 
 **Notice:** This helper removes quarantine from a verified temporary app copy
 only after your consent, bypassing its quarantine-based first-open check. It
@@ -211,8 +213,8 @@ failure returns raw text with a warning and preserves audio for retry.
 Remote settings remain available when switching back. Remove Model deletes only
 that model; Failed Recordings and other app data are preserved.
 
-The local 0.6.0 release includes accepted on-device dictation and cleanup. Public
-installer publication and Homebrew advancement await the second-Mac test. Qwen-ASR and Granite
+The public 0.6.0 release includes accepted on-device dictation and cleanup,
+available through the DMG and Homebrew tap. Qwen-ASR and Granite
 are listed as deferred choices with downloads disabled in this pilot. Building
 the default helper requires Swift 6.2+; building deferred MLX support additionally
 requires Xcode's Metal toolchain and separate validation.
