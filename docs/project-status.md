@@ -33,11 +33,13 @@ step. Organization-specific values are excluded from this public repository.
 
 The approved optional manual download/install/update helper is implemented and
 integrated on main. Contract: `docs/features/manual-install-helper/spec.md`;
-tracker: `docs/runs/active/manual-install-helper.md`. It reuses 0.5.3 unchanged,
+tracker: `docs/runs/active/manual-install-helper.md`. It selects the verified
+public 0.6.0/build 14/c36c28c artifact using refreshed pins on main,
 requires exact consent before removing quarantine from a verified staged app,
 and opens the illustrated installer for manual Finder installation. The maintainer
 explicitly authorized main integration before the remaining visual/managed-Mac
 pilot. Managed-device installation and launch remain unproven.
+Installer alignment work is tracked in `docs/runs/active/installer-current-release.md`.
 Earlier scrub/release work remains closed in its archived runs.
 
 ## Known Limitations And Deferred Follow-Ups

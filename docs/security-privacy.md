@@ -27,7 +27,9 @@ deleted; users enter an approved personal key in the app. Other preferences are
 preserved. Private temporary preference backups are removed on success/rollback;
 failed rollback explicitly retains a private recovery snapshot. See
 `features/installer-provider-configuration/spec.md`. Downloads disclose
-ordinary connection metadata to GitHub only. See
+ordinary connection metadata to GitHub only. Download/update runs also check
+GitHub's latest stable release redirect and stop on stale pins or an unavailable
+check. The redirect cannot authorize different payloads or update trust pins. See
 `features/manual-install-helper/spec.md`; endpoint rejection requires IT follow-up.
 
 - Audio: temporary while recording, then safeguarded under Application Support before provider processing. Delete immediately after transcription and any enabled cleanup succeed. Preserve failed, canceled-after-stop, or interrupted processing until retry succeeds or the user explicitly deletes it.

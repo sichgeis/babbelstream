@@ -10,6 +10,7 @@ tasks:
       - scripts/build-local-cleanup.sh
       - scripts/check-release-tooling.sh
       - python3 scripts/test-downloaded-install.py
+      - python3 scripts/test-installer-release.py
       - python3 scripts/check-public-hygiene.py
       - python3 scripts/test-public-hygiene.py
 
@@ -17,6 +18,11 @@ tasks:
     desc: Build the local macOS app bundle into dist/
     cmds:
       - scripts/build-app.sh
+
+  installer:check-release:
+    desc: Check pinned installer against latest public release and current app sources (network required)
+    cmds:
+      - python3 scripts/check-installer-release.py
 
   app:install-dev:
     desc: Build a DMG and open the drag-to-Applications installer

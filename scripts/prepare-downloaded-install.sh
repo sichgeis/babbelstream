@@ -4,12 +4,12 @@ set -euo pipefail
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 umask 077
 
-VERSION=0.5.3
-BUILD=11
-SOURCE=b9c0641
-SHA256=41b8aed841824c66862b65a11c576364300e3cbd07760370e81f76b77a6a99a2
-CDHASH=8ae6266b8ce2389dd4b6f356fc8a66c120b7c85c
-RELEASE_URL=https://github.com/sichgeis/babbelstream/releases/download/v0.5.3/BabbelStream-0.5.3.dmg
+VERSION=0.6.0
+BUILD=14
+SOURCE=c36c28c
+SHA256=2752d399f5b1575be0a0ed9e5e8bb107a8b6b029584c196653c7a9db66f98ce4
+CDHASH=cfab070efd8afedb6fad882575b7ad2db29b68c3
+RELEASE_URL=https://github.com/sichgeis/babbelstream/releases/download/v0.6.0/BabbelStream-0.6.0.dmg
 verify_only=false
 download=false
 update=false
@@ -68,6 +68,18 @@ if ! $verify_only; then
   if pgrep -x BabbelStream >/dev/null; then
     fail 'Quit BabbelStream normally, then run the helper again. No processes were stopped.'
   fi
+fi
+
+# The current main helper carries reviewed trust pins. Latest-release metadata
+# may reject stale pins, but must never select unverified replacement bytes.
+if $download; then
+  latest_url="$(curl --head --silent --show-error --fail --location \
+    --proto '=https' --proto-redir '=https' --tlsv1.2 \
+    --connect-timeout 20 --max-time 60 --output /dev/null --write-out '%{url_effective}' \
+    https://github.com/sichgeis/babbelstream/releases/latest)" \
+    || fail 'Could not check the latest public release. Try again later; nothing was changed.'
+  [[ "$latest_url" == "https://github.com/sichgeis/babbelstream/releases/tag/v$VERSION" ]] \
+    || fail 'This helper is behind the latest public release or release metadata is unexpected. Get the current helper from main; if it still fails, contact the maintainer to refresh verified pins. Nothing was changed.'
 fi
 
 already_current=false

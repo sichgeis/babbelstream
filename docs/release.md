@@ -367,3 +367,30 @@ public downloads, cask style/strict audit and the 0.5.3-to-0.6.0 Homebrew upgrad
 passed. Normal launch and installed provenance pass with quarantine intact.
 Permission/Keychain continuity and real dictation remain user validation.
 Evidence: `runs/archive/homebrew-v0.6.0.md`.
+
+## Keep The Manual Helper Current
+
+Every public release must update `scripts/prepare-downloaded-install.sh` on main
+with the verified public DMG's version, build, source, SHA-256, CDHash and URL.
+Use the public artifact, which can differ from a previous local-only package.
+Refresh the synthetic helper fixtures with the same identity and retain upgrade
+from the preceding public version, no-op and downgrade checks.
+
+After publication and pin refresh, run `task installer:check-release` from current
+main with fresh tags. It checks GitHub's latest stable release, exact canonical
+asset pair/digest/URL, tag/version/build/source and app/build inputs against the
+checkout. New app/build inputs require review and a new release before claiming
+that the installer contains current main behavior. Documentation and installer
+maintenance may follow the app tag without rebuilding its immutable payload.
+This is an explicit maintainer network check; `task check` stays fixture-only.
+The helper itself checks only the latest stable release redirect and refuses a
+stale or unavailable result before staging/configuration. It never substitutes
+new download URLs or hashes from that response.
+
+Run `bash scripts/prepare-downloaded-install.sh --verify-only --download` against
+the public payload; this also checks the exact CDHash and full native integrity.
+Then publish the helper on main and repeat verification with the downloaded main
+helper. The existing README/internal bootstrap command should stay unchanged.
+Do not mark a release's installation channels complete until the helper and
+Homebrew both point to the verified public artifact. Never replace published
+assets or install locally merely to refresh pins.

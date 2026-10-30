@@ -60,7 +60,10 @@ and BUILD_NUMBER for new binaries, package from the exact clean release tag and
 keep checksum/provenance. Publish/re-download/verify the release before changing
 the cask; then update its version and sha256 in a reviewed tap commit. Test on the
 pilot Mac before recommending the update broadly. Record release URL, app commit,
-checksum, tap commit and test outcomes. No new automatic publishing workflow or
+checksum, tap commit and test outcomes. Also refresh the manual helper pins on
+app main and run `task installer:check-release` plus public-download helper
+verification as required by `docs/release.md`; a current cask alone does not
+update the standalone helper. No new automatic publishing workflow or
 cross-repository secret is needed for the initial channel.
 
 Each release uploads exactly `BabbelStream-<VERSION>.dmg` and its portable

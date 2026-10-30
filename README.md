@@ -44,7 +44,9 @@ that copy. Eject the image afterward. Source ZIP/tar archives are not installers
 
 ### Optional manual installation helper (pilot)
 
-The helper currently targets 0.5.3. Use Homebrew or the DMG above for 0.6.0.
+The helper prepares the latest verified public release, currently 0.6.0. If a newer
+release appears before its verified pins are refreshed, it stops instead of
+installing an older version. Try the same command again after the maintainer updates it.
 
 **Notice:** This helper removes quarantine from a verified temporary app copy
 only after your consent, bypassing its quarantine-based first-open check. It

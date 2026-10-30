@@ -22,6 +22,15 @@ case "$name" in
   uname) if [[ "$1" == -s ]]; then echo Darwin; else echo arm64; fi ;;
   sw_vers) echo 26.7.1 ;;
   curl)
+    if [[ "$*" == *releases/latest ]]; then
+      [[ "${FAULT:-}" != latest-unavailable ]] || exit 1
+      if [[ "${FAULT:-}" == latest-newer ]]; then
+        echo 'https://github.com/sichgeis/babbelstream/releases/tag/v0.7.0'
+      else
+        echo 'https://github.com/sichgeis/babbelstream/releases/tag/v0.6.0'
+      fi
+      exit 0
+    fi
     [[ "${FAULT:-}" != download ]] || exit 1
     while [[ "$1" != --output ]]; do shift; done
     /bin/cp "$FIXTURE_ROOT/synthetic download \$(never execute); example.dmg" "$2" ;;
@@ -55,7 +64,7 @@ case "$name" in
         if [[ "${FAULT:-}" == copied && -e "$FIXTURE_ROOT/shadow-mounted" ]]; then exit 1; fi ;;
       *--entitlements*) /bin/cat "$FIXTURE_ROOT/entitlements.plist" ;;
       *)
-        echo 'CDHash=8ae6266b8ce2389dd4b6f356fc8a66c120b7c85c' >&2
+        echo 'CDHash=cfab070efd8afedb6fad882575b7ad2db29b68c3' >&2
         echo 'Signature=adhoc' >&2
         echo 'CodeDirectory flags=0x10002(adhoc,runtime)' >&2 ;;
     esac ;;
@@ -129,8 +138,8 @@ class DownloadedInstallTests(unittest.TestCase):
         (self.app / "Contents/MacOS").mkdir(parents=True)
         (self.app / "Contents/MacOS/BabbelStream").write_text("synthetic executable")
         self.info = dict(CFBundleIdentifier="com.sichgeis.babbelstream",
-                         CFBundleExecutable="BabbelStream", CFBundleShortVersionString="0.5.3",
-                         CFBundleVersion="11", BabbelStreamGitCommit="b9c0641")
+                         CFBundleExecutable="BabbelStream", CFBundleShortVersionString="0.6.0",
+                         CFBundleVersion="14", BabbelStreamGitCommit="c36c28c")
         self.write_info()
         (self.root / "entitlements.plist").write_bytes(plistlib.dumps({
             "com.apple.security.device.audio-input": True}))
@@ -142,7 +151,7 @@ class DownloadedInstallTests(unittest.TestCase):
         source = (ROOT / "scripts/prepare-downloaded-install.sh").read_text()
         source = source.replace("export PATH=/usr/bin:/bin:/usr/sbin:/sbin",
                                 f"export PATH='{self.bin}':/usr/bin:/bin:/usr/sbin:/sbin")
-        source = source.replace("41b8aed841824c66862b65a11c576364300e3cbd07760370e81f76b77a6a99a2", self.digest)
+        source = source.replace("2752d399f5b1575be0a0ed9e5e8bb107a8b6b029584c196653c7a9db66f98ce4", self.digest)
         # Isolate receipt detection from any actual installed software.
         source = source.replace("/opt/homebrew/Caskroom/babbelstream", str(self.root / "receipt"))
         source = source.replace("/usr/local/Caskroom/babbelstream", str(self.root / "receipt-other"))
@@ -311,6 +320,19 @@ class DownloadedInstallTests(unittest.TestCase):
         self.assertNotIn("hdiutil attach", self.events())
         self.assert_untouched()
 
+    def test_stale_or_unavailable_latest_never_downloads_or_configures(self):
+        for fault in ("latest-newer", "latest-unavailable"):
+            with self.subTest(fault=fault):
+                (self.root / "events").write_text("")
+                code, output = self.run_helper(interactive=True, consent="prepare",
+                    mode="--update", fault=fault, extra_args=CONFIG_ARGS)
+                self.assertNotEqual(code, 0, output)
+                self.assertIn("Nothing was changed".lower(), output.lower())
+                self.assertNotIn("hdiutil", self.events())
+                self.assertNotIn("defaults", self.events())
+                self.assertNotIn("--output " + str(self.staging), self.events())
+                self.assert_untouched()
+
     def install_fixture(self, version, build):
         self.info["CFBundleShortVersionString"] = version
         self.info["CFBundleVersion"] = build
@@ -319,30 +341,31 @@ class DownloadedInstallTests(unittest.TestCase):
         shutil.copytree(self.app, self.root / "Installed.app")
 
     def test_update_current_version_is_noop(self):
-        self.install_fixture("0.5.3", "11")
+        self.install_fixture("0.6.0", "14")
         code, output = self.run_helper(interactive=True, mode="--update")
         self.assertEqual(code, 0, output)
         self.assertIn("already installed", output)
-        self.assertNotIn("curl", self.events())
+        self.assertIn("releases/latest", self.events())
+        self.assertNotIn("releases/download/", self.events())
         self.assert_untouched()
 
     def test_update_rejects_downgrade(self):
-        self.install_fixture("0.6.0", "12")
+        self.install_fixture("0.7.0", "15")
         code, output = self.run_helper(interactive=True, mode="--update")
         self.assertNotEqual(code, 0)
         self.assertIn("newer", output)
         self.assert_untouched()
 
     def test_update_older_version_prepares_without_replacing(self):
-        self.install_fixture("0.5.1", "8")
-        # Downloaded release remains 0.5.3; installed copy is the older fixture.
-        self.info["CFBundleShortVersionString"] = "0.5.3"
-        self.info["CFBundleVersion"] = "11"
+        self.install_fixture("0.5.3", "11")
+        # Downloaded release remains 0.6.0; installed copy is the older fixture.
+        self.info["CFBundleShortVersionString"] = "0.6.0"
+        self.info["CFBundleVersion"] = "14"
         self.write_info()
         code, output = self.run_helper(interactive=True, consent="PREPARE", mode="--update")
         self.assertEqual(code, 0, output)
         info = plistlib.loads((self.root / "Installed.app/Contents/Info.plist").read_bytes())
-        self.assertEqual(info["CFBundleShortVersionString"], "0.5.1")
+        self.assertEqual(info["CFBundleShortVersionString"], "0.5.3")
         self.assertIn("\nopen ", self.events())
 
     def saved_preferences(self):
@@ -375,10 +398,11 @@ class DownloadedInstallTests(unittest.TestCase):
         self.assertEqual(self.saved_preferences()["provider.cleanupEndpointPath"],"/v1/chat/completions")
 
     def test_configuration_on_current_install_skips_download_and_quarantine(self):
-        self.install_fixture("0.5.3","11")
+        self.install_fixture("0.6.0","14")
         code,output=self.run_helper(interactive=True,consent="prepare",mode="--update",extra_args=CONFIG_ARGS)
         self.assertEqual(code,0,output)
-        self.assertNotIn("curl ",self.events())
+        self.assertIn("releases/latest",self.events())
+        self.assertNotIn("releases/download/",self.events())
         self.assertNotIn("xattr ",self.events())
         self.assertNotIn("\nopen ",self.events())
         self.assertEqual(list(self.staging.iterdir()),[])

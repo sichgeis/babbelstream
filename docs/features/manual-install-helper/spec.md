@@ -31,7 +31,7 @@ supersedes configuration-preservation language here only when those arguments
 are supplied; ordinary runs still leave provider settings untouched.
 
 - Standalone Bash helper, macOS 13+ on Apple Silicon, using system tools only.
-- Version 0.5.3/build 11/source b9c0641; pinned DMG SHA-256 and app CDHash.
+- Version 0.6.0/build 14/source c36c28c; pinned DMG SHA-256 and app CDHash.
 - Local file, `--download`, `--update`, and mutation-free `--verify-only` modes.
 - Download via HTTPS GitHub Releases, bounded connection/transfer timeouts and HTTPS-only redirects.
 - Approved stable-command follow-up: the README bootstrap downloads the current
@@ -42,6 +42,17 @@ are supplied; ordinary runs still leave provider settings untouched.
   the helper's pins on main for each future supported release; the bootstrap
   stays unchanged. This selects the maintainer-supported release, not arbitrary
   newer assets discovered via GitHub's latest-release API.
+- On 2026-10-30 the maintainer authorized refreshing the helper to the latest
+  published release and keeping it aligned with main. The developer-only
+  `task installer:check-release` fails on stale pins, asset URL/hash drift, missing
+  or extra assets, tag/version/build/source mismatch, or changed app/build inputs.
+  It never updates trust pins automatically; release completion requires pin
+  refresh plus native `--verify-only --download` validation. Installer users
+  continue to run the same main bootstrap. Download/update modes check GitHub's
+  latest stable release redirect before staging or configuration and refuse a
+  mismatch/unavailable result. That metadata can only reject stale pins; it
+  cannot select or authorize replacement payloads. Explicit local-file mode
+  remains an offline verification/preparation route for its pinned version.
 - No global Gatekeeper change, TCC reset, broad xattr clearing, re-signing,
   credentials, telemetry, provider calls, process killing or automatic app launch.
 - No automatic replacement of installed bundles or Homebrew ownership takeover.
@@ -52,7 +63,10 @@ are supplied; ordinary runs still leave provider settings untouched.
 1. Review the README disclaimer and optional helper source; copy its command into Terminal.
 2. Helper refuses noninteractive preparation, root execution, known Homebrew
    receipts/symlink ownership, a running app, unsupported platform or malformed input.
-3. Update mode checks an existing Applications copy. A newer installed
+3. Download/update modes first check the HTTPS latest-release redirect against
+   the pinned tag. A newer/unexpected tag or network failure stops without
+   downloading a payload, staging or configuring preferences.
+   Update mode then checks an existing Applications copy. A newer installed
    version/build is rejected; an equal version/build is a no-op only if signature
    integrity and pinned CDHash match. Older or absent installations continue.
 4. Download the pinned DMG or copy the supplied file into a private temporary
@@ -127,7 +141,7 @@ On a consenting pilot Mac: run the README bootstrap using an actual downloaded
 release; cancel once, then consent. Confirm the actual illustrated installer window opens with the
 Applications shortcut. Verify the original download still has its
 attributes and only the staged copy loses quarantine. Preserve the previous app,
-install using Finder, launch manually and confirm 0.5.3/build 11/b9c0641 in
+install using Finder, launch manually and confirm 0.6.0/build 14/c36c28c in
 Diagnostics. Record any endpoint-policy rejection honestly. Microphone/provider
 smoke remains a separate human action using harmless unsent content.
 

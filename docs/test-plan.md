@@ -343,3 +343,16 @@ stored as evidence. Individual editor/paste/recovery cases, offline relaunch,
 ## Optional Local Cleanup
 
 Fixture checks cover default-off settings/migration, separate model role, blocked activation without weights, local cleanup after both speech backends, immutable settings, no cloud cleaner/key in the fully local flow, raw fallback and recovery copy, cancellation and late results. Explicit synthetic native inference checks English/German/mixed speech, negation/numbers, dictated requests and identifiers without microphone or production stores. Human quality, long-form memory and other-host layout remain separate smoke gates.
+
+## Installer Release Alignment
+
+`task check` includes synthetic release-channel regressions for stale installer
+pins, draft/prerelease selection, changed or absent asset digests/URLs and missing
+or parallel installer assets. The helper fixtures cover 0.5.3-to-0.6.0 preparation
+without installed-app replacement, exact-current no-op/configuration, downgrade
+refusal and no payload download/settings mutation when latest-release metadata
+is newer or unavailable. The explicit online maintainer command `task installer:check-release`
+also compares latest public metadata and tagged provenance with current app/build
+inputs. Public `--verify-only --download` checks native payload integrity/CDHash
+without configuration, quarantine mutation, installation or launch. Managed-Mac
+Finder installation, OS approval and real dictation remain human validation.
