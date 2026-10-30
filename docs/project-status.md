@@ -39,7 +39,10 @@ requires exact consent before removing quarantine from a verified staged app,
 and opens the illustrated installer for manual Finder installation. The maintainer
 explicitly authorized main integration before the remaining visual/managed-Mac
 pilot. Managed-device installation and launch remain unproven.
-Installer alignment work is tracked in `docs/runs/active/installer-current-release.md`.
+Installer alignment is complete: the unchanged shared main bootstrap now verifies
+and prepares public 0.6.0, refusing stale pins when a newer public release exists.
+The internal guide documents the current version; its command is preserved.
+Evidence: `docs/runs/archive/installer-current-release.md`.
 Earlier scrub/release work remains closed in its archived runs.
 
 ## Known Limitations And Deferred Follow-Ups

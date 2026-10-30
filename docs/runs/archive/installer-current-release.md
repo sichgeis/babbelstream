@@ -56,13 +56,31 @@ installation, user stores, permission changes or provider/microphone calls neede
   and entitlements. No quarantine/settings/install/launch mutation.
 - Working-tree public hygiene and pre-commit history checks: pass.
 - Internal page changes dry-run validated; existing rich HTML and command preserved.
-- Feature/main publication, published bootstrap verification and page readback: pending.
+- Feature commit `7a36898` pushed and fast-forwarded into public main.
+- Exact shared main helper URL downloaded; bytes match committed script.
+  Published helper with all four generic provider arguments and
+  `--verify-only --download`: pass, 0.6.0/build 14/c36c28c.
+- `task installer:check-release` on main: pass against public latest and tag.
+- Internal guide published and read back at version 9. Exact intended HTML
+  matches; existing install command is byte-for-byte preserved. Only two
+  explanatory paragraphs changed, documenting current version and stale-pin guard.
 - Real managed-Mac installation/dictation remains human work; no pass claimed.
 
 ## Current Blocker
 
-None for installer repair; complete validation/publication next.
+None. Installer repair and publication are complete.
 
 ## Next Action
 
-Publish the validated fix on main, verify the fetched helper, then update the internal guide.
+On the colleague's Mac, quit the app and rerun the existing shared command;
+complete the manual Finder copy and confirm 0.6.0/build 14/c36c28c in Diagnostics.
+
+
+## Closeout
+
+- [x] Runtime helper, fixtures and durable specs agree.
+- [x] Canonical and native public-download verification passed.
+- [x] Main publication and internal guide readback verified.
+- [x] Existing v0.6.0 tag and canonical public assets preserved.
+- [x] No production installation, settings, permission or provider change made.
+- [x] Run archived; managed-Mac Finder/dictation remains an explicit human test.
