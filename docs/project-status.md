@@ -68,4 +68,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Validate the dictation reliability candidate on the upgraded pilot Mac using the feature smoke test.
+Run the two [dictation checks](runs/active/dictation-reliability.md#next-action) on candidate 0.6.1 installed on the development Mac and record the result for the release decision.

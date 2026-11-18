@@ -8,7 +8,7 @@ Started from clean, pushed main at `decbc10`. Branch `codex/dictation-reliabilit
 
 1. Pushed `bb513f7` with the provider, delivery, export, recovery metadata and cancellation fixes. The complete `task check` passed.
 2. Replaced HUD text matching with typed operation state, extracted the settings draft and archive browser, and aligned the setup guides and specifications. The executable suite covers local cleanup presentation and archive load, export and clear. The final full check passed, including both native helper builds, 26 installer fixtures, five release-alignment fixtures and four hygiene fixtures. Relative file links in the changed documentation were checked.
-3. Candidate version 0.6.1, build 15. Build the local ad-hoc DMG from the clean second milestone with `task app:candidate`. The filename embeds the source commit and the adjacent checksum identifies the image. The published installer and tap still serve 0.6.0.
+3. Built candidate 0.6.1, build 15, from clean commit `795cc76`. On 2026-11-18 the maintainer requested installation on the development Mac. The DMG checksum and installed app signature passed. The installed files matched the read-only mounted image. Launch Services confirmed one running Applications copy at 0.6.1/build 15/`795cc76`. The previous 0.6.0/build 14 bundle is available under the ignored `dist/rollback/0.6.0-build14-before-0.6.1-build15/` directory. The public installer and tap still serve 0.6.0.
 
 ## Local processing measurement
 
@@ -27,4 +27,4 @@ Timing starts at the coordinator's Stop call and ends when it hands the draft to
 
 ## Next action
 
-On the upgraded pilot Mac, run the [manual smoke test](../../features/dictation-reliability/spec.md#acceptance-and-manual-smoke) against the 0.6.1 candidate and record the results before promoting the release.
+The maintainer will try two harmless dictations on the installed candidate. With the original editor focused, the draft should appear once and remain unsent. After switching applications before delivery, the draft should be available on the clipboard and the newly focused app should receive no paste. Record the result for the release decision. The [full pilot matrix](../../features/dictation-reliability/spec.md#acceptance-and-manual-smoke) remains available for follow-up, including the other Mac.
