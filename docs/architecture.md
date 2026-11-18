@@ -53,10 +53,11 @@ The executable target keeps the application shell separate from the behavior-hea
 
 - `BabbelStreamLauncher/main.swift` is the executable entry point and invokes the native application bootstrap in `BabbelStreamApp.swift`.
 - The existing app sources compile as `BabbelStreamApplication`, so executable debug checks can import the actual coordinator with `@testable` without running the app.
-- `AppRuntime` isolates diagnostic logging and temporary-directory discovery; production uses the native adapter and checks use fixture-only runtime state.
+- `AppRuntime` isolates diagnostic logging and temporary-directory discovery; production uses the native adapter and checks use fixture-only runtime state. Target capture belongs to the insertion service.
 - `AppDelegate.swift` is the composition root that creates stores, `AppState`, window controllers, the status item, and the HUD.
 - `StatusBarController.swift` owns menu-bar presentation and actions.
 - `AppWindowControllers.swift`, `SettingsView.swift`, `DictationArchiveUI.swift`, and `DictationStatusHUD.swift` own their respective AppKit/SwiftUI presentation concerns.
+- `SettingsDraft` builds a validated settings value from unapplied edits. `ArchiveBrowser` owns month selection, reading, export and clearing. The archive store is shared with the dictation writer. `DictationStatus` maps operation transitions to the menu label and HUD phase.
 - `AppState.swift` remains the main-actor workflow coordinator. Its top-level dictation path delegates the provider details to explicit transcription-with-fallback and cleanup-with-raw-fallback actions.
 - `BabbelStreamCore` owns reusable policy, provider, storage, recording, hotkey, secret, and insertion implementations and does not depend on the app target.
 

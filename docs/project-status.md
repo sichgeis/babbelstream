@@ -16,7 +16,7 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
-The [dictation reliability update](features/dictation-reliability/spec.md) is in development on `codex/dictation-reliability`. See the [implementation run](runs/active/dictation-reliability.md) for validation and the pilot handoff.
+The [dictation reliability update](features/dictation-reliability/spec.md) is implemented on `codex/dictation-reliability` for candidate **0.6.1, build 15**. The [implementation run](runs/active/dictation-reliability.md) records the regression checks, synthetic local timings and pending upgraded-Mac smoke test.
 
 Local Parakeet dictation and Qwen3.5-4B cleanup are complete in 0.6.0.
 Implementation evidence is archived in `docs/runs/archive/local-transcription.md`

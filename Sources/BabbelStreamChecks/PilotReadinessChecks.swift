@@ -103,7 +103,7 @@ func runPilotReadinessChecks() async throws {
         defer { try? f.dispose() }
         check(f.secret.reads == 0, "Origin migration must not read legacy secrets at startup.")
         let originalOrigin = f.keyPresence.approvedOrigin
-        f.app.baseURLText = "https://changed.example.invalid"
+        f.app.settingsDraft.baseURLText = "https://changed.example.invalid"
         f.app.saveSettings()
         check(f.app.settingsErrorMessage != nil, "Host changes must require explicit key replacement or reassociation.")
         check(f.settings.value.providerConfiguration.baseURL.host == "primary.example.invalid" && f.keyPresence.approvedOrigin == originalOrigin, "Rejected Apply must preserve saved configuration and credential binding.")
@@ -118,7 +118,7 @@ func runPilotReadinessChecks() async throws {
         let f = try CoordinatorFixture()
         defer { try? f.dispose() }
         f.settings.failSave = true
-        f.app.baseURLText = "https://changed.example.invalid"
+        f.app.settingsDraft.baseURLText = "https://changed.example.invalid"
         f.app.apiKeyInput = "explicit-new-fixture-key"
         f.app.saveSettings()
         check(f.app.settingsErrorMessage != nil, "Settings persistence failure must be visible.")
@@ -130,10 +130,10 @@ func runPilotReadinessChecks() async throws {
     do {
         let f = try CoordinatorFixture()
         defer { try? f.dispose() }
-        f.app.status = "/Users/private-user/transcript-content"
         f.app.lastFailureCategory = "/Users/private-user/provider-body"
-        f.app.cleanupModelText = "/Users/private-user/secret-model"
+        f.app.settingsDraft.cleanupModelText = "/Users/private-user/secret-model"
         f.app.saveSettings()
+        f.app.lastResult = "/Users/private-user/transcript-content"
         let report = f.app.diagnosticsReport()
         check(!report.contains(f.root.path) && !report.contains("/Users/") && !report.contains("provider-body"), "Export allowlist must omit private paths and arbitrary errors/status.")
         check(!report.contains("synthetic-key") && report.contains("build commit:") && report.contains("primary origin:"), "Export must retain actionable content-free build/provider fields.")

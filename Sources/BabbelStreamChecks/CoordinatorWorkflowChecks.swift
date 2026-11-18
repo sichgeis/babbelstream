@@ -8,6 +8,25 @@ func runCoordinatorWorkflowChecks() async throws {
     do {
         let f = try CoordinatorFixture(cleanupEnabled: false)
         defer { try? f.dispose() }
+        f.app.setDictationArchiveEnabled(true)
+        await f.app.startDictation()
+        await f.app.stopActiveRecording()
+        let browser = f.app.archiveBrowser
+        check(browser.snapshot.entries.count == 1, "The archive browser must refresh after an opted-in dictation.")
+        browser.monthText = "invalid"
+        browser.loadMonth()
+        check(browser.errorMessage != nil && browser.snapshot.entries.count == 1, "Invalid input preserves the displayed month.")
+        browser.monthText = browser.snapshot.month.directoryName
+        browser.copyMarkdownExport()
+        check(f.insertion.copied.count == 1 && browser.errorMessage == nil, "Archive export copies through the injected clipboard.")
+        browser.clear()
+        browser.loadMonth()
+        check(browser.snapshot.entries.isEmpty, "Clearing the fixture archive must clear both the browser and store.")
+    }
+
+    do {
+        let f = try CoordinatorFixture(cleanupEnabled: false)
+        defer { try? f.dispose() }
         let currentTarget = f.insertion.target
         f.insertion.target = nil
         await f.app.startDictation()
@@ -61,7 +80,7 @@ func runCoordinatorWorkflowChecks() async throws {
         defer { try? f.dispose() }
         check(f.secret.reads == 0 && f.personalSecret.reads == 0, "Coordinator startup must not read credentials.")
         await f.app.startDictation()
-        f.app.baseURLText = "https://later.example.invalid"
+        f.app.settingsDraft.baseURLText = "https://later.example.invalid"
         f.app.apiKeyInput = "replacement-fixture-key"
         f.app.saveSettings()
         check(f.app.settingsErrorMessage == nil, "Fixture settings edit must actually apply.")
@@ -82,11 +101,11 @@ func runCoordinatorWorkflowChecks() async throws {
         let item = try await f.createFailedRecording()
         check(item.state == .cleanupFailed && f.insertion.inserted == ["raw fixture "], "Cleanup fallback must deliver raw text and retain audio.")
         let initialInsertCount = f.insertion.inserted.count
-        f.app.baseURLText = "https://retry.example.invalid"
+        f.app.settingsDraft.baseURLText = "https://retry.example.invalid"
         f.app.apiKeyInput = "replacement-fixture-key"
         f.app.saveSettings()
         f.transcription.action = { [weak app = f.app] _ in
-            app?.baseURLText = "https://next.example.invalid"
+            app?.settingsDraft.baseURLText = "https://next.example.invalid"
             app?.apiKeyInput = "next-fixture-key"
             app?.saveSettings()
             return "raw fixture"
@@ -113,6 +132,17 @@ func runCoordinatorWorkflowChecks() async throws {
         f.fm.failRemovalAt = nil
         f.app.deleteRecoveryRecording(item)
         check(f.app.recoverySnapshot.recordings.isEmpty, "Explicit deletion must remove a retained successful recording.")
+    }
+
+    do {
+        let f = try CoordinatorFixture()
+        defer { try? f.dispose() }
+        let earlier = try await f.createFailedRecording()
+        await f.app.startDictation()
+        f.recorder.audio = nil
+        await f.app.stopActiveRecording()
+        check(f.app.operationStatus.hudPhase == .error && f.app.recoverySnapshot.recordings.map(\.id) == [earlier.id],
+              "A previous failed recording must not make the HUD claim the current recording was saved.")
     }
 
     do {

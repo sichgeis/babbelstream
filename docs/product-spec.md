@@ -65,7 +65,7 @@ entry in the app. No organization profile is bundled publicly. Contract:
   explicitly applies the opt-in, a primary connection failure may make one
   sequential personal transcription request. HTTP 502/503/504 also qualify;
   authentication, rate-limit, other HTTP, model, and response-shape failures do
-  not switch accounts. Cleanup follows
+  not switch accounts. If both primary and Mini fail, each failure must qualify. Cleanup follows
   the transcript-winning profile and may make one personal attempt after a
   primary connection failure.
 - Applied `Use personal OpenAI now` mode for known work-proxy downtime. It
@@ -248,7 +248,7 @@ The explicit local test replaces the clipboard with a fixed harmless sample and 
 
 Shared form canvases use a nearly white adaptive Light Mode surface with white sections, native Dark Mode surfaces and stronger native separation under Increase Contrast. This applies to Settings, setup and secondary form dialogs. Settings keeps five native segments on this same canvas without a separate TabView bezel; section/control/help spacing and label columns are consistent across all sections. Sparkle and colleague signing remain deferred.
 
-## Local Transcription (0.6.0 Candidate)
+## Local Transcription
 
 Provider settings offer explicit Remote / On this Mac selection. On Apple
 Silicon/macOS 14+, users may confirm a verified Parakeet Ultra download, prepare
@@ -257,7 +257,7 @@ Local dictation performs no cloud cleanup, hedge or fallback; audio remains on
 the Mac and existing successful deletion/Failed Recordings rules apply. Download
 hosts receive ordinary connection metadata only during explicit setup. Qwen and
 Granite catalog entries are deferred and cannot download in the Parakeet pilot.
-No model operation sends a message. Real quality/latency acceptance is pending.
+No model operation sends a message. The 0.6.0 pilot accepted English and German dictation. Mixed-language quality and timings on the upgraded pilot Mac remain open. See the [test plan](test-plan.md#local-transcription-pilot).
 
 ## Optional Local Cleanup
 

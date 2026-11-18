@@ -131,24 +131,24 @@ func runLocalTranscriptionChecks() async throws {
         defer { try? f.dispose() }
         try await f.app.localModels.store.install(model, progress: { _ in }, prepare: { _ in })
         await f.app.localModels.refresh()
-        f.app.transcriptionBackend = .local
-        f.app.personalOpenAIFallbackEnabled = true
-        f.app.personalOpenAIDirectModeEnabled = true
+        f.app.settingsDraft.transcriptionBackend = .local
+        f.app.settingsDraft.personalOpenAIFallbackEnabled = true
+        f.app.settingsDraft.personalOpenAIDirectModeEnabled = true
         f.app.saveSettings()
         localCheck(f.app.settingsErrorMessage == nil && !f.app.needsConnectionSetup, "Prepared local mode applies without any key.")
         await f.app.startDictation()
         localCheck(f.app.hudDetail.contains("On this Mac"), "Recording HUD must disclose local execution.")
         // Apply remote settings during recording. The operation remains local.
-        f.app.transcriptionBackend = .remote
-        f.app.personalOpenAIFallbackEnabled = false
-        f.app.personalOpenAIDirectModeEnabled = false
+        f.app.settingsDraft.transcriptionBackend = .remote
+        f.app.settingsDraft.personalOpenAIFallbackEnabled = false
+        f.app.settingsDraft.personalOpenAIDirectModeEnabled = false
         f.app.saveSettings()
         await f.app.stopActiveRecording()
         localCheck(runtime.calls == 1 && f.insertion.inserted == ["Hallo local fixture "], "Operation snapshots local mode and delivers one unsent draft.")
         localCheck(f.secret.reads == 0 && f.personalSecret.reads == 0, "Local dictation must never read a key.")
         localCheck(f.transcription.requests.isEmpty && f.mini.requests.isEmpty && f.cleanup.requests.isEmpty, "Local dictation makes zero cloud, hedge or cleanup requests.")
         localCheck(try f.recovery.loadSnapshot().recordings.isEmpty, "Successful local dictation deletes recovery audio.")
-        f.app.transcriptionBackend = .local; f.app.saveSettings()
+        f.app.settingsDraft.transcriptionBackend = .local; f.app.saveSettings()
         runtime.fail = true
         await f.app.startDictation(); await f.app.stopActiveRecording()
         let item = try f.recovery.loadSnapshot().recordings.first!
@@ -164,7 +164,7 @@ func runLocalTranscriptionChecks() async throws {
         defer { try? f.dispose() }
         try await f.app.localModels.store.install(model, progress: { _ in }, prepare: { _ in })
         await f.app.localModels.refresh()
-        f.app.transcriptionBackend = .local; f.app.saveSettings()
+        f.app.settingsDraft.transcriptionBackend = .local; f.app.saveSettings()
         runtime.action = {
             // Simulate a native provider that delivers a late completion after cancellation.
             try? await Task.sleep(nanoseconds: 30_000_000_000)
@@ -187,7 +187,7 @@ func runLocalTranscriptionChecks() async throws {
         let runtime = FixtureLocalSpeechRuntime()
         let f = try CoordinatorFixture(hasPrimaryKey: false, localRuntime: runtime, localManifests: [model])
         defer { try? f.dispose() }
-        f.app.transcriptionBackend = .local; f.app.saveSettings()
+        f.app.settingsDraft.transcriptionBackend = .local; f.app.saveSettings()
         localCheck(f.app.settingsErrorMessage != nil, "Missing model prevents Apply.")
     }
 }

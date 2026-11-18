@@ -84,52 +84,25 @@ check(
     "Invalid negative press durations should normalize safely."
 )
 check(
-    DictationHUDPresentation.phase(
-        isRecording: false,
-        isProcessing: true,
-        canCancel: true,
-        status: "Trying Mini transcription",
-        lastResult: "",
-        hasError: false
-    ) == .tryingMini,
+    DictationStatus.mini.hudPhase == .tryingMini,
     "The active Mini hedge should be named in the HUD."
 )
 check(
-    DictationHUDPresentation.phase(
-        isRecording: false,
-        isProcessing: false,
-        canCancel: false,
-        status: "Recording saved",
-        lastResult: "Recording retained for recovery.",
-        hasError: true
-    ) == .recordingSaved,
+    DictationStatus.saved.hudPhase == .recordingSaved,
     "Recording recovery should take precedence over a generic HUD error."
 )
 check(
-    DictationHUDPresentation.phase(
-        isRecording: false,
-        isProcessing: false,
-        canCancel: false,
-        status: "Ready",
-        lastResult: "Draft inserted. Review it before sending.",
-        hasError: false
-    ) == .pasted,
+    DictationStatus.pasted.hudPhase == .pasted,
     "Successful insertion should retain the concise Pasted HUD state."
 )
+check(DictationStatus.localCleanup.hudPhase == .cleaningUp, "Local cleanup must show the cleanup phase.")
 check(DictationHUDPhase.tryingMini.displayName == "Trying Mini", "Mini HUD copy should stay compact.")
 check(
     DictationHUDPhase.tryingPersonalOpenAI.displayName == "Personal OpenAI",
     "Personal fallback activation should be visible in the compact HUD."
 )
 check(
-    DictationHUDPresentation.phase(
-        isRecording: false,
-        isProcessing: true,
-        canCancel: true,
-        status: "Trying personal OpenAI",
-        lastResult: "",
-        hasError: false
-    ) == .tryingPersonalOpenAI,
+    DictationStatus.personal.hudPhase == .tryingPersonalOpenAI,
     "The personal OpenAI provider phase should remain visible while active."
 )
 check(

@@ -58,7 +58,7 @@ final class DictationStatusHUDController {
         refreshMetering()
         let action = visibilityPolicy.update(
             isActive: appState.isRecording || appState.isProcessing || appState.canCancel,
-            needsAttention: appState.status == "Copied" || appState.status == "Copy Last Draft"
+            needsAttention: appState.operationStatus == .copied || appState.operationStatus == .draftAvailable
                 || appState.errorMessage != nil || appState.warningMessage != nil
         )
         switch action {
@@ -300,7 +300,7 @@ private struct DictationStatusHUDView: View {
     }
 
     private var recordingBadge: String {
-        if appState.status == "Recording test" {
+        if appState.recordingMode == .test {
             return "Test"
         }
         return appState.pasteTargetSummary ?? "Recording"
@@ -318,14 +318,7 @@ private struct DictationStatusHUDView: View {
     }
 
     private var hudPhase: DictationHUDPhase {
-        DictationHUDPresentation.phase(
-            isRecording: appState.isRecording,
-            isProcessing: appState.isProcessing,
-            canCancel: appState.canCancel,
-            status: appState.status,
-            lastResult: appState.lastResult,
-            hasError: appState.errorMessage != nil
-        )
+        appState.isRecording ? .recording : appState.operationStatus.hudPhase
     }
 
     private var compactStatus: String {

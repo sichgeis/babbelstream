@@ -7,6 +7,8 @@ scripts/build-app.sh
 
 `task check` builds the app, runs the fixture-based `BabbelStreamChecks` executable (including loopback-only transport checks), and verifies release preflight in disposable Git repositories. Project commands select the validated installed macOS 26.5 SDK locally; see `docs/release.md` for toolchain prerequisites and explicit overrides. This CLT-only environment does not expose XCTest or Swift Testing through SwiftPM, so the repository intentionally has no misleading empty `swift test` target.
 
+On Apple Silicon, full checks also build the local speech and cleanup helpers. Install CMake 3.20+ or set `CMAKE` to its executable. Native model inference and model downloads are separate from this fixture suite.
+
 The app bundle is written to:
 
 ```text

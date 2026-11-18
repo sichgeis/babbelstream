@@ -59,22 +59,22 @@ func runLocalCleanupChecks() async throws {
         if localSpeech {
             try await f.app.localModels.store.install(speech, progress: { _ in }, prepare: { _ in })
             await f.app.localModels.refresh()
-            f.app.transcriptionBackend = .local
+            f.app.settingsDraft.transcriptionBackend = .local
         }
-        f.app.localCleanupEnabled = true; f.app.saveSettings()
+        f.app.settingsDraft.localCleanupEnabled = true; f.app.saveSettings()
         cleanupCheck(f.app.settingsErrorMessage != nil, "Missing cleanup weights prevent activation.")
         try await f.app.cleanupModels.store.install(model, progress: { _ in }, prepare: { _ in })
         await f.app.cleanupModels.refresh(); f.app.saveSettings()
         cleanupCheck(f.app.settingsErrorMessage == nil, "Ready cleanup model permits Apply.")
         await f.app.startDictation()
         // Changing the next operation does not change this operation's snapshot.
-        f.app.localCleanupEnabled = false; f.app.saveSettings()
+        f.app.settingsDraft.localCleanupEnabled = false; f.app.saveSettings()
         await f.app.stopActiveRecording()
         cleanupCheck(cleaner.calls == 1 && f.insertion.inserted == ["Hallo cleaned fixture "], "Saved snapshot runs local cleanup and inserts once without sending.")
         cleanupCheck(f.cleanup.requests.isEmpty, "Local cleanup never calls the cloud cleaner.")
         if localSpeech { cleanupCheck(f.secret.reads == 0 && f.transcription.requests.isEmpty, "Entire local workflow uses neither keys nor cloud.") }
         cleanupCheck(try f.recovery.loadSnapshot().recordings.isEmpty, "Full local success releases stopped audio.")
-        f.app.localCleanupEnabled = true; f.app.saveSettings(); cleaner.fail = true
+        f.app.settingsDraft.localCleanupEnabled = true; f.app.saveSettings(); cleaner.fail = true
         await f.app.startDictation(); await f.app.stopActiveRecording()
         cleanupCheck(f.app.warningMessage?.contains("raw transcript") == true, "Cleanup failure discloses raw fallback.")
         let item = try f.recovery.loadSnapshot().recordings.first!
@@ -101,7 +101,7 @@ func runLocalCleanupChecks() async throws {
     try await f.app.localModels.store.install(speech, progress: { _ in }, prepare: { _ in })
     try await f.app.cleanupModels.store.install(model, progress: { _ in }, prepare: { _ in })
     await f.app.localModels.refresh(); await f.app.cleanupModels.refresh()
-    f.app.transcriptionBackend = .local; f.app.localCleanupEnabled = true; f.app.saveSettings()
+    f.app.settingsDraft.transcriptionBackend = .local; f.app.settingsDraft.localCleanupEnabled = true; f.app.saveSettings()
     cleaner.action = { try? await Task.sleep(nanoseconds: 30_000_000_000); return "late cleanup" }
     await f.app.startDictation()
     let processing = Task { await f.app.stopActiveRecording() }
@@ -110,6 +110,7 @@ func runLocalCleanupChecks() async throws {
         try await Task.sleep(nanoseconds: 1_000_000)
     }
     cleanupCheck(cleaner.calls == 1, "Cancellation fixture reached cleanup.")
+    cleanupCheck(f.app.operationStatus.hudPhase == .cleaningUp, "The HUD must show cleanup while the local cleaner runs.")
     await f.app.cancelRecording(); await processing.value
     cleanupCheck(f.insertion.inserted.isEmpty && f.app.canStart, "Late canceled cleanup never delivers and releases ownership.")
     cleanupCheck(try f.recovery.loadSnapshot().recordings.count == 1, "Canceled cleanup retains stopped audio.")

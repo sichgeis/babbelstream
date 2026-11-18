@@ -1,14 +1,14 @@
 # Get Started With BabbelStream
 
-Version 0.5.3 is the clean rebuild for the non-notarized Apple Silicon pilot.
+Version 0.6.0 offers remote and on-device dictation for the Apple Silicon pilot.
 Older 0.5.1/0.5.2 downloads are withdrawn. See [current status](project-status.md)
 for evidence and remaining integration coverage.
 
 ## Install the Applications copy
 
 Use `brew install --cask sichgeis/tap/babbelstream` or download the
-[0.5.3 DMG and checksum](https://github.com/sichgeis/babbelstream/releases/tag/v0.5.3).
-Verify `shasum -a 256 -c BabbelStream-0.5.3.dmg.sha256` in their download folder.
+[0.6.0 DMG and checksum](https://github.com/sichgeis/babbelstream/releases/tag/v0.6.0).
+Verify `shasum -a 256 -c BabbelStream-0.6.0.dmg.sha256` in their download folder.
 Quit the old app, open the image, drag BabbelStream onto Applications, eject the
 image and launch the Applications copy. Preserve local settings and Keychain.
 A manual app may conflict with Homebrew; preserve it before moving it aside.
@@ -25,16 +25,14 @@ Open **Set Up BabbelStream…** from the menu or General Settings to return to s
 1. **Permissions:** allow Microphone when you want to record and Accessibility
    when you want automatic paste. These are separate OS grants; setup completion
    alone is not evidence of permission. Without Accessibility, use manual paste.
-2. **Provider:** confirm your authorized destination and enter your own API key.
-   Choose the official OpenAI preset or your approved compatible service. No
-   shared key or guessed company endpoint is supplied. Provider use may cost money.
-3. **Apply:** choose Apply Settings to make edits active. A saved key is not proof
-   that the connection works. Changing provider origin requires approving a key
-   for that destination by entering it explicitly again.
+2. Choose **On this Mac** or **Remote provider** in Provider Settings.
+   - **On this Mac** requires macOS 14+. Select Parakeet Ultra, confirm Download Model, and wait for preparation. Audio stays on this Mac. To clean up the transcript locally, download Qwen3.5-4B and enable local cleanup. You can remove either model while idle.
+   - **Remote provider** uses your authorized URL, model routing and individual API key. Confirm the destination and possible charges. A change of provider origin requires a key approved for that origin.
+3. Choose **Apply Settings** to activate your selection. Remote settings remain available when switching back from local dictation.
 4. **Local paste:** optionally run the app-owned sample test. It replaces the
    clipboard without using your microphone, provider, existing field contents or
    keys. A pass proves this local field accepted the sample, not every editor.
-5. **First dictation:** with an authorized provider, focus an unsent TextEdit or
+5. **First dictation:** with your selected backend ready, focus an unsent TextEdit or
    Slack draft and use harmless sample speech. Check that the draft appears once
    and remains unsent.
 

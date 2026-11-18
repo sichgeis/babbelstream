@@ -360,3 +360,5 @@ Finder installation, OS approval and real dictation remain human validation.
 ### Routing and recovery regressions
 
 The executable checks cover mixed provider failures in both orders, copy-only delivery after missing initial focus, fresh explicit paste capture, atomic export replacement with an injected copy failure, local and legacy recovery metadata, and Escape while retrying.
+
+The same fixture coordinator checks the HUD phase during local cleanup, distinguishes older recovery entries from the current failure, and exercises archive refresh, invalid month input, Markdown export and clear. The [local timing run](runs/active/dictation-reliability.md#local-processing-measurement) documents synthetic short and long clips through transcription and cleanup. The pilot measures the full interval from shortcut release to an unsent draft in the editor.

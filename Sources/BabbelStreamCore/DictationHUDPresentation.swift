@@ -61,72 +61,69 @@ public enum DictationHUDPhase: Equatable, Sendable {
     }
 }
 
+public enum DictationStatus: String, Sendable {
+    case ready = "Ready"
+    case preparing = "Preparing recording"
+    case microphoneUnavailable = "Microphone unavailable"
+    case canceling = "Canceling dictation"
+    case cancelFailed = "Cancel failed"
+    case invalidSettings = "Settings invalid"
+    case personal = "Trying personal OpenAI"
+    case mini = "Trying Mini transcription"
+    case transcribing = "Transcribing"
+    case retrying = "Retrying transcription"
+    case recording = "Recording dictation"
+    case test = "Recording test"
+    case recordingFailed = "Recording failed"
+    case stopFailed = "Stop failed"
+    case dictationFailed = "Dictation failed"
+    case draftAvailable = "Copy Last Draft"
+    case cleanupFailed = "Cleanup failed"
+    case saved = "Recording saved"
+    case transcribingAtLimit = "Max reached; transcribing"
+    case localTranscription = "Transcribing on this Mac"
+    case localCleanup = "Cleaning up on this Mac"
+    case cleanup = "Cleaning up"
+    case retryingRecording = "Retrying saved recording"
+    case copied = "Copied"
+    case pasting = "Pasting draft"
+    case pasteFailed = "Paste failed"
+    case pasted, canceled, canceledAfterStop, failedAndRetained
+
+    public var displayName: String {
+        switch self {
+        case .pasted, .canceled, .canceledAfterStop: "Ready"
+        case .failedAndRetained: "Dictation failed"
+        default: rawValue
+        }
+    }
+
+    public var hudPhase: DictationHUDPhase {
+        switch self {
+        case .recording, .test: .recording
+        case .preparing: .processing
+        case .transcribing, .transcribingAtLimit, .localTranscription: .transcribing
+        case .personal: .tryingPersonalOpenAI
+        case .mini: .tryingMini
+        case .retrying, .retryingRecording: .retrying
+        case .cleanup, .localCleanup: .cleaningUp
+        case .canceling: .canceling
+        case .pasting: .pasting
+        case .pasted: .pasted
+        case .copied: .copied
+        case .draftAvailable: .draftAvailable
+        case .saved, .cleanupFailed, .canceledAfterStop, .failedAndRetained: .recordingSaved
+        case .canceled: .canceled
+        case .microphoneUnavailable, .invalidSettings, .recordingFailed, .stopFailed,
+             .dictationFailed, .cancelFailed, .pasteFailed: .error
+        case .ready: .done
+        }
+    }
+}
+
 public enum DictationHUDPresentation {
     public static func providerAccent(personalOpenAIActive: Bool) -> DictationHUDProviderAccent {
         personalOpenAIActive ? .personalOpenAI : .standard
-    }
-
-    public static func phase(
-        isRecording: Bool,
-        isProcessing: Bool,
-        canCancel: Bool,
-        status: String,
-        lastResult: String,
-        hasError: Bool
-    ) -> DictationHUDPhase {
-        if isRecording {
-            return .recording
-        }
-
-        if isProcessing || canCancel {
-            switch status {
-            case "Transcribing", "Transcribing on this Mac", "Max reached; transcribing":
-                return .transcribing
-            case "Trying Mini transcription":
-                return .tryingMini
-            case "Trying personal OpenAI":
-                return .tryingPersonalOpenAI
-            case "Retrying transcription":
-                return .retrying
-            case "Cleaning up":
-                return .cleaningUp
-            case "Pasting draft":
-                return .pasting
-            case "Canceling dictation":
-                return .canceling
-            default:
-                return .processing
-            }
-        }
-
-        if status == "Copy Last Draft" { return .draftAvailable }
-
-        if status == "Copied" {
-            return .copied
-        }
-
-        if status == "Recording saved"
-            || lastResult.localizedCaseInsensitiveContains("Failed Recordings")
-            || lastResult.localizedCaseInsensitiveContains("recording retained")
-        {
-            return .recordingSaved
-        }
-
-        if hasError || status.localizedCaseInsensitiveContains("failed") {
-            return .error
-        }
-
-        if lastResult.localizedCaseInsensitiveContains("canceled") {
-            return .canceled
-        }
-
-        if lastResult.localizedCaseInsensitiveContains("draft inserted")
-            || lastResult.localizedCaseInsensitiveContains("paste shortcut")
-        {
-            return .pasted
-        }
-
-        return .done
     }
 }
 

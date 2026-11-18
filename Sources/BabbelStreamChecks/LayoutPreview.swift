@@ -17,7 +17,7 @@ func runLayoutPreview() throws {
     if CommandLine.arguments.contains("--preview-not-requested") {
         fixture.recorder.permissionAfterRequest = .authorized // Fake consent only; no OS prompt.
     }
-    if CommandLine.arguments.contains("--preview-local") { fixture.app.transcriptionBackend = .local }
+    if CommandLine.arguments.contains("--preview-local") { fixture.app.settingsDraft.transcriptionBackend = .local }
     let delegate = LayoutPreviewDelegate(fixture: fixture)
     application.delegate = delegate
     application.setActivationPolicy(.regular)

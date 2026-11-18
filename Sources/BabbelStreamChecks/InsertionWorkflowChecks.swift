@@ -102,5 +102,5 @@ func runInsertionWorkflowChecks() async throws {
     } catch TextInsertionError.pasteboardUnavailable {}
     check(failedWrite.posts == 0 && failedWrite.clipboard == "original fixture", "A failed clipboard write must never post paste.")
 
-    check(DictationHUDPresentation.phase(isRecording: false, isProcessing: false, canCancel: false, status: "Copy Last Draft", lastResult: "", hasError: false) == .draftAvailable, "Clipboard contention must show a truthful Copy Last Draft HUD.")
+    check(DictationStatus.draftAvailable.hudPhase == .draftAvailable, "Clipboard contention must show a truthful Copy Last Draft HUD.")
 }

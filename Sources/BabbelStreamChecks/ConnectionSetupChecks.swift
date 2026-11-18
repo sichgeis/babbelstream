@@ -14,20 +14,20 @@ func runConnectionSetupChecks() async throws {
         await f.app.testSavedConnection()
         check(f.transcription.requests.isEmpty && f.secret.reads == 0, "Incomplete setup must not submit a request or read a secret.")
         let original = f.settings.value
-        let model = f.app.transcriptionModelText
+        let model = f.app.settingsDraft.transcriptionModelText
         f.app.selectConnectionPreset(.officialOpenAI)
-        check(f.app.baseURLText == "https://api.openai.com" && f.app.transcriptionModelText == model, "Explicit preset must stage only non-secret connection values.")
+        check(f.app.settingsDraft.baseURLText == "https://api.openai.com" && f.app.settingsDraft.transcriptionModelText == model, "Explicit preset must stage only non-secret connection values.")
         check(f.settings.value == original && f.app.hasUnsavedSettingsChanges, "Preset must not silently apply.")
-        check(!f.app.personalOpenAIFallbackEnabled, "Setup must not enable fallback for a new user.")
+        check(!f.app.settingsDraft.personalOpenAIFallbackEnabled, "Setup must not enable fallback for a new user.")
         f.app.selectConnectionPreset(.custom)
-        check(f.app.baseURLText.contains("example.invalid"), "Custom preset must not invent a company endpoint.")
+        check(f.app.settingsDraft.baseURLText.contains("example.invalid"), "Custom preset must not invent a company endpoint.")
     }
     do {
         let f = try CoordinatorFixture()
         defer { try? f.dispose() }
         check(f.app.connectionVerification == .unverified && f.secret.reads == 0, "Saved presence must never imply tested credentials.")
-        f.app.transcriptionPromptText = "private-fixture-hint-never-send-in-connection-test"
-        f.app.transcriptionLanguageText = "de"
+        f.app.settingsDraft.transcriptionPromptText = "private-fixture-hint-never-send-in-connection-test"
+        f.app.settingsDraft.transcriptionLanguageText = "de"
         await f.app.testSavedConnection()
         check(f.transcription.requests.isEmpty, "Edited unapplied settings must disable connection tests.")
         f.app.saveSettings()
@@ -43,7 +43,7 @@ func runConnectionSetupChecks() async throws {
         check(f.transcription.requests.count == 1 && f.mini.requests.isEmpty && f.cleanup.requests.isEmpty && f.personalSecret.reads == 0 && f.insertion.inserted.isEmpty, "Connection test must never hedge, cleanup, use fallback or deliver text.")
         check(!FileManager.default.fileExists(atPath: f.transcription.requests[0].audioURL.path), "Synthetic test audio must be removed at completion.")
         check(f.app.latestFinalDraftSummary == "None" && f.app.usageSnapshot.totalDictations == 0, "Test must not retain provider output as a draft or a dictation.")
-        f.app.timeoutText = "35"
+        f.app.settingsDraft.timeoutText = "35"
         f.app.saveSettings()
         check(f.app.connectionVerification == .unverified, "Apply must invalidate prior connection evidence.")
     }
@@ -73,7 +73,7 @@ func runConnectionSetupChecks() async throws {
             try await Task.sleep(nanoseconds: 1_000_000)
         }
         check(f.app.isConnectionTesting && !f.app.canStart, "An explicit test must own its operation until completion/cancellation.")
-        f.app.timeoutText = "35"
+        f.app.settingsDraft.timeoutText = "35"
         f.app.saveSettings() // Invalidates generation and cancels even a provider that ignores cancellation.
         await test.value
         check(f.app.connectionVerification == .unverified && !f.app.isConnectionTesting, "Stale completion after Apply must never mark changed settings verified.")

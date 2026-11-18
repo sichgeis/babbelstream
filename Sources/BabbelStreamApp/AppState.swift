@@ -55,8 +55,7 @@ final class AppState: ObservableObject {
         let personalOpenAIWasAutomaticFallback: Bool
     }
 
-    @Published var transcriptionBackend: TranscriptionBackend
-    @Published var localModel: LocalModelID
+    @Published var settingsDraft: SettingsDraft
     let localModels: LocalModelController
     let cleanupModels: LocalModelController
     var isLocalSpeechHUDActive: Bool {
@@ -64,7 +63,8 @@ final class AppState: ObservableObject {
     }
     var isLocalTranscriptionApplied: Bool { appSettings.transcriptionBackend == .local }
 
-    @Published var status = "Ready"
+    @Published private(set) var operationStatus: DictationStatus = .ready
+    var status: String { operationStatus.displayName }
     @Published var microphonePermissionStatus: MicrophonePermissionStatus = .unknown
     @Published var accessibilityPermissionStatus: AccessibilityPermissionStatus = .notTrusted
     @Published var elapsedSeconds: TimeInterval = 0
@@ -74,16 +74,12 @@ final class AppState: ObservableObject {
     @Published private var isDeliveringDraft = false
     @Published var recordingMode: RecordingMode = .none
     @Published private(set) var dictationControlStyle: DictationControlStyle = .none
-    @Published var localCleanupEnabled: Bool
-    @Published var cleanupEnabled: Bool
     @Published var lastResult = "No dictation yet."
     @Published var warningMessage: String?
     @Published var errorMessage: String?
     @Published var hotkeyStatus = "Hotkey not registered yet."
     @Published var hasAPIKey = false
     @Published var hasPersonalOpenAIFallbackAPIKey = false
-    @Published var personalOpenAIFallbackEnabled: Bool
-    @Published var personalOpenAIDirectModeEnabled: Bool
     @Published private(set) var usesPersonalOpenAIForCurrentOperation = false
     @Published private(set) var usesLocalSpeechForCurrentOperation = false
     @Published var launchAtLoginEnabled = false
@@ -92,26 +88,11 @@ final class AppState: ObservableObject {
     @Published var usageSnapshot: UsageSnapshot
     @Published var personalDictionarySummary = "Not loaded yet."
     @Published var lastFailureCategory = "None"
-    @Published var dictationArchiveEnabled: Bool
-    @Published var archiveRawTranscriptEnabled: Bool
-    @Published var archiveMonthText: String
-    @Published var archiveSnapshot: DictationArchiveMonthSnapshot
-    @Published var archiveStatusMessage = "Archive not loaded yet."
-    @Published var archiveErrorMessage: String?
+    let archiveBrowser: ArchiveBrowser
     @Published private(set) var recoverySnapshot = DictationRecoverySnapshot(recordings: [])
     @Published private(set) var recoveryStatusMessage = "No failed recordings."
     @Published private(set) var recoveryErrorMessage: String?
 
-    @Published var baseURLText: String
-    @Published var transcriptionPathText: String
-    @Published var cleanupPathText: String
-    @Published var transcriptionModelText: String
-    @Published var transcriptionModelRouting: TranscriptionModelRouting
-    @Published var cleanupModelText: String
-    @Published var timeoutText: String
-    @Published var maxAudioDurationMinutesText: String
-    @Published var transcriptionLanguageText: String
-    @Published var transcriptionPromptText: String
     @Published var apiKeyInput = ""
     @Published var personalOpenAIFallbackAPIKeyInput = ""
     @Published private(set) var connectionVerification: ConnectionVerificationState = .unverified
@@ -211,32 +192,17 @@ final class AppState: ObservableObject {
 
         let loadedSettings = settingsStore.load()
         let loadedUsageSnapshot = usageTracker.load()
-        let currentArchiveMonth = DictationArchiveMonth.current()
-        self.transcriptionBackend = loadedSettings.transcriptionBackend
-        self.localModel = loadedSettings.localModel
+        self.archiveBrowser = ArchiveBrowser(store: dictationArchiveStore, clipboard: textInsertionService)
+        self.settingsDraft = SettingsDraft(loadedSettings)
         self.appSettings = loadedSettings
         self.usageSnapshot = loadedUsageSnapshot
-        self.cleanupEnabled = loadedSettings.cleanupEnabled
-        self.localCleanupEnabled = loadedSettings.localCleanupEnabled
-        self.personalOpenAIFallbackEnabled = loadedSettings.personalOpenAIFallbackEnabled
-        self.personalOpenAIDirectModeEnabled = loadedSettings.personalOpenAIDirectModeEnabled
-        self.dictationArchiveEnabled = loadedSettings.dictationArchiveEnabled
-        self.archiveRawTranscriptEnabled = loadedSettings.archiveRawTranscriptEnabled
-        self.archiveMonthText = currentArchiveMonth.directoryName
-        self.archiveSnapshot = DictationArchiveMonthSnapshot(month: currentArchiveMonth, entries: [])
-        self.baseURLText = loadedSettings.providerConfiguration.baseURL.absoluteString
-        self.transcriptionPathText = loadedSettings.providerConfiguration.transcriptionEndpointPath
-        self.cleanupPathText = loadedSettings.providerConfiguration.cleanupEndpointPath
-        self.transcriptionModelText = loadedSettings.providerConfiguration.transcriptionModel
-        self.transcriptionModelRouting = loadedSettings.providerConfiguration.transcriptionModelRouting
-        self.cleanupModelText = loadedSettings.providerConfiguration.cleanupModel
-        self.timeoutText = String(Int(loadedSettings.providerConfiguration.timeoutSeconds))
-        self.maxAudioDurationMinutesText = Self.durationMinutesText(for: loadedSettings.maxAudioDurationSeconds)
-        self.transcriptionLanguageText = loadedSettings.transcriptionLanguage
-        self.transcriptionPromptText = loadedSettings.transcriptionPrompt
 
         self.microphonePermissionStatus = audioRecorder.microphonePermissionStatus()
         self.accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
+        archiveBrowser.onAction = { [weak self] diagnostic, result in
+            if let result { self?.lastResult = result }
+            self?.recordDiagnostic(diagnostic)
+        }
         // One-time non-secret migration binds legacy installations to their saved origin.
         // A sentinel left by an interrupted key update is never migrated implicitly.
         if apiKeyPresenceStore.approvedOrigin == nil {
@@ -432,22 +398,22 @@ final class AppState: ObservableObject {
     }
 
     var effectiveTranscriptionModel: String {
-        transcriptionModelRouting.providerModelID(for: transcriptionModelText)
+        settingsDraft.transcriptionModelRouting.providerModelID(for: settingsDraft.transcriptionModelText)
     }
 
     var effectiveFallbackTranscriptionModel: String {
-        transcriptionModelRouting.providerModelID(for: ProjectDefaults.fallbackTranscriptionModel)
+        settingsDraft.transcriptionModelRouting.providerModelID(for: ProjectDefaults.fallbackTranscriptionModel)
     }
 
     var editedProviderDestinationSummary: String {
-        if transcriptionBackend == .local { return "On this Mac · \(localModel.displayName)" }
-        return "\(baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(transcriptionPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
+        if settingsDraft.transcriptionBackend == .local { return "On this Mac · \(settingsDraft.localModel.displayName)" }
+        return "\(settingsDraft.baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(settingsDraft.transcriptionPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
     }
 
     var editedCleanupDestinationSummary: String {
-        if localCleanupEnabled { return "On this Mac · Qwen3.5-4B" }
-        if transcriptionBackend == .local { return "Off — text stays on this Mac" }
-        return "\(baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(cleanupPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
+        if settingsDraft.localCleanupEnabled { return "On this Mac · Qwen3.5-4B" }
+        if settingsDraft.transcriptionBackend == .local { return "Off — text stays on this Mac" }
+        return "\(settingsDraft.baseURLText.trimmingCharacters(in: .whitespacesAndNewlines))\(settingsDraft.cleanupPathText.trimmingCharacters(in: .whitespacesAndNewlines))"
     }
 
     var hasUnsavedSettingsChanges: Bool {
@@ -457,7 +423,7 @@ final class AppState: ObservableObject {
     }
 
     var hasUnsavedConfigurationChanges: Bool {
-        guard let draft = try? settingsFromDraft() else {
+        guard let draft = try? settingsDraft.applying(to: appSettings) else {
             return true
         }
 
@@ -520,10 +486,6 @@ final class AppState: ObservableObject {
         return "If System Settings already shows this app enabled, remove and re-add /Applications/\(ProjectDefaults.appName).app in Accessibility, then restart the app."
     }
 
-    var archiveSummary: String {
-        "\(archiveSnapshot.entries.count) entries, \(archiveSnapshot.totalFinalWordCount) final words"
-    }
-
     var hudDetail: String {
         if isRecording {
             let target = pasteTargetSummary ?? "unverified target"
@@ -542,16 +504,14 @@ final class AppState: ObservableObject {
                 : "Escape cancels"
             return "Target: \(target) • \(stopGuidance) via \(provider) • \(cancelGuidance) • \(formatDuration(elapsedSeconds))"
         }
-        if status == "Cleaning up" {
+        if operationStatus.hudPhase == .cleaningUp {
             return "Formatting the transcript. The original target will be verified before paste."
         }
-        if (status == "Transcribing"
-                || status == "Retrying transcription"
-                || status == "Trying personal OpenAI"),
+        if [.transcribing, .retrying, .tryingPersonalOpenAI].contains(operationStatus.hudPhase),
            let transcriptionProgressDetail {
             return transcriptionProgressDetail
         }
-        if status == "Pasting draft" {
+        if operationStatus == .pasting {
             return "Verifying the original application before inserting into its focused field."
         }
 
@@ -590,10 +550,10 @@ final class AppState: ObservableObject {
 
         microphonePermissionStatus = await audioRecorder.requestMicrophonePermission()
         if microphonePermissionStatus.canRecord {
-            status = "Ready"
+            operationStatus = .ready
             errorMessage = nil
         } else {
-            status = "Microphone unavailable"
+            operationStatus = .microphoneUnavailable
             errorMessage = microphoneGuidance(for: microphonePermissionStatus)
         }
         recordDiagnostic("microphone permission: \(microphonePermissionStatus.displayName)")
@@ -649,7 +609,7 @@ final class AppState: ObservableObject {
 
     func cancelRecording() async {
         if let processingTask {
-            status = "Canceling dictation"
+            operationStatus = .canceling
             lastResult = "Cancel requested. Stopping provider work and preserving stopped audio for recovery."
             recordDiagnostic("processing cancellation requested")
             processingTask.cancel()
@@ -669,7 +629,7 @@ final class AppState: ObservableObject {
         do {
             try await audioRecorder.cancel()
             resetRecordingState()
-            status = "Ready"
+            operationStatus = .canceled
             errorMessage = nil
             warningMessage = nil
             lastResult = "Recording canceled; temporary file deleted."
@@ -677,7 +637,7 @@ final class AppState: ObservableObject {
             completeDiagnosticOperation()
         } catch {
             resetRecordingState()
-            status = "Cancel failed"
+            operationStatus = .cancelFailed
             errorMessage = error.localizedDescription
             lastResult = "Could not cancel recording safely."
             recordDiagnostic("recording cancel failed: \(diagnosticErrorCategory(error))")
@@ -717,10 +677,10 @@ final class AppState: ObservableObject {
     }
 
     func selectConnectionPreset(_ preset: ConnectionPreset) {
-        baseURLText = preset.baseURL
-        transcriptionPathText = "/v1/audio/transcriptions"
-        cleanupPathText = "/v1/chat/completions"
-        transcriptionModelRouting = .standardOpenAI
+        settingsDraft.baseURLText = preset.baseURL
+        settingsDraft.transcriptionPathText = "/v1/audio/transcriptions"
+        settingsDraft.cleanupPathText = "/v1/chat/completions"
+        settingsDraft.transcriptionModelRouting = .standardOpenAI
         settingsFeedbackMessage = "Preset staged. Confirm your authorized destination and per-user key, review Advanced if needed, then Apply. Models are unchanged."
     }
 
@@ -779,7 +739,7 @@ final class AppState: ObservableObject {
     func saveSettings() {
         cancelConnectionTest()
         do {
-            let settings = try settingsFromDraft()
+            let settings = try settingsDraft.applying(to: appSettings)
             if settings.localCleanupEnabled { try validateLocalCleanupReady() }
             if settings.transcriptionBackend == .local {
                 guard !localModels.isBusy else { throw LocalModelError.busy }
@@ -831,14 +791,14 @@ final class AppState: ObservableObject {
             try settingsStore.save(settings)
 
             appSettings = settings
-            transcriptionBackend = settings.transcriptionBackend
-            localModel = settings.localModel
-            personalOpenAIFallbackEnabled = settings.personalOpenAIFallbackEnabled
-            personalOpenAIDirectModeEnabled = settings.personalOpenAIDirectModeEnabled
-            dictationArchiveEnabled = settings.dictationArchiveEnabled
-            archiveRawTranscriptEnabled = settings.archiveRawTranscriptEnabled
-            transcriptionLanguageText = settings.transcriptionLanguage
-            maxAudioDurationMinutesText = Self.durationMinutesText(for: settings.maxAudioDurationSeconds)
+            settingsDraft.transcriptionBackend = settings.transcriptionBackend
+            settingsDraft.localModel = settings.localModel
+            settingsDraft.personalOpenAIFallbackEnabled = settings.personalOpenAIFallbackEnabled
+            settingsDraft.personalOpenAIDirectModeEnabled = settings.personalOpenAIDirectModeEnabled
+            settingsDraft.dictationArchiveEnabled = settings.dictationArchiveEnabled
+            settingsDraft.archiveRawTranscriptEnabled = settings.archiveRawTranscriptEnabled
+            settingsDraft.transcriptionLanguageText = settings.transcriptionLanguage
+            settingsDraft.maxAudioDurationMinutesText = SettingsDraft.durationMinutesText(for: settings.maxAudioDurationSeconds)
             hasAPIKey = apiKeyPresenceStore.hasSavedAPIKey
             hasPersonalOpenAIFallbackAPIKey = personalOpenAIFallbackAPIKeyPresenceStore.hasSavedAPIKey
             warningMessage = nil
@@ -888,8 +848,8 @@ final class AppState: ObservableObject {
             updatedSettings.personalOpenAIDirectModeEnabled = false
             try settingsStore.save(updatedSettings)
             appSettings = updatedSettings
-            personalOpenAIFallbackEnabled = false
-            personalOpenAIDirectModeEnabled = false
+            settingsDraft.personalOpenAIFallbackEnabled = false
+            settingsDraft.personalOpenAIDirectModeEnabled = false
 
             settingsErrorMessage = nil
             settingsFeedbackMessage = "Personal OpenAI key deleted and fallback disabled."
@@ -904,19 +864,19 @@ final class AppState: ObservableObject {
     }
 
     func setPersonalOpenAIFallbackEnabledDraft(_ isEnabled: Bool) {
-        personalOpenAIFallbackEnabled = isEnabled
+        settingsDraft.personalOpenAIFallbackEnabled = isEnabled
         if !isEnabled {
-            personalOpenAIDirectModeEnabled = false
+            settingsDraft.personalOpenAIDirectModeEnabled = false
         }
     }
 
     func setPersonalOpenAIDirectModeEnabledDraft(_ isEnabled: Bool) {
-        personalOpenAIDirectModeEnabled = personalOpenAIFallbackEnabled && isEnabled
+        settingsDraft.personalOpenAIDirectModeEnabled = settingsDraft.personalOpenAIFallbackEnabled && isEnabled
     }
 
     func setCleanupEnabled(_ isEnabled: Bool) {
         guard !isLocalTranscriptionApplied, !appSettings.localCleanupEnabled else { return }
-        cleanupEnabled = isEnabled
+        settingsDraft.cleanupEnabled = isEnabled
         var updatedSettings = appSettings
         updatedSettings.cleanupEnabled = isEnabled
         do {
@@ -945,7 +905,7 @@ final class AppState: ObservableObject {
                 diagnosticMessage: "dictation archive \(isEnabled ? "enabled" : "disabled")"
             )
             if isEnabled {
-                loadArchiveMonth()
+                archiveBrowser.loadMonth()
             } else {
                 notifyStateChanged()
             }
@@ -957,7 +917,7 @@ final class AppState: ObservableObject {
 
     func setArchiveRawTranscriptEnabled(_ isEnabled: Bool) {
         var updatedSettings = appSettings
-        updatedSettings.archiveRawTranscriptEnabled = dictationArchiveEnabled && isEnabled
+        updatedSettings.archiveRawTranscriptEnabled = settingsDraft.dictationArchiveEnabled && isEnabled
 
         do {
             try applySavedArchiveSettings(
@@ -981,10 +941,10 @@ final class AppState: ObservableObject {
     ) throws {
         try settingsStore.save(settings)
         appSettings = settings
-        dictationArchiveEnabled = settings.dictationArchiveEnabled
-        archiveRawTranscriptEnabled = settings.archiveRawTranscriptEnabled
-        archiveStatusMessage = statusMessage
-        archiveErrorMessage = nil
+        settingsDraft.dictationArchiveEnabled = settings.dictationArchiveEnabled
+        settingsDraft.archiveRawTranscriptEnabled = settings.archiveRawTranscriptEnabled
+        archiveBrowser.statusMessage = statusMessage
+        archiveBrowser.errorMessage = nil
         lastResult = statusMessage
         recordDiagnostic(diagnosticMessage)
     }
@@ -1057,104 +1017,6 @@ final class AppState: ObservableObject {
         notifyStateChanged()
     }
 
-    func loadArchiveMonth() {
-        guard let month = DictationArchiveMonth(string: archiveMonthText) else {
-            archiveErrorMessage = "Use a month in YYYY-MM format."
-            archiveStatusMessage = "Archive month could not be loaded."
-            recordDiagnostic("archive month load failed: invalid month")
-            notifyStateChanged()
-            return
-        }
-
-        do {
-            let snapshot = try dictationArchiveStore.loadMonth(month)
-            archiveSnapshot = snapshot
-            archiveMonthText = month.directoryName
-            archiveErrorMessage = nil
-            let recoverySuffix = snapshot.readWarnings.isEmpty
-                ? ""
-                : " Skipped \(snapshot.readWarnings.count) damaged entr\(snapshot.readWarnings.count == 1 ? "y" : "ies")."
-            archiveStatusMessage = "Loaded \(snapshot.entries.count) archive entr\(snapshot.entries.count == 1 ? "y" : "ies").\(recoverySuffix)"
-            recordDiagnostic(
-                "archive month loaded: \(month.directoryName), \(snapshot.entries.count) entries, \(snapshot.readWarnings.count) skipped"
-            )
-        } catch {
-            archiveErrorMessage = error.localizedDescription
-            archiveStatusMessage = "Archive month could not be loaded."
-            recordDiagnostic("archive month load failed: \(diagnosticErrorCategory(error))")
-        }
-
-        notifyStateChanged()
-    }
-
-    func copyArchiveMarkdownExport() {
-        guard let month = DictationArchiveMonth(string: archiveMonthText) else {
-            archiveErrorMessage = "Use a month in YYYY-MM format."
-            archiveStatusMessage = "Archive export could not be prepared."
-            recordDiagnostic("archive export failed: invalid month")
-            notifyStateChanged()
-            return
-        }
-
-        do {
-            let snapshot = try dictationArchiveStore.loadMonth(month)
-            let markdown = dictationArchiveStore.markdownExport(for: snapshot)
-            try textInsertionService.copyText(markdown)
-            archiveSnapshot = snapshot
-            archiveMonthText = month.directoryName
-            archiveErrorMessage = nil
-            archiveStatusMessage = snapshot.readWarnings.isEmpty
-                ? "Archive Markdown export copied."
-                : "Archive Markdown export copied with \(snapshot.readWarnings.count) damaged entr\(snapshot.readWarnings.count == 1 ? "y" : "ies") skipped."
-            lastResult = "Archive Markdown export copied."
-            recordDiagnostic("archive export copied: \(month.directoryName), \(snapshot.entries.count) entries")
-        } catch {
-            archiveErrorMessage = error.localizedDescription
-            archiveStatusMessage = "Archive export could not be copied."
-            recordDiagnostic("archive export failed: \(diagnosticErrorCategory(error))")
-        }
-
-        notifyStateChanged()
-    }
-
-    func revealArchiveFolder() {
-        let fileManager = FileManager.default
-        let archiveURL = dictationArchiveStore.archiveDirectoryURL
-        let fallbackURL = archiveURL.deletingLastPathComponent()
-
-        if fileManager.fileExists(atPath: archiveURL.path) {
-            NSWorkspace.shared.open(archiveURL)
-            archiveStatusMessage = "Archive folder opened."
-        } else if fileManager.fileExists(atPath: fallbackURL.path) {
-            NSWorkspace.shared.open(fallbackURL)
-            archiveStatusMessage = "Archive folder does not exist yet. Opened BabbelStream support folder."
-        } else {
-            NSWorkspace.shared.open(fallbackURL.deletingLastPathComponent())
-            archiveStatusMessage = "Archive folder does not exist yet."
-        }
-        archiveErrorMessage = nil
-        recordDiagnostic("archive folder reveal requested")
-        notifyStateChanged()
-    }
-
-    func clearArchive() {
-        do {
-            try dictationArchiveStore.clearArchive()
-            let month = DictationArchiveMonth(string: archiveMonthText) ?? DictationArchiveMonth.current()
-            archiveSnapshot = DictationArchiveMonthSnapshot(month: month, entries: [])
-            archiveErrorMessage = nil
-            archiveStatusMessage = "Archive cleared."
-            lastResult = "Dictation archive cleared."
-            recordDiagnostic("dictation archive cleared")
-        } catch {
-            archiveErrorMessage = error.localizedDescription
-            archiveStatusMessage = "Archive could not be cleared."
-            recordDiagnostic("archive clear failed: \(diagnosticErrorCategory(error))")
-        }
-
-        notifyStateChanged()
-    }
-
     func openTeachCorrection() {
         onTeachCorrectionRequested?()
     }
@@ -1168,7 +1030,7 @@ final class AppState: ObservableObject {
         do {
             _ = try await insertFinalDraft(latestFinalDraft, target: target)
         } catch {
-            status = "Ready"
+            operationStatus = .canceled
             lastResult = "Paste retry canceled."
             recordDiagnostic("paste retry canceled")
         }
@@ -1244,7 +1106,7 @@ final class AppState: ObservableObject {
             ("microphone", microphonePermissionStatus.rawValue),
             ("accessibility", accessibilityPermissionStatus.displayName),
             ("archive enabled", String(appSettings.dictationArchiveEnabled)),
-            ("archive entries", String(archiveSnapshot.entries.count)),
+            ("archive entries", String(archiveBrowser.snapshot.entries.count)),
             ("failed recordings", String(recoverySnapshot.recordings.count)),
             ("dictations", String(usageSnapshot.totalDictations)),
             ("recorded seconds", String(usageSnapshot.totalRecordedSeconds)),
@@ -1256,77 +1118,9 @@ final class AppState: ObservableObject {
         return "BabbelStream diagnostics\n" + fields.map { "\($0.0): \($0.1)" }.joined(separator: "\n")
     }
 
-    private func settingsFromDraft() throws -> AppSettings {
-        if transcriptionBackend == .local {
-            var settings = appSettings // Preserve all inactive remote choices.
-            settings.transcriptionBackend = .local
-            settings.localModel = localModel
-            settings.localCleanupEnabled = localCleanupEnabled
-            guard let minutes = TimeInterval(maxAudioDurationMinutesText) else { throw SettingsValidationError.invalidMaxAudioDuration }
-            settings.maxAudioDurationSeconds = minutes * 60
-            let language = transcriptionLanguageText.trimmingCharacters(in: .whitespacesAndNewlines)
-            settings.transcriptionLanguage = TranscriptionLanguageNormalizer.apiValue(from: language) ?? language
-            settings.dictationArchiveEnabled = dictationArchiveEnabled
-            settings.archiveRawTranscriptEnabled = dictationArchiveEnabled && archiveRawTranscriptEnabled
-            try AppSettingsValidator.validate(settings)
-            return settings
-        }
-        guard let baseURL = URL(string: baseURLText.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-            throw SettingsValidationError.invalidBaseURL
-        }
-        guard let timeout = TimeInterval(timeoutText.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-            throw SettingsValidationError.invalidTimeout
-        }
-        guard let maxAudioDurationMinutes = TimeInterval(
-            maxAudioDurationMinutesText.trimmingCharacters(in: .whitespacesAndNewlines)
-        ) else {
-            throw SettingsValidationError.invalidMaxAudioDuration
-        }
-
-        let rawLanguage = transcriptionLanguageText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalizedLanguage = TranscriptionLanguageNormalizer.apiValue(from: rawLanguage) ?? rawLanguage
-        let configuration = ProviderConfiguration(
-            baseURL: baseURL,
-            transcriptionEndpointPath: transcriptionPathText,
-            cleanupEndpointPath: cleanupPathText,
-            transcriptionModel: transcriptionModelText,
-            transcriptionModelRouting: transcriptionModelRouting,
-            cleanupModel: cleanupModelText,
-            timeoutSeconds: timeout
-        )
-        let settings = AppSettings(
-            providerConfiguration: configuration,
-            transcriptionBackend: transcriptionBackend,
-            localModel: localModel,
-            localCleanupEnabled: localCleanupEnabled,
-            personalOpenAIFallbackEnabled: personalOpenAIFallbackEnabled,
-            personalOpenAIDirectModeEnabled: personalOpenAIFallbackEnabled
-                && personalOpenAIDirectModeEnabled,
-            cleanupEnabled: cleanupEnabled,
-            transcriptionResponseFormat: ProjectDefaults.defaultTranscriptionResponseFormat,
-            transcriptionLanguage: normalizedLanguage,
-            transcriptionPrompt: transcriptionPromptText,
-            maxAudioDurationSeconds: maxAudioDurationMinutes * 60,
-            dictationArchiveEnabled: dictationArchiveEnabled,
-            archiveRawTranscriptEnabled: dictationArchiveEnabled && archiveRawTranscriptEnabled
-        )
-        try AppSettingsValidator.validate(settings)
-
-        return settings
-    }
-
     private func effectiveDestination(baseURL: URL, path: String) -> String {
         ProviderEndpointBuilder.endpointURL(baseURL: baseURL, path: path)?.absoluteString
             ?? "Invalid saved destination"
-    }
-
-    private static func durationMinutesText(for duration: TimeInterval) -> String {
-        let minutes = duration / 60
-        if minutes.rounded(.towardZero) == minutes {
-            return "\(Int(minutes))"
-        }
-
-        return String(format: "%.1f", minutes)
     }
 
     private func notifyStateChanged() {
@@ -1346,7 +1140,7 @@ final class AppState: ObservableObject {
             }
             return true
         } catch {
-            status = "Settings invalid"
+            operationStatus = .invalidSettings
             lastResult = "Dictation not started."
             errorMessage = error.localizedDescription
             lastFailureCategory = diagnosticErrorCategory(error)
@@ -1376,11 +1170,11 @@ final class AppState: ObservableObject {
         case let .attemptStarted(attempt, totalAttempts):
             if stage.hasPrefix("transcription") {
                 if stage.contains("personal openai") {
-                    status = "Trying personal OpenAI"
+                    operationStatus = .personal
                 } else if stage.contains("mini") || stage.contains("fallback") {
-                    status = "Trying Mini transcription"
+                    operationStatus = .mini
                 } else {
-                    status = "Transcribing"
+                    operationStatus = .transcribing
                 }
                 transcriptionProgressDetail = "Attempt \(attempt) of \(totalAttempts) • connection timeout \(Self.secondsLabel(connectionTimeout)) • overall timeout \(Self.secondsLabel(overallTimeout)) • Escape cancels"
             }
@@ -1392,7 +1186,7 @@ final class AppState: ObservableObject {
         case let .attemptFailed(attempt, totalAttempts, durationMilliseconds, category, willRetry):
             recordDiagnostic("\(stage) attempt \(attempt)/\(totalAttempts) failed in \(durationMilliseconds) ms: \(category.displayName), retry \(willRetry ? "yes" : "no")")
         case let .retryScheduled(nextAttempt, totalAttempts, reason):
-            status = "Retrying transcription"
+            operationStatus = .retrying
             transcriptionProgressDetail = "Retrying after \(reason.displayName) • attempt \(nextAttempt) of \(totalAttempts) starts shortly • Escape cancels"
             recordDiagnostic(
                 "\(stage) retry scheduled: attempt \(nextAttempt)/\(totalAttempts), \(reason.displayName)"
@@ -1570,13 +1364,14 @@ final class AppState: ObservableObject {
         isProcessing = true
         warningMessage = nil
         errorMessage = nil
+        operationStatus = .preparing
         lastResult = "Preparing recording..."
 
         let newStatus = await audioRecorder.requestMicrophonePermission()
         microphonePermissionStatus = newStatus
 
         guard newStatus.canRecord else {
-            status = "Microphone unavailable"
+            operationStatus = .microphoneUnavailable
             lastResult = "Recording not started."
             errorMessage = microphoneGuidance(for: newStatus)
             isProcessing = false
@@ -1595,7 +1390,7 @@ final class AppState: ObservableObject {
             activeDictation = session
             isRecording = true
             setCancelHotkeyEnabled(true)
-            status = mode == .dictation ? "Recording dictation" : "Recording test"
+            operationStatus = mode == .dictation ? .recording : .test
             if mode == .dictation {
                 lastResult = dictationControlStyle == .handsFree
                     ? "Hands-free recording active. Press \(ProjectDefaults.fixedHotkeyDescription) again or click Stop to transcribe."
@@ -1606,7 +1401,7 @@ final class AppState: ObservableObject {
             startElapsedTimer()
             recordDiagnostic("recording started: \(mode == .dictation ? "dictation" : "local test")")
         } catch {
-            status = "Recording failed"
+            operationStatus = .recordingFailed
             lastResult = "Recording not started."
             errorMessage = error.localizedDescription
             recordDiagnostic("recording start failed: \(diagnosticErrorCategory(error))")
@@ -1649,6 +1444,7 @@ final class AppState: ObservableObject {
         isProcessing = true
         stopElapsedTimer()
 
+        let previousRecordings = recoverySnapshot.recordings
         do {
             guard let session = activeDictation else { throw AudioRecordingError.notRecording }
             recordDiagnostic("recording stop started")
@@ -1678,7 +1474,7 @@ final class AppState: ObservableObject {
             if error as? AudioRecordingError == .couldNotSafeguardStop {
                 // The recorder still owns this file. Keep Stop/Cancel available.
                 isProcessing = false
-                status = "Stop failed"
+                operationStatus = .stopFailed
                 errorMessage = error.localizedDescription
                 lastResult = "Recording could not be stopped safely. Retry Stop or Cancel."
                 recordDiagnostic("recording stop ownership failed")
@@ -1689,15 +1485,17 @@ final class AppState: ObservableObject {
             refreshRecoveryRecordings()
             transcriptionProgressDetail = nil
             if ProviderRetryPolicy.isCancellation(error) {
-                status = "Ready"
+                operationStatus = .canceledAfterStop
                 errorMessage = nil
                 lastResult = "Processing canceled; recording retained in Failed Recordings."
                 lastFailureCategory = "None"
                 recordDiagnostic("dictation processing canceled")
             } else {
-                status = "Dictation failed"
+                let previousIDs = Set(previousRecordings.map(\.id))
+                let retained = activeRecoveryRecording != nil || recoverySnapshot.recordings.contains { !previousIDs.contains($0.id) }
+                operationStatus = retained ? .failedAndRetained : .dictationFailed
                 errorMessage = error.localizedDescription
-                lastResult = activeRecoveryRecording == nil && recoverySnapshot.recordings.isEmpty
+                lastResult = !retained
                     ? "Could not finish dictation safely."
                     : "Recording retained in Failed Recordings; retry or export it."
                 lastFailureCategory = diagnosticErrorCategory(error)
@@ -1726,14 +1524,14 @@ final class AppState: ObservableObject {
             let recording = try await audioRecorder.stop(deleteTemporaryFile: true)
             resetRecordingState()
             elapsedSeconds = recording.duration
-            status = "Ready"
+            operationStatus = .ready
             errorMessage = nil
             warningMessage = nil
             lastResult = resultMessage(for: recording, autoStopped: autoStopped)
             recordDiagnostic("local test stopped: \(formatDuration(recording.duration)); temp audio deleted")
         } catch {
             resetRecordingState()
-            status = "Stop failed"
+            operationStatus = .stopFailed
             errorMessage = error.localizedDescription
             lastResult = "Could not finish test recording safely."
             recordDiagnostic("local test stop failed: \(diagnosticErrorCategory(error))")
@@ -1757,15 +1555,15 @@ final class AppState: ObservableObject {
             )
             if cleanupFallbackUsed {
                 preserveActiveRecoveryRecording(state: .cleanupFailed, failureCategory: lastFailureCategory)
-                if status == "Copy Last Draft" || status == "Paste failed" {
-                    status = "Copy Last Draft"
+                if operationStatus == .draftAvailable || operationStatus == .pasteFailed {
+                    operationStatus = .draftAvailable
                     lastResult = "Cleanup failed; use Copy Last Draft. Recording retained in Failed Recordings."
                 } else {
-                    status = "Cleanup failed"
+                    operationStatus = .cleanupFailed
                     lastResult = "Raw draft delivered; recording saved in Failed Recordings."
                 }
             } else if !deleteActiveRecoveryRecording() {
-                status = "Recording saved"
+                operationStatus = .saved
                 lastResult = "Draft prepared; recording retained in Failed Recordings because deletion failed."
             }
         } catch {
@@ -1794,7 +1592,7 @@ final class AppState: ObservableObject {
         saveUsageSnapshot()
 
         usesLocalSpeechForCurrentOperation = settings.transcriptionBackend == .local
-        status = autoStopped ? "Max reached; transcribing" : "Transcribing"
+        operationStatus = autoStopped ? .transcribingAtLimit : .transcribing
         let activeTranscriptionSettings = PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settings)
             ? PersonalOpenAIFallbackPolicy.settings(derivedFrom: settings)
             : settings
@@ -1837,7 +1635,7 @@ final class AppState: ObservableObject {
         settings: AppSettings
     ) async throws -> PreparedDraft {
         if settings.transcriptionBackend == .local {
-            status = "Transcribing on this Mac"
+            operationStatus = .localTranscription
             let transcript: String
             do {
                 transcript = try await localModels.transcribe(model: settings.localModel, audio: audioURL,
@@ -1913,11 +1711,11 @@ final class AppState: ObservableObject {
                     onHedgeStarted: { [weak self] in
                         await MainActor.run {
                             guard let self else { return }
-                            self.status = "Trying Mini transcription"
+                            self.operationStatus = .mini
                             self.recordDiagnostic("transcription hedge started: \(ProjectDefaults.fallbackTranscriptionModel)")
                         }
                     },
-                    primary: { [transcriptionProvider] in
+                    primary: { [weak self, transcriptionProvider] in
                         try await transcriptionProvider.transcribe(
                             TranscriptionRequest(
                                 audioURL: audioURL,
@@ -1933,7 +1731,7 @@ final class AppState: ObservableObject {
                             )
                         )
                     },
-                    fallback: { [fallbackTranscriptionProvider] in
+                    fallback: { [weak self, fallbackTranscriptionProvider] in
                         try await fallbackTranscriptionProvider.transcribe(
                             TranscriptionRequest(
                                 audioURL: audioURL,
@@ -2009,7 +1807,7 @@ final class AppState: ObservableObject {
         configuredPersonalSettings.providerConfiguration.timeoutSeconds = ProjectDefaults.transcriptionOverallTimeoutSeconds
         let personalSettings = configuredPersonalSettings
         usesPersonalOpenAIForCurrentOperation = true
-        status = "Trying personal OpenAI"
+        operationStatus = .personal
 
         let wasAutomaticFallback: Bool
         switch activation {
@@ -2065,7 +1863,7 @@ final class AppState: ObservableObject {
     private func prepareLocalCleanup(transcript: String, settings: AppSettings) async throws -> PreparedDraft {
         var settings = settings
         settings.localCleanupEnabled = true
-        status = "Cleaning up on this Mac"
+        operationStatus = .localCleanup
         usageSnapshot.recordCleanupRequest(); saveUsageSnapshot()
         let dictionary = loadPersonalDictionaryForCleanup()
         do {
@@ -2106,7 +1904,7 @@ final class AppState: ObservableObject {
             )
         }
 
-        status = "Cleaning up"
+        operationStatus = .cleanup
         recordDiagnostic("cleanup started")
         usageSnapshot.recordCleanupRequest()
         saveUsageSnapshot()
@@ -2158,7 +1956,7 @@ final class AppState: ObservableObject {
                     }
                     let personalSettings = PersonalOpenAIFallbackPolicy.settings(derivedFrom: primarySettings)
                     usesPersonalOpenAIForCurrentOperation = true
-                    status = "Trying personal OpenAI"
+                    operationStatus = .personal
                     recordDiagnostic(
                         "personal openai cleanup fallback started after \(diagnosticErrorCategory(error))"
                     )
@@ -2382,7 +2180,7 @@ final class AppState: ObservableObject {
         usesPersonalOpenAIForCurrentOperation = PersonalOpenAIFallbackPolicy
             .shouldUsePersonalOpenAIDirectly(appSettings)
         activeRecoveryRecording = recording
-        status = "Retrying saved recording"
+        operationStatus = .retryingRecording
         errorMessage = nil
         warningMessage = nil
         lastResult = "Retrying failed recording with the currently applied provider settings."
@@ -2416,11 +2214,11 @@ final class AppState: ObservableObject {
 
             if preparedDraft.cleanupFallbackUsed {
                 preserveActiveRecoveryRecording(state: .cleanupFailed, failureCategory: lastFailureCategory)
-                status = "Recording saved"
+                operationStatus = .saved
                 lastResult = "Cleanup failed; raw draft copied and recording retained."
             } else {
                 let deleted = deleteActiveRecoveryRecording()
-                status = deleted ? "Copied" : "Recording saved"
+                operationStatus = deleted ? .copied : .saved
                 errorMessage = nil
                 lastResult = deleted
                     ? "Recovered draft copied; saved recording deleted."
@@ -2431,17 +2229,17 @@ final class AppState: ObservableObject {
             let state: DictationRecoveryState
             if ProviderRetryPolicy.isCancellation(error) {
                 state = .processingCanceled
-                status = "Recording saved"
+                operationStatus = .saved
                 errorMessage = nil
                 lastResult = "Retry canceled; recording retained."
             } else if error is TextInsertionError {
                 state = .copyFailed
-                status = "Recording saved"
+                operationStatus = .saved
                 errorMessage = error.localizedDescription
                 lastResult = "Recovered draft could not be copied; recording retained."
             } else {
                 state = .transcriptionFailed
-                status = "Recording saved"
+                operationStatus = .saved
                 errorMessage = error.localizedDescription
                 lastResult = "Retry failed; recording retained."
             }
@@ -2503,8 +2301,8 @@ final class AppState: ObservableObject {
             let startedAt = ContinuousClock.now
             try dictationArchiveStore.append(entry)
             recordDiagnostic("archive entry written in \(elapsedMilliseconds(since: startedAt)) ms: \(entry.finalWordCount) final words")
-            if DictationArchiveMonth(string: archiveMonthText) == DictationArchiveMonth.containing(entry.startedAt) {
-                loadArchiveMonth()
+            if DictationArchiveMonth(string: archiveBrowser.monthText) == DictationArchiveMonth.containing(entry.startedAt) {
+                archiveBrowser.loadMonth()
             }
         } catch {
             warningMessage = combinedWarning(
@@ -2592,7 +2390,7 @@ final class AppState: ObservableObject {
     private func insertFinalDraft(_ finalDraft: String, target: TextInsertionTarget?) async throws -> DictationArchiveInsertionOutcome {
         isDeliveringDraft = true
         defer { isDeliveringDraft = false }
-        status = "Pasting draft"
+        operationStatus = .pasting
         let startedAt = ContinuousClock.now
         recordDiagnostic("paste started")
         let insertionText = DictationDraftFormatter.textWithTrailingSeparator(finalDraft)
@@ -2621,7 +2419,7 @@ final class AppState: ObservableObject {
     ) -> DictationArchiveInsertionOutcome {
         switch insertionResult {
         case .pasteShortcutPosted:
-            status = "Ready"
+            operationStatus = .pasted
             lastResult = "Paste shortcut sent; draft is also on the clipboard."
             errorMessage = nil
             warningMessage = combinedWarning(
@@ -2631,14 +2429,14 @@ final class AppState: ObservableObject {
             recordDiagnostic("paste shortcut posted; clipboard fallback retained")
             return .pasteShortcutPosted
         case .copiedForManualPaste:
-            status = "Copied"
+            operationStatus = .copied
             lastResult = "Draft copied to clipboard. Paste manually with Cmd+V."
             errorMessage = "Accessibility is not allowed, so BabbelStream could not paste automatically."
             warningMessage = priorWarning
             recordDiagnostic("paste fallback: copied for manual paste")
             return .copiedForManualPaste
         case .copiedBecauseTargetChanged:
-            status = "Copied"
+            operationStatus = .copied
             lastResult = "The active application changed while processing. Draft copied; paste manually with Cmd+V."
             errorMessage = nil
             warningMessage = combinedWarning(
@@ -2648,14 +2446,14 @@ final class AppState: ObservableObject {
             recordDiagnostic("paste prevented: target application changed")
             return .copiedBecauseTargetChanged
         case .clipboardChanged:
-            status = "Copy Last Draft"
+            operationStatus = .draftAvailable
             lastResult = "Clipboard changed before paste. Use Copy Last Draft, then paste manually."
             errorMessage = nil
             warningMessage = combinedWarning(priorWarning, "BabbelStream preserved the newer clipboard contents and did not auto-paste.")
             recordDiagnostic("paste prevented: clipboard changed")
             return .clipboardChanged
         case .copiedAfterPasteShortcutFailure:
-            status = "Copied"
+            operationStatus = .copied
             lastResult = "Draft copied to clipboard after paste shortcut failed."
             errorMessage = "BabbelStream could not post Cmd+V. Paste manually with Cmd+V."
             warningMessage = priorWarning
@@ -2670,13 +2468,13 @@ final class AppState: ObservableObject {
     ) -> DictationArchiveInsertionOutcome {
         do {
             try textInsertionService.copyText(insertionText)
-            status = "Copied"
+            operationStatus = .copied
             lastResult = "Draft copied to clipboard after paste failed. Paste manually with Cmd+V."
             errorMessage = originalError.localizedDescription
             recordDiagnostic("paste failed; copied fallback: \(diagnosticErrorCategory(originalError))")
             return .copiedAfterPasteFailure
         } catch {
-            status = "Paste failed"
+            operationStatus = .pasteFailed
             lastResult = "Draft is only available in memory for this app session."
             errorMessage = error.localizedDescription
             recordDiagnostic("paste and copy failed: \(diagnosticErrorCategory(error))")

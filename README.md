@@ -111,8 +111,13 @@ are replaced only when these options are supplied. No API keys in shell commands
 1. Open **Set Up BabbelStream…** from the app’s menu.
 2. Allow **Microphone** and **Accessibility**. Without Accessibility, copy the
    completed draft and paste it manually.
-3. Enter your approved provider URL and personal API key, then click **Apply
-   Settings**. No key is bundled.
+3. In **Provider Settings**, choose where transcription runs and click **Apply Settings**.
+
+   | Choice | Setup |
+   | --- | --- |
+   | **On this Mac** | On Apple Silicon with macOS 14+, select **Parakeet Ultra**, confirm the 632 MB download and wait for preparation. Local transcription works offline without an API key. Optionally download and enable the 2.74 GB Qwen cleanup model. |
+   | **Remote provider** | Enter your approved provider URL, model routing and your own API key. Review the saved audio and cleanup destinations. Provider charges may apply. |
+
 4. Try the local paste test, then dictate harmless sample text into an unsent
    draft. The paste test replaces the clipboard; it uses no microphone or provider.
 
@@ -167,8 +172,7 @@ Check Accessibility and keep the original app focused.
 
 ## Privacy by default
 
-- Recording starts only when requested. Audio goes to your configured provider;
-  optional cleanup sends transcript text and dictionary hints there too.
+- Recording starts on request. Local transcription processes audio on this Mac. Remote transcription sends audio to the applied provider. Optional cleanup processes the transcript and dictionary hints at the selected cleanup destination.
 - Successful audio is deleted. Failed or interrupted stopped recordings remain
   locally until recovery succeeds or you delete them.
 - Drafts stay in session memory and the clipboard unless you enable the local
@@ -201,22 +205,3 @@ executable fixtures because this Command Line Tools environment cannot run XCTes
 
 [Documentation](docs/README.md) · [Changelog](CHANGELOG.md) ·
 [Project status](docs/project-status.md) · [Pilot checklist](docs/homebrew-pilot-smoke-test.md)
-
-### Local dictation (0.6.0)
-
-On Apple Silicon with macOS 14 or later, choose **Provider → On this Mac**,
-select **Parakeet Ultra**, confirm **Download Model**, then **Apply Settings**
-after preparation. The approximately 632 MB download is separate from the app.
-Subsequent dictation runs locally without an API key, cloud cleanup or fallback.
-Optional Qwen3.5-4B cleanup is available in Provider Settings: download its 2.74 GB
-model, enable local cleanup, and Apply. It runs on Apple Silicon/macOS 14+ without
-Ollama or Xcode and uses your personal dictionary. Local cleanup defaults off;
-failure returns raw text with a warning and preserves audio for retry.
-Remote settings remain available when switching back. Remove Model deletes only
-that model; Failed Recordings and other app data are preserved.
-
-The public 0.6.0 release includes accepted on-device dictation and cleanup,
-available through the DMG and Homebrew tap. Qwen-ASR and Granite
-are listed as deferred choices with downloads disabled in this pilot. Building
-the default helper requires Swift 6.2+; building deferred MLX support additionally
-requires Xcode's Metal toolchain and separate validation.

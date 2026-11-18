@@ -4,6 +4,10 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+- Keep missing recording targets copy-only and require all failed work-provider attempts to qualify before switching to personal OpenAI.
+- Show the original transcription selection and current retry destination in Failed Recordings. Escape cancels retries. A failed Save Audio As preserves the previous export.
+- Show the cleanup phase during on-device processing and document both setup paths together.
+
 ## 0.6.0 - 2026-10-28
 
 - Add optional Qwen3.5-4B cleanup with a verified 2.74 GB download, local dictionary hints and network-denied native inference. Failed cleanup preserves raw text and recovery audio.

@@ -36,7 +36,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `TextInsertionService`
 
-- Responsibility: capture the intended application, insert into its currently focused Accessibility element when possible, and use clipboard plus synthetic Cmd+V only while that captured application remains frontmost.
+- Responsibility: capture the current external application at recording start and deliver through the clipboard. Post Cmd+V only when the captured application is still frontmost. An unavailable target remains copy-only.
 - Input: final text and captured target application.
 - Output: insertion result, including an explicit copy-only recovery outcome when the active application changed and `clipboardChanged` when the newer clipboard must be preserved. The latter retains the draft in memory and posts no paste event.
 - Errors: missing Accessibility permission, clipboard unavailable, paste event failed, no captured application, or changed active application.
@@ -48,6 +48,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 - Input: typed settings values.
 - Output: current settings and validation errors.
 - Errors: invalid URL, remote plain HTTP, embedded URL credentials/query data, invalid duration, missing model, unsupported endpoint path.
+- Test strategy: validation, defaults, migration and explicit Apply with a recording in progress.
 
 ## `DictationRecoveryStore`
 
@@ -56,7 +57,6 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 - Output: sorted recovery snapshots with count/size metadata and stable recording identifiers.
 - Errors: missing source audio, failed copy or metadata write, missing recovery item, invalid export destination, or failed deletion.
 - Test strategy: adoption removes the source only after a durable copy, `0700`/`0600` permissions, startup interruption recovery, malformed metadata recovery, export retention, retry counting, individual deletion, and confirmed UI bulk deletion.
-- Test strategy: validation unit tests and migration/default tests.
 
 ## `SecretStore`
 
@@ -120,7 +120,7 @@ These are the main protocol boundaries for the native macOS MVP. Implemented int
 
 ## `AppRuntime`
 
-- Responsibility: main-actor workspace target discovery/observation, privacy-safe diagnostic sink, and temporary-audio directory discovery.
-- Production: native macOS adapter, with observer cleanup on release.
-- Checks: isolated adapter with synthetic target, no OS logs/observers, and fixture-only directories. AppState's existing recorder/provider/storage/insertion protocols supply the remaining fakes.
+- Responsibility: privacy-safe diagnostic logging and temporary-audio directory discovery.
+- Production: native macOS logger and temporary-directory adapter.
+- Checks: isolated logging and fixture-only directories. The fake insertion service supplies the captured target. AppState's existing recorder/provider/storage/insertion protocols supply the remaining fakes.
 - The application module is importable by debug executable checks; the launcher alone starts NSApplication.

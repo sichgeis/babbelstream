@@ -1,10 +1,5 @@
 # Implementation Plan
 
-Local Parakeet and Qwen3.5-4B cleanup are accepted for 0.6.0. Local release finalization is recorded in `runs/archive/release-v0.6.0.md`;
-authorized public publication and the second-Mac Homebrew upgrade are recorded in
-`runs/archive/homebrew-v0.6.0.md`. Real dictation and permission/Keychain continuity
-on that Mac remain follow-up validation.
-
 This plan contains only remaining candidate work and delivery dependencies.
 Current release state and the single next action live in `docs/project-status.md`.
 Completed milestone history is retained in
@@ -35,111 +30,44 @@ start a tracker under `docs/runs/active/`.
 
 ### 3. Additional Local Transcription Backends
 
-The approved Parakeet candidate is tracked in `docs/project-status.md` and
-`docs/features/local-transcription/spec.md`. Remaining work: Qwen/Granite native
-builds with Metal tooling, pinned offline-load/cancellation/resource/license QA,
-real multilingual quality and desktop memory/latency measurements. The maintainer
-explicitly deferred these builds while the Parakeet pilot is prepared.
+Parakeet and optional Qwen cleanup ship in 0.6.0. Measure the supported path on the upgraded pilot Mac first. Qwen-ASR and Granite speech builds remain deferred pending a demonstrated need, native tooling, pinned offline loading, cancellation, licensing, multilingual quality and desktop resource measurements.
 
 ### 4. Public macOS Distribution
 
-- Approved path (2026-10-23): a clearly labeled ad-hoc, non-notarized colleague
-  pilot via GitHub Releases and our own Homebrew tap, without paid Apple membership.
-  The approved contract, publication sequence, upgrade/rollback tests and
-  required policy reconciliation are in
-  `docs/features/homebrew-distribution/spec.md` (2026-10-23).
-- Implementation and the narrow non-notarized pilot exception are approved.
-  Completed pilot evidence: `docs/runs/archive/homebrew-distribution.md`. The
-  public download, installation/reinstall and human dictation checks passed;
-  the following lifecycle cases remain follow-ups, not acceptance claims.
-- Developer ID/notarization remains an optional later channel requiring authorized
-  identity/profile access and real distribution validation; do not weaken that
-  build mode to accommodate the ad-hoc pilot.
+- Complete managed-device installation and upgrade trust checks for the existing Homebrew and manual pilot channels. See [release status](project-status.md) and the [Homebrew contract](features/homebrew-distribution/spec.md).
+- Wider distribution with Developer ID and notarization requires separately authorized credentials and native validation.
 
 ### 5. Update Delivery
 
-- First-run onboarding is released in 0.5.0; see `docs/features/onboarding-and-updates/spec.md`. Its Sparkle/update proposal remains deferred and does not authorize updater dependencies or network traffic.
-
-- Approved first update mechanism: user-initiated Homebrew upgrades using a
-  versioned cask and verified GitHub release assets; no in-app network traffic or
-  Sparkle dependency. See the Homebrew distribution contract above.
-- Dependency: first downloaded install and a separately
-  evidenced upgrade to the next real release. Sparkle remains optional future work.
+Homebrew provides user-initiated upgrades. An in-app updater remains a candidate requiring a separate decision about dependencies, signing and network access.
 
 ## Additional Product Candidates
-
-These remain unsequenced until the user selects them:
 
 - Per-app cleanup style defaults.
 - Optional local price inputs and estimated cleanup tokens.
 - A standalone deterministic correction mode beyond the implemented local-cleanup spelling pass.
 - Preview/editor and email-specific cleanup modes.
 
-## Maintenance And UX Path
+## Maintenance and menu design
 
-- Keep the dependency policy intentionally native-first. Optional local helpers pin FluidAudio and llama.cpp; maintenance should review the Swift tools
-  version, deployment target, deprecated Apple APIs, and release tooling rather
-  than adding an updater merely to have one.
-- Re-run the dependency/platform audit before each planned release or after a
-  major macOS/Xcode upgrade. Local `task check` remains sufficient for this
-  personal-only project; CI can be reconsidered only if distribution or outside
-  contributors make it useful.
-- Option B: make secondary tools contextual, showing recovery/archive entries
-  only when they contain data. This would shorten the menu further but makes
-  stable tool locations less predictable.
-- Option C: replace the menu with a small status popover that combines readiness,
-  recent draft recovery, and richer live state. This offers more visual polish
-  but adds interaction and focus complexity to a utility whose strongest trait
-  is immediacy.
+- Review the Swift toolchain, deployment target, Apple APIs and pinned native helpers before releases and after major platform upgrades. Revisit CI as outside contribution or distribution needs grow.
+- Consider showing archive and recovery tools only when they contain data. Evaluate discoverability for people who rely on stable menu locations.
+- A status popover could show readiness and draft recovery together. Evaluate focus behavior with the active editor before committing to this design.
 
-## Input Compatibility Candidates (2026-09-05)
+## Input compatibility
 
-Clipboard-only insertion is released in 0.5.0; see `docs/features/clipboard-only-insertion/spec.md` and `docs/project-status.md` for execution state. Remaining unapproved candidates:
+- Evaluate direct Accessibility insertion only for a demonstrated need to avoid clipboard use. Define field eligibility, acceptance checks and duplicate-safe recovery before implementation. See the [clipboard delivery contract](features/clipboard-only-insertion/spec.md).
+- Consider content-free delivery diagnostics for permissions, app matching, clipboard ownership and event posting.
+- Exercise selection replacement, multiline drafts, alternate layouts, IME and held modifiers in additional native and rich editors. Current delivery uses ANSI-V keycode 9.
+- Define explicit handling for protected fields, terminals and remote desktops if the application-level target policy proves insufficient.
 
-- Direct Accessibility insertion, including ChatGPT: postponed. A future feature must demonstrate a concrete clipboard-avoidance benefit, validate editor state beyond AX success, define application/field eligibility and duplicate-safe failure behavior, and preserve focus/clipboard/cancellation rules. No dormant direct-writing implementation or allowlist remains.
-- Content-free delivery diagnostics: permission, application match, clipboard ownership and event-posted outcome; never draft, clipboard or field text.
-- Broader native/manual coverage across rich/native editors, alternate layouts/IME, held modifiers, selection replacement and multiline input. Current paste uses ANSI-V keycode 9; measure before changing event strategy.
-- Explicit protected-field, terminal and remote-desktop policies. Current targeting identifies an application, not an original field. Stricter behavior needs a feature contract compatible with unstable rich-editor AX elements. Never blindly retry ambiguous delivery.
+## Provider lifecycle
 
-## Provider Lifecycle Dependency
+Track the model and proxy alias inventory, replacement approvals, deadlines and acceptance checks in the [provider lifecycle plan](provider-lifecycle.md). Colleague deployment also needs an approved connection profile, per-user key issuance and a support and revocation owner.
 
-The approved pilot work records a separately gated model migration follow-up in `docs/provider-lifecycle.md`: inventory by 2026-11-13, spec/cost approval by 2026-12-04, cleanup validation by 2026-12-18 before the dated GPT-4o mini removal on 2027-01-14, and transcription/hedge validation by 2027-02-05 before 2027-02-26 removal. Company aliases require IT confirmation. This does not authorize a default/model/provider/cost change or create a recurring automation.
+## Pilot validation still needed
 
-## Post-0.5.0 Follow-Ups
-
-The local release was explicitly approved on 2026-10-23. Deferred work does not imply the following checks passed:
-
-- The maintainer’s macOS 27.0.1 comparison of Settings/onboarding at both documented sizes; full OS Increase Contrast review.
-- Broader permission repair, language/editor/gesture/recovery and personal-provider compatibility matrix.
-- Approved company connection profile, per-user key issuance and support/revocation owner.
-- Distribution/update direction is now approved as the non-notarized own-tap pilot
-  above. Developer ID/notarization and Sparkle remain deferred alternatives;
-  neither is a prerequisite for that explicitly limited pilot.
-
-Keep these follow-ups in the existing candidate plan rather than reopening closed implementation runs. Provider lifecycle milestones remain in `docs/provider-lifecycle.md`.
-
-## Homebrew Pilot Lifecycle Follow-Ups
-
-The initial distribution pilot is closed. Keep these cases explicitly untested
-until their own evidence is recorded:
-
-- **Genuine version upgrade:** test 0.5.1 to the clean 0.5.3 release with
-  increased VERSION/BUILD_NUMBER. Verify installed source/version, settings,
-  dictionary/recovery preservation, permissions and Keychain trust. A same-version
-  reinstall does not prove this case.
-- **Uninstall retention and reinstall:** use an isolated pilot account with benign
-  fixtures. Verify ordinary cask uninstall retains settings, dictionary, recovery,
-  optional archive and Keychain entries, then reinstall. No zap or real-data
-  deletion. The missing-bundle reinstall already passed; uninstall retention did not.
-- **Rollback:** restore a known-good bundle after reviewing data compatibility;
-  verify version, preserved data and Homebrew pin/version-record reconciliation.
-  The documented procedure is not yet a tested recovery guarantee.
-- **Additional restart/trust coverage:** a further quit/reopen cycle of the
-  Homebrew-installed copy and trust across future binaries remain untested.
-  Earlier manual-DMG restart passed after the targeted Keychain repair.
-- **Manual-app adoption and missing bundle:** ordinary install conflict and move-
-  aside recovery passed; optional --adopt is untested. The observed bundle
-  disappearance cause remains unknown; brew reinstall recovery passed.
-
-Follow the operator matrix in `docs/homebrew-release.md`; do not reopen the closed
-initial pilot run merely to imply these follow-ups were completed.
+- Compare Settings and onboarding at both documented sizes on macOS 27.0.1, including Increase Contrast.
+- Exercise permission repair, dictation gestures, language, recovery and approved personal-provider compatibility with the [test plan](test-plan.md).
+- On the upgraded Mac, check permission and Keychain continuity after restarting and time local dictation through an unsent draft.
+- Use an isolated pilot account to test cask uninstall retention, reinstall, optional manual-app adoption and rollback. Verify data compatibility, version and Homebrew records when restoring an earlier bundle. Follow the [Homebrew operator matrix](homebrew-release.md).

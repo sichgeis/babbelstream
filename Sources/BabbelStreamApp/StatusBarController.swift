@@ -234,7 +234,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     @objc private func toggleCleanup() {
-        appState.setCleanupEnabled(!appState.cleanupEnabled)
+        appState.setCleanupEnabled(!appState.settingsDraft.cleanupEnabled)
         rebuildMenu()
     }
 

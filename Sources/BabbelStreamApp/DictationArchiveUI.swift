@@ -17,7 +17,7 @@ final class DictationArchiveWindowController {
         controller.showWindow(nil)
         controller.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        appState.loadArchiveMonth()
+        appState.archiveBrowser.loadMonth()
     }
 
     private func makeWindowController() -> NSWindowController {
@@ -33,7 +33,7 @@ final class DictationArchiveWindowController {
             window.sharingType = .readOnly
         }
         window.contentViewController = makeDialogHostingController(
-            rootView: DictationArchiveView()
+            rootView: DictationArchiveView(browser: appState.archiveBrowser)
                 .environmentObject(appState)
         )
         window.setDialogInitialContentSize(NSSize(width: 760, height: 640), minimum: NSSize(width: 680, height: 520))
@@ -45,35 +45,36 @@ final class DictationArchiveWindowController {
 }
 
 struct DictationArchiveView: View {
+    @ObservedObject var browser: ArchiveBrowser
     @EnvironmentObject private var appState: AppState
 
     var body: some View {
         AppDialogScaffold(maxContentWidth: 680) {
             AppFormSection("Month") {
-                AppFormTextField("Month (YYYY-MM)", text: $appState.archiveMonthText)
+                AppFormTextField("Month (YYYY-MM)", text: $browser.monthText)
                 Text("Review local, text-only entries for one calendar month.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Button {
-                    appState.loadArchiveMonth()
+                    browser.loadMonth()
                 } label: {
                     Label("Reload Month", systemImage: "arrow.clockwise")
                 }
             }
 
             AppFormSection("Summary") {
-                AppLabeledContent("Entries", value: "\(appState.archiveSnapshot.entries.count)")
-                AppLabeledContent("Raw words", value: "\(appState.archiveSnapshot.totalRawWordCount)")
-                AppLabeledContent("Final words", value: "\(appState.archiveSnapshot.totalFinalWordCount)")
-                AppLabeledContent("Archive", value: appState.dictationArchiveEnabled ? "Enabled" : "Disabled")
+                AppLabeledContent("Entries", value: "\(browser.snapshot.entries.count)")
+                AppLabeledContent("Raw words", value: "\(browser.snapshot.totalRawWordCount)")
+                AppLabeledContent("Final words", value: "\(browser.snapshot.totalFinalWordCount)")
+                AppLabeledContent("Archive", value: appState.settingsDraft.dictationArchiveEnabled ? "Enabled" : "Disabled")
             }
 
             AppFormSection("Daily Totals") {
-                if appState.archiveSnapshot.dailySummaries.isEmpty {
+                if browser.snapshot.dailySummaries.isEmpty {
                     Text("No archived dictations for this month.")
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(appState.archiveSnapshot.dailySummaries) { summary in
+                    ForEach(browser.snapshot.dailySummaries) { summary in
                         AppLabeledContent(
                             summary.dateString,
                             value: "\(summary.entryCount) dictations, \(summary.rawWordCount) raw words, \(summary.finalWordCount) final words"
@@ -82,11 +83,11 @@ struct DictationArchiveView: View {
                 }
             }
 
-            if !appState.archiveSnapshot.readWarnings.isEmpty {
+            if !browser.snapshot.readWarnings.isEmpty {
                 AppFormSection("Recovery") {
                     Text("Valid entries were loaded. Damaged JSONL lines were skipped and remain in the local files for manual recovery.")
                         .foregroundStyle(.orange)
-                    ForEach(appState.archiveSnapshot.readWarnings.prefix(8)) { warning in
+                    ForEach(browser.snapshot.readWarnings.prefix(8)) { warning in
                         AppLabeledContent(warning.fileName, value: "line \(warning.line)")
                     }
                 }
@@ -99,7 +100,7 @@ struct DictationArchiveView: View {
                     .foregroundStyle(.secondary)
                 HStack {
                     Button {
-                        appState.revealArchiveFolder()
+                        browser.revealFolder()
                     } label: {
                         Label("Reveal Folder", systemImage: "folder")
                     }
@@ -111,14 +112,14 @@ struct DictationArchiveView: View {
                 }
             }
         } status: {
-            if let archiveErrorMessage = appState.archiveErrorMessage {
+            if let archiveErrorMessage = browser.errorMessage {
                 Text(archiveErrorMessage)
                     .foregroundStyle(.red)
-            } else if appState.archiveStatusMessage.isEmpty {
+            } else if browser.statusMessage.isEmpty {
                 Text("Archive review is local-only and never sends content to a provider.")
                     .foregroundStyle(.secondary)
             } else {
-                Text(appState.archiveStatusMessage)
+                Text(browser.statusMessage)
                     .foregroundStyle(.secondary)
             }
         } actions: {
@@ -128,7 +129,7 @@ struct DictationArchiveView: View {
                 Label("Close", systemImage: "xmark")
             }
             Button {
-                appState.copyArchiveMarkdownExport()
+                browser.copyMarkdownExport()
             } label: {
                 Label("Copy Markdown Export", systemImage: "doc.on.doc")
             }
@@ -148,6 +149,6 @@ struct DictationArchiveView: View {
             return
         }
 
-        appState.clearArchive()
+        browser.clear()
     }
 }

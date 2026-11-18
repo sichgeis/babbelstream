@@ -165,7 +165,7 @@ private struct SettingsGeneralPane: View {
                         set: { appState.setLaunchAtLoginEnabled($0) }
                     )
                 )
-                AppFormTextField("Max recording minutes", text: $appState.maxAudioDurationMinutesText)
+                AppFormTextField("Max recording minutes", text: $appState.settingsDraft.maxAudioDurationMinutesText)
                 AppLabeledContent("Hybrid hotkey", value: ProjectDefaults.fixedHotkeyDescription)
                 AppLabeledContent("Shortcut behavior", value: ProjectDefaults.hybridHotkeyUsageDescription)
             }
@@ -226,7 +226,7 @@ private struct SettingsProviderPane: View {
             }
 
             AppFormSection("Transcription") {
-                Picker("Run transcription", selection: $appState.transcriptionBackend) {
+                Picker("Run transcription", selection: $appState.settingsDraft.transcriptionBackend) {
                     Text("Remote provider").tag(TranscriptionBackend.remote)
                     Text("On this Mac").tag(.local as TranscriptionBackend)
                 }
@@ -236,39 +236,39 @@ private struct SettingsProviderPane: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             AppFormSection("Cleanup on this Mac") {
-                Toggle("Use Qwen3.5-4B for local cleanup", isOn: $appState.localCleanupEnabled)
+                Toggle("Use Qwen3.5-4B for local cleanup", isOn: $appState.settingsDraft.localCleanupEnabled)
                 Text("After Apply, this replaces cloud cleanup with local processing. With local transcription, the complete dictation stays on this Mac. Download and prepare the cleanup model below first.")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             LocalModelsPane(controller: appState.cleanupModels, selected: .constant(.qwenCleanup),
                             canManage: appState.canStart, isCleanup: true)
-            if appState.transcriptionBackend == .local {
-                LocalModelsPane(controller: appState.localModels, selected: $appState.localModel,
+            if appState.settingsDraft.transcriptionBackend == .local {
+                LocalModelsPane(controller: appState.localModels, selected: $appState.settingsDraft.localModel,
                                 canManage: appState.canStart)
             } else {
             AppFormSection("Provider Mode") {
                 Toggle(
                     "Enable personal OpenAI fallback",
                     isOn: Binding(
-                        get: { appState.personalOpenAIFallbackEnabled },
+                        get: { appState.settingsDraft.personalOpenAIFallbackEnabled },
                         set: { appState.setPersonalOpenAIFallbackEnabledDraft($0) }
                     )
                 )
                 Toggle(
                     "Use personal OpenAI now (skip primary)",
                     isOn: Binding(
-                        get: { appState.personalOpenAIDirectModeEnabled },
+                        get: { appState.settingsDraft.personalOpenAIDirectModeEnabled },
                         set: { appState.setPersonalOpenAIDirectModeEnabledDraft($0) }
                     )
                 )
-                .disabled(!appState.personalOpenAIFallbackEnabled)
-                Text(appState.personalOpenAIDirectModeEnabled
+                .disabled(!appState.settingsDraft.personalOpenAIFallbackEnabled)
+                Text(appState.settingsDraft.personalOpenAIDirectModeEnabled
                     ? "After Apply, every new dictation goes directly to personal OpenAI. LiteLLM and its Mini hedge are skipped. The HUD turns purple while this mode is active."
                     : "Leave this off for primary-first behavior with automatic personal fallback only after an eligible outage.")
                     .font(.caption)
                     .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.secondary)
-                if appState.personalOpenAIFallbackEnabled {
+                if appState.settingsDraft.personalOpenAIFallbackEnabled {
                     Text("Work audio and text may be sent to https://api.openai.com with personal API charges. A separate per-user key is required; review the fallback details below before Apply.")
                         .font(.caption)
                         .fixedSize(horizontal: false, vertical: true)
@@ -285,7 +285,7 @@ private struct SettingsProviderPane: View {
                     Button("Official OpenAI") { appState.selectConnectionPreset(.officialOpenAI) }
                 }
                 AppFormFieldGroup {
-                    AppFormTextField("Provider base URL", text: $appState.baseURLText)
+                    AppFormTextField("Provider base URL", text: $appState.settingsDraft.baseURLText)
                     Text("Ask IT for your approved company URL and per-user key. A company preset is not available yet. Existing saved configuration is retained; presets leave models unchanged.")
                         .font(.caption)
                         .fixedSize(horizontal: false, vertical: true)
@@ -325,12 +325,12 @@ private struct SettingsProviderPane: View {
             DisclosureGroup("Advanced: Endpoints, Models And Timeouts", isExpanded: $showAdvanced) {
                 VStack(alignment: .leading, spacing: 16) {
                     AppFormSection("Endpoint Paths") {
-                        AppFormTextField("Transcription path", text: $appState.transcriptionPathText)
-                        AppFormTextField("Cleanup path", text: $appState.cleanupPathText)
+                        AppFormTextField("Transcription path", text: $appState.settingsDraft.transcriptionPathText)
+                        AppFormTextField("Cleanup path", text: $appState.settingsDraft.cleanupPathText)
                     }
                     AppFormSection("Models And Timeouts") {
                         AppLabeledContent("Primary transcription") {
-                            Picker("Primary transcription model", selection: $appState.transcriptionModelText) {
+                            Picker("Primary transcription model", selection: $appState.settingsDraft.transcriptionModelText) {
                                 ForEach(ProjectDefaults.supportedTranscriptionModels, id: \.self) { model in
                                     Text(model).tag(model)
                                 }
@@ -343,7 +343,7 @@ private struct SettingsProviderPane: View {
                             .fixedSize(horizontal: false, vertical: true)
                             .foregroundStyle(.secondary)
                         AppLabeledContent("Model routing") {
-                            Picker("Model routing", selection: $appState.transcriptionModelRouting) {
+                            Picker("Model routing", selection: $appState.settingsDraft.transcriptionModelRouting) {
                                 ForEach(TranscriptionModelRouting.allCases, id: \.rawValue) { routing in
                                     Text(routing.displayName).tag(routing)
                                 }
@@ -351,16 +351,16 @@ private struct SettingsProviderPane: View {
                             .pickerStyle(.menu)
                             .labelsHidden()
                         }
-                        Text(appState.transcriptionModelRouting.helpText)
+                        Text(appState.settingsDraft.transcriptionModelRouting.helpText)
                             .font(.caption)
                             .fixedSize(horizontal: false, vertical: true)
                             .foregroundStyle(.secondary)
                         AppLabeledContent("Effective primary model", value: appState.effectiveTranscriptionModel)
                         AppLabeledContent("Effective fallback model", value: appState.effectiveFallbackTranscriptionModel)
-                        AppFormTextField("Cleanup model", text: $appState.cleanupModelText)
+                        AppFormTextField("Cleanup model", text: $appState.settingsDraft.cleanupModelText)
                         AppLabeledContent("Mini hedge delay", value: "\(Int(ProjectDefaults.transcriptionHedgeDelaySeconds))s")
                         AppLabeledContent("Overall transcription deadline", value: "\(Int(ProjectDefaults.transcriptionOverallTimeoutSeconds))s")
-                        AppFormTextField("Cleanup timeout (seconds)", text: $appState.timeoutText)
+                        AppFormTextField("Cleanup timeout (seconds)", text: $appState.settingsDraft.timeoutText)
                         AppLabeledContent("Connection watchdog", value: appState.providerConnectionTimeoutSummary)
                         AppLabeledContent("Transcription requests", value: "Primary + one bounded Mini hedge")
                         AppLabeledContent("Personal fallback limit", value: "One sequential request")
@@ -423,13 +423,13 @@ private struct SettingsWritingPane: View {
         SettingsPane {
             AppFormSection("Transcription Hints") {
                 AppFormFieldGroup {
-                    AppFormTextField("Language code", text: $appState.transcriptionLanguageText)
+                    AppFormTextField("Language code", text: $appState.settingsDraft.transcriptionLanguageText)
                     Text("Optional. Leave blank to detect the spoken language.")
                         .font(.caption).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 AppFormFieldGroup {
-                    AppFormTextField("Transcription prompt", text: $appState.transcriptionPromptText, axis: .vertical)
+                    AppFormTextField("Transcription prompt", text: $appState.settingsDraft.transcriptionPromptText, axis: .vertical)
                         .lineLimit(2...4)
                     Text(appState.isLocalTranscriptionApplied ? "Remote-only hint. Local vocabulary integration is not enabled in this pilot." : "Optional context to help transcription, such as technical terms.")
                         .font(.caption).foregroundStyle(.secondary)
@@ -462,18 +462,18 @@ private struct SettingsArchivePane: View {
                 Toggle(
                     "Archive completed dictations",
                     isOn: Binding(
-                        get: { appState.dictationArchiveEnabled },
+                        get: { appState.settingsDraft.dictationArchiveEnabled },
                         set: { appState.setDictationArchiveEnabled($0) }
                     )
                 )
                 Toggle(
                     "Store raw transcript in archive",
                     isOn: Binding(
-                        get: { appState.archiveRawTranscriptEnabled },
+                        get: { appState.settingsDraft.archiveRawTranscriptEnabled },
                         set: { appState.setArchiveRawTranscriptEnabled($0) }
                     )
                 )
-                .disabled(!appState.dictationArchiveEnabled)
+                .disabled(!appState.settingsDraft.dictationArchiveEnabled)
                 Text("When enabled, BabbelStream writes work text to local daily files on this Mac. Audio is never archived.")
                     .font(.caption)
                     .fixedSize(horizontal: false, vertical: true)
