@@ -356,3 +356,7 @@ also compares latest public metadata and tagged provenance with current app/buil
 inputs. Public `--verify-only --download` checks native payload integrity/CDHash
 without configuration, quarantine mutation, installation or launch. Managed-Mac
 Finder installation, OS approval and real dictation remain human validation.
+
+### Routing and recovery regressions
+
+The executable checks cover mixed provider failures in both orders, copy-only delivery after missing initial focus, fresh explicit paste capture, atomic export replacement with an injected copy failure, local and legacy recovery metadata, and Escape while retrying.

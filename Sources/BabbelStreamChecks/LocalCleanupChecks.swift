@@ -78,6 +78,18 @@ func runLocalCleanupChecks() async throws {
         await f.app.startDictation(); await f.app.stopActiveRecording()
         cleanupCheck(f.app.warningMessage?.contains("raw transcript") == true, "Cleanup failure discloses raw fallback.")
         let item = try f.recovery.loadSnapshot().recordings.first!
+        if localSpeech {
+            cleanupCheck(item.originalRoute == .local && item.primaryModel == LocalModelID.parakeetUltra.displayName,
+                         "Recovery must identify the selected local model.")
+            cleanupCheck(item.providerHost == "On this Mac" && item.cleanupModel == LocalModelID.qwenCleanup.displayName,
+                         "Fully local metadata must omit inactive cloud configuration.")
+        }
+        var legacy = try JSONSerialization.jsonObject(with: JSONEncoder().encode(item)) as! [String: Any]
+        legacy.removeValue(forKey: "originalRoute")
+        legacy["schemaVersion"] = 1
+        let oldItem = try JSONDecoder().decode(DictationRecoveryRecording.self, from: JSONSerialization.data(withJSONObject: legacy))
+        cleanupCheck(oldItem.id == item.id && oldItem.originalRouteSummary == "Original route unavailable",
+                     "Existing records remain usable without guessing their original backend.")
         cleaner.fail = false
         await f.app.retryRecoveryRecording(item)
         cleanupCheck(f.insertion.copied.last == "Hallo cleaned fixture ", "Cleanup recovery copies rather than pasting to an old target.")

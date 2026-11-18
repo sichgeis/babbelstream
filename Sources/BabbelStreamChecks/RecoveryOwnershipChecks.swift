@@ -61,6 +61,19 @@ func runRecoveryOwnershipChecks() throws {
     try restarted.exportAudio(for: snapshot.recordings[0], to: exported)
     check(tryData(exported) == fixture && fm.fileExists(atPath: source.path), "Pending audio can be exported without losing its source.")
 
+    let previousExport = Data("existing export".utf8)
+    try previousExport.write(to: exported)
+    fm.failCopy = true
+    do {
+        try restarted.exportAudio(for: snapshot.recordings[0], to: exported)
+        check(false, "Export must surface the copy failure.")
+    } catch {}
+    check(tryData(exported) == previousExport && tryData(source) == fixture,
+          "A failed replacement must preserve the previous export and the source.")
+    fm.failCopy = false
+    try restarted.exportAudio(for: snapshot.recordings[0], to: exported)
+    check(tryData(exported) == fixture, "A successful replacement must publish the complete audio.")
+
     fm.failMetadataPermissions = true
     do {
         _ = try restarted.prepareForRetry(snapshot.recordings[0])

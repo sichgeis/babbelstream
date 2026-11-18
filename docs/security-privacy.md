@@ -213,3 +213,5 @@ added. The first pilot enables only Parakeet; other runtime builds are deferred.
 ## Optional Local Cleanup
 
 Local cleanup receives transcript and capped personal dictionary through private stdin. It has OS network denial, no API key, no retained prompt/transcript/cache history and no content logging. Model setup only contacts the disclosed Hugging Face HTTPS source/CDN. Weights remain in the private managed model directory until removal. Cancellation kills its owned child; failure retains raw text and stopped audio under existing recovery rules. No permissions or retention defaults change.
+
+A failed primary/Mini phase qualifies for personal fallback only if every failed attempt qualifies individually. Capture failure keeps automatic delivery copy-only throughout the session. Failed-recording metadata records the original transcription selection, including local processing. A legacy entry without that information displays an unknown route.

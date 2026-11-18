@@ -16,6 +16,8 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Active Work
 
+The [dictation reliability update](features/dictation-reliability/spec.md) is in development on `codex/dictation-reliability`. See the [implementation run](runs/active/dictation-reliability.md) for validation and the pilot handoff.
+
 Local Parakeet dictation and Qwen3.5-4B cleanup are complete in 0.6.0.
 Implementation evidence is archived in `docs/runs/archive/local-transcription.md`
 and `docs/runs/archive/local-cleanup.md`; final local release evidence is in
@@ -66,4 +68,4 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Run a harmless unsent dictation on the upgraded Mac and report permission/Keychain prompts and local speech/cleanup behavior.
+Validate the dictation reliability candidate on the upgraded pilot Mac using the feature smoke test.

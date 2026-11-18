@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 public enum DictationRecoveryState: String, Codable, CaseIterable, Sendable {
     case processing
@@ -22,8 +23,27 @@ public enum DictationRecoveryState: String, Codable, CaseIterable, Sendable {
     }
 }
 
+public enum RecoveryTranscriptionRoute: String, Codable, Sendable {
+    case local, primary, primaryWithPersonalFallback, personal
+
+    public init(settings: AppSettings) {
+        if settings.transcriptionBackend == .local { self = .local }
+        else if PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settings) { self = .personal }
+        else { self = settings.personalOpenAIFallbackEnabled ? .primaryWithPersonalFallback : .primary }
+    }
+
+    public func summary(host: String, model: String) -> String {
+        switch self {
+        case .local: "On this Mac / \(model)"
+        case .personal: "Personal OpenAI / \(model)"
+        case .primary: "\(host) / \(model)"
+        case .primaryWithPersonalFallback: "\(host) / \(model) (personal outage fallback enabled)"
+        }
+    }
+}
+
 public struct DictationRecoveryRecording: Codable, Equatable, Identifiable, Sendable {
-    public static let currentSchemaVersion = 1
+    public static let currentSchemaVersion = 2
 
     public var schemaVersion: Int
     public var id: UUID
@@ -33,6 +53,10 @@ public struct DictationRecoveryRecording: Codable, Equatable, Identifiable, Send
     public var byteCount: Int64
     public var targetApplicationName: String?
     public var targetBundleIdentifier: String?
+    public var originalRoute: RecoveryTranscriptionRoute?
+    public var originalRouteSummary: String {
+        originalRoute?.summary(host: providerHost, model: primaryModel) ?? "Original route unavailable"
+    }
     public var providerHost: String
     public var primaryModel: String
     public var cleanupModel: String?
@@ -50,6 +74,7 @@ public struct DictationRecoveryRecording: Codable, Equatable, Identifiable, Send
         byteCount: Int64,
         targetApplicationName: String?,
         targetBundleIdentifier: String?,
+        originalRoute: RecoveryTranscriptionRoute? = nil,
         providerHost: String,
         primaryModel: String,
         cleanupModel: String?,
@@ -66,6 +91,7 @@ public struct DictationRecoveryRecording: Codable, Equatable, Identifiable, Send
         self.byteCount = max(0, byteCount)
         self.targetApplicationName = targetApplicationName
         self.targetBundleIdentifier = targetBundleIdentifier
+        self.originalRoute = originalRoute
         self.providerHost = providerHost
         self.primaryModel = primaryModel
         self.cleanupModel = cleanupModel
@@ -174,7 +200,10 @@ public final class FileDictationRecoveryStore: DictationRecoveryStore {
         }
 
         let source = try StoppedAudioOwnership.mark(recording, fileManager: fileManager)
-        let configuration = settings.providerConfiguration
+        let route = RecoveryTranscriptionRoute(settings: settings)
+        let configuration = route == .personal
+            ? PersonalOpenAIFallbackPolicy.settings(derivedFrom: settings).providerConfiguration
+            : settings.providerConfiguration
         let item = DictationRecoveryRecording(
             id: source.id,
             recordedAt: recording.createdAt,
@@ -182,10 +211,12 @@ public final class FileDictationRecoveryStore: DictationRecoveryStore {
             byteCount: recording.byteCount,
             targetApplicationName: target?.localizedName,
             targetBundleIdentifier: target?.bundleIdentifier,
-            providerHost: configuration.baseURL.host ?? "unknown",
-            primaryModel: configuration.transcriptionModel,
-            cleanupModel: settings.cleanupEnabled ? configuration.cleanupModel : nil,
-            cleanupEnabled: settings.cleanupEnabled
+            originalRoute: route,
+            providerHost: route == .local ? "On this Mac" : configuration.baseURL.host ?? "unknown",
+            primaryModel: route == .local ? settings.localModel.displayName : configuration.transcriptionModel,
+            cleanupModel: settings.localCleanupEnabled ? LocalModelID.qwenCleanup.displayName
+                : (settings.effectiveCleanupEnabled ? configuration.cleanupModel : nil),
+            cleanupEnabled: settings.effectiveCleanupEnabled
         )
         return try finishAdoption(source, item: item)
     }
@@ -338,10 +369,19 @@ public final class FileDictationRecoveryStore: DictationRecoveryStore {
             throw DictationRecoveryError.invalidExportDestination
         }
         do {
-            if fileManager.fileExists(atPath: destinationURL.path) {
-                try fileManager.removeItem(at: destinationURL)
+            let staging = destinationURL.deletingLastPathComponent()
+                .appendingPathComponent(".babbelstream-export-" + UUID().uuidString, isDirectory: true)
+            try fileManager.createDirectory(at: staging, withIntermediateDirectories: false,
+                                            attributes: [.posixPermissions: 0o700])
+            defer { try? fileManager.removeItem(at: staging) }
+            let copy = staging.appendingPathComponent(audioFileName)
+            try fileManager.copyItem(at: sourceURL, to: copy)
+            try setUserOnlyPermissions(on: copy)
+            // Both names are on the destination volume. rename publishes the complete
+            // copy atomically, including when the user confirmed an existing file.
+            guard rename(copy.path, destinationURL.path) == 0 else {
+                throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
             }
-            try fileManager.copyItem(at: sourceURL, to: destinationURL)
         } catch {
             throw DictationRecoveryError.fileOperationFailed(error.localizedDescription)
         }

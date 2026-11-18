@@ -19,20 +19,20 @@ public struct HedgedTranscriptionResult: Equatable, Sendable {
 
 public enum HedgedTranscriptionError: Error, LocalizedError, Equatable, Sendable {
     case deadlineExceeded(seconds: Int)
-    case attemptsFailed
+    case attemptsFailed(primary: ProviderFailureCategory, mini: ProviderFailureCategory)
 
     public var errorDescription: String? {
         switch self {
         case let .deadlineExceeded(seconds):
             "Transcription did not finish within the \(seconds)-second recovery deadline."
-        case .attemptsFailed:
-            "Both transcription models failed."
+        case let .attemptsFailed(primary, mini):
+            "Transcription failed (primary: \(primary.displayName), Mini: \(mini.displayName))."
         }
     }
 }
 
 public enum HedgedTranscriptionRunner {
-    private enum Event: @unchecked Sendable {
+    private enum Event: Sendable {
         case succeeded(TranscriptionModelRole, String)
         case failed(TranscriptionModelRole, Error)
         case hedgeDelayElapsed
@@ -65,9 +65,8 @@ public enum HedgedTranscriptionRunner {
             }
 
             var hedgeStarted = false
-            var primaryFinished = false
-            var fallbackFinished = false
-            var lastError: Error?
+            var primaryFailure: ProviderFailureCategory?
+            var miniFailure: ProviderFailureCategory?
 
             func startFallback() async {
                 guard !hedgeStarted else { return }
@@ -93,8 +92,7 @@ public enum HedgedTranscriptionRunner {
                         hedgeStarted: hedgeStarted
                     )
                 case let .failed(.primary, error):
-                    primaryFinished = true
-                    lastError = error
+                    primaryFailure = .classify(error)
                     if shouldHedgeAfterError(error) {
                         await startFallback()
                     } else {
@@ -102,10 +100,9 @@ public enum HedgedTranscriptionRunner {
                         throw error
                     }
                 case let .failed(.fallback, error):
-                    fallbackFinished = true
-                    lastError = error
+                    miniFailure = .classify(error)
                 case .hedgeDelayElapsed:
-                    if !primaryFinished {
+                    if primaryFailure == nil {
                         await startFallback()
                     }
                 case .deadlineElapsed:
@@ -115,13 +112,13 @@ public enum HedgedTranscriptionRunner {
                     )
                 }
 
-                if primaryFinished, hedgeStarted, fallbackFinished {
+                if let primaryFailure, let miniFailure {
                     group.cancelAll()
-                    throw lastError ?? HedgedTranscriptionError.attemptsFailed
+                    throw HedgedTranscriptionError.attemptsFailed(primary: primaryFailure, mini: miniFailure)
                 }
             }
 
-            throw lastError ?? CancellationError()
+            throw CancellationError()
         }
     }
 

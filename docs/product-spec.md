@@ -262,3 +262,7 @@ No model operation sends a message. Real quality/latency acceptance is pending.
 ## Optional Local Cleanup
 
 Qwen3.5-4B can optionally clean local or remote speech on this Mac. It defaults off until explicitly downloaded, prepared, enabled and applied. Local cleanup replaces cloud cleanup for that operation and uses the personal dictionary. Failures deliver raw text with a warning and retain stopped audio for retry. Contract: `features/local-cleanup/spec.md`.
+
+### Dictation reliability update
+
+All primary/Mini failures must qualify before an opted-in account switch. Missing external focus at recording start means copy-only delivery. Failed Recordings distinguishes the original transcription selection from the current retry destination. Escape cancels retry and a failed audio export preserves any existing destination file. See [the interaction contract](features/dictation-reliability/spec.md).

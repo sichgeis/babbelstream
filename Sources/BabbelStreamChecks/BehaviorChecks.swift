@@ -1114,6 +1114,33 @@ func runHedgedTranscriptionChecks() async throws {
     )
     check(earlyFailureResult.winningRole == .fallback, "Retryable primary failure should start Mini immediately.")
 
+    for primaryFirst in [true, false] {
+        do {
+            _ = try await HedgedTranscriptionRunner.run(
+                hedgeDelaySeconds: 0, deadlineSeconds: 2,
+                shouldHedgeAfterError: ProviderRetryPolicy.shouldRetry,
+                primary: {
+                    if !primaryFirst { try await Task.sleep(for: .milliseconds(30)) }
+                    throw ProviderError.requestFailed(statusCode: 429, message: nil)
+                },
+                fallback: {
+                    if primaryFirst { try await Task.sleep(for: .milliseconds(30)) }
+                    throw URLError(.timedOut)
+                })
+            check(false, "Two failed attempts cannot return a transcript.")
+        } catch let failure as HedgedTranscriptionError {
+            check(failure == .attemptsFailed(primary: .httpStatus(429), mini: .urlError(URLError.timedOut.rawValue)),
+                  "Each role must retain its own failure independent of completion order.")
+            check(!PersonalOpenAIFallbackPolicy.shouldFallback(after: failure), "Mixed failures must block personal fallback.")
+        }
+    }
+    check(PersonalOpenAIFallbackPolicy.shouldFallback(after:
+            HedgedTranscriptionError.attemptsFailed(primary: .httpStatus(503), mini: .connectionTimeout)),
+          "Two eligible outages must still permit the opted-in personal profile.")
+    check(!PersonalOpenAIFallbackPolicy.shouldFallback(after:
+            HedgedTranscriptionError.attemptsFailed(primary: .connectionTimeout, mini: .malformedResponse)),
+          "An invalid Mini response must block personal fallback even after a primary outage.")
+
     let permanentFallbackStarts = LockedAttemptCounter()
     do {
         _ = try await HedgedTranscriptionRunner.run(

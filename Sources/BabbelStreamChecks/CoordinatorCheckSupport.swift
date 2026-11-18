@@ -36,8 +36,6 @@ final class FixtureLogin: LaunchAtLoginManaging {
 final class FixtureRuntime: AppRuntime {
     let temporaryAudioDirectories: [URL]
     init(root: URL) { temporaryAudioDirectories = [root] }
-    func frontmostTarget() -> TextInsertionTarget? { TextInsertionTarget(processIdentifier: 123, localizedName: "Fixture", bundleIdentifier: "example.fixture") }
-    func observeActivations(_ handler: @escaping @MainActor (TextInsertionTarget) -> Void) {}
     func recordDiagnostic(_ message: String) {}
 }
 
@@ -123,8 +121,11 @@ final class FixtureInsertion: TextInsertionService {
     var action: ((String) async throws -> TextInsertionResult)?
     func accessibilityPermissionStatus() -> AccessibilityPermissionStatus { permission }
     func requestAccessibilityPermission() {}
-    func captureTarget() -> TextInsertionTarget? { TextInsertionTarget(processIdentifier: 123, localizedName: "Fixture", bundleIdentifier: "example.fixture") }
+    var target: TextInsertionTarget? = TextInsertionTarget(processIdentifier: 123, localizedName: "Fixture", bundleIdentifier: "example.fixture")
+    var deliveryTargets: [TextInsertionTarget?] = []
+    func captureTarget() -> TextInsertionTarget? { target }
     func insertText(_ text: String, target: TextInsertionTarget?) async throws -> TextInsertionResult {
+        deliveryTargets.append(target)
         inserted.append(text)
         if let action { return try await action(text) }
         return result

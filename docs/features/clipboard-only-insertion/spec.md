@@ -65,3 +65,5 @@ The maintainer authorizes specification, implementation, fixture checks and feat
 ## Open Questions
 
 None blocking implementation. Direct insertion requires a future approved contract and live editor-state validation.
+
+The capture at recording start is final even when the app is unavailable. The session carries that optional target through recovery metadata, archive and delivery. Explicit Paste Last Draft captures again.

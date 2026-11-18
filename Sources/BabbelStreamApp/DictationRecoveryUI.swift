@@ -53,6 +53,7 @@ struct DictationRecoveryView: View {
                 Text("BabbelStream keeps stopped audio here only when processing did not complete normally. Retry uses the currently applied provider settings and copies the result instead of pasting into the old target.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                AppLongValue(label: "Retry transcription destination", value: appState.recoveryRetryDestinationSummary)
                 AppLabeledContent("Saved recordings", value: "\(appState.recoverySnapshot.recordings.count)")
                 AppLabeledContent(
                     "Disk usage",
@@ -116,7 +117,7 @@ struct DictationRecoveryView: View {
             AppLabeledContent("Duration", value: durationText(recording.durationSeconds))
             AppLabeledContent("Size", value: ByteCountFormatter.string(fromByteCount: recording.byteCount, countStyle: .file))
             AppLabeledContent("Original target", value: recording.targetApplicationName ?? "Unknown")
-            AppLabeledContent("Provider", value: "\(recording.providerHost) / \(recording.primaryModel)")
+            AppLongValue(label: "Original transcription selection", value: recording.originalRouteSummary)
             AppLabeledContent("Retries", value: "\(recording.retryCount)")
 
             HStack {

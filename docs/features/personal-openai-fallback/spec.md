@@ -264,3 +264,7 @@ error as permission to send work audio to a personal account.
 - Must stop before: merge/push of `main`, local production installation, real
   provider calls with work/personal content or credentials, annotated tag, or
   public release.
+
+### Mixed primary and Mini failures
+
+After a failed hedge, both role-specific failures must independently qualify as reachability failures before a personal request can start. A rate limit, authentication error, malformed response or other ineligible result blocks the switch regardless of completion order. The shared deadline and cancellation end the phase.

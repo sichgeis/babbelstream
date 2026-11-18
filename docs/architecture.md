@@ -53,7 +53,7 @@ The executable target keeps the application shell separate from the behavior-hea
 
 - `BabbelStreamLauncher/main.swift` is the executable entry point and invokes the native application bootstrap in `BabbelStreamApp.swift`.
 - The existing app sources compile as `BabbelStreamApplication`, so executable debug checks can import the actual coordinator with `@testable` without running the app.
-- `AppRuntime` isolates workspace observations, diagnostic logging, and temporary-directory discovery; production uses the native adapter and checks use fixture-only runtime state.
+- `AppRuntime` isolates diagnostic logging and temporary-directory discovery; production uses the native adapter and checks use fixture-only runtime state.
 - `AppDelegate.swift` is the composition root that creates stores, `AppState`, window controllers, the status item, and the HUD.
 - `StatusBarController.swift` owns menu-bar presentation and actions.
 - `AppWindowControllers.swift`, `SettingsView.swift`, `DictationArchiveUI.swift`, and `DictationStatusHUD.swift` own their respective AppKit/SwiftUI presentation concerns.
@@ -65,7 +65,7 @@ This boundary keeps lifecycle and UI wiring out of the dictation flow without in
 ## Data Flow
 
 1. Hotkey press starts `AudioRecorder` immediately. `HybridDictationHotkeyPolicy` classifies release before 0.5 seconds as hands-free latch and release at or after 0.5 seconds as push-to-talk completion.
-2. `AppState` snapshots the saved settings and the focused application identity for the whole dictation.
+2. `AppState` passes one immutable session containing saved settings and the optional external target through processing, adoption, archive and delivery. Only explicit Paste Last Draft captures a new target.
 3. The bottom-centered, non-activating capsule HUD shows live microphone activity and the target while recording, then progressively discloses only the current processing, Mini fallback, completion, or recovery state. Full provider and timeout details remain in the menu, Settings, and diagnostics.
 4. A held-hotkey release, a second press while hands-free, or an explicit Stop action stops recording and returns a temporary audio URL. All paths converge on the same coordinator action. `DictationRecoveryStore` copies the file into user-only Application Support storage before provider work and only then removes the temporary source.
 5. The configured primary transcription begins immediately. If it remains pending for 10 seconds, an independent Mini request starts; the first valid response wins within one 75-second overall deadline.

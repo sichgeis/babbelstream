@@ -6,6 +6,57 @@ import BabbelStreamCore
 func runCoordinatorWorkflowChecks() async throws {
     // Actual AppState, isolated OS adapters and stores: no credentials or work content.
     do {
+        let f = try CoordinatorFixture(cleanupEnabled: false)
+        defer { try? f.dispose() }
+        let currentTarget = f.insertion.target
+        f.insertion.target = nil
+        await f.app.startDictation()
+        f.insertion.target = currentTarget
+        await f.app.stopActiveRecording()
+        check(f.insertion.deliveryTargets.count == 1 && f.insertion.deliveryTargets[0] == nil,
+              "Delivery must preserve an unavailable start target despite a later activation.")
+        await f.app.retryPasteLatestDraft()
+        check(f.insertion.deliveryTargets.count == 2 && f.insertion.deliveryTargets[1] == currentTarget,
+              "Explicit Paste Last Draft must capture a fresh target.")
+    }
+
+    do {
+        let f = try CoordinatorFixture(cleanupEnabled: false)
+        defer { try? f.dispose() }
+        f.app.setPersonalOpenAIFallbackEnabledDraft(true)
+        f.app.saveSettings()
+        f.transcription.action = { _ in throw ProviderError.requestFailed(statusCode: 429, message: nil) }
+        f.mini.action = { _ in throw URLError(.timedOut) }
+        await f.app.startDictation()
+        await f.app.stopActiveRecording()
+        check(f.mini.requests.count == 1 && f.personalSecret.reads == 0,
+              "A rate limit followed by a Mini timeout must retain audio without switching accounts.")
+        check(f.app.recoverySnapshot.recordings.first?.state == .transcriptionFailed,
+              "Mixed failures must remain recoverable.")
+    }
+
+    do {
+        let f = try CoordinatorFixture()
+        defer { try? f.dispose() }
+        let item = try await f.createFailedRecording()
+        let (started, signal) = AsyncStream<Void>.makeStream()
+        f.transcription.action = { _ in
+            signal.yield(())
+            signal.finish()
+            try await Task.sleep(for: .seconds(30))
+            return "late fixture"
+        }
+        let retry = Task { await f.app.retryRecoveryRecording(item) }
+        for await _ in started { break }
+        check(f.hotkey.cancelEnabled, "Escape must be registered while retry is processing.")
+        f.hotkey.onCancel?()
+        await retry.value
+        check(!f.hotkey.cancelEnabled && f.app.recoverySnapshot.recordings.first?.state == .processingCanceled,
+              "Escape must cancel retry, retain the audio and release the hotkey.")
+        check(f.insertion.copied.isEmpty, "Canceled retry must not deliver late text.")
+    }
+
+    do {
         let f = try CoordinatorFixture()
         defer { try? f.dispose() }
         check(f.secret.reads == 0 && f.personalSecret.reads == 0, "Coordinator startup must not read credentials.")

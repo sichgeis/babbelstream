@@ -19,25 +19,24 @@ public enum PersonalOpenAIFallbackPolicy {
     }
 
     public static func shouldFallback(after error: Error) -> Bool {
-        if case ProviderError.connectionTimedOut = error {
-            return true
+        if case let HedgedTranscriptionError.attemptsFailed(primary, mini) = error {
+            return isReachabilityFailure(primary) && isReachabilityFailure(mini)
         }
-        if case let ProviderError.requestFailed(statusCode, _) = error {
-            return [502, 503, 504].contains(statusCode)
-        }
+        return isReachabilityFailure(.classify(error))
+    }
 
-        guard let urlError = error as? URLError else {
+    private static func isReachabilityFailure(_ category: ProviderFailureCategory) -> Bool {
+        switch category {
+        case .connectionTimeout:
+            return true
+        case let .httpStatus(status):
+            return [502, 503, 504].contains(status)
+        case let .urlError(code):
+            let eligible: [URLError.Code] = [.timedOut, .cannotFindHost, .cannotConnectToHost,
+                .networkConnectionLost, .dnsLookupFailed, .notConnectedToInternet, .resourceUnavailable]
+            return eligible.contains { $0.rawValue == code }
+        default:
             return false
         }
-
-        return [
-            .timedOut,
-            .cannotFindHost,
-            .cannotConnectToHost,
-            .networkConnectionLost,
-            .dnsLookupFailed,
-            .notConnectedToInternet,
-            .resourceUnavailable
-        ].contains(urlError.code)
     }
 }

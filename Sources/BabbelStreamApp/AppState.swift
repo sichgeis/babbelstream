@@ -33,6 +33,11 @@ final class AppState: ObservableObject {
         case handsFree
     }
 
+    private struct DictationSession {
+        let settings: AppSettings
+        let target: TextInsertionTarget?
+    }
+
     private struct PreparedDraft {
         let rawTranscript: String
         let finalDraft: String
@@ -141,8 +146,6 @@ final class AppState: ObservableObject {
     private var elapsedTimer: Timer?
     private var latestRawTranscript: String?
     private var latestFinalDraft: String?
-    private var latestPasteTarget: TextInsertionTarget?
-    private var latestExternalPasteTarget: TextInsertionTarget?
     private let runtime: any AppRuntime
     private var shouldStopDictationAfterStart = false
     private var dictationHotkeyPressedAt: ContinuousClock.Instant?
@@ -151,7 +154,7 @@ final class AppState: ObservableObject {
     private var retainedOperationKeys: [String: String] = [:]
     private var cachedAPIKey: String?
     private var cachedPersonalOpenAIFallbackAPIKey: String?
-    private var activeDictationSettings: AppSettings?
+    private var activeDictation: DictationSession?
     private var processingTask: Task<Void, Never>?
     private var activeRecoveryRecording: DictationRecoveryRecording?
     private var stateChangeObservers: [UUID: () -> Void] = [:]
@@ -254,8 +257,6 @@ final class AppState: ObservableObject {
             recordDiagnostic("launch at login migration failed: \(diagnosticErrorCategory(error))")
         }
 
-        updateLatestExternalPasteTarget(from: runtime.frontmostTarget())
-        observeWorkspaceActivations()
         cleanupStaleTemporaryAudio()
         loadRecoveryRecordings(markProcessingAsInterrupted: true)
         configureHotkey()
@@ -277,7 +278,7 @@ final class AppState: ObservableObject {
     }
 
     var canStart: Bool {
-        !isRecording && !isProcessing && !cleanupModels.isBusy && !localModels.isBusy && !isConnectionTesting && !isLocalPasteTesting && !isDeliveringDraft
+        !isRecording && !isProcessing && processingTask == nil && !cleanupModels.isBusy && !localModels.isBusy && !isConnectionTesting && !isLocalPasteTesting && !isDeliveringDraft
     }
 
     func beginLocalPasteTest() -> Bool {
@@ -313,7 +314,7 @@ final class AppState: ObservableObject {
     }
 
     var pasteTargetSummary: String? {
-        (latestPasteTarget ?? latestExternalPasteTarget)?.displayName
+        activeDictation?.target?.displayName
     }
 
     var latestRawTranscriptSummary: String {
@@ -419,6 +420,13 @@ final class AppState: ObservableObject {
             : providerDestinationSummary
     }
 
+    var recoveryRetryDestinationSummary: String {
+        if RecoveryTranscriptionRoute(settings: appSettings) == .primaryWithPersonalFallback {
+            return activeProviderDestinationSummary + " (personal OpenAI outage fallback enabled)"
+        }
+        return activeProviderDestinationSummary
+    }
+
     var providerConnectionTimeoutSummary: String {
         Self.secondsLabel(ProjectDefaults.providerConnectionTimeoutSeconds)
     }
@@ -519,7 +527,7 @@ final class AppState: ObservableObject {
     var hudDetail: String {
         if isRecording {
             let target = pasteTargetSummary ?? "unverified target"
-            let settings = activeDictationSettings ?? appSettings
+            let settings = activeDictation?.settings ?? appSettings
             let activeProviderSettings = PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settings)
                 ? PersonalOpenAIFallbackPolicy.settings(derivedFrom: settings)
                 : settings
@@ -561,52 +569,11 @@ final class AppState: ObservableObject {
         stateChangeObservers[id] = nil
     }
 
-    private func observeWorkspaceActivations() {
-        runtime.observeActivations { [weak self] target in
-            self?.updateLatestExternalPasteTarget(from: target)
-        }
-    }
-
-    private func captureCurrentPasteTarget() {
-        updateLatestExternalPasteTarget(from: runtime.frontmostTarget())
-        if let capturedTarget = textInsertionService.captureTarget(),
-           capturedTarget.processIdentifier != ProcessInfo.processInfo.processIdentifier,
-           capturedTarget.bundleIdentifier != Bundle.main.bundleIdentifier {
-            latestPasteTarget = capturedTarget
-        } else {
-            latestPasteTarget = latestExternalPasteTarget
-        }
-        notifyStateChanged()
-    }
-
-    private func updateLatestExternalPasteTarget(from application: TextInsertionTarget?) {
-        guard let application else {
-            return
-        }
-
-        updateLatestExternalPasteTarget(
-            processIdentifier: application.processIdentifier,
-            localizedName: application.localizedName,
-            bundleIdentifier: application.bundleIdentifier
-        )
-    }
-
-    private func updateLatestExternalPasteTarget(
-        processIdentifier: pid_t,
-        localizedName: String?,
-        bundleIdentifier: String?
-    ) {
-        guard processIdentifier != ProcessInfo.processInfo.processIdentifier,
-              bundleIdentifier != Bundle.main.bundleIdentifier
-        else {
-            return
-        }
-
-        latestExternalPasteTarget = TextInsertionTarget(
-            processIdentifier: processIdentifier,
-            localizedName: localizedName,
-            bundleIdentifier: bundleIdentifier
-        )
+    private func currentExternalTarget() -> TextInsertionTarget? {
+        guard let target = textInsertionService.captureTarget(),
+              target.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return nil }
+        if let ownBundleID = Bundle.main.bundleIdentifier, target.bundleIdentifier == ownBundleID { return nil }
+        return target
     }
 
     func refreshPermissionStatuses() {
@@ -1197,9 +1164,9 @@ final class AppState: ObservableObject {
             return
         }
 
-        captureCurrentPasteTarget()
+        let target = currentExternalTarget()
         do {
-            _ = try await insertFinalDraft(latestFinalDraft)
+            _ = try await insertFinalDraft(latestFinalDraft, target: target)
         } catch {
             status = "Ready"
             lastResult = "Paste retry canceled."
@@ -1598,9 +1565,7 @@ final class AppState: ObservableObject {
         usesPersonalOpenAIForCurrentOperation = mode == .dictation
             && PersonalOpenAIFallbackPolicy.shouldUsePersonalOpenAIDirectly(settingsSnapshot)
 
-        if mode == .dictation {
-            captureCurrentPasteTarget()
-        }
+        let session = mode == .dictation ? DictationSession(settings: settingsSnapshot, target: currentExternalTarget()) : nil
         cleanupStaleTemporaryAudio()
         isProcessing = true
         warningMessage = nil
@@ -1627,7 +1592,7 @@ final class AppState: ObservableObject {
             recordingStartedAt = Date()
             elapsedSeconds = 0
             recordingMode = mode
-            activeDictationSettings = mode == .dictation ? settingsSnapshot : nil
+            activeDictation = session
             isRecording = true
             setCancelHotkeyEnabled(true)
             status = mode == .dictation ? "Recording dictation" : "Recording test"
@@ -1685,7 +1650,7 @@ final class AppState: ObservableObject {
         stopElapsedTimer()
 
         do {
-            let settingsSnapshot = activeDictationSettings ?? appSettings
+            guard let session = activeDictation else { throw AudioRecordingError.notRecording }
             recordDiagnostic("recording stop started")
             let stopStartedAt = ContinuousClock.now
             let recording = try await audioRecorder.stop(deleteTemporaryFile: false)
@@ -1695,8 +1660,8 @@ final class AppState: ObservableObject {
             recordDiagnostic("recording stopped: dictation, \(formatDuration(recording.duration))")
             let recoveryRecording = try dictationRecoveryStore.adopt(
                 recording,
-                target: latestPasteTarget ?? latestExternalPasteTarget,
-                settings: settingsSnapshot
+                target: session.target,
+                settings: session.settings
             )
             activeRecoveryRecording = recoveryRecording
             let safeguardedRecording = RecordedAudio(
@@ -1708,7 +1673,7 @@ final class AppState: ObservableObject {
             )
             recordDiagnostic("recording safeguarded for processing: \(recording.byteCount) bytes")
             refreshRecoveryRecordings()
-            try await processRecording(safeguardedRecording, settings: settingsSnapshot, autoStopped: autoStopped)
+            try await processRecording(safeguardedRecording, session: session, autoStopped: autoStopped)
         } catch {
             if error as? AudioRecordingError == .couldNotSafeguardStop {
                 // The recorder still owns this file. Keep Stop/Cancel available.
@@ -1781,13 +1746,13 @@ final class AppState: ObservableObject {
 
     private func processRecording(
         _ recording: RecordedAudio,
-        settings: AppSettings,
+        session: DictationSession,
         autoStopped: Bool
     ) async throws {
         do {
             let cleanupFallbackUsed = try await processRecordedAudio(
                 recording,
-                settings: settings,
+                session: session,
                 autoStopped: autoStopped
             )
             if cleanupFallbackUsed {
@@ -1814,9 +1779,10 @@ final class AppState: ObservableObject {
 
     private func processRecordedAudio(
         _ recording: RecordedAudio,
-        settings: AppSettings,
+        session: DictationSession,
         autoStopped: Bool
     ) async throws -> Bool {
+        let settings = session.settings
         try Task.checkCancellation()
 
         if !TranscriptionLanguageNormalizer.isValidForSettings(settings.transcriptionLanguage) {
@@ -1850,9 +1816,10 @@ final class AppState: ObservableObject {
             lastFailureCategory = "None"
         }
 
-        let insertionOutcome = try await insertFinalDraft(preparedDraft.finalDraft)
+        let insertionOutcome = try await insertFinalDraft(preparedDraft.finalDraft, target: session.target)
         appendDictationArchiveEntry(
             recording: recording,
+            pasteTarget: session.target,
             settings: settings,
             transcriptionSettings: preparedDraft.transcriptionSettings,
             cleanupSettings: preparedDraft.cleanupSettings,
@@ -2421,6 +2388,8 @@ final class AppState: ObservableObject {
         lastResult = "Retrying failed recording with the currently applied provider settings."
         activeDiagnosticOperationID = UUID()
         activeDiagnosticOperationStartedAt = ContinuousClock.now
+        setCancelHotkeyEnabled(true)
+        defer { setCancelHotkeyEnabled(false) }
         recordDiagnostic("failed recording retry started")
 
         do {
@@ -2490,6 +2459,7 @@ final class AppState: ObservableObject {
 
     private func appendDictationArchiveEntry(
         recording: RecordedAudio,
+        pasteTarget: TextInsertionTarget?,
         settings: AppSettings,
         transcriptionSettings: AppSettings,
         cleanupSettings: AppSettings?,
@@ -2503,7 +2473,6 @@ final class AppState: ObservableObject {
             return
         }
 
-        let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
         let transcriptionConfiguration = transcriptionSettings.providerConfiguration
         let entry = DictationArchiveEntry(
             startedAt: recording.createdAt,
@@ -2620,18 +2589,17 @@ final class AppState: ObservableObject {
         return apiKey
     }
 
-    private func insertFinalDraft(_ finalDraft: String) async throws -> DictationArchiveInsertionOutcome {
+    private func insertFinalDraft(_ finalDraft: String, target: TextInsertionTarget?) async throws -> DictationArchiveInsertionOutcome {
         isDeliveringDraft = true
         defer { isDeliveringDraft = false }
         status = "Pasting draft"
         let startedAt = ContinuousClock.now
         recordDiagnostic("paste started")
-        let pasteTarget = latestPasteTarget ?? latestExternalPasteTarget
         let insertionText = DictationDraftFormatter.textWithTrailingSeparator(finalDraft)
         let priorWarning = warningMessage
 
         do {
-            let insertionResult = try await textInsertionService.insertText(insertionText, target: pasteTarget)
+            let insertionResult = try await textInsertionService.insertText(insertionText, target: target)
             recordDiagnostic("paste operation completed in \(elapsedMilliseconds(since: startedAt)) ms")
             accessibilityPermissionStatus = textInsertionService.accessibilityPermissionStatus()
             let outcome = applySuccessfulInsertionResult(insertionResult, priorWarning: priorWarning)
@@ -2738,7 +2706,7 @@ final class AppState: ObservableObject {
 
         elapsedSeconds = Date().timeIntervalSince(recordingStartedAt)
 
-        let maxDuration = activeDictationSettings?.maxAudioDurationSeconds ?? appSettings.maxAudioDurationSeconds
+        let maxDuration = activeDictation?.settings.maxAudioDurationSeconds ?? appSettings.maxAudioDurationSeconds
         if elapsedSeconds >= maxDuration, !isProcessing {
             Task {
                 switch recordingMode {
@@ -2758,7 +2726,7 @@ final class AppState: ObservableObject {
         recordingStartedAt = nil
         recordingMode = .none
         resetDictationControlState()
-        activeDictationSettings = nil
+        activeDictation = nil
     }
 
     private func resetDictationControlState() {

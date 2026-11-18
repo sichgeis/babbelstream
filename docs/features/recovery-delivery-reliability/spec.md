@@ -109,3 +109,5 @@ Canonical command: `task check`. Add focused storage fault, clipboard/event, and
 ## Open Questions
 
 None blocking implementation.
+
+Recovery displays the original transcription selection and the currently applied retry destination separately. Older records can have an unknown route. Escape cancels an active retry and releases the shortcut afterward. Saving over an existing export publishes a completed sibling copy atomically.
