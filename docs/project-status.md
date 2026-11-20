@@ -19,8 +19,8 @@ validation and release procedure remain in their dedicated specifications.
 The [dictation reliability update](features/dictation-reliability/spec.md) is implemented on `codex/dictation-reliability` for candidate **0.6.1, build 15**. The [implementation run](runs/active/dictation-reliability.md) records the regression checks, synthetic local timings and pending upgraded-Mac smoke test.
 
 The [GPT-6 Luna cleanup update](features/luna-cleanup/spec.md) is implemented
-on `codex/luna-cleanup`. Candidate **0.6.1, build 16** is verified and ready
-for installation approval and smoke testing. The
+on `codex/luna-cleanup`. Candidate **0.6.1, build 16** is installed and running
+on the development Mac with the migrated Luna cleanup model. The
 [implementation run](runs/active/luna-cleanup.md) records the artifact and
 synthetic prompt comparison.
 
@@ -74,6 +74,6 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-After installation approval, run the [Luna cleanup smoke test](features/luna-cleanup/spec.md#acceptance-and-smoke-test)
+Run the [Luna cleanup smoke test](features/luna-cleanup/spec.md#acceptance-and-smoke-test)
 and remaining [dictation delivery checks](runs/active/dictation-reliability.md#next-action)
 on candidate 0.6.1, build 16.

@@ -41,14 +41,19 @@ reasoning, and verify the cleanup prompt with synthetic dictation.
 - Version 0.6.1, build 16, commit `ac6a475`.
 - Artifact `dist/BabbelStream-0.6.1-candidate.16-ac6a475.dmg`.
 - SHA-256 `245437c211190d2565e918a64dd956cc43a193d0f7567fcade8e576bfd1f0278`.
-- Ad-hoc signed. The development Mac currently has 0.6.1, build 15,
-  commit `795cc76` installed.
+- Ad-hoc signed. On 2026-11-20 the maintainer authorized installing this
+  candidate. The installed bundle matched the read-only image and passed
+  signature verification. Launch Services reported one running copy from
+  Applications, and the saved cleanup model migrated to `openai/gpt-6-luna`.
+- The previous build 15 bundle, commit `795cc76`, is saved under
+  `dist/rollback/0.6.1-build15-before-luna-build16/`. Before using a rollback,
+  confirm its cleanup model selection matches the older app's request format.
 
 ## Remaining gate
 
-Candidate installation and the microphone-to-editor smoke test are pending.
+The microphone-to-editor smoke test is pending.
 
 ## Next action
 
-After installation approval, install build 16 and run the mixed-language
-cleanup and focused delivery smoke checks.
+Run the mixed-language cleanup and focused delivery smoke checks on installed
+build 16.
