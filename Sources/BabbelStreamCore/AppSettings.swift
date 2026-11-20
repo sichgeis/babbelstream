@@ -233,6 +233,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         static let transcriptionModelPickerMigrationVersion = "provider.transcriptionModelPickerMigrationVersion"
         static let transcriptionModelRouting = "provider.transcriptionModelRouting"
         static let cleanupModel = "provider.cleanupModel"
+        static let cleanupModelMigrationVersion = "provider.cleanupModelMigrationVersion"
         static let timeoutSeconds = "provider.timeoutSeconds"
         static let personalOpenAIFallbackEnabled = "provider.personalOpenAIFallback.enabled"
         static let personalOpenAIDirectModeEnabled = "provider.personalOpenAIFallback.directModeEnabled"
@@ -281,6 +282,21 @@ public final class UserDefaultsSettingsStore: SettingsStore {
             transcriptionModelRouting = .standardOpenAI
             userDefaults.set(transcriptionModelRouting.rawValue, forKey: Key.transcriptionModelRouting)
         }
+        var cleanupModel = userDefaults.string(forKey: Key.cleanupModel)
+            ?? defaultConfiguration.cleanupModel
+        if userDefaults.integer(forKey: Key.cleanupModelMigrationVersion) < 1 {
+            switch cleanupModel {
+            case ProjectDefaults.legacyDefaultCleanupModel:
+                cleanupModel = ProjectDefaults.lunaCleanupModel
+                userDefaults.set(cleanupModel, forKey: Key.cleanupModel)
+            case "openai/\(ProjectDefaults.legacyDefaultCleanupModel)":
+                cleanupModel = "openai/\(ProjectDefaults.lunaCleanupModel)"
+                userDefaults.set(cleanupModel, forKey: Key.cleanupModel)
+            default:
+                break
+            }
+            userDefaults.set(1, forKey: Key.cleanupModelMigrationVersion)
+        }
         let configuration = ProviderConfiguration(
             baseURL: baseURL,
             transcriptionEndpointPath: userDefaults.string(forKey: Key.transcriptionEndpointPath)
@@ -289,8 +305,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
                 ?? defaultConfiguration.cleanupEndpointPath,
             transcriptionModel: transcriptionModel,
             transcriptionModelRouting: transcriptionModelRouting,
-            cleanupModel: userDefaults.string(forKey: Key.cleanupModel)
-                ?? defaultConfiguration.cleanupModel,
+            cleanupModel: cleanupModel,
             timeoutSeconds: timeout
         )
 
@@ -344,6 +359,7 @@ public final class UserDefaultsSettingsStore: SettingsStore {
         userDefaults.set(1, forKey: Key.transcriptionModelPickerMigrationVersion)
         userDefaults.set(configuration.transcriptionModelRouting.rawValue, forKey: Key.transcriptionModelRouting)
         userDefaults.set(configuration.cleanupModel, forKey: Key.cleanupModel)
+        userDefaults.set(1, forKey: Key.cleanupModelMigrationVersion)
         userDefaults.set(configuration.timeoutSeconds, forKey: Key.timeoutSeconds)
         userDefaults.set(
             settings.personalOpenAIFallbackEnabled,

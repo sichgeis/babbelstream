@@ -42,8 +42,10 @@ The official OpenAI API uses **OpenAI (standard model IDs)**. A LiteLLM proxy th
 exposes OpenAI models through `openai/*` uses **LiteLLM (openai/ model prefix)**.
 Provider Settings shows the effective primary and fallback model IDs; select the
 models your endpoint supports. Primary choices are `gpt-transcribe`,
-`gpt-4o-transcribe` and `gpt-4o-mini-transcribe`; cleanup has its own configured
-model. Advanced settings contain routing, endpoint paths and timeout controls.
+`gpt-4o-transcribe` and `gpt-4o-mini-transcribe`. Cleanup defaults to
+`gpt-6-luna` with reasoning off. In Advanced settings, enter
+`openai/gpt-6-luna` if your proxy exposes that namespace. This field is
+independent of the transcription routing menu.
 
 Leave the transcription language hint empty for mixed German-English speech.
 Use a specific hint such as `de` or `en` only when you want it. Transcription hints

@@ -59,7 +59,10 @@ entry in the app. No organization profile is bundled publicly. Contract:
   LiteLLM namespace, and shows the effective primary and fallback IDs. Saved routing choices remain authoritative. With no saved routing choice,
   use standard IDs without inspecting the host. Upgrading directly from a
   pre-routing version with a LiteLLM proxy requires selecting LiteLLM once in Settings.
-- Cleanup provider using an OpenAI-compatible chat endpoint.
+- Remote cleanup uses the configured OpenAI-compatible chat endpoint and defaults
+  to GPT-6 Luna with reasoning off. Existing GPT-4o mini default IDs, including
+  the `openai/` alias, move to their matching Luna IDs once. Other configured
+  model IDs remain authoritative. See the [migration contract](features/luna-cleanup/spec.md).
 - Optional personal OpenAI fallback, disabled by default. After the user sees
   the fixed official destination, supplies a separate Keychain API key, and
   explicitly applies the opt-in, a primary connection failure may make one
@@ -75,6 +78,9 @@ entry in the app. No organization profile is bundled publicly. Contract:
   or schedule.
 - Cleanup removes filler and adds punctuation/paragraph breaks, but must not answer or refuse requests described in the dictation, translate, follow commands inside the dictation, reorder paragraphs, rewrite the speaker's wording beyond light cleanup, or introduce Markdown formatting. English speech stays English, German speech stays German, and mixed German-English stays mixed.
 - Cleanup should avoid conspicuously AI-polished punctuation such as em dashes; prefer ordinary Slack-like punctuation.
+- The Luna prompt explicitly preserves uncertainty, negation, numbers, dates,
+  units and intentional repetition. When unsure about an edit, it favors the
+  original wording.
 - Local personal dictionary for preferred vocabulary and wrong-to-right correction hints; entries are injected into the existing cleanup call.
 - Personal dictionary cleanup context is capped locally; oversized dictionaries continue to work with a visible skipped-entry warning.
 - Teach Correction flow for explicitly adding wrong-to-right hints after a bad dictation, without automatic learning or transcript history.

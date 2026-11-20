@@ -99,7 +99,9 @@ Provider settings should include:
   `gpt-4o-transcribe`, or `gpt-4o-mini-transcribe`.
 - Transcription model routing selected between standard OpenAI IDs and
   LiteLLM's `openai/` namespace.
-- Cleanup model name.
+- Cleanup model name, defaulting to `gpt-6-luna`. A one-time preference
+  migration replaces the two exact legacy GPT-4o mini aliases and preserves
+  their namespace.
 - Optional transcription language code. This must be a single ISO 639-1 code such as `de` or `en`; mixed-language dictation should leave it empty and use prompt/cleanup hints.
 - Timeout.
 - Retry policy.
@@ -114,6 +116,11 @@ requests share the same immutable settings snapshot and routing. Saved routing c
 When routing is absent or invalid, persist standard OpenAI routing without host
 inference. An installation upgrading directly from a pre-routing version with a
 LiteLLM namespace must select LiteLLM once in Settings.
+
+The cleanup request uses its configured model ID verbatim. For `gpt-6-luna` and
+`openai/gpt-6-luna`, it adds `reasoning_effort: "none"` and uses the Luna
+cleanup prompt. The user message contains one JSON
+transcript value, and the capped dictionary remains in the system message.
 
 `PersonalOpenAIFallbackPolicy` derives a fixed official profile from the
 immutable primary settings snapshot. It preserves the supported logical

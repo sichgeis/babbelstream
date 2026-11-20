@@ -18,6 +18,10 @@ validation and release procedure remain in their dedicated specifications.
 
 The [dictation reliability update](features/dictation-reliability/spec.md) is implemented on `codex/dictation-reliability` for candidate **0.6.1, build 15**. The [implementation run](runs/active/dictation-reliability.md) records the regression checks, synthetic local timings and pending upgraded-Mac smoke test.
 
+The [GPT-6 Luna cleanup update](features/luna-cleanup/spec.md) is implemented
+on `codex/luna-cleanup` for candidate **0.6.1, build 16**. See the
+[implementation run](runs/active/luna-cleanup.md) for candidate verification.
+
 Local Parakeet dictation and Qwen3.5-4B cleanup are complete in 0.6.0.
 Implementation evidence is archived in `docs/runs/archive/local-transcription.md`
 and `docs/runs/archive/local-cleanup.md`; final local release evidence is in

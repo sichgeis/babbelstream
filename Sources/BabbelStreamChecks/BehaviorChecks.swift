@@ -35,7 +35,7 @@ check(
     ],
     "The transcription model picker should expose only the approved options."
 )
-check(ProjectDefaults.defaultCleanupModel == "gpt-4o-mini", "Unexpected default cleanup model.")
+check(ProjectDefaults.defaultCleanupModel == "gpt-6-luna", "Unexpected default cleanup model.")
 check(ProjectDefaults.minConfigurableAudioDurationSeconds == 5, "Unexpected minimum recording duration.")
 check(ProjectDefaults.maxConfigurableAudioDurationSeconds == 600, "Unexpected maximum configurable recording duration.")
 check(ProjectDefaults.defaultTranscriptionResponseFormat == "json", "Transcription should default to JSON responses.")
@@ -667,6 +667,27 @@ check(
     presenceDefaults.string(forKey: "provider.transcriptionModelRouting") == TranscriptionModelRouting.standardOpenAI.rawValue,
     "Default routing should be persisted once so future host edits cannot infer a different route."
 )
+presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
+let cleanupModelStore = UserDefaultsSettingsStore(userDefaults: presenceDefaults)
+check(
+    cleanupModelStore.load().providerConfiguration.cleanupModel == "gpt-6-luna",
+    "Fresh settings should default to GPT-6 Luna."
+)
+for (saved, expected) in [
+    ("gpt-4o-mini", "gpt-6-luna"),
+    ("openai/gpt-4o-mini", "openai/gpt-6-luna"),
+    ("custom/gpt-4o-mini", "custom/gpt-4o-mini"),
+    ("gpt-4o-mini-2024-07-18", "gpt-4o-mini-2024-07-18")
+] {
+    presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
+    presenceDefaults.set(saved, forKey: "provider.cleanupModel")
+    var migratedSettings = cleanupModelStore.load()
+    check(migratedSettings.providerConfiguration.cleanupModel == expected, "Cleanup migration must preserve model namespaces and custom IDs.")
+    check(presenceDefaults.string(forKey: "provider.cleanupModel") == expected, "Migrated cleanup selection must persist.")
+    migratedSettings.providerConfiguration.cleanupModel = saved
+    try cleanupModelStore.save(migratedSettings)
+    check(cleanupModelStore.load().providerConfiguration.cleanupModel == saved, "A user can explicitly reselect the old cleanup model.")
+}
 presenceDefaults.removePersistentDomain(forName: "com.sichgeis.babbelstream.checks")
 let apiKeyPresenceStore = UserDefaultsAPIKeyPresenceStore(
     userDefaults: presenceDefaults,

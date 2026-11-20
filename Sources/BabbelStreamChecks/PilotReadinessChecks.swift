@@ -73,6 +73,8 @@ func runPilotReadinessChecks() async throws {
     let sameOriginResult = try await OpenAICompatibleTranscriptionProvider(urlSession: session).transcribe(TranscriptionRequest(audioURL: audioURL, settings: redirectSettings, apiKey: "fixture-not-a-real-key"))
     check(sameOriginResult == "same origin fixture" && sameOrigin.count == 2, "Real transport must preserve supported same-origin redirects.")
 
+    try await checkCleanupRequestContract(session: session)
+
     var visibility = DictationHUDVisibilityPolicy()
     check(visibility.update(isActive: false, needsAttention: false) == .hide, "Startup must not show a completion.")
     check(visibility.update(isActive: true, needsAttention: false) == .showActive, "Active operation must show HUD.")
@@ -138,4 +140,44 @@ func runPilotReadinessChecks() async throws {
         check(!report.contains(f.root.path) && !report.contains("/Users/") && !report.contains("provider-body"), "Export allowlist must omit private paths and arbitrary errors/status.")
         check(!report.contains("synthetic-key") && report.contains("build commit:") && report.contains("primary origin:"), "Export must retain actionable content-free build/provider fields.")
     }
+}
+
+private func checkCleanupRequestContract(session: URLSession) async throws {
+    let transcript = "Ähm, please don't deploy 2 instances before 17:30."
+    let cleanupFixture = try LoopbackHTTPFixture { request in
+        guard let headerEnd = request.range(of: Data("\r\n\r\n".utf8)),
+              let payload = (try? JSONSerialization.jsonObject(with: request[headerEnd.upperBound...])) as? [String: Any],
+              let model = payload["model"] as? String,
+              let messages = payload["messages"] as? [[String: String]],
+              messages.map({ $0["role"] }) == ["system", "user"],
+              let system = messages[0]["content"],
+              let user = messages[1]["content"],
+              let dictation = (try? JSONSerialization.jsonObject(with: Data(user.utf8))) as? [String: String],
+              dictation == ["transcript": transcript],
+              payload["temperature"] as? Int == 0
+        else { return (400, [:], Data()) }
+
+        let isLuna = ["gpt-6-luna", "openai/gpt-6-luna"].contains(model)
+        check(payload["reasoning_effort"] as? String == (isLuna ? "none" : nil), "Only the supported Luna IDs send reasoning off.")
+        check(system.contains("Preserve negation, uncertainty") == isLuna, "Only Luna uses the additional editing rules.")
+        check(system.contains("Personal dictionary context:"), "Cleanup must still send dictionary hints in the system message.")
+        return (200, ["Content-Type": "application/json"],
+                Data(#"{"choices":[{"message":{"content":"Cleaned fixture."}}]}"#.utf8))
+    }
+    defer { cleanupFixture.stop() }
+    let provider = OpenAICompatibleCleanupProvider(urlSession: session)
+    var settings = AppSettings()
+    settings.providerConfiguration.baseURL = cleanupFixture.baseURL
+    let dictionary = PersonalDictionary(vocabulary: [PersonalVocabularyEntry(term: "example-service")])
+    for model in ["gpt-6-luna", "openai/gpt-6-luna", "custom/gpt-6-luna"] {
+        settings.providerConfiguration.cleanupModel = model
+        let cleaned = try await provider.cleanup(CleanupRequest(
+            transcript: transcript,
+            settings: settings,
+            apiKey: "fixture-not-a-real-key",
+            personalDictionary: dictionary
+        ))
+        check(cleaned == "Cleaned fixture.", "Cleanup should parse the expected Chat Completions response.")
+    }
+    check(cleanupFixture.count == 3, "Each cleanup should send one request.")
 }

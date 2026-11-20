@@ -430,17 +430,23 @@ public final class OpenAICompatibleCleanupProvider: CleanupProvider {
         }
 
         let preparationStartedAt = ContinuousClock.now
-        let payload: [String: Any] = [
-            "model": configuration.cleanupModel,
+        let model = configuration.cleanupModel
+        let isLuna = model == ProjectDefaults.lunaCleanupModel || model == "openai/\(ProjectDefaults.lunaCleanupModel)"
+        let basePrompt = isLuna ? CleanupPrompt.lunaReady : CleanupPrompt.slackReady
+        var payload: [String: Any] = [
+            "model": model,
             "temperature": 0,
             "messages": [
                 [
                     "role": "system",
-                    "content": DictionaryPromptBuilder.cleanupSystemPrompt(dictionary: request.personalDictionary)
+                    "content": DictionaryPromptBuilder.cleanupSystemPrompt(basePrompt: basePrompt, dictionary: request.personalDictionary)
                 ],
                 ["role": "user", "content": CleanupPrompt.userMessage(for: request.transcript)]
             ]
         ]
+        if isLuna {
+            payload["reasoning_effort"] = "none"
+        }
 
         var urlRequest = URLRequest(url: endpoint)
         urlRequest.httpMethod = "POST"

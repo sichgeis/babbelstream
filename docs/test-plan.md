@@ -170,6 +170,12 @@ The actual main-actor AppState runs with fixture-only recording, provider, inser
 - Cleanup preserves paragraph/sentence order and speaker wording except for light filler removal, punctuation, paragraph breaks, and obvious transcription slips.
 - Cleanup returns plain text only, without Markdown headings, bullets, code fences, block quotes, labels, or commentary.
 - Cleanup should not introduce em dashes or other conspicuously AI-polished punctuation.
+- Disposable preferences cover fresh Luna defaults, both legacy aliases, custom
+  IDs and later explicit reselection. Loopback requests cover reasoning off and
+  the prompt contract on both Luna aliases, plus compatibility with a custom ID.
+- Use synthetic dictation to check that Luna preserves negation, uncertainty,
+  numbers, units, technical identifiers and intentional emphasis, and applies
+  a matching dictionary correction.
 - Dictionary hints: preferred terms such as `LiteLLM` and corrections such as `light LM => LiteLLM`.
 
 ## Latency Tests

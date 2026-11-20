@@ -4,6 +4,9 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+- Default remote cleanup to GPT-6 Luna with reasoning off. The two GPT-4o mini
+  default aliases upgrade once. The Luna prompt better protects numbers,
+  negation, uncertainty and intentional repetition.
 - Keep missing recording targets copy-only and require all failed work-provider attempts to qualify before switching to personal OpenAI.
 - Show the original transcription selection and current retry destination in Failed Recordings. Escape cancels retries. A failed Save Audio As preserves the previous export.
 - Show the cleanup phase during on-device processing and document both setup paths together.
