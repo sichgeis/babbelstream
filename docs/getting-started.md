@@ -1,14 +1,14 @@
 # Get Started With BabbelStream
 
-Version 0.6.0 offers remote and on-device dictation for the Apple Silicon pilot.
+Version 0.6.1 brings GPT-6 Luna cleanup and delivery reliability fixes to the Apple Silicon pilot.
 Older 0.5.1/0.5.2 downloads are withdrawn. See [current status](project-status.md)
 for evidence and remaining integration coverage.
 
 ## Install the Applications copy
 
 Use `brew install --cask sichgeis/tap/babbelstream` or download the
-[0.6.0 DMG and checksum](https://github.com/sichgeis/babbelstream/releases/tag/v0.6.0).
-Verify `shasum -a 256 -c BabbelStream-0.6.0.dmg.sha256` in their download folder.
+[0.6.1 DMG and checksum](https://github.com/sichgeis/babbelstream/releases/tag/v0.6.1).
+Verify `shasum -a 256 -c BabbelStream-0.6.1.dmg.sha256` in their download folder.
 Quit the old app, open the image, drag BabbelStream onto Applications, eject the
 image and launch the Applications copy. Preserve local settings and Keychain.
 A manual app may conflict with Homebrew; preserve it before moving it aside.
@@ -46,6 +46,9 @@ models your endpoint supports. Primary choices are `gpt-transcribe`,
 `gpt-6-luna` with reasoning off. In Advanced settings, enter
 `openai/gpt-6-luna` if your proxy exposes that namespace. This field is
 independent of the transcription routing menu.
+Previously saved `gpt-4o-mini` and `openai/gpt-4o-mini` upgrade to the
+corresponding Luna model on first launch. Check the saved cleanup model in
+Provider Settings after updating if your proxy uses different aliases.
 
 Leave the transcription language hint empty for mixed German-English speech.
 Use a specific hint such as `de` or `en` only when you want it. Transcription hints

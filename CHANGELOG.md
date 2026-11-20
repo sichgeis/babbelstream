@@ -4,6 +4,8 @@ BabbelStream uses Semantic Versioning. Before 1.0, minor releases may contain su
 
 ## Unreleased
 
+## 0.6.1 - 2026-11-20
+
 - Default remote cleanup to GPT-6 Luna with reasoning off. The two GPT-4o mini
   default aliases upgrade once. The Luna prompt better protects numbers,
   negation, uncertainty and intentional repetition.

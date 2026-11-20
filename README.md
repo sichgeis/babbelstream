@@ -8,7 +8,7 @@ and filler words. **BabbelStream never presses Enter or sends your message.**
 
 ## Install
 
-**0.6.0 · Apple Silicon · macOS 13+ · Non-notarized pilot**
+**0.6.1 · Apple Silicon · macOS 13+ · Non-notarized pilot**
 
 Remote dictation needs an approved OpenAI-compatible provider and your own API
 key; provider charges may apply. Optional local models need macOS 14+ and no API
@@ -31,12 +31,12 @@ backup first. [Installation guidance →](docs/getting-started.md)
 
 ### DMG
 
-Download the [DMG](https://github.com/sichgeis/babbelstream/releases/download/v0.6.0/BabbelStream-0.6.0.dmg)
-and [checksum](https://github.com/sichgeis/babbelstream/releases/download/v0.6.0/BabbelStream-0.6.0.dmg.sha256).
+Download the [DMG](https://github.com/sichgeis/babbelstream/releases/download/v0.6.1/BabbelStream-0.6.1.dmg)
+and [checksum](https://github.com/sichgeis/babbelstream/releases/download/v0.6.1/BabbelStream-0.6.1.dmg.sha256).
 In their download folder, verify:
 
 ```sh
-shasum -a 256 -c BabbelStream-0.6.0.dmg.sha256
+shasum -a 256 -c BabbelStream-0.6.1.dmg.sha256
 ```
 
 Quit the old app, open the DMG, drag BabbelStream into Applications, and launch
@@ -44,7 +44,7 @@ that copy. Eject the image afterward. Source ZIP/tar archives are not installers
 
 ### Optional manual installation helper (pilot)
 
-The helper prepares the latest verified public release, currently 0.6.0. If a newer
+The helper prepares the latest verified public release. If a newer
 release appears before its verified pins are refreshed, it stops instead of
 installing an older version. Try the same command again after the maintainer updates it.
 
@@ -123,6 +123,8 @@ are replaced only when these options are supplied. No API keys in shell commands
 
 Leave the language hint empty for mixed German-English speech. For a LiteLLM
 proxy using `openai/*`, select **LiteLLM (openai/ model prefix)** in Provider settings.
+Remote cleanup defaults to GPT-6 Luna with reasoning off. If your proxy exposes
+the namespaced model, use `openai/gpt-6-luna` in **Advanced → Cleanup model**.
 [Full setup guide →](docs/getting-started.md)
 
 ## Dictate where you write
@@ -151,8 +153,8 @@ open /Applications/BabbelStream.app
 
 For manual installations, use a newer DMG or the current helper’s `--update` mode.
 Check Diagnostics afterward. macOS or Keychain may require approval again.
-Settings, dictionary, and retained recordings should remain; genuine Homebrew
-upgrade validation is still pending. There is no automatic background updater.
+Settings, dictionary entries, and retained recordings carry forward. If you
+installed manually, keep a rollback copy before switching to Homebrew.
 [Upgrade and rollback →](docs/homebrew-release.md#bad-release-and-rollback)
 
 ## Troubleshooting
