@@ -180,4 +180,42 @@ private func checkCleanupRequestContract(session: URLSession) async throws {
         check(cleaned == "Cleaned fixture.", "Cleanup should parse the expected Chat Completions response.")
     }
     check(cleanupFixture.count == 3, "Each cleanup should send one request.")
+
+    let directAttempts = LockedAttemptCounter()
+    StubURLProtocol.handler = { request in
+        _ = directAttempts.increment()
+        let endpoint = URL(string: "https://api.openai.com:443/v1/chat/completions")!
+        check(request.url == endpoint, "The direct Luna request should use the configured OpenAI endpoint.")
+        var body = request.httpBody ?? Data()
+        if let stream = request.httpBodyStream {
+            stream.open()
+            defer { stream.close() }
+            var buffer = [UInt8](repeating: 0, count: 4096)
+            while true {
+                let count = stream.read(&buffer, maxLength: buffer.count)
+                if count <= 0 { break }
+                body.append(contentsOf: buffer.prefix(count))
+            }
+        }
+        let payload = (try? JSONSerialization.jsonObject(with: body)) as? [String: Any]
+        check(payload?["model"] as? String == "gpt-6-luna", "Direct OpenAI should receive the standard Luna model ID.")
+        check(payload?["reasoning_effort"] as? String == "none", "Direct Luna cleanup must keep reasoning disabled.")
+        check(payload?["temperature"] == nil, "Direct Luna cleanup must leave temperature at the provider default.")
+        return (
+            HTTPURLResponse(url: endpoint, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!,
+            Data(#"{"choices":[{"message":{"content":"Cleaned fixture."}}]}"#.utf8)
+        )
+    }
+    defer { StubURLProtocol.handler = nil }
+    let directConfiguration = URLSessionConfiguration.ephemeral
+    directConfiguration.protocolClasses = [StubURLProtocol.self]
+    let directSession = URLSession(configuration: directConfiguration)
+    defer { directSession.invalidateAndCancel() }
+    let directProvider = OpenAICompatibleCleanupProvider(urlSession: directSession)
+    settings.providerConfiguration.baseURL = URL(string: "https://api.openai.com:443")!
+    settings.providerConfiguration.cleanupModel = "gpt-6-luna"
+    let directResult = try await directProvider.cleanup(CleanupRequest(
+        transcript: transcript, settings: settings, apiKey: "fixture-not-a-real-key", personalDictionary: dictionary
+    ))
+    check(directResult == "Cleaned fixture." && directAttempts.value == 1, "Direct Luna cleanup should succeed in one request.")
 }

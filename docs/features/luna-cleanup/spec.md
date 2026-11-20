@@ -30,7 +30,8 @@ endpoint. The choice keeps the existing endpoint contract.
   Custom IDs, endpoint paths and provider origins retain their saved values.
 - Both Luna IDs send `reasoning_effort: "none"` on the existing Chat Completions
   request. Cleanup has its own model ID, independent of transcription routing.
-  Other models keep their existing request and prompt contracts.
+  On the official OpenAI origin, leave temperature at the provider default.
+  Keep `temperature: 0` on compatible proxies and for other models.
 - The system prompt already scopes edits to the JSON transcript, preserves
   code-switching and treats dictated instructions as text. The revised Luna
   prompt preserves those rules and explicitly protects negation, uncertainty,
@@ -52,6 +53,8 @@ adds no credentials, dependencies, storage, permissions or destinations.
 
 1. Verify new, legacy, edited and custom settings with disposable preferences.
    Inspect both Luna requests and one custom model using a loopback fixture.
+   Stub the official OpenAI origin and verify that Luna sends reasoning off
+   with no temperature override.
 2. Use synthetic transcripts on the configured proxy to check English,
    German, mixed phrasing, numbers, negation, dictated instructions, and a
    matching dictionary correction.

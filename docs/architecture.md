@@ -119,7 +119,9 @@ LiteLLM namespace must select LiteLLM once in Settings.
 
 The cleanup request uses its configured model ID verbatim. For `gpt-6-luna` and
 `openai/gpt-6-luna`, it adds `reasoning_effort: "none"` and uses the Luna
-cleanup prompt. The user message contains one JSON
+cleanup prompt. Luna requests to the official OpenAI origin leave sampling
+temperature at the provider default. Proxy requests and other cleanup models
+continue to send `temperature: 0`. The user message contains one JSON
 transcript value, and the capped dictionary remains in the system message.
 
 `PersonalOpenAIFallbackPolicy` derives a fixed official profile from the
