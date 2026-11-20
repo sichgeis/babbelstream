@@ -354,7 +354,7 @@ Fixture checks cover default-off settings/migration, separate model role, blocke
 
 `task check` includes synthetic release-channel regressions for stale installer
 pins, draft/prerelease selection, changed or absent asset digests/URLs and missing
-or parallel installer assets. The helper fixtures cover 0.5.3-to-0.6.0 preparation
+or parallel installer assets. The helper fixtures cover 0.6.0-to-0.6.1 preparation
 without installed-app replacement, exact-current no-op/configuration, downgrade
 refusal and no payload download/settings mutation when latest-release metadata
 is newer or unavailable. The explicit online maintainer command `task installer:check-release`
@@ -367,4 +367,4 @@ Finder installation, OS approval and real dictation remain human validation.
 
 The executable checks cover mixed provider failures in both orders, copy-only delivery after missing initial focus, fresh explicit paste capture, atomic export replacement with an injected copy failure, local and legacy recovery metadata, and Escape while retrying.
 
-The same fixture coordinator checks the HUD phase during local cleanup, distinguishes older recovery entries from the current failure, and exercises archive refresh, invalid month input, Markdown export and clear. The [local timing run](runs/active/dictation-reliability.md#local-processing-measurement) documents synthetic short and long clips through transcription and cleanup. The pilot measures the full interval from shortcut release to an unsent draft in the editor.
+The same fixture coordinator checks the HUD phase during local cleanup, distinguishes older recovery entries from the current failure, and exercises archive refresh, invalid month input, Markdown export and clear. The [local timing run](runs/archive/dictation-reliability.md#local-processing-measurement) documents synthetic short and long clips through transcription and cleanup. The pilot measures the full interval from shortcut release to an unsent draft in the editor.

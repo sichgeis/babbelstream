@@ -5,32 +5,23 @@ validation and release procedure remain in their dedicated specifications.
 
 ## Current Release
 
-- Public release: **0.6.0**, bundle build **14**, annotated tag **v0.6.0**. Exact app/tag source: `c36c28cba3ab968a3fca6ce6dfb250e1a7f5dc1f` on main; the tag is unchanged.
-- The maintainer explicitly authorized GitHub publication, tap advancement and installation on the second Mac on 2026-10-29, superseding the earlier public deferral. No new real-microphone/provider smoke is claimed.
-- Published installer: `BabbelStream-0.6.0.dmg`, 7,352,802 bytes, SHA-256 `2752d399f5b1575be0a0ed9e5e8bb107a8b6b029584c196653c7a9db66f98ce4`, plus its portable checksum. Both authenticated draft download and anonymous public download match the verified bytes.
-- This is the first public 0.6.0 installer, rebuilt from the exact clean tag on the second Mac. The earlier local-only DMG/hash remains historical evidence in `docs/runs/archive/release-v0.6.0.md`; no published bytes were replaced.
-- Tap main `1aa5318` advertises the verified public asset. Homebrew 7.0.11 upgraded 0.5.3 to 0.6.0 on arm64/macOS 27.0.1 after normal quit. Applications runs 0.6.0/build 14/c36c28c; all installed file bytes match the verified payload and quarantine remains intact. The old app and conflicted local tap checkout are preserved in ignored pilot backups.
-- Full `task check`, source/history/binary and all 13 mounted payload file/attribute hygiene scans, app/helper/DMG signatures, image integrity, portable checksum, Homebrew style and strict cask audit pass. CMake was installed as the existing cleanup helper's build prerequisite.
-- Ad-hoc signed, non-notarized pilot; internal candidate metadata describes signing class. No provider settings, credentials, models, permissions or user data were changed by the upgrade. Actual permission/Keychain continuity and dictation remain user checks.
-- Publication/upgrade evidence: `docs/runs/archive/homebrew-v0.6.0.md`. Retired 0.5.1/0.5.2 installer assets remain withdrawn.
+- Public release **0.6.1**, build **17**, is tagged at `131ab28bcfabafa080b5af444603dcdd2262aeab`. The polished DMG and its portable checksum are the two uploaded assets. [GitHub release](https://github.com/sichgeis/babbelstream/releases/tag/v0.6.1)
+- Homebrew tap main `0f85ca6` and the standalone helper use the same verified DMG. Homebrew style, strict audit and fetch passed. The published helper verified the public checksum, signature and CDHash in read-only mode.
+- The development Mac runs 0.6.1/build 17/`131ab28` from Applications. The installed signature and payload match the public DMG, with `openai/gpt-6-luna` selected for cleanup.
+- The release is an ad-hoc signed, non-notarized Apple Silicon pilot. The maintainer waived microphone-to-editor and focus-switch smoke checks for this release. [Release verification](runs/archive/release-v0.6.1.md)
 
 ## Active Work
 
-The [dictation reliability update](features/dictation-reliability/spec.md) is implemented on `codex/dictation-reliability` for candidate **0.6.1, build 15**. The [implementation run](runs/active/dictation-reliability.md) records the regression checks, synthetic local timings and pending upgraded-Mac smoke test.
+The [dictation reliability update](features/dictation-reliability/spec.md) and
+[GPT-6 Luna cleanup](features/luna-cleanup/spec.md) shipped in 0.6.1.
 
-The [GPT-6 Luna cleanup update](features/luna-cleanup/spec.md) is implemented
-on `codex/luna-cleanup`. Candidate **0.6.1, build 16** is installed and running
-on the development Mac with the migrated Luna cleanup model. The
-[implementation run](runs/active/luna-cleanup.md) records the artifact and
-synthetic prompt comparison.
-
-Local Parakeet dictation and Qwen3.5-4B cleanup are complete in 0.6.0.
+Local Parakeet dictation and Qwen3.5-4B cleanup first shipped in 0.6.0.
 Implementation evidence is archived in `docs/runs/archive/local-transcription.md`
 and `docs/runs/archive/local-cleanup.md`; final local release evidence is in
 `docs/runs/archive/release-v0.6.0.md`. Qwen-ASR and Granite native builds remain
-deferred. Public release and the second-Mac Homebrew upgrade are complete;
-real dictation/permission/Keychain validation on that Mac, expanded editor,
-long-form memory and OS matrices remain explicitly unclaimed.
+deferred. The second Mac completed its Homebrew upgrade to 0.6.0. Real
+dictation, permission and Keychain validation on that Mac, expanded editor
+coverage, long-form memory and the OS matrix remain open.
 
 Optional generic installer provider configuration is implemented directly
 on main by explicit maintainer request; canonical checks and 25 helper fixtures pass. Contract:
@@ -39,24 +30,18 @@ on main by explicit maintainer request; canonical checks and 25 helper fixtures 
 displayed non-secret profile and installation; API keys remain an app/Keychain
 step. Organization-specific values are excluded from this public repository.
 
-The approved optional manual download/install/update helper is implemented and
-integrated on main. Contract: `docs/features/manual-install-helper/spec.md`;
-tracker: `docs/runs/active/manual-install-helper.md`. It selects the verified
-public 0.6.0/build 14/c36c28c artifact using refreshed pins on main,
-requires exact consent before removing quarantine from a verified staged app,
-and opens the illustrated installer for manual Finder installation. The maintainer
-explicitly authorized main integration before the remaining visual/managed-Mac
-pilot. Managed-device installation and launch remain unproven.
-Installer alignment is complete: the unchanged shared main bootstrap now verifies
-and prepares public 0.6.0, refusing stale pins when a newer public release exists.
-The internal guide documents the current version; its command is preserved.
-Evidence: `docs/runs/archive/installer-current-release.md`.
+The optional [manual helper](features/manual-install-helper/spec.md) selects
+the verified public 0.6.1 artifact. It requires exact consent for staging and
+opens the illustrated installer for manual Finder installation. The published
+bootstrap keeps its existing command. Managed-device installation and launch
+remain unproven.
 Earlier scrub/release work remains closed in its archived runs.
 
 ## Known Limitations And Deferred Follow-Ups
 
-- The Homebrew 0.5.3-to-0.6.0 replacement and normal launch pass; actual permission/Keychain behavior and microphone/provider/editor coverage remain follow-up validation. The maintainer explicitly requested release without a new smoke result; no pass was fabricated.
-
+- The Homebrew 0.5.3-to-0.6.0 upgrade passed on the second Mac. The 0.6.1
+  Homebrew upgrade, permission and Keychain continuity, and dictation remain
+  pilot follow-ups. [Prior upgrade evidence](runs/archive/homebrew-v0.6.0.md)
 
 - At initial local installation, microphone was Not requested and Accessibility Not allowed. After the explicitly authorized targeted repair on 2026-10-23, native setup reports both Allowed and Codex insertion works. Ad-hoc future builds may require reapproval; no global TCC reset was used.
 - The maintainer approved the successful build 5 smoke test and explicitly authorized finalization on 2026-10-23, deferring macOS 27.0.1 comparison to the other Mac. Local 26.7.1 fixture evidence exists at both documented sizes in light/dark appearance. The 0.5.1 patch has focused grant/deny and native button/refresh evidence. Full OS Increase Contrast and expanded native/accessibility/provider matrices are not claimed complete.
@@ -74,6 +59,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Run the [Luna cleanup smoke test](features/luna-cleanup/spec.md#acceptance-and-smoke-test)
-and remaining [dictation delivery checks](runs/active/dictation-reliability.md#next-action)
-on candidate 0.6.1, build 16.
+Validate the Homebrew 0.6.1 upgrade on the second pilot Mac and record normal
+launch, permission continuity and a harmless unsent dictation.

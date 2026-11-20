@@ -49,11 +49,8 @@ reasoning, and verify the cleanup prompt with synthetic dictation.
   `dist/rollback/0.6.1-build15-before-luna-build16/`. Before using a rollback,
   confirm its cleanup model selection matches the older app's request format.
 
-## Remaining gate
+## Closeout
 
-The microphone-to-editor smoke test is pending.
-
-## Next action
-
-Run the mixed-language cleanup and focused delivery smoke checks on installed
-build 16.
+The maintainer waived the microphone-to-editor and focus-switch checks for
+0.6.1. This change shipped in build 17. See the
+[release evidence](release-v0.6.1.md).

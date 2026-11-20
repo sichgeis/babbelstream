@@ -2,8 +2,8 @@
 
 ## Status
 
-Approved for implementation by the maintainer on 2026-11-20. The
-[implementation run](../../runs/active/luna-cleanup.md) records validation.
+Released in 0.6.1 on 2026-11-20. The
+[implementation run](../../runs/archive/luna-cleanup.md) records validation.
 
 ## Problem and outcome
 

@@ -2,7 +2,10 @@
 
 ## Status and scope
 
-The maintainer approved implementation and two feature-branch pushes on 2026-11-18. The changes are implemented for candidate 0.6.1, build 15. The public release is 0.6.0. This change covers the existing providers, clipboard delivery, Failed Recordings and setup instructions. The [implementation run](../../runs/active/dictation-reliability.md) records the development-Mac timings and pending pilot validation.
+Released in 0.6.1 on 2026-11-20. This change covers the existing providers,
+clipboard delivery, Failed Recordings and setup instructions. The
+[implementation run](../../runs/archive/dictation-reliability.md) records
+development-Mac timings and pilot validation.
 
 ## Interaction and ownership
 

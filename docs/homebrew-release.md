@@ -1,16 +1,17 @@
 # Homebrew Pilot Release Operations
 
-The public DMG/Homebrew channel now ships 0.6.0. The older
+The public DMG/Homebrew channel ships 0.6.1. The older
 0.5.1/0.5.2 DMGs and checksums remain withdrawn; do not restore retired bytes.
 The first-publication steps below are historical. Use the subsequent-release
 procedure for current versions.
 
 Owner: the maintainer (`sichgeis`). Contract: [Homebrew distribution](features/homebrew-distribution/spec.md).
-This is the approved ad-hoc/non-notarized pilot. Current release 0.6.0/build 14
+This is the approved ad-hoc/non-notarized pilot. Current release 0.6.1/build 17
 uses one fully scanned polished DMG and portable checksum. An independent public
 download matches the release bytes; Homebrew version/URL/hash match that artifact.
-Release/upgrade evidence: [0.6.0 publication](runs/archive/homebrew-v0.6.0.md). Historical installation
-pilot evidence: [initial Homebrew run](runs/archive/homebrew-distribution.md).
+See the [0.6.1 release verification](runs/archive/release-v0.6.1.md), the
+[0.6.0 upgrade](runs/archive/homebrew-v0.6.0.md) and the
+[initial Homebrew pilot](runs/archive/homebrew-distribution.md).
 Commands that replace an app remain explicit operator steps, not automatic guide actions.
 
 ## First publication

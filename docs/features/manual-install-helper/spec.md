@@ -31,7 +31,7 @@ supersedes configuration-preservation language here only when those arguments
 are supplied; ordinary runs still leave provider settings untouched.
 
 - Standalone Bash helper, macOS 13+ on Apple Silicon, using system tools only.
-- Version 0.6.0/build 14/source c36c28c; pinned DMG SHA-256 and app CDHash.
+- Version 0.6.1/build 17/source 131ab28; pinned DMG SHA-256 and app CDHash.
 - Local file, `--download`, `--update`, and mutation-free `--verify-only` modes.
 - Download via HTTPS GitHub Releases, bounded connection/transfer timeouts and HTTPS-only redirects.
 - Approved stable-command follow-up: the README bootstrap downloads the current
@@ -141,7 +141,7 @@ On a consenting pilot Mac: run the README bootstrap using an actual downloaded
 release; cancel once, then consent. Confirm the actual illustrated installer window opens with the
 Applications shortcut. Verify the original download still has its
 attributes and only the staged copy loses quarantine. Preserve the previous app,
-install using Finder, launch manually and confirm 0.6.0/build 14/c36c28c in
+install using Finder, launch manually and confirm 0.6.1/build 17/131ab28 in
 Diagnostics. Record any endpoint-policy rejection honestly. Microphone/provider
 smoke remains a separate human action using harmless unsent content.
 

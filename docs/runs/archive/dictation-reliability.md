@@ -25,6 +25,8 @@ On 2026-11-18, the development Mac (Apple M5, 16 GiB, macOS 26.7.3) ran Parakeet
 
 Timing starts at the coordinator's Stop call and ends when it hands the draft to insertion. All six runs completed local cleanup and released the stopped audio. The first invocation took longest. OS caches were uncontrolled. Shortcut delivery, physical microphone input, editor acceptance, recognition quality and the upgraded pilot Mac require separate measurement.
 
-## Next action
+## Closeout
 
-The maintainer will try two harmless dictations on the installed candidate. With the original editor focused, the draft should appear once and remain unsent. After switching applications before delivery, the draft should be available on the clipboard and the newly focused app should receive no paste. Record the result for the release decision. The [full pilot matrix](../../features/dictation-reliability/spec.md#acceptance-and-manual-smoke) remains available for follow-up, including the other Mac.
+The maintainer waived the microphone-to-editor and focus-switch checks for
+0.6.1. This change shipped in build 17. See the
+[release evidence](release-v0.6.1.md).
