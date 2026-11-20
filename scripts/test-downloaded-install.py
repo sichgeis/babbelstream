@@ -27,7 +27,7 @@ case "$name" in
       if [[ "${FAULT:-}" == latest-newer ]]; then
         echo 'https://github.com/sichgeis/babbelstream/releases/tag/v0.7.0'
       else
-        echo 'https://github.com/sichgeis/babbelstream/releases/tag/v0.6.0'
+        echo 'https://github.com/sichgeis/babbelstream/releases/tag/v0.6.1'
       fi
       exit 0
     fi
@@ -64,7 +64,7 @@ case "$name" in
         if [[ "${FAULT:-}" == copied && -e "$FIXTURE_ROOT/shadow-mounted" ]]; then exit 1; fi ;;
       *--entitlements*) /bin/cat "$FIXTURE_ROOT/entitlements.plist" ;;
       *)
-        echo 'CDHash=cfab070efd8afedb6fad882575b7ad2db29b68c3' >&2
+        echo 'CDHash=eec531a53823582c02c002726e60cc53422848ca' >&2
         echo 'Signature=adhoc' >&2
         echo 'CodeDirectory flags=0x10002(adhoc,runtime)' >&2 ;;
     esac ;;
@@ -119,7 +119,7 @@ else: sys.exit(2)
 
 CONFIG_ARGS = ["--provider-url", "https://proxy.example.invalid", "--model-routing",
                "litellm-openai-namespace", "--transcription-model", "gpt-transcribe",
-               "--cleanup-model", "openai/gpt-4o-mini"]
+               "--cleanup-model", "openai/gpt-6-luna"]
 
 
 class DownloadedInstallTests(unittest.TestCase):
@@ -138,8 +138,8 @@ class DownloadedInstallTests(unittest.TestCase):
         (self.app / "Contents/MacOS").mkdir(parents=True)
         (self.app / "Contents/MacOS/BabbelStream").write_text("synthetic executable")
         self.info = dict(CFBundleIdentifier="com.sichgeis.babbelstream",
-                         CFBundleExecutable="BabbelStream", CFBundleShortVersionString="0.6.0",
-                         CFBundleVersion="14", BabbelStreamGitCommit="c36c28c")
+                         CFBundleExecutable="BabbelStream", CFBundleShortVersionString="0.6.1",
+                         CFBundleVersion="17", BabbelStreamGitCommit="131ab28")
         self.write_info()
         (self.root / "entitlements.plist").write_bytes(plistlib.dumps({
             "com.apple.security.device.audio-input": True}))
@@ -151,7 +151,7 @@ class DownloadedInstallTests(unittest.TestCase):
         source = (ROOT / "scripts/prepare-downloaded-install.sh").read_text()
         source = source.replace("export PATH=/usr/bin:/bin:/usr/sbin:/sbin",
                                 f"export PATH='{self.bin}':/usr/bin:/bin:/usr/sbin:/sbin")
-        source = source.replace("2752d399f5b1575be0a0ed9e5e8bb107a8b6b029584c196653c7a9db66f98ce4", self.digest)
+        source = source.replace("5150941438e03fabc3cb03f8f95cd6cb0b8e0ce2b8e6915610503ce28a5f5748", self.digest)
         # Isolate receipt detection from any actual installed software.
         source = source.replace("/opt/homebrew/Caskroom/babbelstream", str(self.root / "receipt"))
         source = source.replace("/usr/local/Caskroom/babbelstream", str(self.root / "receipt-other"))
@@ -341,7 +341,7 @@ class DownloadedInstallTests(unittest.TestCase):
         shutil.copytree(self.app, self.root / "Installed.app")
 
     def test_update_current_version_is_noop(self):
-        self.install_fixture("0.6.0", "14")
+        self.install_fixture("0.6.1", "17")
         code, output = self.run_helper(interactive=True, mode="--update")
         self.assertEqual(code, 0, output)
         self.assertIn("already installed", output)
@@ -350,22 +350,22 @@ class DownloadedInstallTests(unittest.TestCase):
         self.assert_untouched()
 
     def test_update_rejects_downgrade(self):
-        self.install_fixture("0.7.0", "15")
+        self.install_fixture("0.7.0", "18")
         code, output = self.run_helper(interactive=True, mode="--update")
         self.assertNotEqual(code, 0)
         self.assertIn("newer", output)
         self.assert_untouched()
 
     def test_update_older_version_prepares_without_replacing(self):
-        self.install_fixture("0.5.3", "11")
-        # Downloaded release remains 0.6.0; installed copy is the older fixture.
-        self.info["CFBundleShortVersionString"] = "0.6.0"
-        self.info["CFBundleVersion"] = "14"
+        self.install_fixture("0.6.0", "14")
+        # Restore the downloaded fixture to its current-release metadata.
+        self.info["CFBundleShortVersionString"] = "0.6.1"
+        self.info["CFBundleVersion"] = "17"
         self.write_info()
         code, output = self.run_helper(interactive=True, consent="PREPARE", mode="--update")
         self.assertEqual(code, 0, output)
         info = plistlib.loads((self.root / "Installed.app/Contents/Info.plist").read_bytes())
-        self.assertEqual(info["CFBundleShortVersionString"], "0.5.3")
+        self.assertEqual(info["CFBundleShortVersionString"], "0.6.0")
         self.assertIn("\nopen ", self.events())
 
     def saved_preferences(self):
@@ -385,7 +385,7 @@ class DownloadedInstallTests(unittest.TestCase):
         self.assertEqual(saved["provider.apiKey.saved.approvedOrigin"],"unassociated")
         self.assertEqual(saved["provider.baseURL"],"https://proxy.example.invalid")
         self.assertEqual(saved["provider.transcriptionModelRouting"],"litellm-openai-namespace")
-        self.assertEqual(saved["provider.cleanupModel"],"openai/gpt-4o-mini")
+        self.assertEqual(saved["provider.cleanupModel"],"openai/gpt-6-luna")
         self.assertEqual(saved["provider.transcriptionModelPickerMigrationVersion"],1)
         self.assertFalse(saved["provider.personalOpenAIFallback.enabled"])
         self.assertFalse(saved["provider.personalOpenAIFallback.directModeEnabled"])
@@ -398,7 +398,7 @@ class DownloadedInstallTests(unittest.TestCase):
         self.assertEqual(self.saved_preferences()["provider.cleanupEndpointPath"],"/v1/chat/completions")
 
     def test_configuration_on_current_install_skips_download_and_quarantine(self):
-        self.install_fixture("0.6.0","14")
+        self.install_fixture("0.6.1","17")
         code,output=self.run_helper(interactive=True,consent="prepare",mode="--update",extra_args=CONFIG_ARGS)
         self.assertEqual(code,0,output)
         self.assertIn("releases/latest",self.events())

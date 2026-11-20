@@ -4,12 +4,12 @@ set -euo pipefail
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 umask 077
 
-VERSION=0.6.0
-BUILD=14
-SOURCE=c36c28c
-SHA256=2752d399f5b1575be0a0ed9e5e8bb107a8b6b029584c196653c7a9db66f98ce4
-CDHASH=cfab070efd8afedb6fad882575b7ad2db29b68c3
-RELEASE_URL=https://github.com/sichgeis/babbelstream/releases/download/v0.6.0/BabbelStream-0.6.0.dmg
+VERSION=0.6.1
+BUILD=17
+SOURCE=131ab28
+SHA256=5150941438e03fabc3cb03f8f95cd6cb0b8e0ce2b8e6915610503ce28a5f5748
+CDHASH=eec531a53823582c02c002726e60cc53422848ca
+RELEASE_URL=https://github.com/sichgeis/babbelstream/releases/download/v0.6.1/BabbelStream-0.6.1.dmg
 verify_only=false
 download=false
 update=false
