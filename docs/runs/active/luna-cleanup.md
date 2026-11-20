@@ -30,8 +30,25 @@ reasoning, and verify the cleanup prompt with synthetic dictation.
   Both prompts had a median complete response of 0.88 seconds in this sample.
   The proxy reported zero reasoning tokens. The check retained only metrics
   and pass/fail labels.
-- Final canonical checks and candidate packaging in progress.
+- Final `task check` passed, including settings and loopback fixtures, both
+  native helper builds, release preflight, installer and hygiene checks.
+- Feature commit `ac6a475` was pushed after the history scan. Built the plain
+  candidate from that clean commit. Optimized binary hygiene, disk image
+  integrity, portable checksum, mounted bundle metadata and signatures passed.
+
+## Candidate
+
+- Version 0.6.1, build 16, commit `ac6a475`.
+- Artifact `dist/BabbelStream-0.6.1-candidate.16-ac6a475.dmg`.
+- SHA-256 `245437c211190d2565e918a64dd956cc43a193d0f7567fcade8e576bfd1f0278`.
+- Ad-hoc signed. The development Mac currently has 0.6.1, build 15,
+  commit `795cc76` installed.
+
+## Remaining gate
+
+Candidate installation and the microphone-to-editor smoke test are pending.
 
 ## Next action
 
-Run the canonical checks on the revised prompt and package a clean candidate.
+After installation approval, install build 16 and run the mixed-language
+cleanup and focused delivery smoke checks.
