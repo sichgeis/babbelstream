@@ -26,4 +26,11 @@ Restore GPT-6 Luna cleanup on the official OpenAI endpoint with reasoning disabl
 
 ## Next Action
 
-Package and verify the candidate for the approved local installation.
+Run one harmless unsent dictation with the installed candidate and confirm that the direct OpenAI cleanup completes without HTTP 400.
+
+## Candidate Evidence
+
+- 0.6.1 build 18 from `a5b22d0`, packaged as `BabbelStream-0.6.1-candidate.18-a5b22d0.dmg`.
+- SHA-256 `c43e3952fcc497002da5617e5d8dcb62721fb268742bdb1856fd597f70949466`.
+- DMG checksum and integrity, mounted and installed bundle signatures, and running installed version verified. The saved cleanup model is `gpt-6-luna`.
+- The live probe stopped at Keychain access. No live cleanup validation has been recorded. Public 0.6.1 remains build 17.

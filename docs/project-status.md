@@ -7,10 +7,14 @@ validation and release procedure remain in their dedicated specifications.
 
 - Public release **0.6.1**, build **17**, is tagged at `131ab28bcfabafa080b5af444603dcdd2262aeab`. The polished DMG and its portable checksum are the two uploaded assets. [GitHub release](https://github.com/sichgeis/babbelstream/releases/tag/v0.6.1)
 - Homebrew tap main `0f85ca6` and the standalone helper use the same verified DMG. Homebrew style, strict audit and fetch passed. The published helper verified the public checksum, signature and CDHash in read-only mode.
-- The development Mac runs 0.6.1/build 17/`131ab28` from Applications. The installed signature and payload match the public DMG, with `openai/gpt-6-luna` selected for cleanup.
+- The published 0.6.1/build 17/`131ab28` payload was verified against the installation at release time.
 - The release is an ad-hoc signed, non-notarized Apple Silicon pilot. The maintainer waived microphone-to-editor and focus-switch smoke checks for this release. [Release verification](runs/archive/release-v0.6.1.md)
 
 ## Active Work
+
+Direct OpenAI Luna cleanup candidate **0.6.1 build 18** is installed locally and
+awaits a live dictation smoke test. It sends reasoning off and leaves sampling
+temperature at the provider default. See the [implementation run](runs/active/luna-direct-openai-cleanup.md).
 
 The [dictation reliability update](features/dictation-reliability/spec.md) and
 [GPT-6 Luna cleanup](features/luna-cleanup/spec.md) shipped in 0.6.1.
@@ -59,5 +63,5 @@ providers, permissions, costs, signing-material access or updater traffic.
 
 ## Next Action
 
-Validate the Homebrew 0.6.1 upgrade on the second pilot Mac and record normal
-launch, permission continuity and a harmless unsent dictation.
+Run a harmless unsent dictation with the installed build 18 candidate and confirm
+direct OpenAI cleanup succeeds without HTTP 400.
